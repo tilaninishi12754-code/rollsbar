@@ -63,6 +63,24 @@ button,a{font:inherit}.shell{width:min(1220px,calc(100% - 40px));margin:0 auto}
   #delivery-map{height:430px}
   .delivery-legend{left:12px;right:12px;bottom:12px;min-width:0}
 }
+
+/* mobile map hotfix */
+.leaflet-container{background:#eef1ea}
+.leaflet-tile{image-rendering:auto}
+@media(max-width:680px){
+  #delivery-map{height:390px}
+  .delivery-legend{
+    left:14px;
+    right:14px;
+    bottom:14px;
+    padding:12px 14px;
+    border-radius:16px;
+    min-width:0;
+  }
+  .delivery-legend b{font-size:16px}
+  .delivery-legend-row{font-size:12px;line-height:1.25}
+  .delivery-map-result{padding:14px 18px;line-height:1.35}
+}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynhMZqPr+7dLrxhI4d4f7rB1F0iM=" crossorigin=""/>
 </head>
@@ -336,7 +354,7 @@ targets.forEach(t=>observer.observe(t));
   const store = [44.9567, 34.1108];
   const map = L.map('delivery-map', {scrollWheelZoom:true}).setView(store, 12);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
