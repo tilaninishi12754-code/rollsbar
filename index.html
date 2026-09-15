@@ -220,6 +220,41 @@
       .menu-toggle{width:34px;height:34px}
     }
 
+  
+    /* VK product assets + category shortcuts */
+    .vk-sprite{display:block;width:100%;height:100%;background-repeat:no-repeat;background-size:600% 100%;background-color:#fff}
+    .vk-sprite--0{background-image:url('assets/vk-products-row0.webp')}
+    .vk-sprite--1{background-image:url('assets/vk-products-row1.webp')}
+    .vk-sprite--2{background-image:url('assets/vk-products-row2.webp')}
+    .vk-sprite--3{background-image:url('assets/vk-products-row3.webp')}
+    .product-card__visual>.vk-sprite{position:absolute;inset:0}
+    .quick-menu{padding-top:18px;padding-bottom:0;margin-bottom:34px}
+    .quick-menu__grid{width:min(860px,100%);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;justify-content:start}
+    .quick-card{display:flex;flex-direction:column;overflow:hidden;border:1px solid #ece7e4!important;border-radius:22px!important;background:linear-gradient(180deg,#fff 0%,#fff8f6 100%)!important;box-shadow:0 10px 26px rgba(25,18,16,.07);padding:0!important;text-align:left;color:#171717;font:inherit;appearance:none;-webkit-appearance:none;transition:transform .18s ease,box-shadow .18s ease}
+    .quick-card:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(25,18,16,.1)}
+    .quick-card__img{display:block;aspect-ratio:1.28/1;overflow:hidden;border-radius:0!important;background:#fff}
+    .quick-card__img>img,.quick-card__img>.vk-sprite{width:100%;height:100%;object-fit:cover}
+    .quick-card__body{display:grid!important;grid-template-columns:1fr auto;grid-template-areas:'small small' 'title arrow' 'price arrow';align-items:center;column-gap:8px;row-gap:2px;padding:11px 13px 12px!important}
+    .quick-card__body small{grid-area:small;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#9b9693}
+    .quick-card__body b{grid-area:title;display:block;font-size:15px!important;line-height:1.15;color:#171717!important}
+    .quick-card__body span{grid-area:price;display:block;margin:2px 0 0!important;font-size:11px!important;font-weight:850;color:var(--red)!important}
+    .quick-card__body em{grid-area:arrow;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font-style:normal;font-size:16px;font-weight:900}
+    .catalog-first{padding-top:0!important;clear:both}
+    .cart-item__media{width:68px;height:68px;border-radius:12px;overflow:hidden;display:block;flex:none;background:var(--soft)}
+    .cart-item__media>img,.cart-item__media>.vk-sprite{width:100%;height:100%;object-fit:cover}
+    @media(max-width:700px){
+      .quick-menu{padding-top:10px;margin-bottom:22px}
+      .quick-menu__grid{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+      .quick-card{border-radius:15px!important;box-shadow:0 6px 18px rgba(25,18,16,.055)}
+      .quick-card__img{aspect-ratio:1.12/1}
+      .quick-card__body{padding:7px 8px 8px!important;column-gap:4px}
+      .quick-card__body small{display:none}
+      .quick-card__body b{font-size:11.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .quick-card__body span{font-size:10px!important}
+      .quick-card__body em{width:21px;height:21px;font-size:12px}
+      .catalog-first{padding-top:0!important}
+    }
+
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 </head>
@@ -533,6 +568,54 @@
       {id:'soy-ginger-wasabi',cat:'sauces',name:'Соевый / Имбирь / Васаби',price:20,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL',desc:'Цена за 1 шт.',hit:false}
     ];
 
+
+    // Current public VK catalog snapshot, 15.09.2026.
+    // Product photos below come from the VK export supplied by the client.
+    var vkCatalog = {
+      'set-kalifornia':{row:0,col:0,price:1800,old:1900},
+      'set-filadelfia':{row:0,col:1,price:1390,old:1450},
+      'tom-yam':{row:0,col:2,price:510,old:580},
+      'fila-ugor':{row:0,col:3,price:420,old:450},
+      'super-set':{row:0,col:4,price:2590,old:2700},
+      'fila-smoked':{row:0,col:5,price:420,old:450},
+      'kani':{row:1,col:0,price:420,old:null},
+      'tyahan-sea':{row:1,col:1,price:430,old:520},
+      'tyahan-chicken':{row:1,col:2,price:410,old:null},
+      'wok-sea':{row:1,col:3,price:430,old:null},
+      'wok-chicken':{row:1,col:4,price:410,old:null},
+      'baked-rolls':{row:1,col:5,price:470,old:null},
+      'baked-rice':{row:2,col:0,price:300,old:360},
+      'baked-mussels':{row:2,col:1,price:280,old:350},
+      'mega-set':{row:2,col:2,price:3200,old:3500},
+      'hit-set':{row:2,col:3,price:1700,old:1900},
+      'set-tyapnica':{row:2,col:4,price:2210,old:2500},
+      'set-tanuki':{row:2,col:5,price:1350,old:1500},
+      'set-inari':{row:3,col:0,price:1340,old:null},
+      'maki-set':{row:3,col:1,price:1265,old:null},
+      'set-divichnik':{row:3,col:2,price:1650,old:null},
+      'filadelfia':{row:3,col:3,price:420,old:480},
+      'kalifornia':{row:3,col:4,price:420,old:460},
+      'red-dragon':{row:3,col:5,price:420,old:450}
+    };
+    products.forEach(function(p){
+      var v=vkCatalog[p.id];
+      if(!v) return;
+      p.price=v.price;
+      p.old=v.old;
+      p.vkRow=v.row;
+      p.vkCol=v.col;
+    });
+
+    function vkPosition(col){
+      return ['0%','20%','40%','60%','80%','100%'][col] || '0%';
+    }
+    function productMedia(p){
+      if(typeof p.vkRow==='number'){
+        return '<span class="vk-sprite vk-sprite--'+p.vkRow+'" style="background-position:'+vkPosition(p.vkCol)+' 50%" role="img" aria-label="'+p.name+'"></span>';
+      }
+      return '<img src="'+p.img+'" alt="'+p.name+'" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'image-missing\')">';
+    }
+
     var upsells = [
       {id:'u-soy',name:'Соевый соус',price:20,img:'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL'},
       {id:'u-ginger',name:'Имбирь',price:20,img:'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL'},
@@ -548,7 +631,7 @@
       if(p.old) badges += '<span class="badge badge--sale">-' + Math.max(1,Math.round((1-p.price/p.old)*100)) + '%</span>';
       var old = p.old ? '<s>' + money(p.old) + '</s>' : '';
       return '<article class="product-card">' +
-        '<div class="product-card__visual"><div class="product-badges">' + badges + '</div><img src="' + p.img + '" alt="' + p.name + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'image-missing\')"></div>' +
+        '<div class="product-card__visual"><div class="product-badges">' + badges + '</div>' + productMedia(p) + '</div>' +
         '<div class="product-card__body"><h3>' + p.name + '</h3><p>' + p.desc + '</p>' +
         '<div class="product-card__footer"><div class="price"><strong>' + money(p.price) + '</strong>' + old + '</div><button class="add" type="button" data-add="' + p.id + '">В корзину</button></div></div>' +
         '</article>';
@@ -563,13 +646,13 @@
       var hits = products.filter(function(p){return p.hit;}).slice(0,8);
       document.getElementById('hitsGrid').innerHTML = hits.map(card).join('');
       var quickItems = [
-        {label:'Роллы',target:'rolls',product:products.find(function(p){return p.cat==='rolls' && p.hit;}) || products.find(function(p){return p.cat==='rolls';})},
+        {label:'Роллы',target:'rolls',product:products.find(function(p){return p.id==='filadelfia';}) || products.find(function(p){return p.cat==='rolls';})},
         {label:'Пицца',target:'pizza',product:products.find(function(p){return p.id==='pizza-pepperoni';}) || products.find(function(p){return p.cat==='pizza';})},
-        {label:'Хит-меню',target:'hits',product:products.find(function(p){return p.id==='set-kalifornia';}) || hits[0]}
+        {label:'Хит-меню',target:'hits',product:products.find(function(p){return p.id==='hit-set';}) || hits[0]}
       ];
       document.getElementById('quickGrid').innerHTML = quickItems.map(function(x){
         var p=x.product;
-        return '<button class="quick-card" type="button" data-quick-jump="'+x.target+'"><span class="quick-card__img"><img src="'+p.img+'" alt="'+x.label+'" loading="eager" decoding="async" referrerpolicy="no-referrer"></span><span class="quick-card__body"><b>'+x.label+'</b><span>от '+money(p.price)+'</span></span></button>';
+        return '<button class="quick-card" type="button" data-quick-jump="'+x.target+'"><span class="quick-card__img">'+productMedia(p)+'</span><span class="quick-card__body"><small>Быстрый выбор</small><b>'+x.label+'</b><span>от '+money(p.price)+'</span><em aria-hidden="true">→</em></span></button>';
       }).join('');
       renderCategory('sets','setsGrid');
       renderCategory('rolls','rollsGrid');
@@ -603,7 +686,7 @@
       var p = products.find(function(x){return x.id===id;});
       if(!p) return;
       var existing = cart.find(function(x){return x.id===id;});
-      if(existing){existing.qty+=1;}else{cart.push({id:p.id,name:p.name,price:p.price,img:p.img,qty:1});}
+      if(existing){existing.qty+=1;}else{cart.push({id:p.id,name:p.name,price:p.price,img:p.img,vkRow:p.vkRow,vkCol:p.vkCol,qty:1});}
       renderCart();
     }
 
@@ -635,7 +718,7 @@
       var list = document.getElementById('cartList');
       empty.style.display = cart.length ? 'none' : 'block';
       list.innerHTML = cart.map(function(item){
-        return '<article class="cart-item"><img src="' + item.img + '" alt=""><div><h4>' + item.name + '</h4><small>' + money(item.price) + '</small>' +
+        return '<article class="cart-item"><span class="cart-item__media">' + productMedia(item) + '</span><div><h4>' + item.name + '</h4><small>' + money(item.price) + '</small>' +
           '<div class="qty"><button type="button" data-minus="' + item.id + '">−</button><span>' + item.qty + '</span><button type="button" data-plus="' + item.id + '">+</button></div></div>' +
           '<button class="remove" type="button" data-remove="' + item.id + '">Удалить</button></article>';
       }).join('');
