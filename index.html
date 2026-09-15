@@ -34,8 +34,8 @@
     .topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(18px);border-bottom:1px solid rgba(0,0,0,.055)}
     .topbar__inner{min-height:74px;display:flex;align-items:center;gap:24px}
     .brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;flex:none}
-    .brand__mark{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:var(--red);color:#fff;font-weight:900;font-size:22px;transform:rotate(-4deg)}
-    .brand__text{font-size:20px;letter-spacing:-.04em}.brand__text b{font-weight:900}.brand__text span{font-weight:500;margin-left:4px}
+    .brand__mark{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#ef3a34,#c71d1d);color:#fff;font-weight:1000;font-size:24px;transform:rotate(-4deg);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+    .brand__text{font-size:20px;letter-spacing:-.055em}.brand__text b{font-weight:1000}.brand__text span{font-weight:700;margin-left:4px}
     .delivery-copy{display:flex;flex-direction:column;line-height:1.15}
     .delivery-copy strong{font-size:14px}.delivery-copy span{font-size:12px;color:var(--muted);margin-top:4px}
     .header-actions{margin-left:auto;display:flex;align-items:center;gap:12px}
@@ -47,12 +47,21 @@
     .category-nav__scroll::-webkit-scrollbar{display:none}
     .category-nav a{color:#545454;text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap;padding:9px 12px;border-radius:999px}
     .category-nav a:hover,.category-nav a.active{background:var(--red);color:#fff}
-    .intro{padding-top:30px}
-    .intro__row{display:flex;align-items:flex-end;justify-content:space-between;gap:30px}
-    .intro h1{font-size:clamp(34px,5vw,58px);line-height:.95;letter-spacing:-.06em;margin:0;max-width:750px}
-    .intro p{margin:0;max-width:420px;color:var(--muted);line-height:1.5}
-    .mini-info{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
-    .mini-pill{display:inline-flex;align-items:center;padding:9px 12px;border-radius:999px;background:var(--soft);font-size:12px;font-weight:800;color:#484848}
+    .brand-hero{padding-top:24px}
+    .brand-hero__card{position:relative;min-height:350px;border:1px solid #ece7e5;border-radius:30px;overflow:hidden;background:#fafafa;box-shadow:0 18px 48px rgba(0,0,0,.07);isolation:isolate}
+    .brand-hero__card:before{content:'';position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.92) 43%,rgba(255,255,255,.18) 68%,rgba(255,255,255,.06) 100%),url('https://sun9-12.vkuserphoto.ru/impf/u4yfduc0I_ceSvP59TCV1st_2x0Rwot4fiASRw/s1WTPCaLw_k.jpg?size=1920x768&quality=95&crop=31,12,1579,632&sign=1e3926f8ebd1b62f6c35d5982f791a9e&c_uniq_tag=XhGPBmD0AMw41SV8CfQF33NYIHoDaA6btGQ87r0wWf8&type=cover_group');background-size:cover;background-position:center;z-index:-2}
+    .brand-hero__card:after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 11% 26%,rgba(217,37,37,.06),transparent 24%),radial-gradient(circle at 88% 76%,rgba(217,37,37,.05),transparent 20%);z-index:-1;pointer-events:none}
+    .brand-hero__content{width:min(610px,58%);padding:34px 38px 32px;display:flex;flex-direction:column;align-items:flex-start}
+    .brand-kicker{display:inline-flex;align-items:center;gap:8px;color:var(--red);font-size:12px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+    .brand-kicker:before{content:'';width:30px;height:3px;background:var(--red);border-radius:999px}
+    .brand-hero h1{font-size:clamp(36px,4.7vw,60px);line-height:.94;letter-spacing:-.065em;margin:0;max-width:650px}
+    .brand-hero__lead{margin:16px 0 0;max-width:520px;color:#5f5f5f;line-height:1.52;font-size:15px}
+    .brand-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+    .brand-primary,.brand-secondary{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:14px;font-weight:900;padding:13px 16px}
+    .brand-primary{background:var(--red);color:#fff;box-shadow:0 12px 26px rgba(217,37,37,.2)}
+    .brand-secondary{background:#fff;color:#171717;border:1px solid #e7e2df}
+    .mini-info{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+    .mini-pill{display:inline-flex;align-items:center;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid #ece7e5;font-size:11px;font-weight:850;color:#454545}
     .section{padding-top:68px}
     .section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:22px}
     .section-heading h2{font-size:36px;line-height:1;letter-spacing:-.045em;margin:0}
@@ -137,7 +146,8 @@
       :root{--shell:min(100% - 28px,1240px)}
       html{scroll-padding-top:116px}
       .topbar__inner{min-height:64px}.delivery-copy,.phone{display:none}.category-nav{top:64px}.category-nav__scroll{min-height:50px}
-      .intro{padding-top:22px}.intro__row{flex-direction:column;align-items:flex-start;gap:14px}.intro h1{font-size:39px}
+      .brand__mark{width:40px;height:40px;font-size:22px}.brand__text{font-size:19px}
+      .brand-hero{padding-top:14px}.brand-hero__card{min-height:410px;border-radius:24px}.brand-hero__card:before{background-image:linear-gradient(180deg,rgba(255,255,255,.20) 0%,rgba(255,255,255,.55) 46%,rgba(255,255,255,.98) 72%,rgba(255,255,255,1) 100%),url('https://sun9-12.vkuserphoto.ru/impf/u4yfduc0I_ceSvP59TCV1st_2x0Rwot4fiASRw/s1WTPCaLw_k.jpg?size=1920x768&quality=95&crop=31,12,1579,632&sign=1e3926f8ebd1b62f6c35d5982f791a9e&c_uniq_tag=XhGPBmD0AMw41SV8CfQF33NYIHoDaA6btGQ87r0wWf8&type=cover_group');background-position:center top}.brand-hero__content{width:100%;min-height:410px;justify-content:flex-end;padding:180px 22px 22px}.brand-kicker{font-size:10px;margin-bottom:9px}.brand-hero h1{font-size:36px;line-height:.98}.brand-hero__lead{font-size:13px;margin-top:11px;max-width:100%}.brand-actions{width:100%;margin-top:15px}.brand-primary,.brand-secondary{flex:1;padding:12px 13px}.mini-info{margin-top:12px}.mini-pill{font-size:10px;padding:7px 9px}
       .section{padding-top:52px}.section-heading{flex-direction:column;align-items:flex-start;gap:8px}.section-heading h2{font-size:30px}
       .product-grid{grid-template-columns:1fr 1fr;gap:14px 10px}.product-card__visual{border-radius:19px;aspect-ratio:1.12/1}.product-card h3{font-size:16px}.product-card p{font-size:11px;min-height:46px}.product-card__footer{flex-direction:column;align-items:flex-start}.add{width:100%}
       .highlight-grid{display:flex;overflow:auto;margin-right:-14px;padding-right:14px;scrollbar-width:none}.highlight-card{min-width:260px}
@@ -186,15 +196,21 @@
   </nav>
 
   <main id="top">
-    <section class="shell intro">
-      <div class="intro__row">
-        <h1>Роллы, пицца и WOK с доставкой по Симферополю</h1>
-        <p>Выбирайте блюда, добавляйте в корзину и оформляйте заказ без регистрации. Оператор перезвонит и подтвердит детали доставки.</p>
-      </div>
-      <div class="mini-info">
-        <span class="mini-pill">Самовывоз: Кечкеметская, 1</span>
-        <span class="mini-pill">Оплата при получении</span>
-        <span class="mini-pill">Стоимость доставки уточнит оператор</span>
+    <section class="shell brand-hero">
+      <div class="brand-hero__card">
+        <div class="brand-hero__content">
+          <span class="brand-kicker">Rolls Bar · Симферополь</span>
+          <h1>Роллы, пицца и WOK с доставкой</h1>
+          <p class="brand-hero__lead">Готовим каждый день. Выбирайте блюда в меню, оформляйте заказ без регистрации, а оператор подтвердит детали доставки.</p>
+          <div class="brand-actions">
+            <a class="brand-primary" href="#hits">Смотреть меню</a>
+            <a class="brand-secondary" href="tel:+79786882288">+7 978 688-22-88</a>
+          </div>
+          <div class="mini-info">
+            <span class="mini-pill">Кечкеметская, 1 · ТЦ «Крым»</span>
+            <span class="mini-pill">Оплата при получении</span>
+          </div>
+        </div>
       </div>
     </section>
 
