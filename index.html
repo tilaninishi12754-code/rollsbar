@@ -153,15 +153,15 @@
     .category-nav{top:74px}
     .category-nav__scroll{gap:6px}
     .category-nav a{font-size:13px;padding:10px 13px}
-    .quick-menu{padding-top:16px}
-    .quick-menu__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    .quick-card{border:0;background:#fff;padding:0;text-align:left;min-width:0;cursor:pointer}
-    .quick-card__img{aspect-ratio:1/1;overflow:hidden;border-radius:20px;background:var(--soft)}
+    .quick-menu{padding-top:16px;padding-bottom:12px}
+    .quick-menu__grid{display:grid;grid-template-columns:repeat(3,minmax(0,240px));gap:16px;justify-content:start}
+    .quick-card{border:0;background:#fff;padding:0;text-align:left;min-width:0;cursor:pointer;color:var(--text);font:inherit;appearance:none;-webkit-appearance:none}
+    .quick-card__img{aspect-ratio:1.22/1;overflow:hidden;border-radius:20px;background:var(--soft)}
     .quick-card__img img{width:100%;height:100%;object-fit:cover}
     .quick-card__body{padding:9px 2px 0}
-    .quick-card__body b{display:block;font-size:14px;line-height:1.1;letter-spacing:-.02em}
+    .quick-card__body b{display:block;font-size:14px;line-height:1.1;letter-spacing:-.02em;color:var(--text)}
     .quick-card__body span{display:block;margin-top:5px;font-size:12px;font-weight:850;color:var(--red)}
-    .catalog-first{padding-top:34px}
+    .catalog-first{padding-top:20px}
     .section-heading{margin-bottom:16px}
     .section-heading p{display:none!important}
     .empty-category__note{padding:16px;border:1px solid var(--line);border-radius:16px;color:var(--muted);font-size:13px;background:var(--soft)}
@@ -194,13 +194,13 @@
       .category-nav{top:68px}
       .category-nav__scroll{padding:7px 0;min-height:48px}
       .category-nav a{font-size:12px;padding:9px 11px}
-      .quick-menu{padding-top:12px}
-      .quick-menu__grid{gap:8px}
-      .quick-card__img{border-radius:16px}
+      .quick-menu{padding-top:10px;padding-bottom:2px}
+      .quick-menu__grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+      .quick-card__img{border-radius:16px;aspect-ratio:1.16/1}
       .quick-card__body{padding-top:7px}
-      .quick-card__body b{font-size:12px}
+      .quick-card__body b{font-size:12px;white-space:nowrap}
       .quick-card__body span{font-size:11px}
-      .catalog-first{padding-top:28px}
+      .catalog-first{padding-top:18px}
       .section{padding-top:40px}
       .section-heading{margin-bottom:14px}
       .section-heading h2{font-size:30px}
