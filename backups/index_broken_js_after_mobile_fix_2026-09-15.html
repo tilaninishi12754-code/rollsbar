@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Rolls Bar — доставка роллов и пиццы в Симферополе</title>
+  <meta name="description" content="Rolls Bar в Симферополе: роллы, сеты, пицца, WOK, закуски. Доставка и самовывоз с Кечкеметской, 1.">
+  <style>
+    :root{
+      --bg:#fff;
+      --text:#171717;
+      --muted:#747474;
+      --line:#ececec;
+      --soft:#f6f6f6;
+      --soft-red:#fff1f0;
+      --red:#d92525;
+      --red-dark:#ac1717;
+      --green:#248b57;
+      --shadow:0 14px 36px rgba(0,0,0,.07);
+      --radius-xl:30px;
+      --radius-lg:24px;
+      --radius-md:16px;
+      --shell:min(1240px,calc(100% - 40px));
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;scroll-padding-top:136px}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+    button,a,input,textarea{font:inherit}
+    button{cursor:pointer}
+    img{display:block;max-width:100%}
+    a{color:inherit}
+    .shell{width:var(--shell);margin:0 auto}
+    .topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(18px);border-bottom:1px solid rgba(0,0,0,.055)}
+    .topbar__inner{min-height:74px;display:flex;align-items:center;gap:24px}
+    .brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;flex:none}
+    .brand__mark{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:var(--red);color:#fff;font-weight:900;font-size:22px;transform:rotate(-4deg)}
+    .brand__text{font-size:20px;letter-spacing:-.04em}.brand__text b{font-weight:900}.brand__text span{font-weight:500;margin-left:4px}
+    .delivery-copy{display:flex;flex-direction:column;line-height:1.15}
+    .delivery-copy strong{font-size:14px}.delivery-copy span{font-size:12px;color:var(--muted);margin-top:4px}
+    .header-actions{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .phone{font-size:14px;font-weight:800;text-decoration:none;padding:11px 14px;border-radius:13px;background:var(--soft)}
+    .cart-button,.mobile-cart{border:0;background:var(--red);color:#fff;border-radius:14px;font-weight:900;padding:13px 17px}
+    .cart-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:rgba(255,255,255,.18);margin-left:6px}
+    .category-nav{position:sticky;top:74px;z-index:45;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+    .category-nav__scroll{min-height:54px;display:flex;align-items:center;gap:10px;overflow:auto;scrollbar-width:none;padding:8px 0}
+    .category-nav__scroll::-webkit-scrollbar{display:none}
+    .category-nav a{color:#545454;text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap;padding:9px 12px;border-radius:999px}
+    .category-nav a:hover,.category-nav a.active{background:var(--red);color:#fff}
+    .intro{padding-top:30px}
+    .intro__row{display:flex;align-items:flex-end;justify-content:space-between;gap:30px}
+    .intro h1{font-size:clamp(34px,5vw,58px);line-height:.95;letter-spacing:-.06em;margin:0;max-width:750px}
+    .intro p{margin:0;max-width:420px;color:var(--muted);line-height:1.5}
+    .mini-info{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
+    .mini-pill{display:inline-flex;align-items:center;padding:9px 12px;border-radius:999px;background:var(--soft);font-size:12px;font-weight:800;color:#484848}
+    .section{padding-top:68px}
+    .section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:22px}
+    .section-heading h2{font-size:36px;line-height:1;letter-spacing:-.045em;margin:0}
+    .section-heading p{margin:0;color:var(--muted);max-width:520px;line-height:1.5;font-size:14px}
+    .product-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+    .product-card{display:flex;flex-direction:column;min-width:0}
+    .product-card__visual{position:relative;background:var(--soft);border-radius:var(--radius-lg);aspect-ratio:1/1;overflow:hidden}
+    .product-card__visual img{width:100%;height:100%;object-fit:cover;transition:.35s transform}.product-card__visual.image-missing{display:grid;place-items:center;background:#f4f4f4}.product-card__visual.image-missing:after{content:'ROLLS BAR';font-weight:900;color:#c9c9c9;font-size:18px}
+    .product-card:hover .product-card__visual img{transform:scale(1.025)}
+    .product-badges{position:absolute;left:10px;top:10px;display:flex;gap:7px;flex-wrap:wrap;z-index:2}
+    .badge{display:inline-flex;background:rgba(255,255,255,.94);color:#222;padding:6px 9px;border-radius:999px;font-size:10px;font-weight:900;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    .badge--sale{background:#fff0ef;color:var(--red)}
+    .product-card__body{display:flex;flex-direction:column;flex:1;padding:14px 4px 2px}
+    .product-card h3{font-size:18px;line-height:1.12;letter-spacing:-.03em;margin:0 0 7px}
+    .product-card p{color:var(--muted);font-size:12.5px;line-height:1.45;margin:0 0 14px;min-height:36px}
+    .product-card__footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto}
+    .price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+    .price strong{font-size:19px}.price s{font-size:12px;color:#999}
+    .add{border:0;border-radius:13px;background:var(--soft-red);color:var(--red);font-weight:900;padding:10px 13px;transition:.2s}
+    .add:hover{background:var(--red);color:#fff;transform:translateY(-1px)}
+    .highlight-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .highlight-card{border:1px solid var(--line);border-radius:20px;padding:8px;background:#fff;display:grid;grid-template-columns:74px 1fr;gap:11px;align-items:center;cursor:pointer;transition:.2s}
+    .highlight-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+    .highlight-card img{width:74px;height:74px;object-fit:cover;border-radius:14px}
+    .highlight-card b{display:block;font-size:14px;line-height:1.15}.highlight-card span{display:block;color:var(--muted);font-size:12px;margin-top:5px}.highlight-card em{font-style:normal;color:var(--red);font-weight:900;font-size:13px;display:block;margin-top:6px}
+    .delivery-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    .delivery-card,.conditions-card,.simple-card{border:1px solid var(--line);border-radius:var(--radius-xl);background:#fff;box-shadow:var(--shadow);overflow:hidden}
+    .delivery-card__head{padding:26px 28px 18px}.delivery-card__head h2{font-size:34px;letter-spacing:-.045em;margin:6px 0 9px}.delivery-card__head p{margin:0;color:var(--muted);line-height:1.5}
+    #delivery-map{height:420px;width:100%}
+    .map-note{padding:13px 18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+    .conditions-card{padding:26px}
+    .conditions-card h3{margin:0 0 14px;font-size:24px;letter-spacing:-.035em}
+    .condition{padding:14px 0;border-top:1px solid var(--line)}
+    .condition:first-of-type{border-top:0}.condition b{display:block;margin-bottom:5px}.condition span{color:var(--muted);font-size:13px}
+    .notice{margin-top:16px;padding:15px 16px;border-radius:16px;background:#fff3ef;color:#5c3532;font-size:13px;line-height:1.45}
+    .content-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .simple-card{padding:25px}.simple-card h3{margin:0 0 10px;font-size:23px;letter-spacing:-.035em}.simple-card p{margin:0;color:var(--muted);line-height:1.5}
+    .footer{margin-top:76px;background:#171717;color:#fff;padding:34px 0 100px}
+    .footer .shell{display:flex;align-items:flex-start;justify-content:space-between;gap:30px}
+    .footer p{color:#9d9d9d;max-width:650px;font-size:12px;line-height:1.5}
+    .footer-links{display:flex;gap:8px;flex-wrap:wrap}.footer-links a{text-decoration:none;background:#282828;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:800}
+    .cart-drawer,.checkout-modal{position:fixed;inset:0;z-index:100;display:none}
+    .cart-drawer.open,.checkout-modal.open{display:block}
+    .backdrop{position:absolute;inset:0;border:0;background:rgba(0,0,0,.46);backdrop-filter:blur(4px)}
+    .cart-drawer__panel{position:absolute;right:0;top:0;height:100%;width:min(470px,100%);background:#fff;display:flex;flex-direction:column;box-shadow:-20px 0 70px rgba(0,0,0,.2)}
+    .drawer-head{padding:22px 20px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+    .drawer-head h2{margin:0;font-size:28px;letter-spacing:-.04em}
+    .close{border:0;background:var(--soft);width:38px;height:38px;border-radius:50%;font-size:24px}
+    .drawer-body{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:18px}
+    .cart-empty{padding:34px 22px;text-align:center;background:var(--soft);border-radius:18px;color:var(--muted)}
+    .cart-list{display:flex;flex-direction:column;gap:10px}
+    .cart-item{display:grid;grid-template-columns:64px 1fr auto;gap:11px;align-items:center;border:1px solid var(--line);padding:9px;border-radius:17px}
+    .cart-item img{width:64px;height:64px;border-radius:12px;object-fit:cover}
+    .cart-item h4{font-size:13px;margin:0 0 5px;line-height:1.2}.cart-item small{color:var(--muted)}
+    .qty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:7px}
+    .qty button{width:30px;height:30px;border:0;background:#fff}.qty span{width:30px;text-align:center;font-size:12px;font-weight:800}
+    .remove{border:0;background:transparent;color:#a34a45;font-size:12px}
+    .upsell h3,.cart-summary h3{margin:0 0 12px;font-size:16px}
+    .upsell-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .upsell-card{padding:12px;border:1px solid var(--line);border-radius:15px;background:#fff}
+    .upsell-card b{font-size:13px;display:block}.upsell-card span{font-size:12px;color:var(--muted);display:block;margin:4px 0 9px}
+    .upsell-card button{border:0;width:100%;background:var(--soft);color:var(--red);border-radius:10px;padding:9px;font-weight:900;font-size:12px}
+    .cart-summary{padding:16px;background:var(--soft);border-radius:18px}
+    .mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+    .mode-switch button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px;font-weight:900}
+    .mode-switch button.active{background:var(--red);border-color:var(--red);color:#fff}
+    .total-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;margin-top:9px}.total-row--main{font-size:17px;font-weight:900;padding-top:10px;border-top:1px solid #ddd}
+    .drawer-foot{padding:16px;border-top:1px solid var(--line)}
+    .wide{width:100%;border:0;border-radius:14px;background:var(--red);color:#fff;font-weight:900;padding:15px}
+    .helper{font-size:11px;color:var(--muted);margin-top:9px;line-height:1.4}
+    .checkout-panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(1040px,calc(100% - 24px));max-height:92vh;overflow:auto;background:#fff;border-radius:28px;padding:22px;box-shadow:0 40px 120px rgba(0,0,0,.32)}
+    .checkout-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.checkout-head h2{margin:0;font-size:30px;letter-spacing:-.045em}
+    .checkout-grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+    .checkout-form{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+    .checkout-form input,.checkout-form textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:14px 15px;outline:none}
+    .checkout-form textarea{grid-column:1/-1;min-height:120px;resize:vertical}
+    .checkout-summary{padding:17px;background:var(--soft);border-radius:19px}.checkout-summary h3{margin:0 0 12px}.checkout-summary ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;font-size:12px}.checkout-summary li{display:flex;justify-content:space-between;gap:10px}
+    .success{display:none;margin-top:12px;padding:14px;border-radius:15px;background:#eef9f2;color:#28533a;border:1px solid #d2eadb;font-size:13px}.success.show{display:block}.success strong{font-size:19px;display:block;margin-bottom:5px}
+    .mobile-cart[hidden]{display:none!important}.mobile-cart{display:none;position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:55;box-shadow:0 12px 35px rgba(217,37,37,.28)}
+    @media(max-width:1050px){.product-grid{grid-template-columns:repeat(3,1fr)}.highlight-grid{grid-template-columns:1fr 1fr}.delivery-layout{grid-template-columns:1fr}.content-grid{grid-template-columns:1fr}.checkout-grid{grid-template-columns:1fr}}
+    @media(max-width:700px){
+      :root{--shell:min(100% - 28px,1240px)}
+      html{scroll-padding-top:116px}
+      .topbar__inner{min-height:64px}.delivery-copy,.phone{display:none}.category-nav{top:64px}.category-nav__scroll{min-height:50px}
+      .intro{padding-top:22px}.intro__row{flex-direction:column;align-items:flex-start;gap:14px}.intro h1{font-size:39px}
+      .section{padding-top:52px}.section-heading{flex-direction:column;align-items:flex-start;gap:8px}.section-heading h2{font-size:30px}
+      .product-grid{grid-template-columns:1fr 1fr;gap:14px 10px}.product-card__visual{border-radius:19px;aspect-ratio:1.12/1}.product-card h3{font-size:16px}.product-card p{font-size:11px;min-height:46px}.product-card__footer{flex-direction:column;align-items:flex-start}.add{width:100%}
+      .highlight-grid{display:flex;overflow:auto;margin-right:-14px;padding-right:14px;scrollbar-width:none}.highlight-card{min-width:260px}
+      #delivery-map{height:350px}.footer .shell{flex-direction:column}
+      .cart-button{display:none}.mobile-cart{display:block}
+      .checkout-panel{top:auto;bottom:0;transform:translateX(-50%);border-radius:25px 25px 0 0;max-height:92vh}.checkout-form{grid-template-columns:1fr}.checkout-form textarea{grid-column:1}
+    }
+    @media(max-width:470px){.upsell-grid{grid-template-columns:1fr}}
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner shell">
+      <a class="brand" href="#top" aria-label="Rolls Bar">
+        <span class="brand__mark">R</span>
+        <span class="brand__text"><b>ROLLS</b><span>BAR</span></span>
+      </a>
+      <div class="delivery-copy">
+        <strong>Доставка по Симферополю</strong>
+        <span>Кечкеметская, 1 · самовывоз и доставка</span>
+      </div>
+      <div class="header-actions">
+        <a class="phone" href="tel:+79786882288">+7 978 688-22-88</a>
+        <button class="cart-button" type="button" data-cart-open>Корзина <span class="cart-count">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="category-nav" aria-label="Категории меню">
+    <div class="shell category-nav__scroll">
+      <a class="active" href="#hits">Хит-меню</a>
+      <a href="#sets">Сеты</a>
+      <a href="#rolls">Роллы</a>
+      <a href="#hot">Горячее</a>
+      <a href="#wok">WOK и рис</a>
+      <a href="#soups">Супы</a>
+      <a href="#pizza">Пицца</a>
+      <a href="#snacks">Закуски</a>
+      <a href="#combo">Комбо</a>
+      <a href="#desserts">Десерты</a>
+      <a href="#sauces">Соусы</a>
+      <a href="#delivery">Доставка и оплата</a>
+      <a href="#contacts">Контакты</a>
+    </div>
+  </nav>
+
+  <main id="top">
+    <section class="shell intro">
+      <div class="intro__row">
+        <h1>Роллы, пицца и WOK с доставкой по Симферополю</h1>
+        <p>Выбирайте блюда, добавляйте в корзину и оформляйте заказ без регистрации. Оператор перезвонит и подтвердит детали доставки.</p>
+      </div>
+      <div class="mini-info">
+        <span class="mini-pill">Самовывоз: Кечкеметская, 1</span>
+        <span class="mini-pill">Оплата при получении</span>
+        <span class="mini-pill">Стоимость доставки уточнит оператор</span>
+      </div>
+    </section>
+
+    <section class="section shell" id="hits">
+      <div class="section-heading">
+        <h2>Хит-меню</h2>
+        <p>Популярные позиции, с которых удобно начать заказ.</p>
+      </div>
+      <div class="highlight-grid" id="hitsGrid"></div>
+    </section>
+
+    <section class="section shell" id="sets">
+      <div class="section-heading"><h2>Сеты</h2><p>Большие и компактные наборы для компании, семьи или вечера вдвоём.</p></div>
+      <div class="product-grid" id="setsGrid"></div>
+    </section>
+
+    <section class="section shell" id="rolls">
+      <div class="section-heading"><h2>Роллы</h2><p>Классические и фирменные позиции.</p></div>
+      <div class="product-grid" id="rollsGrid"></div>
+    </section>
+
+    <section class="section shell" id="hot">
+      <div class="section-heading"><h2>Горячее</h2><p>Запечённые роллы, мидии и горячие закуски.</p></div>
+      <div class="product-grid" id="hotGrid"></div>
+    </section>
+
+    <section class="section shell" id="wok">
+      <div class="section-heading"><h2>WOK и рис</h2><p>Лапша и тяхан с курицей или морепродуктами.</p></div>
+      <div class="product-grid" id="wokGrid"></div>
+    </section>
+
+    <section class="section shell" id="soups">
+      <div class="section-heading"><h2>Супы</h2><p>Горячие супы для полноценного заказа.</p></div>
+      <div class="product-grid" id="soupsGrid"></div>
+    </section>
+
+    <section class="section shell" id="pizza">
+      <div class="section-heading"><h2>Пицца</h2><p>Большие пиццы 50 см с разными начинками.</p></div>
+      <div class="product-grid" id="pizzaGrid"></div>
+    </section>
+
+    <section class="section shell" id="snacks">
+      <div class="section-heading"><h2>Закуски</h2><p>То, что удобно добавить к роллам, сетам или пицце.</p></div>
+      <div class="product-grid" id="snacksGrid"></div>
+    </section>
+
+    <section class="section shell" id="combo">
+      <div class="section-heading"><h2>Комбо</h2><p>Готовые наборы с пиццей, закусками и напитками.</p></div>
+      <div class="product-grid" id="comboGrid"></div>
+    </section>
+
+    <section class="section shell" id="desserts">
+      <div class="section-heading"><h2>Десерты</h2><p>Сладкое к заказу.</p></div>
+      <div class="product-grid" id="dessertsGrid"></div>
+    </section>
+
+    <section class="section shell" id="sauces">
+      <div class="section-heading"><h2>Соусы и дополнения</h2><p>Имбирь, васаби и соевый соус можно добавить в корзину в один клик.</p></div>
+      <div class="product-grid" id="saucesGrid"></div>
+    </section>
+
+    <section class="section shell" id="delivery">
+      <div class="delivery-layout">
+        <article class="delivery-card">
+          <div class="delivery-card__head">
+            <span class="badge badge--sale">Доставка</span>
+            <h2>Зоны доставки</h2>
+            <p>На карте показана структура из трёх зон. Финальные границы и тарифы будут установлены после согласования.</p>
+          </div>
+          <div id="delivery-map" aria-label="Карта зон доставки Rolls Bar"></div>
+          <div class="map-note">Демонстрационные границы зон. Точная стоимость и условия доставки подтверждаются оператором.</div>
+        </article>
+        <aside class="conditions-card">
+          <h3>Доставка и оплата</h3>
+          <div class="condition"><b>Доставка курьером</b><span>Стоимость и условия уточнит оператор при подтверждении заказа.</span></div>
+          <div class="condition"><b>Самовывоз</b><span>Кечкеметская улица, 1. Скидка за самовывоз предусмотрена и будет настроена по согласованным условиям.</span></div>
+          <div class="condition"><b>Оплата</b><span>На старте — при получении заказа. Онлайн-оплата будет подключаться отдельно при необходимости.</span></div>
+          <div class="notice">Уважаемые клиенты, в связи с возможными сбоями связи, пожалуйста, будьте готовы оплатить заказ наличными при получении.</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section shell" id="contacts">
+      <div class="section-heading"><h2>Контакты</h2><p>Заказ можно оформить на сайте или уточнить детали по телефону.</p></div>
+      <div class="content-grid">
+        <article class="simple-card"><h3>Rolls Bar</h3><p>Симферополь, Кечкеметская улица, 1.</p></article>
+        <article class="simple-card"><h3>Телефон</h3><p><a href="tel:+79786882288">+7 978 688-22-88</a><br><a href="tel:+79786990399">+7 978 699-03-99</a></p></article>
+        <article class="simple-card"><h3>Соцсети</h3><p><a href="https://vk.ru/rollsbar82" target="_blank" rel="noreferrer">VK Rolls Bar</a><br><a href="https://telegram.me/rollsbar82" target="_blank" rel="noreferrer">Telegram</a></p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell">
+      <div>
+        <a class="brand" href="#top" style="color:#fff">
+          <span class="brand__mark" style="background:#fff;color:#171717">R</span>
+          <span class="brand__text"><b>ROLLS</b><span>BAR</span></span>
+        </a>
+        <p>Доставка роллов, сетов, пиццы и WOK по Симферополю. Заказ оформляется без регистрации, детали подтверждает оператор.</p>
+      </div>
+      <div class="footer-links"><a href="#sets">Меню</a><a href="#delivery">Доставка и оплата</a><a href="#contacts">Контакты</a></div>
+    </div>
+  </footer>
+
+  <button class="mobile-cart" type="button" data-cart-open>Корзина <span class="cart-count">0</span></button>
+
+  <div class="cart-drawer" id="cartDrawer" aria-hidden="true">
+    <button class="backdrop" type="button" data-cart-close></button>
+    <div class="cart-drawer__panel">
+      <div class="drawer-head"><h2>Корзина</h2><button class="close" type="button" data-cart-close>×</button></div>
+      <div class="drawer-body">
+        <div class="cart-empty" id="cartEmpty">Корзина пока пустая. Добавьте блюда из меню.</div>
+        <div class="cart-list" id="cartList"></div>
+        <section class="upsell">
+          <h3>Добавить к заказу</h3>
+          <div class="upsell-grid" id="upsellGrid"></div>
+        </section>
+        <section class="cart-summary">
+          <h3>Способ получения</h3>
+          <div class="mode-switch">
+            <button class="active" type="button" data-mode="delivery">Доставка</button>
+            <button type="button" data-mode="pickup">Самовывоз</button>
+          </div>
+          <div id="cartTotals"></div>
+        </section>
+      </div>
+      <div class="drawer-foot"><button class="wide" type="button" id="checkoutOpen">Перейти к оформлению</button><div class="helper">Стоимость и условия доставки уточнит оператор при подтверждении заказа.</div></div>
+    </div>
+  </div>
+
+  <div class="checkout-modal" id="checkoutModal" aria-hidden="true">
+    <button class="backdrop" type="button" data-checkout-close></button>
+    <div class="checkout-panel">
+      <div class="checkout-head"><h2>Оформление заказа</h2><button class="close" type="button" data-checkout-close>×</button></div>
+      <div class="checkout-grid">
+        <form class="checkout-form" id="checkoutForm">
+          <input name="name" type="text" placeholder="Имя" required>
+          <input name="phone" type="tel" placeholder="Телефон" required>
+          <input name="city" type="text" value="Симферополь" required>
+          <input name="address" type="text" placeholder="Улица и дом" required id="addressField">
+          <textarea name="comment" placeholder="Комментарий к заказу: желаемое время, подъезд, этаж, домофон, пожелания"></textarea>
+        </form>
+        <aside class="checkout-summary">
+          <h3>Ваш заказ</h3>
+          <ul id="checkoutItems"></ul>
+          <div style="height:1px;background:#ddd;margin:14px 0"></div>
+          <div class="total-row"><span>Товары</span><span id="checkoutItemsTotal">0 ₽</span></div>
+          <div class="total-row"><span>Получение</span><span id="checkoutMode">Доставка</span></div>
+          <div class="total-row"><span>Доставка</span><span id="checkoutDelivery">Уточнит оператор</span></div>
+          <div class="total-row total-row--main"><span>Итого на сайте</span><span id="checkoutTotal">0 ₽</span></div>
+          <div class="notice">Стоимость и условия доставки уточнит оператор при подтверждении заказа.</div>
+          <button class="wide" type="submit" form="checkoutForm" style="margin-top:13px">Подтвердить заказ</button>
+          <div class="success" id="successBox"><strong>Заказ принят</strong><span id="successText"></span></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+  (function(){
+    var money = function(v){ return new Intl.NumberFormat('ru-RU').format(v) + ' ₽'; };
+
+    var products = [
+      {id:'set-kalifornia',cat:'sets',name:'Сет Калифорния',price:1800,old:1900,img:'https://avatars.mds.yandex.net/get-sprav-products/2413620/2a0000019d4fd416399e0c202849efecc256/XL',desc:'Калифорния классическая, с крабом, с креветкой и копчёным лососем. Гункан спайси креветка ×2.',hit:true},
+      {id:'set-filadelfia',cat:'sets',name:'Сет Филадельфия',price:1390,old:1450,img:'https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000019d4fd4589291f4fd19ee29da6c94/XL',desc:'Филадельфия классическая, с копчёным лососем и угрём. Гункан с лососем ×2.',hit:true},
+      {id:'super-set',cat:'sets',name:'Супер Сет',price:2590,old:2700,img:'https://avatars.mds.yandex.net/get-sprav-products/5393394/2a0000019d4fcf50b47f650ae4c477a73e51/XL',desc:'Большой сет для компании.',hit:true},
+      {id:'mega-set',cat:'sets',name:'Мега Сет',price:3200,old:3500,img:'https://avatars.mds.yandex.net/get-sprav-products/17700615/2a0000019ef4798edcb378aee99027723bb4/XL',desc:'Большой набор роллов для компании.',hit:true},
+      {id:'hit-set',cat:'sets',name:'Хит Сет',price:1700,old:1900,img:'https://avatars.mds.yandex.net/get-sprav-products/11939409/2a0000019d4fd4aa9d172efcc6de7c29cde2/XL',desc:'Набор популярных роллов.',hit:false},
+      {id:'set-tyapnica',cat:'sets',name:'Сет Тяпница',price:2210,old:2500,img:'https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000019d4fcfadbfddec2b3a40bf276ca7/XL',desc:'Большой сет со скидкой.',hit:false},
+      {id:'set-tanuki',cat:'sets',name:'Сет Тануки',price:1350,old:1500,img:'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'%3E%3Crect width='800' height='800' fill='%23f6f6f6'/%3E%3Ccircle cx='400' cy='350' r='105' fill='%23d92525'/%3E%3Ctext x='400' y='386' text-anchor='middle' font-family='Arial' font-size='100' font-weight='700' fill='white'%3ER%3C/text%3E%3Ctext x='400' y='535' text-anchor='middle' font-family='Arial' font-size='48' font-weight='700' fill='%23171717'%3EROLLS BAR%3C/text%3E%3C/svg%3E',desc:'Компактный сет для небольшого заказа.',hit:false},
+      {id:'set-inari',cat:'sets',name:'Сет Инари',price:1340,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/11939409/2a0000019d4fd32ace264a8eade4afddd5c9/XL',desc:'Сет роллов.',hit:false},
+      {id:'maki-set',cat:'sets',name:'Маки Сет',price:1265,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/5234963/2a0000019d4fd02236279b8f8d8d7e033d08/XL',desc:'Набор маки-роллов.',hit:false},
+      {id:'set-divichnik',cat:'sets',name:'Сет Горячий дивичник',price:1650,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17700615/2a0000019d4fcfd4e1ffee0ec10fa93769bd/XL',desc:'Запечённые роллы с креветкой, тунцом, угрём и мидиями.',hit:false},
+
+      {id:'fila-ugor',cat:'rolls',name:'Филадельфия с угрём',price:420,old:450,img:'https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL',desc:'Ролл с угрём и сливочным сыром.',hit:true},
+      {id:'fila-smoked',cat:'rolls',name:'Филадельфия с копчёным лососем',price:420,old:450,img:'https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL',desc:'Ролл с копчёным лососем и сливочным сыром.',hit:false},
+      {id:'kani',cat:'rolls',name:'Кани',price:420,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL',desc:'Фирменный ролл Кани.',hit:false},
+      {id:'filadelfia',cat:'rolls',name:'Филадельфия',price:420,old:480,img:'https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL',desc:'Классическая Филадельфия.',hit:true},
+      {id:'kalifornia',cat:'rolls',name:'Калифорния',price:420,old:460,img:'https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL',desc:'Классическая Калифорния.',hit:true},
+      {id:'red-dragon',cat:'rolls',name:'Красный дракон',price:420,old:450,img:'https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL',desc:'Фирменный ролл Красный дракон.',hit:false},
+
+      {id:'baked-rolls',cat:'hot',name:'Запечённые роллы',price:470,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL',desc:'8 шт. На выбор: с лососем, креветкой, угрём, крабом или мидиями.',hit:true},
+      {id:'baked-rice',cat:'hot',name:'Запечённый рис',price:300,old:360,img:'https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ae42b149456eaf19588627438/XL',desc:'Горячая позиция на рисе.',hit:false},
+      {id:'baked-mussels',cat:'hot',name:'Запечённые мидии',price:280,old:350,img:'https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019ef92985ac5e638b1beceb7fb844/XL',desc:'4 шт. Соус на выбор: спайси или унаги.',hit:false},
+
+      {id:'wok-veg',cat:'wok',name:'Удон/Соба/Фунчоза с овощами',price:230,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/2510998/2a0000017cb180f1f8c4c8c7b84d89dbd3a8/XL',desc:'240 г. Лапша на выбор, овощи и соус: сливочный, терияки или сладкий чили.',hit:false},
+      {id:'tyahan-sea',cat:'wok',name:'Тяхан с морепродуктами',price:430,old:520,img:'https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000017cb183a6c74fd62c6ae0185f5887/XL',desc:'300 г. Рис, лосось, креветки, мидии, овощи и соус терияки.',hit:false},
+      {id:'tyahan-chicken',cat:'wok',name:'Тяхан с курицей',price:410,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000017cb183a6c74fd62c6ae0185f5887/XL',desc:'300 г. Рис, куриное филе, овощи и соус терияки.',hit:false},
+      {id:'wok-sea',cat:'wok',name:'WOK с морепродуктами',price:430,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL',desc:'300 г. Лапша на выбор, лосось, креветка, мидии, овощи и соус.',hit:false},
+      {id:'wok-chicken',cat:'wok',name:'WOK с курицей',price:410,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL',desc:'300 г. Лапша на выбор, куриное филе, овощи и соус.',hit:false},
+
+      {id:'tom-yam',cat:'soups',name:'Суп Том Ям',price:510,old:580,img:'https://avatars.mds.yandex.net/get-sprav-products/17712810/2a0000019d0abdb6877deb8b80dc33c2f2f1/XL',desc:'Лосось, креветка, мидии, кальмар, грибы. Подаётся с рисом, лаймом, перцем и черри.',hit:true},
+
+      {id:'pizza-mushroom',cat:'pizza',name:'Пицца Грибная',price:990,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019d0aaf107c2711a5adc7fa88d701/XL',desc:'50 см. Моцарелла, шампиньоны, курица, сливочный соус.',hit:false},
+      {id:'pizza-pepperoni',cat:'pizza',name:'Пицца Пепперони',price:890,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17712810/2a0000019d0aaf4583d1955f7dbae2ed908d/XL',desc:'50 см. Моцарелла, пепперони, красный соус.',hit:true},
+      {id:'pizza-carbonara',cat:'pizza',name:'Пицца Карбонара',price:1070,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019d0aaf8f03770d3a6db573860545/XL',desc:'50 см. Моцарелла, курица, бекон, пармезан, сливочный соус.',hit:false},
+      {id:'pizza-margherita',cat:'pizza',name:'Пицца Маргарита',price:720,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17712810/2a0000019d0aafd162aab992f44beb962076/XL',desc:'50 см. Моцарелла, помидоры, красный соус.',hit:false},
+      {id:'pizza-fire',cat:'pizza',name:'Пицца Огонёк',price:1090,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab011ba794fbdb74b5d9ce75d/XL',desc:'50 см. Салями, шампиньоны, бекон, чили, моцарелла и красный соус.',hit:false},
+      {id:'pizza-hunter',cat:'pizza',name:'Пицца Охотничья',price:1020,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab0487e84fd35d79cb5c23310/XL',desc:'50 см. Охотничьи колбаски, бекон, лук криспи, маслины, барбекю.',hit:false},
+      {id:'pizza-chicken',cat:'pizza',name:'Пицца Цыпочка',price:1020,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab08671e1247c3239cd657032/XL',desc:'50 см. Курица, бекон, помидор, моцарелла и сливочный соус.',hit:false},
+      {id:'pizza-four-cheese',cat:'pizza',name:'Пицца 4 сыра Чедр',price:1030,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019d0ab0c3ee544b0404c1bbaeee9f/XL',desc:'50 см. Моцарелла, фета, чедр, пармезан и сливочный соус.',hit:false},
+      {id:'pizza-country',cat:'pizza',name:'Пицца Деревенская',price:1040,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab138a7722db853c44a7d07d3/XL',desc:'50 см. Охотничьи колбаски, ветчина, ялтинский лук, барбекю, укроп.',hit:false},
+      {id:'pizza-salami',cat:'pizza',name:'Пицца Салями',price:990,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab170d00545daf813a3ad4b9b/XL',desc:'50 см. Салями, шампиньоны, болгарский перец, ялтинский лук, маслины.',hit:false},
+      {id:'pizza-caesar',cat:'pizza',name:'Пицца Цезарь',price:1190,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab19f7a2435901d0539c5909c/XL',desc:'50 см. Курица, бекон, салат, пармезан, черри и соус Цезарь.',hit:false},
+
+      {id:'cheese-sticks',cat:'snacks',name:'Сырные палочки',price:199,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab8dc8421354687da9466a2f7/XL',desc:'5 шт. Моцарелла в панировке.',hit:false},
+      {id:'shrimp-tempura',cat:'snacks',name:'Креветка темпура',price:350,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab91cd9907110248fba57786d/XL',desc:'5 шт. Креветка в панировке.',hit:false},
+      {id:'sandwich-shrimp',cat:'snacks',name:'Сэндвич темпура с креветкой',price:300,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/1358381/2a0000019ef3f6348e0ea28cff737c1cc67c/XL',desc:'4 шт.',hit:false},
+      {id:'sandwich-salmon',cat:'snacks',name:'Сэндвич темпура с лососем',price:300,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/1358381/2a0000019ef3f6348e0ea28cff737c1cc67c/XL',desc:'4 шт.',hit:false},
+
+      {id:'combo1',cat:'combo',name:'Комбо №1',price:790,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17700615/2a0000019c9a2c4f5025392cc3d58df182cb/XL',desc:'Пицца Цыпочка 30 см, картофель фри, кола 0,33 и соус ассорти.',hit:false},
+      {id:'combo2',cat:'combo',name:'Комбо №2',price:1160,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17763327/2a0000019c9a2eb883aad2b4405f6205a96c/XL',desc:'Пицца Грибная 30 см, Пепперони 30 см и две колы 0,33.',hit:false},
+
+      {id:'moti',cat:'desserts',name:'Моти',price:160,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17712810/2a0000019d0ab52074c2411c31e1c31cf05c/XL',desc:'Вишня, манго-маракуйя, киви, клубника или чёрная смородина.',hit:false},
+      {id:'soy-ginger-wasabi',cat:'sauces',name:'Соевый / Имбирь / Васаби',price:20,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL',desc:'Цена за 1 шт.',hit:false}
+    ];
+
+    var upsells = [
+      {id:'u-soy',name:'Соевый соус',price:20,img:'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL'},
+      {id:'u-ginger',name:'Имбирь',price:20,img:'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL'},
+      {id:'u-wasabi',name:'Васаби',price:20,img:'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL'}
+    ];
+
+    var cart = [];
+    var mode = 'delivery';
+
+    function card(p){
+      var badges = '';
+      if(p.hit) badges += '<span class="badge">Хит</span>';
+      if(p.old) badges += '<span class="badge badge--sale">-' + Math.max(1,Math.round((1-p.price/p.old)*100)) + '%</span>';
+      var old = p.old ? '<s>' + money(p.old) + '</s>' : '';
+      return '<article class="product-card">' +
+        '<div class="product-card__visual"><div class="product-badges">' + badges + '</div><img src="' + p.img + '" alt="' + p.name + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'image-missing\')"></div>' +
+        '<div class="product-card__body"><h3>' + p.name + '</h3><p>' + p.desc + '</p>' +
+        '<div class="product-card__footer"><div class="price"><strong>' + money(p.price) + '</strong>' + old + '</div><button class="add" type="button" data-add="' + p.id + '">В корзину</button></div></div>' +
+        '</article>';
+    }
+
+    function renderCategory(cat,id){
+      var el = document.getElementById(id);
+      el.innerHTML = products.filter(function(p){return p.cat===cat;}).map(card).join('');
+    }
+
+    function renderCatalog(){
+      var hits = products.filter(function(p){return p.hit;}).slice(0,8);
+      document.getElementById('hitsGrid').innerHTML = hits.map(function(p){
+        return '<article class="highlight-card" data-jump="' + p.cat + '"><img src="' + p.img + '" alt="' + p.name + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.visibility=\'hidden\'"><div><b>' + p.name + '</b><span>' + p.desc + '</span><em>' + money(p.price) + '</em></div></article>';
+      }).join('');
+      renderCategory('sets','setsGrid');
+      renderCategory('rolls','rollsGrid');
+      renderCategory('hot','hotGrid');
+      renderCategory('wok','wokGrid');
+      renderCategory('soups','soupsGrid');
+      renderCategory('pizza','pizzaGrid');
+      renderCategory('snacks','snacksGrid');
+      renderCategory('combo','comboGrid');
+      renderCategory('desserts','dessertsGrid');
+      renderCategory('sauces','saucesGrid');
+
+      document.querySelectorAll('[data-add]').forEach(function(btn){
+        btn.addEventListener('click',function(){ addProduct(btn.dataset.add); });
+      });
+      document.querySelectorAll('[data-jump]').forEach(function(el){
+        el.addEventListener('click',function(){
+          var target = document.getElementById(el.dataset.jump);
+          if(target) target.scrollIntoView({behavior:'smooth'});
+        });
+      });
+    }
+
+    function addProduct(id){
+      var p = products.find(function(x){return x.id===id;});
+      if(!p) return;
+      var existing = cart.find(function(x){return x.id===id;});
+      if(existing){existing.qty+=1;}else{cart.push({id:p.id,name:p.name,price:p.price,img:p.img,qty:1});}
+      renderCart();
+    }
+
+    function addUpsell(id){
+      var p = upsells.find(function(x){return x.id===id;});
+      if(!p) return;
+      var existing = cart.find(function(x){return x.id===id;});
+      if(existing){existing.qty+=1;}else{cart.push({id:p.id,name:p.name,price:p.price,img:p.img,qty:1});}
+      renderCart();
+    }
+
+    function changeQty(id,delta){
+      var item = cart.find(function(x){return x.id===id;});
+      if(!item) return;
+      item.qty += delta;
+      if(item.qty<=0) cart = cart.filter(function(x){return x.id!==id;});
+      renderCart();
+    }
+
+    function totals(){
+      var items = cart.reduce(function(s,x){return s+x.price*x.qty;},0);
+      return {items:items,total:items};
+    }
+
+    function renderCart(){
+      var count = cart.reduce(function(s,x){return s+x.qty;},0);
+      document.querySelectorAll('.cart-count').forEach(function(x){x.textContent=count;}); var mobileCart=document.querySelector('.mobile-cart'); if(mobileCart) mobileCart.hidden=(count===0);
+      var empty = document.getElementById('cartEmpty');
+      var list = document.getElementById('cartList');
+      empty.style.display = cart.length ? 'none' : 'block';
+      list.innerHTML = cart.map(function(item){
+        return '<article class="cart-item"><img src="' + item.img + '" alt=""><div><h4>' + item.name + '</h4><small>' + money(item.price) + '</small>' +
+          '<div class="qty"><button type="button" data-minus="' + item.id + '">−</button><span>' + item.qty + '</span><button type="button" data-plus="' + item.id + '">+</button></div></div>' +
+          '<button class="remove" type="button" data-remove="' + item.id + '">Удалить</button></article>';
+      }).join('');
+      document.querySelectorAll('[data-minus]').forEach(function(btn){btn.addEventListener('click',function(){changeQty(btn.dataset.minus,-1);});});
+      document.querySelectorAll('[data-plus]').forEach(function(btn){btn.addEventListener('click',function(){changeQty(btn.dataset.plus,1);});});
+      document.querySelectorAll('[data-remove]').forEach(function(btn){btn.addEventListener('click',function(){cart=cart.filter(function(x){return x.id!==btn.dataset.remove;});renderCart();});});
+
+      document.getElementById('upsellGrid').innerHTML = upsells.map(function(p){
+        return '<div class="upsell-card"><b>' + p.name + '</b><span>' + money(p.price) + '</span><button type="button" data-upsell="' + p.id + '">Добавить</button></div>';
+      }).join('');
+      document.querySelectorAll('[data-upsell]').forEach(function(btn){btn.addEventListener('click',function(){addUpsell(btn.dataset.upsell);});});
+
+      var t = totals();
+      var deliveryLine = mode==='delivery' ? 'Уточнит оператор' : 'По условиям самовывоза';
+      document.getElementById('cartTotals').innerHTML =
+        '<div class="total-row"><span>Сумма товаров</span><span>' + money(t.items) + '</span></div>' +
+        '<div class="total-row"><span>Получение</span><span>' + (mode==='delivery'?'Доставка':'Самовывоз') + '</span></div>' +
+        '<div class="total-row"><span>' + (mode==='delivery'?'Доставка':'Скидка за самовывоз') + '</span><span>' + deliveryLine + '</span></div>' +
+        '<div class="total-row total-row--main"><span>Итого на сайте</span><span>' + money(t.total) + '</span></div>';
+      renderCheckout();
+    }
+
+    function openCart(){
+      document.getElementById('cartDrawer').classList.add('open');
+      document.body.style.overflow='hidden';
+    }
+    function closeCart(){
+      document.getElementById('cartDrawer').classList.remove('open');
+      if(!document.getElementById('checkoutModal').classList.contains('open')) document.body.style.overflow='';
+    }
+    function openCheckout(){
+      if(!cart.length){openCart();return;}
+      closeCart();
+      document.getElementById('checkoutModal').classList.add('open');
+      document.body.style.overflow='hidden';
+      renderCheckout();
+    }
+    function closeCheckout(){
+      document.getElementById('checkoutModal').classList.remove('open');
+      document.body.style.overflow='';
+    }
+
+    function renderCheckout(){
+      var t = totals();
+      document.getElementById('checkoutItems').innerHTML = cart.map(function(x){
+        return '<li><span>' + x.name + ' × ' + x.qty + '</span><strong>' + money(x.price*x.qty) + '</strong></li>';
+      }).join('');
+      document.getElementById('checkoutItemsTotal').textContent = money(t.items);
+      document.getElementById('checkoutMode').textContent = mode==='delivery'?'Доставка':'Самовывоз';
+      document.getElementById('checkoutDelivery').textContent = mode==='delivery'?'Уточнит оператор':'По условиям самовывоза';
+      document.getElementById('checkoutTotal').textContent = money(t.total);
+      var address = document.getElementById('addressField');
+      address.required = mode==='delivery';
+      address.placeholder = mode==='delivery'?'Улица и дом':'Адрес не требуется при самовывозе';
+    }
+
+    renderCatalog();
+    renderCart();
+
+    document.querySelectorAll('[data-cart-open]').forEach(function(btn){btn.addEventListener('click',openCart);});
+    document.querySelectorAll('[data-cart-close]').forEach(function(btn){btn.addEventListener('click',closeCart);});
+    document.querySelectorAll('[data-checkout-close]').forEach(function(btn){btn.addEventListener('click',closeCheckout);});
+    document.getElementById('checkoutOpen').addEventListener('click',openCheckout);
+
+    document.querySelectorAll('[data-mode]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        mode=btn.dataset.mode;
+        document.querySelectorAll('[data-mode]').forEach(function(x){x.classList.toggle('active',x===btn);});
+        renderCart();
+      });
+    });
+
+    document.getElementById('checkoutForm').addEventListener('submit',function(e){
+      e.preventDefault();
+      if(!cart.length) return;
+      var fd = new FormData(e.target);
+      var name = fd.get('name') || 'клиент';
+      var number = Math.floor(10000 + Math.random()*90000);
+      document.getElementById('successBox').classList.add('show');
+      document.getElementById('successText').innerHTML = 'Заказ №' + number + ' отправлен. Спасибо, ' + name + '. Оператор свяжется с вами для подтверждения деталей.';
+    });
+
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeCart();closeCheckout();}});
+
+    var navLinks = Array.from(document.querySelectorAll('.category-nav a'));
+    var sections = navLinks.map(function(a){return document.querySelector(a.getAttribute('href'));}).filter(Boolean);
+    var io = new IntersectionObserver(function(entries){
+      var visible = entries.filter(function(e){return e.isIntersecting;}).sort(function(a,b){return b.intersectionRatio-a.intersectionRatio;})[0];
+      if(!visible) return;
+      navLinks.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+visible.target.id);});
+    },{rootMargin:'-136px 0px -64% 0px',threshold:[0,.2,.55]});
+    sections.forEach(function(s){io.observe(s);});
+
+    if(typeof L!=='undefined'){
+      var mapStarted=false;
+      var startMap=function(){
+      if(mapStarted) return; mapStarted=true;
+      var store=[44.973541,34.099398];
+      var map=L.map('delivery-map',{scrollWheelZoom:true}).setView(store,12);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+      var zone3=[[45.008,34.024],[45.020,34.105],[44.998,34.185],[44.954,34.208],[44.912,34.180],[44.897,34.107],[44.914,34.038],[44.956,34.016]];
+      var zone2=[[44.992,34.060],[45.002,34.113],[44.980,34.163],[44.950,34.178],[44.924,34.151],[44.914,34.102],[44.930,34.060],[44.958,34.045]];
+      var zone1=[[44.983,34.079],[44.989,34.112],[44.974,34.139],[44.948,34.146],[44.934,34.124],[44.940,34.091],[44.958,34.079]];
+      L.polygon(zone3,{color:'#df4a44',weight:2,fillColor:'#df4a44',fillOpacity:.12}).addTo(map);
+      L.polygon(zone2,{color:'#dda72f',weight:2,fillColor:'#f0b646',fillOpacity:.18}).addTo(map);
+      L.polygon(zone1,{color:'#2f9564',weight:2,fillColor:'#42b883',fillOpacity:.22}).addTo(map);
+      var icon=L.divIcon({className:'',html:'<div style="width:38px;height:38px;border-radius:13px;background:#d92525;color:#fff;display:grid;place-items:center;font-weight:900;border:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.25)">R</div>',iconSize:[38,38],iconAnchor:[19,19]});
+      L.marker(store,{icon:icon}).addTo(map).bindPopup('<b>ROLLS BAR</b><br>Кечкеметская, 1');
+      };
+      var mapEl=document.getElementById('delivery-map');
+      if('IntersectionObserver' in window){
+        var mapObserver=new IntersectionObserver(function(entries){if(entries[0]&&entries[0].isIntersecting){startMap();mapObserver.disconnect();}},{rootMargin:'500px'});
+        mapObserver.observe(mapEl);
+      }else{startMap();}
+    }
+  })();
+  </script>
+</body>
+</html>
