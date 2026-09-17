@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Отзывы клиентов — Rolls Bar</title>
+  <style>
+    :root{--red:#d92525;--text:#171717;--muted:#777;--line:#ececec;--soft:#f6f6f6;--shell:min(1080px,calc(100% - 32px))}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--text);background:#fff;-webkit-font-smoothing:antialiased}a{color:inherit}button,input,textarea,select{font:inherit}.shell{width:var(--shell);margin:auto}
+    header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.95);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+    .head{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:950;font-size:22px;letter-spacing:-.04em;text-decoration:none}.brand span{color:var(--red)}.back{font-size:13px;font-weight:850;text-decoration:none;padding:10px 13px;border-radius:12px;background:var(--soft)}
+    main{padding:34px 0 70px}.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:stretch}.hero-card,.sources,.review-form,.feed{border:1px solid var(--line);border-radius:26px;background:#fff;box-shadow:0 14px 36px rgba(0,0,0,.055)}
+    .hero-card{padding:28px;background:linear-gradient(135deg,#fff 0%,#fff3f1 100%)}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--red);font-weight:900}.hero h1{font-size:42px;line-height:.98;letter-spacing:-.055em;margin:9px 0 14px}.hero p{margin:0;color:var(--muted);font-size:14px;line-height:1.55;max-width:620px}
+    .rating-box{display:flex;align-items:end;gap:12px;margin-top:24px}.rating-number{font-size:52px;line-height:.9;font-weight:950;letter-spacing:-.06em}.stars{color:#ffb21a;letter-spacing:2px;font-size:18px}.rating-note{font-size:11px;color:var(--muted);margin-top:5px}
+    .sources{padding:22px}.sources h2,.feed h2,.review-form h2{font-size:23px;letter-spacing:-.04em;margin:0 0 14px}.source-link{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid var(--line);border-radius:15px;text-decoration:none;margin-top:9px}.source-link b{font-size:14px}.source-link span{font-size:12px;color:var(--muted)}.source-link em{font-style:normal;color:var(--red);font-weight:900}
+    .layout{display:grid;grid-template-columns:1fr 400px;gap:18px;margin-top:18px}.feed{padding:24px}.empty{padding:38px 18px;text-align:center;border-radius:18px;background:var(--soft);color:var(--muted);font-size:13px;line-height:1.5}.review-form{padding:24px;align-self:start}.field{margin-top:12px}.field label{display:block;font-size:11px;font-weight:850;color:#666;margin:0 0 6px}.field input,.field textarea,.field select{width:100%;border:1px solid var(--line);border-radius:13px;padding:12px 13px;outline:none;background:#fff}.field textarea{min-height:120px;resize:vertical}.submit{width:100%;border:0;border-radius:14px;background:var(--red);color:#fff;font-weight:900;padding:14px;margin-top:14px}.success{display:none;margin-top:12px;border-radius:13px;background:#eef9f2;color:#28533a;padding:12px;font-size:12px;line-height:1.45}.success.show{display:block}.moderation{margin-top:10px;color:var(--muted);font-size:10px;line-height:1.4}
+    footer{background:#171717;color:#fff;padding:28px 0;margin-top:30px}.footer-inner{display:flex;justify-content:space-between;gap:20px;align-items:center}.footer-inner small{color:#aaa}.footer-inner a{font-size:12px;font-weight:800;text-decoration:none;background:#292929;padding:9px 11px;border-radius:10px}
+    @media(max-width:780px){.hero,.layout{grid-template-columns:1fr}.hero h1{font-size:34px}.hero-card,.sources,.feed,.review-form{border-radius:20px}.rating-number{font-size:45px}.footer-inner{flex-direction:column;align-items:flex-start}}
+  </style>
+</head>
+<body>
+<header><div class="shell head"><a class="brand" href="client-fixes.html">РОЛЛС <span>БАР</span></a><a class="back" href="client-fixes.html">← Вернуться в меню</a></div></header>
+<main class="shell">
+  <section class="hero">
+    <article class="hero-card">
+      <div class="eyebrow">Отзывы клиентов</div>
+      <h1>Нам важно, что вы думаете о заказе</h1>
+      <p>На этой странице можно посмотреть отзывы в независимых сервисах и оставить отзыв непосредственно на сайте. Новые отзывы с сайта публикуются только после модерации.</p>
+      <div class="rating-box">
+        <div><div class="rating-number">3.0</div><div class="rating-note">из 5 · 2 оценки в 2ГИС</div></div>
+        <div><div class="stars">★★★☆☆</div><div class="rating-note">Публичные данные 2ГИС на момент подготовки демо</div></div>
+      </div>
+    </article>
+    <aside class="sources">
+      <h2>Отзывы в сервисах</h2>
+      <a class="source-link" href="https://yandex.ru/profile/229692973623?lang=ru" target="_blank" rel="noopener"><div><b>Яндекс Карты</b><span>Открыть карточку Rolls Bar</span></div><em>↗</em></a>
+      <a class="source-link" href="https://2gis.ru/simferopol/search/Rolls%20bar" target="_blank" rel="noopener"><div><b>2ГИС</b><span>Посмотреть оценки и отзывы</span></div><em>↗</em></a>
+    </aside>
+  </section>
+
+  <section class="layout">
+    <article class="feed">
+      <h2>Отзывы с сайта</h2>
+      <div class="empty" id="reviewFeed">Здесь будут опубликованы отзывы, прошедшие модерацию. В демо-версии мы не добавляем вымышленные отзывы клиентов.</div>
+    </article>
+    <aside class="review-form">
+      <h2>Оставить отзыв</h2>
+      <form id="reviewForm">
+        <div class="field"><label>Имя</label><input name="name" required placeholder="Ваше имя"></div>
+        <div class="field"><label>Оценка</label><select name="rating" required><option value="5">5 — отлично</option><option value="4">4 — хорошо</option><option value="3">3 — нормально</option><option value="2">2 — есть замечания</option><option value="1">1 — плохо</option></select></div>
+        <div class="field"><label>Текст отзыва</label><textarea name="text" required placeholder="Расскажите о заказе"></textarea></div>
+        <div class="field"><label>Фото заказа</label><input name="photo" type="file" accept="image/*"></div>
+        <button class="submit" type="submit">Отправить на модерацию</button>
+        <div class="success" id="success">Спасибо! Отзыв сохранён со статусом «На модерации». После проверки администратором он сможет быть опубликован.</div>
+        <div class="moderation">На WordPress эта форма будет сохранять отзыв в админке со статусом «На модерации». Публикация — только после подтверждения администратора.</div>
+      </form>
+    </aside>
+  </section>
+</main>
+<footer><div class="shell footer-inner"><small>Rolls Bar · Симферополь, Кечкеметская, 1</small><a href="client-fixes.html">Вернуться к каталогу</a></div></footer>
+<script>
+(function(){
+  var form=document.getElementById('reviewForm');
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var fd=new FormData(form);
+    var pending=JSON.parse(localStorage.getItem('rollsbarPendingReviews')||'[]');
+    pending.push({name:fd.get('name'),rating:Number(fd.get('rating')),text:fd.get('text'),date:new Date().toISOString(),status:'pending'});
+    localStorage.setItem('rollsbarPendingReviews',JSON.stringify(pending));
+    document.getElementById('success').classList.add('show');
+    form.reset();
+  });
+})();
+</script>
+</body>
+</html>
