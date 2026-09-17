@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <iframe id="stage" src="client-fixes.html?v=cartbar-v1" title="Rolls Bar"></iframe>
+  <iframe id="stage" src="client-fixes.html?v=cartbar-v2" title="Rolls Bar"></iframe>
   <script>
   (function(){
     var stage=document.getElementById('stage');
@@ -32,17 +32,20 @@
       return 'товаров';
     }
 
+    function rublesFrom(text){
+      return parseInt(String(text||'').replace(/[^0-9]/g,''),10)||0;
+    }
+
     function applyFinalFixes(){
       var d=deepDocument();
       if(!d||!d.body) return false;
       if(d.body.dataset.finalDemoFixes==='1') return true;
-      if(d.body.dataset.clientFixesV3!=='1') return false;
+      if(!d.querySelector('.cart-count')||!d.querySelector('[data-cart-open]')) return false;
       d.body.dataset.finalDemoFixes='1';
 
       var css=d.createElement('style');
       css.textContent=`
         .client-order-bar{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:170;display:none;align-items:center;justify-content:space-between;gap:12px;min-height:62px;padding:10px 16px;border:0;border-radius:21px;background:#d92525;color:#fff;box-shadow:0 16px 38px rgba(180,24,29,.28);font:inherit;text-align:left}
-        .client-order-bar.show{display:flex}
         .client-order-bar__left{display:flex;align-items:center;gap:10px;min-width:0}
         .client-order-bar__icon{width:40px;height:40px;border-radius:13px;background:rgba(255,255,255,.15);display:grid;place-items:center;flex:none}
         .client-order-bar__icon svg{width:21px;height:21px}
@@ -52,7 +55,6 @@
         .client-order-bar__total{font-size:20px;font-weight:950;white-space:nowrap;letter-spacing:-.02em}
         @media(max-width:700px){
           body{padding-bottom:86px!important}
-          .client-order-bar{display:none}
           .client-order-bar.show{display:flex}
           body.client-orderbar-active .mobile-actions{bottom:calc(88px + env(safe-area-inset-bottom))!important}
           body.client-orderbar-active .mobile-cart{display:none!important}
@@ -71,7 +73,7 @@
 
       function readCount(){
         var el=d.querySelector('.cart-count');
-        return el?parseInt(String(el.textContent||'').replace(/[^0-9]/g,''),10)||0:0;
+        return el?rublesFrom(el.textContent):0;
       }
       function readTotal(){
         var el=d.querySelector('#cartTotals .total-row--main span:last-child') || d.getElementById('checkoutTotal');
@@ -81,10 +83,8 @@
       function updateBar(){
         scheduled=false;
         var count=readCount();
-        var countEl=bar.querySelector('.client-order-bar__count');
-        var totalEl=bar.querySelector('.client-order-bar__total');
-        countEl.textContent=count+' '+pluralProducts(count);
-        totalEl.textContent=readTotal();
+        bar.querySelector('.client-order-bar__count').textContent=count+' '+pluralProducts(count);
+        bar.querySelector('.client-order-bar__total').textContent=readTotal();
         var show=count>0;
         bar.classList.toggle('show',show);
         d.body.classList.toggle('client-orderbar-active',show);
@@ -94,37 +94,64 @@
         scheduled=true;
         (d.defaultView.requestAnimationFrame||function(fn){setTimeout(fn,16);})(updateBar);
       }
-
       bar.addEventListener('click',function(){
         var cartOpen=d.querySelector('[data-cart-open]');
         if(cartOpen) cartOpen.click();
       });
-
       var observer=new MutationObserver(scheduleBar);
       observer.observe(d.body,{subtree:true,childList:true,characterData:true});
       scheduleBar();
+
+      function backToMenu(e){
+        if(e){e.preventDefault();e.stopImmediatePropagation();}
+        var min=d.querySelector('.minimum-modal');
+        if(min) min.classList.remove('open');
+        var checkout=d.getElementById('checkoutModal');
+        if(checkout){checkout.classList.remove('open');checkout.setAttribute('aria-hidden','true');}
+        var drawer=d.getElementById('cartDrawer');
+        if(drawer) drawer.classList.remove('open');
+        d.body.style.overflow='';
+        var target=d.getElementById('rolls')||d.querySelector('main');
+        if(target) setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'start'});},30);
+      }
 
       function patchMinimumButton(){
         var btn=d.getElementById('minimumReturn');
         if(!btn||btn.dataset.menuReturnPatched==='1') return;
         btn.dataset.menuReturnPatched='1';
         btn.textContent='Вернуться в меню';
-        btn.addEventListener('click',function(e){
+        btn.addEventListener('click',backToMenu,true);
+      }
+
+      function installMinimumGuard(){
+        var form=d.getElementById('checkoutForm');
+        if(!form||form.dataset.finalMinimumGuard==='1') return;
+        form.dataset.finalMinimumGuard='1';
+        form.addEventListener('submit',function(e){
+          var zone=d.getElementById('clientDeliveryZone');
+          if(!zone||!zone.value) return;
+          var modeText=(d.getElementById('checkoutMode')||{}).textContent||'';
+          if(modeText.toLowerCase().indexOf('самовывоз')!==-1) return;
+          var min=parseInt(zone.value,10)||0;
+          var total=rublesFrom((d.getElementById('checkoutItemsTotal')||{}).textContent);
+          if(total>=min) return;
           e.preventDefault();
           e.stopImmediatePropagation();
-          var min=d.querySelector('.minimum-modal');
-          if(min) min.classList.remove('open');
-          var checkout=d.getElementById('checkoutModal');
-          if(checkout){checkout.classList.remove('open');checkout.setAttribute('aria-hidden','true');}
-          var drawer=d.getElementById('cartDrawer');
-          if(drawer) drawer.classList.remove('open');
-          d.body.style.overflow='';
-          var target=d.getElementById('rolls')||d.querySelector('main');
-          if(target) setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'start'});},30);
+          var modal=d.querySelector('.minimum-modal');
+          if(!modal) return;
+          var title=d.getElementById('minimumTitle');
+          var text=d.getElementById('minimumText');
+          var diff=Math.max(0,min-total);
+          if(title) title.textContent='Минимальная сумма заказа — '+new Intl.NumberFormat('ru-RU').format(min)+' ₽';
+          if(text) text.textContent='Для оформления заказа наберите в корзине ещё товаров на сумму '+new Intl.NumberFormat('ru-RU').format(diff)+' ₽';
+          patchMinimumButton();
+          modal.classList.add('open');
         },true);
       }
+
       patchMinimumButton();
-      var patchObserver=new MutationObserver(patchMinimumButton);
+      installMinimumGuard();
+      var patchObserver=new MutationObserver(function(){patchMinimumButton();installMinimumGuard();});
       patchObserver.observe(d.body,{subtree:true,childList:true});
 
       return true;
@@ -135,17 +162,19 @@
       var inner=wrapper&&wrapper.getElementById('site');
       if(inner){
         inner.addEventListener('load',function(){
-          setTimeout(applyFinalFixes,250);
-          setTimeout(applyFinalFixes,700);
+          setTimeout(applyFinalFixes,200);
+          setTimeout(applyFinalFixes,500);
+          setTimeout(applyFinalFixes,1000);
         });
       }
-      setTimeout(applyFinalFixes,350);
-      setTimeout(applyFinalFixes,1000);
-      setTimeout(applyFinalFixes,1800);
+      setTimeout(applyFinalFixes,250);
+      setTimeout(applyFinalFixes,700);
+      setTimeout(applyFinalFixes,1300);
+      setTimeout(applyFinalFixes,2200);
     }
 
     stage.addEventListener('load',bind);
-    setTimeout(bind,900);
+    setTimeout(bind,700);
   })();
   </script>
 </body>
