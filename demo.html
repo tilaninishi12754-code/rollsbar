@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Rolls Bar — актуальное демо</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f3f4f5}
+    #stage{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f3f4f5}
+  </style>
+</head>
+<body>
+  <iframe id="stage" src="client-fixes.html?v=cartbar-v1" title="Rolls Bar"></iframe>
+  <script>
+  (function(){
+    var stage=document.getElementById('stage');
+
+    function deepDocument(){
+      try{
+        var wrapper=stage.contentDocument;
+        var inner=wrapper&&wrapper.getElementById('site');
+        return inner&&inner.contentDocument?inner.contentDocument:null;
+      }catch(e){return null;}
+    }
+
+    function pluralProducts(n){
+      n=Math.abs(n)%100;
+      var n1=n%10;
+      if(n>10&&n<20) return 'товаров';
+      if(n1>1&&n1<5) return 'товара';
+      if(n1===1) return 'товар';
+      return 'товаров';
+    }
+
+    function applyFinalFixes(){
+      var d=deepDocument();
+      if(!d||!d.body) return false;
+      if(d.body.dataset.finalDemoFixes==='1') return true;
+      if(d.body.dataset.clientFixesV3!=='1') return false;
+      d.body.dataset.finalDemoFixes='1';
+
+      var css=d.createElement('style');
+      css.textContent=`
+        .client-order-bar{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:170;display:none;align-items:center;justify-content:space-between;gap:12px;min-height:62px;padding:10px 16px;border:0;border-radius:21px;background:#d92525;color:#fff;box-shadow:0 16px 38px rgba(180,24,29,.28);font:inherit;text-align:left}
+        .client-order-bar.show{display:flex}
+        .client-order-bar__left{display:flex;align-items:center;gap:10px;min-width:0}
+        .client-order-bar__icon{width:40px;height:40px;border-radius:13px;background:rgba(255,255,255,.15);display:grid;place-items:center;flex:none}
+        .client-order-bar__icon svg{width:21px;height:21px}
+        .client-order-bar__meta{display:flex;flex-direction:column;min-width:0}
+        .client-order-bar__count{font-size:14px;font-weight:900;line-height:1.15}
+        .client-order-bar__hint{font-size:10px;font-weight:700;opacity:.78;margin-top:2px}
+        .client-order-bar__total{font-size:20px;font-weight:950;white-space:nowrap;letter-spacing:-.02em}
+        @media(max-width:700px){
+          body{padding-bottom:86px!important}
+          .client-order-bar{display:none}
+          .client-order-bar.show{display:flex}
+          body.client-orderbar-active .mobile-actions{bottom:calc(88px + env(safe-area-inset-bottom))!important}
+          body.client-orderbar-active .mobile-cart{display:none!important}
+          .footer{padding-bottom:145px!important}
+        }
+        @media(min-width:701px){.client-order-bar{display:none!important}}
+      `;
+      d.head.appendChild(css);
+
+      var bar=d.createElement('button');
+      bar.type='button';
+      bar.className='client-order-bar';
+      bar.setAttribute('aria-label','Открыть корзину');
+      bar.innerHTML='<span class="client-order-bar__left"><span class="client-order-bar__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Zm3 0V6a4 4 0 0 1 8 0v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="client-order-bar__meta"><span class="client-order-bar__count">1 товар</span><span class="client-order-bar__hint">Перейти в корзину</span></span></span><strong class="client-order-bar__total">0 ₽</strong>';
+      d.body.appendChild(bar);
+
+      function readCount(){
+        var el=d.querySelector('.cart-count');
+        return el?parseInt(String(el.textContent||'').replace(/[^0-9]/g,''),10)||0:0;
+      }
+      function readTotal(){
+        var el=d.querySelector('#cartTotals .total-row--main span:last-child') || d.getElementById('checkoutTotal');
+        return el?String(el.textContent||'').trim():'0 ₽';
+      }
+      var scheduled=false;
+      function updateBar(){
+        scheduled=false;
+        var count=readCount();
+        var countEl=bar.querySelector('.client-order-bar__count');
+        var totalEl=bar.querySelector('.client-order-bar__total');
+        countEl.textContent=count+' '+pluralProducts(count);
+        totalEl.textContent=readTotal();
+        var show=count>0;
+        bar.classList.toggle('show',show);
+        d.body.classList.toggle('client-orderbar-active',show);
+      }
+      function scheduleBar(){
+        if(scheduled) return;
+        scheduled=true;
+        (d.defaultView.requestAnimationFrame||function(fn){setTimeout(fn,16);})(updateBar);
+      }
+
+      bar.addEventListener('click',function(){
+        var cartOpen=d.querySelector('[data-cart-open]');
+        if(cartOpen) cartOpen.click();
+      });
+
+      var observer=new MutationObserver(scheduleBar);
+      observer.observe(d.body,{subtree:true,childList:true,characterData:true});
+      scheduleBar();
+
+      function patchMinimumButton(){
+        var btn=d.getElementById('minimumReturn');
+        if(!btn||btn.dataset.menuReturnPatched==='1') return;
+        btn.dataset.menuReturnPatched='1';
+        btn.textContent='Вернуться в меню';
+        btn.addEventListener('click',function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          var min=d.querySelector('.minimum-modal');
+          if(min) min.classList.remove('open');
+          var checkout=d.getElementById('checkoutModal');
+          if(checkout){checkout.classList.remove('open');checkout.setAttribute('aria-hidden','true');}
+          var drawer=d.getElementById('cartDrawer');
+          if(drawer) drawer.classList.remove('open');
+          d.body.style.overflow='';
+          var target=d.getElementById('rolls')||d.querySelector('main');
+          if(target) setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'start'});},30);
+        },true);
+      }
+      patchMinimumButton();
+      var patchObserver=new MutationObserver(patchMinimumButton);
+      patchObserver.observe(d.body,{subtree:true,childList:true});
+
+      return true;
+    }
+
+    function bind(){
+      var wrapper=stage.contentDocument;
+      var inner=wrapper&&wrapper.getElementById('site');
+      if(inner){
+        inner.addEventListener('load',function(){
+          setTimeout(applyFinalFixes,250);
+          setTimeout(applyFinalFixes,700);
+        });
+      }
+      setTimeout(applyFinalFixes,350);
+      setTimeout(applyFinalFixes,1000);
+      setTimeout(applyFinalFixes,1800);
+    }
+
+    stage.addEventListener('load',bind);
+    setTimeout(bind,900);
+  })();
+  </script>
+</body>
+</html>
