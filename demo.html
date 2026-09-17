@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Rolls Bar — актуальное демо</title>
   <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f3f4f5}
-    #stage{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f3f4f5}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
+    #stage{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}
   </style>
 </head>
 <body>
-  <iframe id="stage" src="client-fixes.html?v=cartbar-v2" title="Rolls Bar"></iframe>
+  <iframe id="stage" src="client-fixes.html?v=polish-v3" title="Rolls Bar"></iframe>
   <script>
   (function(){
     var stage=document.getElementById('stage');
@@ -45,24 +45,64 @@
 
       var css=d.createElement('style');
       css.textContent=`
-        .client-order-bar{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:170;display:none;align-items:center;justify-content:space-between;gap:12px;min-height:62px;padding:10px 16px;border:0;border-radius:21px;background:#d92525;color:#fff;box-shadow:0 16px 38px rgba(180,24,29,.28);font:inherit;text-align:left}
+        html,body{background:#fff!important}
+        main{background:#fff!important}
+
+        /* Чистые белые карточки с едва заметным парением */
+        .product-card{background:#fff!important;border:1px solid rgba(20,24,30,.045)!important;border-radius:24px!important;box-shadow:0 10px 28px rgba(18,22,26,.055),0 2px 8px rgba(18,22,26,.035)!important;overflow:hidden!important;padding:0!important;transition:transform .18s ease,box-shadow .18s ease!important}
+        .product-card:hover{transform:translateY(-2px)!important;box-shadow:0 14px 34px rgba(18,22,26,.075),0 3px 10px rgba(18,22,26,.04)!important}
+        .product-card__visual{background:#fff!important;border-radius:0!important;overflow:hidden!important;padding:12px!important;box-shadow:none!important}
+        .product-card__visual img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;transform:none!important;filter:none!important}
+        .product-card:hover .product-card__visual img{transform:none!important}
+        .product-card__visual>.vk-sprite{inset:12px!important;width:auto!important;height:auto!important;border-radius:16px!important;background-color:#fff!important;background-repeat:no-repeat!important}
+        .product-card__body{padding:14px 15px 16px!important}
+
+        /* Акцентные карточки остаются демонстрацией выбора стиля из WP, но тоже аккуратно парят */
+        .product-card.client-accent{border:1px solid rgba(20,24,30,.045)!important;box-shadow:0 10px 28px rgba(18,22,26,.055),0 2px 8px rgba(18,22,26,.035)!important}
+
+        /* Объёмный + и счётчик */
+        .client-plus{width:42px!important;height:42px!important;border-radius:15px!important;background:linear-gradient(180deg,#ff6668 0%,#e23a40 55%,#cf252d 100%)!important;color:#fff!important;box-shadow:0 11px 22px rgba(210,38,47,.28),inset 0 1px 0 rgba(255,255,255,.46),inset 0 -2px 4px rgba(118,10,17,.18)!important;text-shadow:0 1px 0 rgba(0,0,0,.08)!important;border:1px solid rgba(173,21,31,.18)!important;transition:transform .12s ease,box-shadow .12s ease!important}
+        .client-plus:active{transform:translateY(2px) scale(.98)!important;box-shadow:0 6px 13px rgba(210,38,47,.22),inset 0 2px 5px rgba(118,10,17,.16)!important}
+        .client-counter{box-shadow:0 9px 20px rgba(210,38,47,.12),inset 0 1px 0 rgba(255,255,255,.8)!important}
+
+        /* Мобильная плавающая корзина: объёмная, во всю полезную ширину */
+        .client-order-bar{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:170;display:none;align-items:center;justify-content:space-between;gap:12px;min-height:64px;padding:10px 16px;border:1px solid rgba(153,17,25,.14);border-radius:21px;background:linear-gradient(180deg,#f45b61 0%,#dc3038 56%,#ca222b 100%);color:#fff;box-shadow:0 18px 38px rgba(180,24,29,.30),inset 0 1px 0 rgba(255,255,255,.34),inset 0 -2px 5px rgba(116,9,16,.14);font:inherit;text-align:left}
+        .client-order-bar:active{transform:translateY(1px)}
         .client-order-bar__left{display:flex;align-items:center;gap:10px;min-width:0}
-        .client-order-bar__icon{width:40px;height:40px;border-radius:13px;background:rgba(255,255,255,.15);display:grid;place-items:center;flex:none}
+        .client-order-bar__icon{width:40px;height:40px;border-radius:13px;background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.28);display:grid;place-items:center;flex:none}
         .client-order-bar__icon svg{width:21px;height:21px}
         .client-order-bar__meta{display:flex;flex-direction:column;min-width:0}
         .client-order-bar__count{font-size:14px;font-weight:900;line-height:1.15}
-        .client-order-bar__hint{font-size:10px;font-weight:700;opacity:.78;margin-top:2px}
+        .client-order-bar__hint{font-size:10px;font-weight:700;opacity:.8;margin-top:2px}
         .client-order-bar__total{font-size:20px;font-weight:950;white-space:nowrap;letter-spacing:-.02em}
+
+        /* На ПК сумма видна прямо в кнопке корзины в шапке */
+        .client-desktop-cart-total{display:inline-flex;align-items:center;margin-left:4px;padding-left:10px;border-left:1px solid rgba(255,255,255,.22);font-size:13px;font-weight:950;white-space:nowrap}
+        .cart-button{background:linear-gradient(180deg,#f45b61 0%,#d92525 100%)!important;box-shadow:0 10px 24px rgba(180,24,29,.20),inset 0 1px 0 rgba(255,255,255,.30)!important}
+
         @media(max-width:700px){
           body{padding-bottom:86px!important}
           .client-order-bar.show{display:flex}
           body.client-orderbar-active .mobile-actions{bottom:calc(88px + env(safe-area-inset-bottom))!important}
           body.client-orderbar-active .mobile-cart{display:none!important}
           .footer{padding-bottom:145px!important}
+          .client-desktop-cart-total{display:none!important}
+          .product-card{border-radius:19px!important;box-shadow:0 8px 22px rgba(18,22,26,.05),0 2px 6px rgba(18,22,26,.03)!important}
+          .product-card__visual{padding:8px!important}
+          .product-card__visual>.vk-sprite{inset:8px!important}
+          .client-plus{width:38px!important;height:38px!important;border-radius:14px!important}
         }
         @media(min-width:701px){.client-order-bar{display:none!important}}
       `;
       d.head.appendChild(css);
+
+      var cartButton=d.querySelector('.cart-button');
+      if(cartButton&&!cartButton.querySelector('.client-desktop-cart-total')){
+        var total=d.createElement('span');
+        total.className='client-desktop-cart-total';
+        total.textContent='0 ₽';
+        cartButton.appendChild(total);
+      }
 
       var bar=d.createElement('button');
       bar.type='button';
@@ -83,8 +123,11 @@
       function updateBar(){
         scheduled=false;
         var count=readCount();
+        var total=readTotal();
         bar.querySelector('.client-order-bar__count').textContent=count+' '+pluralProducts(count);
-        bar.querySelector('.client-order-bar__total').textContent=readTotal();
+        bar.querySelector('.client-order-bar__total').textContent=total;
+        var desktopTotal=d.querySelector('.client-desktop-cart-total');
+        if(desktopTotal) desktopTotal.textContent=total;
         var show=count>0;
         bar.classList.toggle('show',show);
         d.body.classList.toggle('client-orderbar-active',show);
