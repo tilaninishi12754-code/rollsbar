@@ -5,38 +5,87 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Rolls Bar — версия с правками заказчика</title>
   <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
-    #site{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f3f4f5}
+    #site{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f3f4f5}
   </style>
 </head>
 <body>
-  <iframe id="site" src="./?client-review=1" title="Rolls Bar"></iframe>
+  <iframe id="site" src="./?client-review=3" title="Rolls Bar"></iframe>
   <script>
   (function(){
     var frame=document.getElementById('site');
     frame.addEventListener('load',function(){
       var d=frame.contentDocument;
-      var w=frame.contentWindow;
-      if(!d||!d.body||d.body.dataset.clientFixes==='1') return;
-      d.body.dataset.clientFixes='1';
+      if(!d||!d.body||d.body.dataset.clientFixesV3==='1') return;
+      d.body.dataset.clientFixesV3='1';
 
       var style=d.createElement('style');
       style.textContent=`
-        .product-card.client-accent{padding:10px;border-radius:24px;transition:.2s}
-        .product-card.client-accent-blue{background:#edf4ff}
-        .product-card.client-accent-red{background:#fff0ef}
-        .product-card.client-accent-warm{background:#fff7e8}
-        .product-card.client-accent .product-card__visual{border-radius:18px}
-        .client-action-wrap{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;min-height:40px}
-        .client-plus{width:40px;height:40px;border:0;border-radius:13px;background:#e94a51;color:#fff;font-size:24px;font-weight:500;display:grid;place-items:center;line-height:1;box-shadow:0 5px 14px rgba(217,37,37,.16)}
-        .client-counter{display:inline-grid;grid-template-columns:36px 34px 36px;align-items:center;background:#fff0ef;border-radius:13px;overflow:hidden;border:1px solid #ffd7d4}
-        .client-counter button{width:36px;height:40px;border:0;background:transparent;color:#d92525;font-size:20px;font-weight:900}
-        .client-counter span{font-size:13px;font-weight:900;text-align:center;color:#171717}
-        .client-choose{border:0;border-radius:13px;background:#fff0ef;color:#d92525;font-weight:900;padding:11px 14px;white-space:nowrap}
+        :root{--shell:min(1180px,calc(100% - 40px));--soft:#f3f4f5;--line:#ececec;--shadow:0 12px 34px rgba(18,22,26,.07)}
+        html{background:#f3f4f5}
+        body{background:#f3f4f5!important}
+
+        .topbar{background:rgba(255,255,255,.985)!important;backdrop-filter:blur(18px);border-bottom:1px solid rgba(0,0,0,.045)!important}
+        .topbar__inner{min-height:78px!important;gap:14px!important}
+        .brand__ninja{width:44px!important;height:56px!important;background:transparent!important;box-shadow:none!important;border-radius:0!important}
+        .brand__logo-img{width:160px!important;height:52px!important}
+        .header-phone-number{font-size:13px!important;font-weight:900!important}
+        .cart-button{border-radius:18px!important;padding:12px 18px!important;box-shadow:none!important}
+        .menu-toggle{border-radius:14px!important;box-shadow:none!important}
+
+        .category-nav{top:78px!important;background:rgba(255,255,255,.985)!important;box-shadow:0 7px 18px rgba(18,22,26,.035);border-bottom:0!important}
+        .category-nav__scroll{min-height:58px!important;gap:6px!important;padding:9px 0!important}
+        .category-nav a{font-size:13px!important;padding:9px 13px!important;border-radius:999px!important;color:#313236!important}
+        .category-nav a.active,.category-nav a:hover{background:#d92525!important;color:#fff!important}
+        .quick-menu{display:none!important}
+
+        .client-promo-wrap{background:#f3f4f5;padding:24px 0 26px}
+        .client-promo{width:var(--shell);margin:0 auto;min-height:208px;border-radius:30px;overflow:hidden;position:relative;display:grid;grid-template-columns:minmax(0,1fr) 330px;align-items:stretch;background:linear-gradient(118deg,#c91924 0%,#e32f32 48%,#f36a52 100%);box-shadow:0 18px 50px rgba(173,22,31,.16);color:#fff;cursor:pointer}
+        .client-promo:before{content:'';position:absolute;left:-80px;bottom:-125px;width:310px;height:230px;border-radius:55px;background:rgba(255,255,255,.08);transform:rotate(18deg)}
+        .client-promo__copy{position:relative;z-index:2;padding:31px 35px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+        .client-promo__eyebrow{display:inline-flex;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.18);padding:7px 10px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+        .client-promo h1{margin:12px 0 7px;font-size:52px;line-height:.92;letter-spacing:-.055em;color:#fff}
+        .client-promo p{margin:0;max-width:520px;font-size:15px;line-height:1.45;color:rgba(255,255,255,.9)}
+        .client-promo__cta{display:inline-flex;align-items:center;gap:9px;margin-top:19px;padding:11px 15px;border-radius:14px;background:#fff;color:#bd1e25;font-size:13px;font-weight:900}
+        .client-promo__art{position:relative;z-index:1;margin:16px 18px 16px 0;border-radius:24px;background:#fff;overflow:hidden;box-shadow:0 18px 40px rgba(106,16,22,.18)}
+        .client-promo__food{position:absolute;inset:0;background-image:url('assets/vk-products-row2.webp');background-repeat:no-repeat;background-size:600% 100%;background-position:60% 50%}
+        .client-promo__art:after{content:'ROLLS BAR';position:absolute;right:14px;bottom:12px;padding:7px 9px;border-radius:10px;background:rgba(20,20,20,.78);color:#fff;font-size:9px;font-weight:900;letter-spacing:.08em}
+
+        main{background:#fff!important;border-radius:34px 34px 0 0;margin-top:0;padding-top:30px;min-height:70vh;box-shadow:0 -1px 0 rgba(0,0,0,.035)}
+        main>.section:first-of-type{padding-top:0!important}
+        .section{padding-top:62px!important}
+        .section-heading{margin-bottom:22px!important}
+        .section-heading h2{font-size:34px!important;letter-spacing:-.045em!important}
+        .product-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:30px 20px!important}
+        .product-card{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;overflow:visible!important;transition:.2s transform}
+        .product-card:hover{transform:translateY(-2px)}
+        .product-card__visual{border-radius:23px!important;background:#f4f5f6!important;box-shadow:none!important}
+        .product-card__body{padding:13px 2px 0!important}
+        .product-card h3{font-size:17px!important;line-height:1.16!important;margin:0 0 6px!important;letter-spacing:-.025em!important}
+        .product-card p{font-size:12px!important;line-height:1.38!important;min-height:34px!important;margin-bottom:10px!important;color:#7b7d80!important}
+        .price strong{font-size:18px!important}
+        .product-card__footer{gap:8px!important}
+        .product-badges{top:11px!important;left:11px!important}
+        .badge{box-shadow:none!important;border:1px solid rgba(0,0,0,.045)!important}
+
+        .product-card.client-accent{padding:10px!important;border-radius:24px!important;transition:.2s transform}
+        .product-card.client-accent-blue{background:#edf3ff!important}
+        .product-card.client-accent-red{background:#fff0ef!important}
+        .product-card.client-accent-warm{background:#fff7e8!important}
+        .product-card.client-accent .product-card__visual{border-radius:18px!important}
+        .product-card.client-accent .product-card__body{padding-left:4px!important;padding-right:4px!important}
+
+        .client-action-wrap{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;min-height:38px}
+        .client-plus{width:38px;height:38px;border:0;border-radius:50%;background:#e94a51;color:#fff;font-size:22px;font-weight:500;display:grid;place-items:center;line-height:1;box-shadow:none}
+        .client-counter{display:inline-grid;grid-template-columns:34px 30px 34px;align-items:center;background:#fff0ef;border-radius:999px;overflow:hidden;border:1px solid #ffd7d4}
+        .client-counter button{width:34px;height:38px;border:0;background:transparent;color:#d92525;font-size:19px;font-weight:900}
+        .client-counter span{font-size:12px;font-weight:900;text-align:center;color:#171717}
+        .client-choose{border:0;border-radius:999px;background:#fff0ef;color:#d92525;font-weight:900;padding:10px 15px;white-space:nowrap}
         .client-price-from:before{content:'от ';font-size:12px;font-weight:800;color:#777}
+
         .client-modal{position:fixed;inset:0;z-index:180;display:none;align-items:center;justify-content:center;padding:16px}
         .client-modal.open{display:flex}
-        .client-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.48);backdrop-filter:blur(4px)}
+        .client-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.48);backdrop-filter:blur(4px);border:0}
         .client-modal__panel{position:relative;z-index:1;width:min(520px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:26px;padding:22px;box-shadow:0 30px 100px rgba(0,0,0,.3)}
         .client-modal__head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
         .client-modal__head h3{margin:0;font-size:25px;letter-spacing:-.04em}
@@ -47,6 +96,7 @@
         .client-option select{width:100%;padding:12px;border:1px solid #e6e6e6;border-radius:12px;background:#fff;font:inherit}
         .client-option-note{font-size:11px;color:#8a8a8a;line-height:1.4;margin-top:7px}
         .client-modal__add{width:100%;border:0;border-radius:14px;background:#d92525;color:#fff;font-weight:900;padding:14px;margin-top:16px}
+
         .delivery-zone-wrap{grid-column:1/-1;border:1px solid #ececec;border-radius:15px;padding:12px;background:#fafafa}
         .delivery-zone-wrap label{display:block;font-size:11px;color:#777;font-weight:800;margin-bottom:6px}
         .delivery-zone-wrap select{width:100%;border:1px solid #e6e6e6;border-radius:12px;padding:12px;background:#fff;font:inherit}
@@ -59,42 +109,104 @@
         .minimum-continue{background:#f0f3f6;color:#28303a}
         .minimum-return{background:#ea5057;color:#fff}
         .client-reviews-link{display:inline-flex!important;align-items:center;gap:6px}
+
+        .delivery-card,.conditions-card,.simple-card{box-shadow:none!important;border-color:#ececec!important}
+        .footer{margin-top:72px!important}
+
+        @media(max-width:1050px){
+          :root{--shell:min(100% - 32px,940px)}
+          .client-promo{grid-template-columns:1fr 280px;min-height:190px}
+          .client-promo h1{font-size:46px}
+          .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+        }
         @media(max-width:700px){
-          .product-card.client-accent{padding:7px;border-radius:18px}
-          .client-action-wrap{min-height:38px}
-          .client-plus{width:38px;height:38px;border-radius:12px}
-          .client-counter{grid-template-columns:32px 30px 32px}
-          .client-counter button{width:32px;height:38px}
-          .client-choose{padding:10px 11px;font-size:12px}
+          :root{--shell:calc(100% - 28px)}
+          html{scroll-padding-top:116px!important}
+          .topbar__inner{min-height:66px!important;padding:5px 0!important}
+          .brand__ninja{width:30px!important;height:40px!important}
+          .brand__logo-img{width:101px!important;height:34px!important}
+          .header-phone-number{font-size:11px!important}
+          .menu-toggle{width:35px!important;height:35px!important}
+          .category-nav{top:66px!important}
+          .category-nav__scroll{min-height:50px!important;padding:7px 0!important}
+          .category-nav a{font-size:12px!important;padding:8px 11px!important}
+
+          .client-promo-wrap{padding:11px 0 14px}
+          .client-promo{min-height:126px;grid-template-columns:minmax(0,1fr) 116px;border-radius:20px;box-shadow:none}
+          .client-promo__copy{padding:17px 16px}
+          .client-promo__eyebrow{font-size:8px;padding:5px 7px}
+          .client-promo h1{font-size:30px;margin:8px 0 4px}
+          .client-promo p{font-size:10.5px;line-height:1.3;max-width:205px}
+          .client-promo__cta{margin-top:9px;padding:7px 9px;border-radius:10px;font-size:9px}
+          .client-promo__art{margin:9px 9px 9px 0;border-radius:15px;box-shadow:none}
+          .client-promo__art:after{display:none}
+
+          main{border-radius:24px 24px 0 0;padding-top:23px!important}
+          .section{padding-top:44px!important}
+          main>.section:first-of-type{padding-top:0!important}
+          .section-heading{margin-bottom:15px!important}
+          .section-heading h2{font-size:29px!important}
+          .product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:24px 11px!important}
+          .product-card__visual{border-radius:18px!important}
+          .product-card__body{padding-top:9px!important}
+          .product-card h3{font-size:14.5px!important;margin-bottom:5px!important}
+          .product-card p{display:none!important}
+          .price strong{font-size:16px!important}
+          .price s{font-size:10px!important}
+          .product-card.client-accent{padding:7px!important;border-radius:18px!important}
+          .client-action-wrap{min-height:35px}
+          .client-plus{width:35px;height:35px;font-size:20px}
+          .client-counter{grid-template-columns:30px 27px 30px}
+          .client-counter button{width:30px;height:35px}
+          .client-choose{padding:9px 10px;font-size:11px}
+
           .client-modal{align-items:flex-end;padding:0}
           .client-modal__panel{width:100%;border-radius:25px 25px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
           .minimum-modal .client-modal__panel{width:100%;border-radius:25px 25px 0 0}
           .minimum-modal h3{font-size:27px}
         }
+        @media(max-width:350px){
+          .header-phone-number{font-size:10px!important}
+          .client-promo{grid-template-columns:minmax(0,1fr) 98px}
+          .client-promo h1{font-size:27px}
+          .client-promo p{font-size:10px}
+        }
       `;
       d.head.appendChild(style);
+
+      var quick=d.querySelector('.quick-menu');
+      if(quick) quick.style.display='none';
+      var nav=d.querySelector('.category-nav');
+      if(nav&&!d.querySelector('.client-promo-wrap')){
+        var promoWrap=d.createElement('section');
+        promoWrap.className='client-promo-wrap';
+        promoWrap.innerHTML='<div class="client-promo" id="clientPromo"><div class="client-promo__copy"><span class="client-promo__eyebrow">Rolls Bar</span><h1>Акции</h1><p>Скидки, комбо и специальные предложения — всё выгодное в одном месте.</p><span class="client-promo__cta">Смотреть предложения <b>→</b></span></div><div class="client-promo__art"><span class="client-promo__food"></span></div></div>';
+        nav.insertAdjacentElement('afterend',promoWrap);
+        promoWrap.querySelector('#clientPromo').addEventListener('click',function(){
+          var target=d.getElementById('hits')||d.getElementById('sets');
+          if(target) target.scrollIntoView({behavior:'smooth'});
+        });
+      }
 
       function addReviewsLinks(){
         var menu=d.querySelector('.site-menu__links');
         if(menu&&!menu.querySelector('[data-client-reviews]')){
-          var a=d.createElement('a');a.href='reviews.html';a.target='_top';a.dataset.clientReviews='1';a.textContent='Отзывы клиентов';menu.insertBefore(a,menu.querySelector('a[href*="vk.ru"]'));
+          var a=d.createElement('a');a.href='reviews.html';a.target='_top';a.dataset.clientReviews='1';a.textContent='Отзывы клиентов';
+          var vk=menu.querySelector('a[href*="vk.ru"]');menu.insertBefore(a,vk||null);
         }
         var footer=d.querySelector('.footer-links');
         if(footer&&!footer.querySelector('[data-client-reviews]')){
           var b=d.createElement('a');b.href='reviews.html';b.target='_top';b.dataset.clientReviews='1';b.className='client-reviews-link';b.textContent='Отзывы клиентов';footer.appendChild(b);
         }
       }
+      addReviewsLinks();
 
-      var highlightMap={
-        'pizza-pepperoni':'client-accent-blue',
-        'hit-set':'client-accent-red',
-        'tom-yam':'client-accent-warm'
-      };
+      var highlightMap={'pizza-pepperoni':'client-accent-blue','hit-set':'client-accent-red','tom-yam':'client-accent-warm'};
       function applyHighlights(){
         Object.keys(highlightMap).forEach(function(id){
           var btn=d.querySelector('[data-add="'+id+'"]');
           var card=btn&&btn.closest('.product-card');
-          if(card){card.classList.add('client-accent',highlightMap[id]);}
+          if(card) card.classList.add('client-accent',highlightMap[id]);
         });
       }
 
@@ -115,29 +227,24 @@
         counts=fresh;
         d.querySelectorAll('[data-client-control]').forEach(function(ctrl){
           var id=ctrl.dataset.clientControl;
-          if(variableIds[id]) return;
-          renderSimpleControl(ctrl,id);
+          if(!variableIds[id]) renderSimpleControl(ctrl,id);
         });
       }
-
       function originalAdd(id){
         var btn=d.querySelector('[data-original-add="'+id+'"]');
         if(btn) btn.click();
-        setTimeout(syncFromCart,30);
+        setTimeout(syncFromCart,40);
       }
       function originalMinus(id){
         var btn=d.querySelector('[data-minus="'+id+'"]');
         if(btn) btn.click();
-        setTimeout(syncFromCart,30);
+        setTimeout(syncFromCart,40);
       }
-
       function renderSimpleControl(ctrl,id){
         var qty=currentCount(id);
-        if(qty>0){
-          ctrl.innerHTML='<div class="client-counter"><button type="button" data-client-minus="'+id+'">−</button><span>'+qty+'</span><button type="button" data-client-plus="'+id+'">+</button></div>';
-        }else{
-          ctrl.innerHTML='<button class="client-plus" type="button" data-client-plus="'+id+'" aria-label="Добавить в корзину">+</button>';
-        }
+        ctrl.innerHTML=qty>0
+          ?'<div class="client-counter"><button type="button" data-client-minus="'+id+'">−</button><span>'+qty+'</span><button type="button" data-client-plus="'+id+'">+</button></div>'
+          :'<button class="client-plus" type="button" data-client-plus="'+id+'" aria-label="Добавить в корзину">+</button>';
       }
 
       var productModal=d.createElement('div');
@@ -149,8 +256,7 @@
         selectedVariable=id;
         var original=d.querySelector('[data-original-add="'+id+'"]');
         var card=original&&original.closest('.product-card');
-        var title=card?card.querySelector('h3').textContent:id;
-        d.getElementById('clientProductTitle').textContent=title;
+        d.getElementById('clientProductTitle').textContent=card&&card.querySelector('h3')?card.querySelector('h3').textContent:id;
         var html='';
         if(id.indexOf('pizza-')===0){
           html+='<div class="client-option"><label>Размер</label><select><option>50 см — текущая позиция</option></select><div class="client-option-note">Дополнительные размеры подключим после загрузки финального прайса.</div></div>';
@@ -184,66 +290,61 @@
             ctrl.innerHTML='<button class="client-choose" type="button" data-client-choose="'+id+'">Выбрать</button>';
             var price=card.querySelector('.price strong');
             if(price&&id.indexOf('pizza-')===0) price.classList.add('client-price-from');
-          }else{
-            renderSimpleControl(ctrl,id);
-          }
+          }else renderSimpleControl(ctrl,id);
           card.dataset.clientAction='1';
         });
       }
 
       d.addEventListener('click',function(e){
-        var plus=e.target.closest('[data-client-plus]');
-        if(plus){e.preventDefault();originalAdd(plus.dataset.clientPlus);return;}
-        var minus=e.target.closest('[data-client-minus]');
-        if(minus){e.preventDefault();originalMinus(minus.dataset.clientMinus);return;}
-        var choose=e.target.closest('[data-client-choose]');
-        if(choose){e.preventDefault();openProductModal(choose.dataset.clientChoose);return;}
+        var plus=e.target.closest('[data-client-plus]');if(plus){e.preventDefault();originalAdd(plus.dataset.clientPlus);return;}
+        var minus=e.target.closest('[data-client-minus]');if(minus){e.preventDefault();originalMinus(minus.dataset.clientMinus);return;}
+        var choose=e.target.closest('[data-client-choose]');if(choose){e.preventDefault();openProductModal(choose.dataset.clientChoose);return;}
       });
 
       var checkoutForm=d.getElementById('checkoutForm');
       var address=d.getElementById('addressField');
-      var zoneWrap=d.createElement('div');
-      zoneWrap.className='delivery-zone-wrap';
-      zoneWrap.innerHTML='<label for="clientDeliveryZone">Зона доставки</label><select id="clientDeliveryZone"><option value="">Выберите зону</option><option value="500">Зона 1 — минимальный заказ 500 ₽</option><option value="800">Зона 2 — минимальный заказ 800 ₽</option><option value="1200">Зона 3 — минимальный заказ 1 200 ₽</option></select><small>В этой GitHub-версии зона выбирается вручную для демонстрации. В WordPress её можно определять автоматически по адресу. Пороговые суммы демонстрационные и заменяются на утверждённые.</small>';
-      if(address&&checkoutForm) address.insertAdjacentElement('afterend',zoneWrap);
+      if(checkoutForm&&address&&!d.getElementById('clientDeliveryZone')){
+        var zoneWrap=d.createElement('div');
+        zoneWrap.className='delivery-zone-wrap';
+        zoneWrap.innerHTML='<label for="clientDeliveryZone">Зона доставки</label><select id="clientDeliveryZone" required><option value="">Выберите зону</option><option value="500">Зона 1 — минимальный заказ 500 ₽</option><option value="800">Зона 2 — минимальный заказ 800 ₽</option><option value="1200">Зона 3 — минимальный заказ 1 200 ₽</option></select><small>Суммы пока демонстрационные. В WordPress будут заменены на утверждённые значения и зона сможет определяться по адресу.</small>';
+        address.insertAdjacentElement('afterend',zoneWrap);
+      }
 
       var minimumModal=d.createElement('div');
       minimumModal.className='client-modal minimum-modal';
-      minimumModal.innerHTML='<div class="client-modal__backdrop"></div><div class="client-modal__panel"><h3 id="minimumTitle">Минимальная сумма заказа</h3><p id="minimumText"></p><div class="minimum-modal__actions"><button class="minimum-continue" type="button" id="minimumContinue">Продолжить</button><button class="minimum-return" type="button" id="minimumReturn">Вернуться в корзину</button></div></div>';
+      minimumModal.innerHTML='<button class="client-modal__backdrop" type="button" data-min-close></button><div class="client-modal__panel"><h3 id="minimumTitle">Минимальная сумма заказа</h3><p id="minimumText"></p><div class="minimum-modal__actions"><button class="minimum-continue" type="button" data-min-close>Продолжить</button><button class="minimum-return" type="button" id="minimumReturn">Вернуться в корзину</button></div></div>';
       d.body.appendChild(minimumModal);
-      d.getElementById('minimumContinue').addEventListener('click',function(){minimumModal.classList.remove('open');});
+      minimumModal.querySelectorAll('[data-min-close]').forEach(function(x){x.addEventListener('click',function(){minimumModal.classList.remove('open');});});
       d.getElementById('minimumReturn').addEventListener('click',function(){
         minimumModal.classList.remove('open');
         var close=d.querySelector('[data-checkout-close]');if(close) close.click();
-        setTimeout(function(){var cart=d.querySelector('[data-cart-open]');if(cart) cart.click();},30);
+        setTimeout(function(){var cart=d.querySelector('[data-cart-open]');if(cart) cart.click();},50);
       });
       function rublesFrom(text){return parseInt(String(text||'').replace(/[^0-9]/g,''),10)||0;}
       function showMinimum(min,total){
         var diff=Math.max(0,min-total);
         d.getElementById('minimumTitle').textContent='Минимальная сумма заказа — '+new Intl.NumberFormat('ru-RU').format(min)+' ₽';
-        d.getElementById('minimumText').textContent='Для оформления заказа наберите в корзине ещё товаров на сумму '+new Intl.NumberFormat('ru-RU').format(diff)+' ₽.';
+        d.getElementById('minimumText').textContent='Для оформления заказа наберите в корзине ещё товаров на сумму '+new Intl.NumberFormat('ru-RU').format(diff)+' ₽';
         minimumModal.classList.add('open');
       }
       if(checkoutForm){
         checkoutForm.addEventListener('submit',function(e){
-          var deliveryActive=d.querySelector('[data-mode="delivery"].active');
-          if(!deliveryActive) return;
           var zone=d.getElementById('clientDeliveryZone');
-          var min=zone?parseInt(zone.value,10)||0:0;
-          var total=rublesFrom(d.getElementById('checkoutItemsTotal')&&d.getElementById('checkoutItemsTotal').textContent);
-          if(!min){e.preventDefault();e.stopImmediatePropagation();d.getElementById('minimumTitle').textContent='Выберите зону доставки';d.getElementById('minimumText').textContent='Зона нужна, чтобы проверить минимальную сумму заказа для вашего адреса.';minimumModal.classList.add('open');return;}
+          if(!zone||!zone.value) return;
+          var modeText=(d.getElementById('checkoutMode')||{}).textContent||'';
+          if(modeText.toLowerCase().indexOf('самовывоз')!==-1) return;
+          var min=parseInt(zone.value,10)||0;
+          var total=rublesFrom((d.getElementById('checkoutItemsTotal')||{}).textContent);
           if(total<min){e.preventDefault();e.stopImmediatePropagation();showMinimum(min,total);}
         },true);
       }
 
-      addReviewsLinks();
-      applyHighlights();
       enhanceProductActions();
+      applyHighlights();
       syncFromCart();
-
-      var obs=new MutationObserver(function(){enhanceProductActions();applyHighlights();setTimeout(syncFromCart,0);});
       var cartList=d.getElementById('cartList');
-      if(cartList) obs.observe(cartList,{childList:true,subtree:true,characterData:true});
+      if(cartList) new MutationObserver(function(){syncFromCart();}).observe(cartList,{childList:true,subtree:true,characterData:true});
+      new MutationObserver(function(){enhanceProductActions();applyHighlights();addReviewsLinks();}).observe(d.body,{childList:true,subtree:true});
     });
   })();
   </script>
