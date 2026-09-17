@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Rolls Bar — версия с правками заказчика</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
+    #site{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}
+  </style>
+</head>
+<body>
+  <iframe id="site" src="./?client-review=1" title="Rolls Bar"></iframe>
+  <script>
+  (function(){
+    var frame=document.getElementById('site');
+    frame.addEventListener('load',function(){
+      var d=frame.contentDocument;
+      var w=frame.contentWindow;
+      if(!d||!d.body||d.body.dataset.clientFixes==='1') return;
+      d.body.dataset.clientFixes='1';
+
+      var style=d.createElement('style');
+      style.textContent=`
+        .product-card.client-accent{padding:10px;border-radius:24px;transition:.2s}
+        .product-card.client-accent-blue{background:#edf4ff}
+        .product-card.client-accent-red{background:#fff0ef}
+        .product-card.client-accent-warm{background:#fff7e8}
+        .product-card.client-accent .product-card__visual{border-radius:18px}
+        .client-action-wrap{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;min-height:40px}
+        .client-plus{width:40px;height:40px;border:0;border-radius:13px;background:#e94a51;color:#fff;font-size:24px;font-weight:500;display:grid;place-items:center;line-height:1;box-shadow:0 5px 14px rgba(217,37,37,.16)}
+        .client-counter{display:inline-grid;grid-template-columns:36px 34px 36px;align-items:center;background:#fff0ef;border-radius:13px;overflow:hidden;border:1px solid #ffd7d4}
+        .client-counter button{width:36px;height:40px;border:0;background:transparent;color:#d92525;font-size:20px;font-weight:900}
+        .client-counter span{font-size:13px;font-weight:900;text-align:center;color:#171717}
+        .client-choose{border:0;border-radius:13px;background:#fff0ef;color:#d92525;font-weight:900;padding:11px 14px;white-space:nowrap}
+        .client-price-from:before{content:'от ';font-size:12px;font-weight:800;color:#777}
+        .client-modal{position:fixed;inset:0;z-index:180;display:none;align-items:center;justify-content:center;padding:16px}
+        .client-modal.open{display:flex}
+        .client-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.48);backdrop-filter:blur(4px)}
+        .client-modal__panel{position:relative;z-index:1;width:min(520px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:26px;padding:22px;box-shadow:0 30px 100px rgba(0,0,0,.3)}
+        .client-modal__head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+        .client-modal__head h3{margin:0;font-size:25px;letter-spacing:-.04em}
+        .client-modal__close{border:0;width:38px;height:38px;border-radius:50%;background:#f5f5f5;font-size:24px}
+        .client-options{display:grid;gap:13px}
+        .client-option{border:1px solid #ececec;border-radius:16px;padding:13px}
+        .client-option label{display:block;font-size:12px;color:#777;margin-bottom:8px;font-weight:800}
+        .client-option select{width:100%;padding:12px;border:1px solid #e6e6e6;border-radius:12px;background:#fff;font:inherit}
+        .client-option-note{font-size:11px;color:#8a8a8a;line-height:1.4;margin-top:7px}
+        .client-modal__add{width:100%;border:0;border-radius:14px;background:#d92525;color:#fff;font-weight:900;padding:14px;margin-top:16px}
+        .delivery-zone-wrap{grid-column:1/-1;border:1px solid #ececec;border-radius:15px;padding:12px;background:#fafafa}
+        .delivery-zone-wrap label{display:block;font-size:11px;color:#777;font-weight:800;margin-bottom:6px}
+        .delivery-zone-wrap select{width:100%;border:1px solid #e6e6e6;border-radius:12px;padding:12px;background:#fff;font:inherit}
+        .delivery-zone-wrap small{display:block;color:#8b8b8b;font-size:10px;margin-top:6px;line-height:1.35}
+        .minimum-modal .client-modal__panel{width:min(560px,100%);text-align:center;border-radius:30px}
+        .minimum-modal h3{font-size:30px;margin:0 0 10px;letter-spacing:-.04em}
+        .minimum-modal p{font-size:16px;line-height:1.45;color:#4b4b4b;margin:0 0 18px}
+        .minimum-modal__actions{display:grid;gap:10px}
+        .minimum-modal__actions button{border:0;border-radius:16px;padding:15px;font-weight:900}
+        .minimum-continue{background:#f0f3f6;color:#28303a}
+        .minimum-return{background:#ea5057;color:#fff}
+        .client-reviews-link{display:inline-flex!important;align-items:center;gap:6px}
+        @media(max-width:700px){
+          .product-card.client-accent{padding:7px;border-radius:18px}
+          .client-action-wrap{min-height:38px}
+          .client-plus{width:38px;height:38px;border-radius:12px}
+          .client-counter{grid-template-columns:32px 30px 32px}
+          .client-counter button{width:32px;height:38px}
+          .client-choose{padding:10px 11px;font-size:12px}
+          .client-modal{align-items:flex-end;padding:0}
+          .client-modal__panel{width:100%;border-radius:25px 25px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+          .minimum-modal .client-modal__panel{width:100%;border-radius:25px 25px 0 0}
+          .minimum-modal h3{font-size:27px}
+        }
+      `;
+      d.head.appendChild(style);
+
+      function addReviewsLinks(){
+        var menu=d.querySelector('.site-menu__links');
+        if(menu&&!menu.querySelector('[data-client-reviews]')){
+          var a=d.createElement('a');a.href='reviews.html';a.target='_top';a.dataset.clientReviews='1';a.textContent='Отзывы клиентов';menu.insertBefore(a,menu.querySelector('a[href*="vk.ru"]'));
+        }
+        var footer=d.querySelector('.footer-links');
+        if(footer&&!footer.querySelector('[data-client-reviews]')){
+          var b=d.createElement('a');b.href='reviews.html';b.target='_top';b.dataset.clientReviews='1';b.className='client-reviews-link';b.textContent='Отзывы клиентов';footer.appendChild(b);
+        }
+      }
+
+      var highlightMap={
+        'pizza-pepperoni':'client-accent-blue',
+        'hit-set':'client-accent-red',
+        'tom-yam':'client-accent-warm'
+      };
+      function applyHighlights(){
+        Object.keys(highlightMap).forEach(function(id){
+          var btn=d.querySelector('[data-add="'+id+'"]');
+          var card=btn&&btn.closest('.product-card');
+          if(card){card.classList.add('client-accent',highlightMap[id]);}
+        });
+      }
+
+      var variableIds={};
+      d.querySelectorAll('[data-add]').forEach(function(btn){
+        var id=btn.dataset.add;
+        if(id.indexOf('pizza-')===0||id==='baked-rolls'||id==='wok-sea'||id==='wok-chicken'||id==='wok-veg') variableIds[id]=true;
+      });
+
+      var counts={};
+      function currentCount(id){return counts[id]||0;}
+      function syncFromCart(){
+        var fresh={};
+        d.querySelectorAll('.cart-item [data-minus]').forEach(function(btn){
+          var q=btn.parentElement&&btn.parentElement.querySelector('span');
+          fresh[btn.dataset.minus]=q?parseInt(q.textContent,10)||0:0;
+        });
+        counts=fresh;
+        d.querySelectorAll('[data-client-control]').forEach(function(ctrl){
+          var id=ctrl.dataset.clientControl;
+          if(variableIds[id]) return;
+          renderSimpleControl(ctrl,id);
+        });
+      }
+
+      function originalAdd(id){
+        var btn=d.querySelector('[data-original-add="'+id+'"]');
+        if(btn) btn.click();
+        setTimeout(syncFromCart,30);
+      }
+      function originalMinus(id){
+        var btn=d.querySelector('[data-minus="'+id+'"]');
+        if(btn) btn.click();
+        setTimeout(syncFromCart,30);
+      }
+
+      function renderSimpleControl(ctrl,id){
+        var qty=currentCount(id);
+        if(qty>0){
+          ctrl.innerHTML='<div class="client-counter"><button type="button" data-client-minus="'+id+'">−</button><span>'+qty+'</span><button type="button" data-client-plus="'+id+'">+</button></div>';
+        }else{
+          ctrl.innerHTML='<button class="client-plus" type="button" data-client-plus="'+id+'" aria-label="Добавить в корзину">+</button>';
+        }
+      }
+
+      var productModal=d.createElement('div');
+      productModal.className='client-modal';
+      productModal.innerHTML='<button class="client-modal__backdrop" type="button" data-client-product-close></button><div class="client-modal__panel"><div class="client-modal__head"><div><small style="color:#999;font-weight:800">Настройка товара</small><h3 id="clientProductTitle">Товар</h3></div><button class="client-modal__close" type="button" data-client-product-close>×</button></div><div class="client-options" id="clientProductOptions"></div><button class="client-modal__add" type="button" id="clientProductAdd">Добавить в корзину</button></div>';
+      d.body.appendChild(productModal);
+      var selectedVariable=null;
+      function openProductModal(id){
+        selectedVariable=id;
+        var original=d.querySelector('[data-original-add="'+id+'"]');
+        var card=original&&original.closest('.product-card');
+        var title=card?card.querySelector('h3').textContent:id;
+        d.getElementById('clientProductTitle').textContent=title;
+        var html='';
+        if(id.indexOf('pizza-')===0){
+          html+='<div class="client-option"><label>Размер</label><select><option>50 см — текущая позиция</option></select><div class="client-option-note">Дополнительные размеры подключим после загрузки финального прайса.</div></div>';
+          html+='<div class="client-option"><label>Тесто</label><select><option>Классическое</option></select></div>';
+        }else if(id==='baked-rolls'){
+          html+='<div class="client-option"><label>Начинка</label><select><option>Лосось</option><option>Креветка</option><option>Угорь</option><option>Краб</option><option>Мидии</option></select></div>';
+        }else{
+          html+='<div class="client-option"><label>Лапша</label><select><option>Удон</option><option>Соба</option><option>Фунчоза</option></select></div>';
+        }
+        d.getElementById('clientProductOptions').innerHTML=html;
+        productModal.classList.add('open');
+      }
+      function closeProductModal(){productModal.classList.remove('open');selectedVariable=null;}
+      productModal.querySelectorAll('[data-client-product-close]').forEach(function(x){x.addEventListener('click',closeProductModal);});
+      d.getElementById('clientProductAdd').addEventListener('click',function(){if(selectedVariable){originalAdd(selectedVariable);closeProductModal();}});
+
+      function enhanceProductActions(){
+        d.querySelectorAll('.product-card').forEach(function(card){
+          if(card.dataset.clientAction==='1') return;
+          var btn=card.querySelector('[data-add]');
+          if(!btn) return;
+          var id=btn.dataset.add;
+          btn.dataset.originalAdd=id;
+          btn.style.display='none';
+          var footer=btn.parentElement;
+          var ctrl=d.createElement('div');
+          ctrl.className='client-action-wrap';
+          ctrl.dataset.clientControl=id;
+          footer.appendChild(ctrl);
+          if(variableIds[id]){
+            ctrl.innerHTML='<button class="client-choose" type="button" data-client-choose="'+id+'">Выбрать</button>';
+            var price=card.querySelector('.price strong');
+            if(price&&id.indexOf('pizza-')===0) price.classList.add('client-price-from');
+          }else{
+            renderSimpleControl(ctrl,id);
+          }
+          card.dataset.clientAction='1';
+        });
+      }
+
+      d.addEventListener('click',function(e){
+        var plus=e.target.closest('[data-client-plus]');
+        if(plus){e.preventDefault();originalAdd(plus.dataset.clientPlus);return;}
+        var minus=e.target.closest('[data-client-minus]');
+        if(minus){e.preventDefault();originalMinus(minus.dataset.clientMinus);return;}
+        var choose=e.target.closest('[data-client-choose]');
+        if(choose){e.preventDefault();openProductModal(choose.dataset.clientChoose);return;}
+      });
+
+      var checkoutForm=d.getElementById('checkoutForm');
+      var address=d.getElementById('addressField');
+      var zoneWrap=d.createElement('div');
+      zoneWrap.className='delivery-zone-wrap';
+      zoneWrap.innerHTML='<label for="clientDeliveryZone">Зона доставки</label><select id="clientDeliveryZone"><option value="">Выберите зону</option><option value="500">Зона 1 — минимальный заказ 500 ₽</option><option value="800">Зона 2 — минимальный заказ 800 ₽</option><option value="1200">Зона 3 — минимальный заказ 1 200 ₽</option></select><small>В этой GitHub-версии зона выбирается вручную для демонстрации. В WordPress её можно определять автоматически по адресу. Пороговые суммы демонстрационные и заменяются на утверждённые.</small>';
+      if(address&&checkoutForm) address.insertAdjacentElement('afterend',zoneWrap);
+
+      var minimumModal=d.createElement('div');
+      minimumModal.className='client-modal minimum-modal';
+      minimumModal.innerHTML='<div class="client-modal__backdrop"></div><div class="client-modal__panel"><h3 id="minimumTitle">Минимальная сумма заказа</h3><p id="minimumText"></p><div class="minimum-modal__actions"><button class="minimum-continue" type="button" id="minimumContinue">Продолжить</button><button class="minimum-return" type="button" id="minimumReturn">Вернуться в корзину</button></div></div>';
+      d.body.appendChild(minimumModal);
+      d.getElementById('minimumContinue').addEventListener('click',function(){minimumModal.classList.remove('open');});
+      d.getElementById('minimumReturn').addEventListener('click',function(){
+        minimumModal.classList.remove('open');
+        var close=d.querySelector('[data-checkout-close]');if(close) close.click();
+        setTimeout(function(){var cart=d.querySelector('[data-cart-open]');if(cart) cart.click();},30);
+      });
+      function rublesFrom(text){return parseInt(String(text||'').replace(/[^0-9]/g,''),10)||0;}
+      function showMinimum(min,total){
+        var diff=Math.max(0,min-total);
+        d.getElementById('minimumTitle').textContent='Минимальная сумма заказа — '+new Intl.NumberFormat('ru-RU').format(min)+' ₽';
+        d.getElementById('minimumText').textContent='Для оформления заказа наберите в корзине ещё товаров на сумму '+new Intl.NumberFormat('ru-RU').format(diff)+' ₽.';
+        minimumModal.classList.add('open');
+      }
+      if(checkoutForm){
+        checkoutForm.addEventListener('submit',function(e){
+          var deliveryActive=d.querySelector('[data-mode="delivery"].active');
+          if(!deliveryActive) return;
+          var zone=d.getElementById('clientDeliveryZone');
+          var min=zone?parseInt(zone.value,10)||0:0;
+          var total=rublesFrom(d.getElementById('checkoutItemsTotal')&&d.getElementById('checkoutItemsTotal').textContent);
+          if(!min){e.preventDefault();e.stopImmediatePropagation();d.getElementById('minimumTitle').textContent='Выберите зону доставки';d.getElementById('minimumText').textContent='Зона нужна, чтобы проверить минимальную сумму заказа для вашего адреса.';minimumModal.classList.add('open');return;}
+          if(total<min){e.preventDefault();e.stopImmediatePropagation();showMinimum(min,total);}
+        },true);
+      }
+
+      addReviewsLinks();
+      applyHighlights();
+      enhanceProductActions();
+      syncFromCart();
+
+      var obs=new MutationObserver(function(){enhanceProductActions();applyHighlights();setTimeout(syncFromCart,0);});
+      var cartList=d.getElementById('cartList');
+      if(cartList) obs.observe(cartList,{childList:true,subtree:true,characterData:true});
+    });
+  })();
+  </script>
+</body>
+</html>
