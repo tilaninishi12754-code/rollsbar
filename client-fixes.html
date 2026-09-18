@@ -66,7 +66,7 @@
         .price{display:flex!important;align-items:baseline!important;gap:6px!important;flex-wrap:wrap!important;min-height:38px!important;align-content:center!important}
         .price strong{font-size:18px!important;line-height:1!important}
         .price s{line-height:1!important}
-        .product-card__footer{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-height:40px!important}
+        .product-card__footer{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-height:40px!important;width:100%!important}
         .product-badges{top:11px!important;left:11px!important}
         .badge{box-shadow:none!important;border:1px solid rgba(0,0,0,.045)!important}
 
@@ -249,7 +249,7 @@
         var qty=currentCount(id);
         ctrl.innerHTML=qty>0
           ?'<div class="client-counter"><button type="button" data-client-minus="'+id+'">−</button><span>'+qty+'</span><button type="button" data-client-plus="'+id+'">+</button></div>'
-          :'<button class="client-plus" type="button" data-client-plus="'+id+'" aria-label="Добавить в корзину"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.5 9h9.8l1.7-6H7.1M10 19a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 10 19Zm8 0a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 18 19Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+          :'<button class="client-plus" type="button" data-client-plus="'+id+'" aria-label="Добавить в корзину"></button>';
       }
 
       var productModal=d.createElement('div');
