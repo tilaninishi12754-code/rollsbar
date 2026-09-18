@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Rolls Bar — актуальное демо</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
+    #stage{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}
+  </style>
+</head>
+<body>
+  <iframe id="stage" src="client-fixes.html?v=polish-v3" title="Rolls Bar"></iframe>
+  <script>
+  (function(){
+    var stage=document.getElementById('stage');
+
+    function deepDocument(){
+      try{
+        var wrapper=stage.contentDocument;
+        var inner=wrapper&&wrapper.getElementById('site');
+        return inner&&inner.contentDocument?inner.contentDocument:null;
+      }catch(e){return null;}
+    }
+
+    function pluralProducts(n){
+      n=Math.abs(n)%100;
+      var n1=n%10;
+      if(n>10&&n<20) return 'товаров';
+      if(n1>1&&n1<5) return 'товара';
+      if(n1===1) return 'товар';
+      return 'товаров';
+    }
+
+    function rublesFrom(text){
+      return parseInt(String(text||'').replace(/[^0-9]/g,''),10)||0;
+    }
+
+    function applyFinalFixes(){
+      var d=deepDocument();
+      if(!d||!d.body) return false;
+      if(d.body.dataset.finalDemoFixes==='1') return true;
+      if(!d.querySelector('.cart-count')||!d.querySelector('[data-cart-open]')) return false;
+      d.body.dataset.finalDemoFixes='1';
+
+      var css=d.createElement('style');
+      css.textContent=`
+        html,body{background:#fff!important}
+        main{background:#fff!important}
+
+        /* Чистые белые карточки с едва заметным парением */
+        .product-card{background:#fff!important;border:1px solid rgba(20,24,30,.045)!important;border-radius:24px!important;box-shadow:0 10px 28px rgba(18,22,26,.055),0 2px 8px rgba(18,22,26,.035)!important;overflow:hidden!important;padding:0!important;transition:transform .18s ease,box-shadow .18s ease!important}
+        .product-card:hover{transform:translateY(-2px)!important;box-shadow:0 14px 34px rgba(18,22,26,.075),0 3px 10px rgba(18,22,26,.04)!important}
+        .product-card__visual{background:#fff!important;border-radius:0!important;overflow:hidden!important;padding:12px!important;box-shadow:none!important}
+        .product-card__visual img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;transform:none!important;filter:none!important}
+        .product-card:hover .product-card__visual img{transform:none!important}
+        .product-card__visual>.vk-sprite{inset:12px!important;width:auto!important;height:auto!important;border-radius:16px!important;background-color:#fff!important;background-repeat:no-repeat!important}
+        .product-card__body{padding:14px 15px 16px!important}
+
+        /* Акцентные карточки остаются демонстрацией выбора стиля из WP, но тоже аккуратно парят */
+        .product-card.client-accent{border:1px solid rgba(20,24,30,.045)!important;box-shadow:0 10px 28px rgba(18,22,26,.055),0 2px 8px rgba(18,22,26,.035)!important}
+
+        /* Объёмный + и счётчик */
+        .client-plus{width:42px!important;height:42px!important;border-radius:15px!important;background:linear-gradient(180deg,#ff6668 0%,#e23a40 55%,#cf252d 100%)!important;color:#fff!important;box-shadow:0 11px 22px rgba(210,38,47,.28),inset 0 1px 0 rgba(255,255,255,.46),inset 0 -2px 4px rgba(118,10,17,.18)!important;text-shadow:0 1px 0 rgba(0,0,0,.08)!important;border:1px solid rgba(173,21,31,.18)!important;transition:transform .12s ease,box-shadow .12s ease!important}
+        .client-plus:active{transform:translateY(2px) scale(.98)!important;box-shadow:0 6px 13px rgba(210,38,47,.22),inset 0 2px 5px rgba(118,10,17,.16)!important}
+        .client-counter{box-shadow:0 9px 20px rgba(210,38,47,.12),inset 0 1px 0 rgba(255,255,255,.8)!important}
+
+        /* Мобильная плавающая корзина: объёмная, во всю полезную ширину */
+        .client-order-bar{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:170;display:none;align-items:center;justify-content:space-between;gap:12px;min-height:64px;padding:10px 16px;border:1px solid rgba(153,17,25,.14);border-radius:21px;background:linear-gradient(180deg,#f45b61 0%,#dc3038 56%,#ca222b 100%);color:#fff;box-shadow:0 18px 38px rgba(180,24,29,.30),inset 0 1px 0 rgba(255,255,255,.34),inset 0 -2px 5px rgba(116,9,16,.14);font:inherit;text-align:left}
+        .client-order-bar:active{transform:translateY(1px)}
+        .client-order-bar__left{display:flex;align-items:center;gap:10px;min-width:0}
+        .client-order-bar__icon{width:40px;height:40px;border-radius:13px;background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.28);display:grid;place-items:center;flex:none}
+        .client-order-bar__icon svg{width:21px;height:21px}
+        .client-order-bar__meta{display:flex;flex-direction:column;min-width:0}
+        .client-order-bar__count{font-size:14px;font-weight:900;line-height:1.15}
+        .client-order-bar__hint{font-size:10px;font-weight:700;opacity:.8;margin-top:2px}
+        .client-order-bar__total{font-size:20px;font-weight:950;white-space:nowrap;letter-spacing:-.02em}
+
+        /* На ПК сумма видна прямо в кнопке корзины в шапке */
+        .client-desktop-cart-total{display:inline-flex;align-items:center;margin-left:4px;padding-left:10px;border-left:1px solid rgba(255,255,255,.22);font-size:13px;font-weight:950;white-space:nowrap}
+        .cart-button{background:linear-gradient(180deg,#f45b61 0%,#d92525 100%)!important;box-shadow:0 10px 24px rgba(180,24,29,.20),inset 0 1px 0 rgba(255,255,255,.30)!important}
+
+        @media(max-width:700px){
+          body{padding-bottom:86px!important}
+          .client-order-bar.show{display:flex}
+          body.client-orderbar-active .mobile-actions{bottom:calc(88px + env(safe-area-inset-bottom))!important}
+          body.client-orderbar-active .mobile-cart{display:none!important}
+          .footer{padding-bottom:145px!important}
+          .client-desktop-cart-total{display:none!important}
+          .product-card{border-radius:19px!important;box-shadow:0 8px 22px rgba(18,22,26,.05),0 2px 6px rgba(18,22,26,.03)!important}
+          .product-card__visual{padding:8px!important}
+          .product-card__visual>.vk-sprite{inset:8px!important}
+          .client-plus{width:38px!important;height:38px!important;border-radius:14px!important}
+        }
+        @media(min-width:701px){.client-order-bar{display:none!important}}
+      `;
+      d.head.appendChild(css);
+
+      var cartButton=d.querySelector('.cart-button');
+      if(cartButton&&!cartButton.querySelector('.client-desktop-cart-total')){
+        var total=d.createElement('span');
+        total.className='client-desktop-cart-total';
+        total.textContent='0 ₽';
+        cartButton.appendChild(total);
+      }
+
+      var bar=d.createElement('button');
+      bar.type='button';
+      bar.className='client-order-bar';
+      bar.setAttribute('aria-label','Открыть корзину');
+      bar.innerHTML='<span class="client-order-bar__left"><span class="client-order-bar__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Zm3 0V6a4 4 0 0 1 8 0v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="client-order-bar__meta"><span class="client-order-bar__count">1 товар</span><span class="client-order-bar__hint">Перейти в корзину</span></span></span><strong class="client-order-bar__total">0 ₽</strong>';
+      d.body.appendChild(bar);
+
+      function readCount(){
+        var el=d.querySelector('.cart-count');
+        return el?rublesFrom(el.textContent):0;
+      }
+      function readTotal(){
+        var el=d.querySelector('#cartTotals .total-row--main span:last-child') || d.getElementById('checkoutTotal');
+        return el?String(el.textContent||'').trim():'0 ₽';
+      }
+      var scheduled=false;
+      function updateBar(){
+        scheduled=false;
+        var count=readCount();
+        var total=readTotal();
+        bar.querySelector('.client-order-bar__count').textContent=count+' '+pluralProducts(count);
+        bar.querySelector('.client-order-bar__total').textContent=total;
+        var desktopTotal=d.querySelector('.client-desktop-cart-total');
+        if(desktopTotal) desktopTotal.textContent=total;
+        var show=count>0;
+        bar.classList.toggle('show',show);
+        d.body.classList.toggle('client-orderbar-active',show);
+      }
+      function scheduleBar(){
+        if(scheduled) return;
+        scheduled=true;
+        (d.defaultView.requestAnimationFrame||function(fn){setTimeout(fn,16);})(updateBar);
+      }
+      bar.addEventListener('click',function(){
+        var cartOpen=d.querySelector('[data-cart-open]');
+        if(cartOpen) cartOpen.click();
+      });
+      var observer=new MutationObserver(scheduleBar);
+      observer.observe(d.body,{subtree:true,childList:true,characterData:true});
+      scheduleBar();
+
+      function backToMenu(e){
+        if(e){e.preventDefault();e.stopImmediatePropagation();}
+        var min=d.querySelector('.minimum-modal');
+        if(min) min.classList.remove('open');
+        var checkout=d.getElementById('checkoutModal');
+        if(checkout){checkout.classList.remove('open');checkout.setAttribute('aria-hidden','true');}
+        var drawer=d.getElementById('cartDrawer');
+        if(drawer) drawer.classList.remove('open');
+        d.body.style.overflow='';
+        var target=d.getElementById('rolls')||d.querySelector('main');
+        if(target) setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'start'});},30);
+      }
+
+      function patchMinimumButton(){
+        var btn=d.getElementById('minimumReturn');
+        if(!btn||btn.dataset.menuReturnPatched==='1') return;
+        btn.dataset.menuReturnPatched='1';
+        btn.textContent='Вернуться в меню';
+        btn.addEventListener('click',backToMenu,true);
+      }
+
+      function installMinimumGuard(){
+        var form=d.getElementById('checkoutForm');
+        if(!form||form.dataset.finalMinimumGuard==='1') return;
+        form.dataset.finalMinimumGuard='1';
+        form.addEventListener('submit',function(e){
+          var zone=d.getElementById('clientDeliveryZone');
+          if(!zone||!zone.value) return;
+          var modeText=(d.getElementById('checkoutMode')||{}).textContent||'';
+          if(modeText.toLowerCase().indexOf('самовывоз')!==-1) return;
+          var min=parseInt(zone.value,10)||0;
+          var total=rublesFrom((d.getElementById('checkoutItemsTotal')||{}).textContent);
+          if(total>=min) return;
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          var modal=d.querySelector('.minimum-modal');
+          if(!modal) return;
+          var title=d.getElementById('minimumTitle');
+          var text=d.getElementById('minimumText');
+          var diff=Math.max(0,min-total);
+          if(title) title.textContent='Минимальная сумма заказа — '+new Intl.NumberFormat('ru-RU').format(min)+' ₽';
+          if(text) text.textContent='Для оформления заказа наберите в корзине ещё товаров на сумму '+new Intl.NumberFormat('ru-RU').format(diff)+' ₽';
+          patchMinimumButton();
+          modal.classList.add('open');
+        },true);
+      }
+
+      patchMinimumButton();
+      installMinimumGuard();
+      var patchObserver=new MutationObserver(function(){patchMinimumButton();installMinimumGuard();});
+      patchObserver.observe(d.body,{subtree:true,childList:true});
+
+      return true;
+    }
+
+    function bind(){
+      var wrapper=stage.contentDocument;
+      var inner=wrapper&&wrapper.getElementById('site');
+      if(inner){
+        inner.addEventListener('load',function(){
+          setTimeout(applyFinalFixes,200);
+          setTimeout(applyFinalFixes,500);
+          setTimeout(applyFinalFixes,1000);
+        });
+      }
+      setTimeout(applyFinalFixes,250);
+      setTimeout(applyFinalFixes,700);
+      setTimeout(applyFinalFixes,1300);
+      setTimeout(applyFinalFixes,2200);
+    }
+
+    stage.addEventListener('load',bind);
+    setTimeout(bind,700);
+  })();
+  </script>
+</body>
+</html>
