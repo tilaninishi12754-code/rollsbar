@@ -286,8 +286,8 @@
     .product-detail-modal.open{display:flex}
     .product-detail-modal__backdrop{position:absolute;inset:0;border:0;background:rgba(0,0,0,.48);backdrop-filter:blur(5px)}
     .product-detail-modal__panel{position:relative;z-index:1;width:min(820px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:28px;box-shadow:0 36px 110px rgba(0,0,0,.28);display:grid;grid-template-columns:minmax(260px,.85fr) minmax(320px,1.15fr)}
-    .product-detail-modal__media{min-height:360px;background:#f6f6f6;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;border-radius:28px 0 0 28px}
-    .product-detail-modal__media img,.product-detail-modal__media .vk-sprite{width:100%;height:100%;min-height:310px;object-fit:contain;background-color:#fff;background-repeat:no-repeat}
+    .product-detail-modal__media{min-height:360px;background:#fff;display:flex;align-items:center;justify-content:center;padding:18px;overflow:hidden;border-radius:28px 0 0 28px}
+    .product-detail-modal__media img{display:block;width:100%;height:auto;max-height:430px;object-fit:contain;object-position:center;background:#fff;image-rendering:auto}
     .product-detail-modal__content{padding:28px;display:flex;flex-direction:column;gap:14px}
     .product-detail-modal__top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
     .product-detail-modal__top h3{margin:0;font-size:34px;line-height:1.02;letter-spacing:-.045em}
@@ -295,12 +295,15 @@
     .product-detail-modal__price{font-size:24px;font-weight:900}
     .product-detail-modal__label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#999}
     .product-detail-modal__desc{margin:0;font-size:17px;line-height:1.55;color:#404044}
-    .product-detail-modal__note{font-size:12px;line-height:1.45;color:#8a8a8f;border-top:1px solid #eee;padding-top:12px;margin-top:auto}
+    .product-detail-modal__add{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;border:0;border-radius:17px;background:linear-gradient(180deg,#ff625f 0%,#e83e3a 58%,#d52825 100%);color:#fff;font-weight:900;font-size:16px;box-shadow:0 12px 26px rgba(213,40,37,.24),inset 0 1px 0 rgba(255,255,255,.3)}
+    .product-detail-modal__add svg{width:20px;height:20px;flex:none}
+    .product-detail-modal__add:active{transform:translateY(1px)}
+    .product-detail-modal__note{font-size:12px;line-height:1.45;color:#8a8a8f;border-top:1px solid #eee;padding-top:12px;margin-top:2px}
     @media(max-width:700px){
       .product-detail-modal{align-items:flex-end;padding:0}
       .product-detail-modal__panel{width:100%;max-height:92vh;border-radius:26px 26px 0 0;grid-template-columns:1fr}
-      .product-detail-modal__media{min-height:240px;max-height:300px;border-radius:26px 26px 0 0;padding:14px}
-      .product-detail-modal__media img,.product-detail-modal__media .vk-sprite{min-height:210px}
+      .product-detail-modal__media{min-height:220px;max-height:340px;border-radius:26px 26px 0 0;padding:10px 14px}
+      .product-detail-modal__media img{width:100%;height:auto;max-height:320px;object-fit:contain}
       .product-detail-modal__content{padding:20px;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
       .product-detail-modal__top h3{font-size:28px}
       .product-detail-modal__desc{font-size:16px}
@@ -890,11 +893,13 @@
             '<div class="product-detail-modal__top"><div><div class="product-detail-modal__label">Описание</div><h3 id="productDetailTitle"></h3></div><button class="product-detail-modal__close" type="button" data-product-detail-close aria-label="Закрыть">×</button></div>'+
             '<div class="product-detail-modal__price" id="productDetailPrice"></div>'+
             '<p class="product-detail-modal__desc" id="productDetailDesc"></p>'+
+            '<button class="product-detail-modal__add" type="button" id="productDetailAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.5 9h9.8l1.7-6H7.1M10 19a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 10 19Zm8 0a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 18 19Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Добавить в корзину</span></button>'+
             '<div class="product-detail-modal__note">Состав и информация взяты из открытого меню Rolls Bar в Яндекс Картах и публичных карточек Rolls Bar во VK. Если в источнике состав не указан, на сайте ничего не дописывается от себя.</div>'+
           '</div>'+
         '</div>';
       document.body.appendChild(modal);
 
+      var currentDetailId=null;
       function closeDetail(){
         modal.classList.remove('open');
         if(!document.getElementById('cartDrawer').classList.contains('open')&&!document.getElementById('checkoutModal').classList.contains('open')) document.body.style.overflow='';
@@ -902,14 +907,33 @@
       function openDetail(id){
         var p=products.find(function(x){return x.id===id;});
         if(!p) return;
+        currentDetailId=id;
         document.getElementById('productDetailTitle').textContent=p.name;
         document.getElementById('productDetailPrice').textContent=money(p.price);
         document.getElementById('productDetailDesc').textContent=p.desc||'Описание в открытом меню не указано.';
-        document.getElementById('productDetailMedia').innerHTML=productMedia(p);
+        var safeSrc=String(p.img||'').replace(/"/g,'&quot;');
+        document.getElementById('productDetailMedia').innerHTML='<img src="'+safeSrc+'" alt="'+String(p.name||'').replace(/"/g,'&quot;')+'" loading="eager" decoding="async" referrerpolicy="no-referrer">';
+        var detailAdd=document.getElementById('productDetailAdd');
+        if(detailAdd){
+          var variableControl=document.querySelector('[data-client-choose="'+id+'"]');
+          detailAdd.querySelector('span').textContent=variableControl?'Выбрать и добавить':'Добавить в корзину';
+        }
         modal.classList.add('open');
         document.body.style.overflow='hidden';
       }
 
+      document.getElementById('productDetailAdd').addEventListener('click',function(){
+        if(!currentDetailId) return;
+        var variable=document.querySelector('[data-client-choose="'+currentDetailId+'"]');
+        var plus=document.querySelector('[data-client-plus="'+currentDetailId+'"]');
+        var original=document.querySelector('[data-original-add="'+currentDetailId+'"]')||document.querySelector('[data-add="'+currentDetailId+'"]');
+        closeDetail();
+        setTimeout(function(){
+          if(variable){variable.click();return;}
+          if(plus){plus.click();return;}
+          if(original){original.click();}
+        },40);
+      });
       modal.querySelectorAll('[data-product-detail-close]').forEach(function(btn){btn.addEventListener('click',closeDetail);});
       document.addEventListener('click',function(e){
         if(e.target.closest('button,a,.qty,.client-action-wrap,.client-counter')) return;
