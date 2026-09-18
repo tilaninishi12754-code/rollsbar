@@ -257,6 +257,26 @@
 
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+
+  <style>
+    /* client-direct-cleanup-v1 */
+    .product-badges,.badge{display:none!important}
+    .price s{display:none!important}
+    .back-to-menu-top{
+      position:fixed;right:26px;bottom:30px;z-index:95;width:48px;height:48px;
+      border:1px solid rgba(0,0,0,.08);border-radius:16px;background:#fff;color:#222;
+      display:grid;place-items:center;box-shadow:0 12px 30px rgba(18,22,26,.16);
+      opacity:0;visibility:hidden;transform:translateY(10px);
+      transition:opacity .2s ease,transform .2s ease,visibility .2s ease
+    }
+    .back-to-menu-top.show{opacity:1;visibility:visible;transform:translateY(0)}
+    .back-to-menu-top svg{width:22px;height:22px}
+    @media(max-width:700px){
+      .back-to-menu-top{right:16px;bottom:86px;width:46px;height:46px;border-radius:15px}
+      body.client-orderbar-active .back-to-menu-top{bottom:98px}
+    }
+  </style>
+
 </head>
 <body>
   <header class="topbar">
@@ -843,5 +863,27 @@
     }
   })();
   </script>
+
+  <button class="back-to-menu-top" id="backToMenuTop" type="button" aria-label="Вернуться в начало меню">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <script>
+    (function(){
+      var btn=document.getElementById('backToMenuTop');
+      if(!btn) return;
+      function syncBackTop(){
+        var y=window.scrollY||document.documentElement.scrollTop||0;
+        btn.classList.toggle('show',y>650);
+      }
+      btn.addEventListener('click',function(){
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+      window.addEventListener('scroll',syncBackTop,{passive:true});
+      syncBackTop();
+    })();
+  </script>
+
 </body>
 </html>
