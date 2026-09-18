@@ -277,6 +277,36 @@
     }
   </style>
 
+
+  <style>
+    /* product-detail-modal-v1 */
+    .product-card{cursor:pointer}
+    .product-card button,.product-card a{cursor:pointer}
+    .product-detail-modal{position:fixed;inset:0;z-index:210;display:none;align-items:center;justify-content:center;padding:18px}
+    .product-detail-modal.open{display:flex}
+    .product-detail-modal__backdrop{position:absolute;inset:0;border:0;background:rgba(0,0,0,.48);backdrop-filter:blur(5px)}
+    .product-detail-modal__panel{position:relative;z-index:1;width:min(820px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:28px;box-shadow:0 36px 110px rgba(0,0,0,.28);display:grid;grid-template-columns:minmax(260px,.85fr) minmax(320px,1.15fr)}
+    .product-detail-modal__media{min-height:360px;background:#f6f6f6;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;border-radius:28px 0 0 28px}
+    .product-detail-modal__media img,.product-detail-modal__media .vk-sprite{width:100%;height:100%;min-height:310px;object-fit:contain;background-color:#fff;background-repeat:no-repeat}
+    .product-detail-modal__content{padding:28px;display:flex;flex-direction:column;gap:14px}
+    .product-detail-modal__top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+    .product-detail-modal__top h3{margin:0;font-size:34px;line-height:1.02;letter-spacing:-.045em}
+    .product-detail-modal__close{width:42px;height:42px;border:0;border-radius:50%;background:#f4f4f5;font-size:26px;line-height:1;flex:none}
+    .product-detail-modal__price{font-size:24px;font-weight:900}
+    .product-detail-modal__label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#999}
+    .product-detail-modal__desc{margin:0;font-size:17px;line-height:1.55;color:#404044}
+    .product-detail-modal__note{font-size:12px;line-height:1.45;color:#8a8a8f;border-top:1px solid #eee;padding-top:12px;margin-top:auto}
+    @media(max-width:700px){
+      .product-detail-modal{align-items:flex-end;padding:0}
+      .product-detail-modal__panel{width:100%;max-height:92vh;border-radius:26px 26px 0 0;grid-template-columns:1fr}
+      .product-detail-modal__media{min-height:240px;max-height:300px;border-radius:26px 26px 0 0;padding:14px}
+      .product-detail-modal__media img,.product-detail-modal__media .vk-sprite{min-height:210px}
+      .product-detail-modal__content{padding:20px;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+      .product-detail-modal__top h3{font-size:28px}
+      .product-detail-modal__desc{font-size:16px}
+    }
+  </style>
+
 </head>
 <body>
   <header class="topbar">
@@ -636,6 +666,58 @@
       return '<img src="'+p.img+'" alt="'+p.name+'" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'image-missing\')">';
     }
 
+
+    // public-product-descriptions-v1
+    var publicProductDescriptions = {
+  "set-kalifornia": "1,1 кг. Калифорния классическая, Калифорния с копчёным лососем, Калифорния с креветкой, Калифорния с крабом, гункан с креветкой спайси — 2 шт. Соевый соус — 3, имбирь — 2, васаби — 2.",
+  "set-filadelfia": "0,9 кг. Филадельфия классическая, Филадельфия с копчёным лососем, Филадельфия с угрём, гункан с лососем спайси — 2 шт. Соевый соус — 2, имбирь — 2, васаби — 1.",
+  "super-set": "1,8 кг, 48 шт. Филадельфия, Калифорния классическая, Пикант, запечённые с лососем, запечённые с угрём, запечённые с лососем терияки. Соевый соус — 3, имбирь — 3, васаби — 3.",
+  "mega-set": "2,2 кг. Филадельфия, Итальянский, Калифорния с копчёным лососем, Калифорния краб, Красный дракон, Пикант, Сурими, Чука ролл, Маки тунец. Соевый соус — 3, имбирь — 2, васаби — 2.",
+  "hit-set": "1,2 кг. Филадельфия, Калифорния классическая, запечённые с лососем, запечённые с угрём. Соевый соус — 2, имбирь — 2, васаби — 1.",
+  "set-tyapnica": "1,6 кг. Запечённые с лососем, запечённые с крабом, запечённые с креветкой, запечённые с мидиями, запечённая Филадельфия. Соевый соус — 2, имбирь — 2, васаби — 1.",
+  "set-tanuki": "0,9 кг, 30 шт. Филадельфия классическая, Бонито, Калифорния классическая, Маки лосось. Унаги, имбирь, васаби.",
+  "set-inari": "0,9 кг. Филадельфия, Калифорния, Бонито, Маки краб. Соевый соус — 1, имбирь — 1, васаби.",
+  "maki-set": "0,9 кг. Маки краб, Маки лосось, Маки креветка, Маки копчёный лосось, Маки огурец, Маки тунец, Маки угорь. Соевый соус — 2, имбирь — 1, васаби.",
+  "set-divichnik": "1 кг. Запечённые Маменори с креветкой, запечённые с тунцом, запечённые с угрём, запечённые мидии. Соевый соус — 2, имбирь — 2, васаби — 1.",
+  "fila-ugor": "Угорь, сыр креметте, огурец, соус унаги, кунжут.",
+  "fila-smoked": "Лосось, сыр креметте, огурец, копчёный лосось.",
+  "kani": "Краб сурими, креветка, огурец, икра тобико, чесночный соус.",
+  "filadelfia": "В публичной карточке VK указаны варианты: лайт, классическая, с копчёным лососем, запечённая.",
+  "kalifornia": "В публичной карточке VK указаны варианты: классическая, с креветкой, с копчёным лососем, с крабом.",
+  "red-dragon": "Сыр креметте, лосось, угорь, огурец, кунжут, соус унаги, соус спайси.",
+  "baked-rolls": "8 шт. На выбор: с лососем, с креветкой, с угрём, с крабом или с мидиями.",
+  "baked-rice": "300 г. В открытом меню позиция указана как запечённый рис с креветкой/лососем (ЭБИ-ЯКИ): рис с креветкой и чесночным соусом, сыр моцарелла.",
+  "baked-mussels": "4 шт. Соус на выбор: спайси или унаги.",
+  "wok-veg": "240 г. Лапша на выбор: удон, фунчоза или соба; соус на выбор: сливочный, терияки или красный; овощи.",
+  "tyahan-sea": "300 г. Рис, морепродукты — лосось, креветки, мидии; овощи — морковь, лук, кабачок, болгарский перец, грибы; соус терияки.",
+  "tyahan-chicken": "300 г. Рис, куриное филе, овощи — морковь, лук, кабачок, болгарский перец, грибы; соус терияки.",
+  "wok-sea": "300 г. Морепродукты — лосось, креветка, мидии; лапша на выбор — удон, фунчоза или соба; соус на выбор — сливочный, терияки или красный; овощи.",
+  "wok-chicken": "300 г. Куриное филе, лапша на выбор — удон, фунчоза или соба; соус на выбор — сливочный, терияки или красный; овощи.",
+  "tom-yam": "Лосось, креветка, мидии, кальмар, грибы. Подаётся с рисом, лаймом, острым перцем и помидором черри.",
+  "pizza-mushroom": "50 см. Сыр моцарелла, грибы шампиньоны, курица, соус сливочный.",
+  "pizza-pepperoni": "50 см. Сыр моцарелла, колбаса пепперони, соус красный.",
+  "pizza-carbonara": "50 см. Сыр моцарелла, курица, бекон, пармезан, соус сливочный.",
+  "pizza-margherita": "50 см. Сыр моцарелла, помидоры, соус красный.",
+  "pizza-fire": "50 см. Сыр моцарелла, колбаса салями, грибы шампиньоны, бекон, перец чили, соус красный.",
+  "pizza-hunter": "50 см. Сыр моцарелла, колбаски охотничьи, бекон, лук криспи, маслины, соус барбекю, соус красный.",
+  "pizza-chicken": "50 см. Сыр моцарелла, курица, бекон, помидор, соус сливочный.",
+  "pizza-four-cheese": "50 см. Сыр моцарелла, сыр фета, сыр чедр, сыр пармезан, соус сливочный.",
+  "pizza-country": "50 см. Сыр моцарелла, колбаски охотничьи, ветчина, лук ялтинский, соус барбекю, укроп, соус красный.",
+  "pizza-salami": "50 см. Сыр моцарелла, колбаса салями, грибы шампиньоны, перец болгарский, лук ялтинский, маслины, соус красный.",
+  "pizza-caesar": "50 см. Сыр моцарелла, курица, бекон, лист салата, пармезан, помидоры черри, соус сливочный, соус цезарь.",
+  "cheese-sticks": "5 шт. Сыр моцарелла в панировке.",
+  "shrimp-tempura": "5 шт. Креветка в панировке.",
+  "sandwich-shrimp": "4 шт.",
+  "sandwich-salmon": "4 шт.",
+  "combo1": "Пицца Цыпочка 30 см, картофель фри, кола 0,33 ж/б, соус в ассортименте.",
+  "combo2": "Пицца Грибная 30 см, Пицца Пепперони 30 см, кола 0,33 ж/б — 2 шт.",
+  "moti": "В ассортименте: вишня, манго-маракуйя, киви, клубника, чёрная смородина.",
+  "soy-ginger-wasabi": "1 шт. Соевый соус, имбирь или васаби."
+};
+    products.forEach(function(p){
+      if(publicProductDescriptions[p.id]) p.desc=publicProductDescriptions[p.id];
+    });
+
     var upsells = [
       {id:'u-soy',name:'Соевый соус',price:20,img:'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL'},
       {id:'u-ginger',name:'Имбирь',price:20,img:'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL'},
@@ -795,8 +877,57 @@
       address.placeholder = mode==='delivery'?'Улица и дом':'Адрес не требуется при самовывозе';
     }
 
+
+    function installProductDetails(){
+      if(document.getElementById('productDetailModal')) return;
+      var modal=document.createElement('div');
+      modal.className='product-detail-modal';
+      modal.id='productDetailModal';
+      modal.innerHTML='<button class="product-detail-modal__backdrop" type="button" data-product-detail-close></button>'+
+        '<div class="product-detail-modal__panel" role="dialog" aria-modal="true" aria-labelledby="productDetailTitle">'+
+          '<div class="product-detail-modal__media" id="productDetailMedia"></div>'+
+          '<div class="product-detail-modal__content">'+
+            '<div class="product-detail-modal__top"><div><div class="product-detail-modal__label">Описание</div><h3 id="productDetailTitle"></h3></div><button class="product-detail-modal__close" type="button" data-product-detail-close aria-label="Закрыть">×</button></div>'+
+            '<div class="product-detail-modal__price" id="productDetailPrice"></div>'+
+            '<p class="product-detail-modal__desc" id="productDetailDesc"></p>'+
+            '<div class="product-detail-modal__note">Состав и информация взяты из открытого меню Rolls Bar в Яндекс Картах и публичных карточек Rolls Bar во VK. Если в источнике состав не указан, на сайте ничего не дописывается от себя.</div>'+
+          '</div>'+
+        '</div>';
+      document.body.appendChild(modal);
+
+      function closeDetail(){
+        modal.classList.remove('open');
+        if(!document.getElementById('cartDrawer').classList.contains('open')&&!document.getElementById('checkoutModal').classList.contains('open')) document.body.style.overflow='';
+      }
+      function openDetail(id){
+        var p=products.find(function(x){return x.id===id;});
+        if(!p) return;
+        document.getElementById('productDetailTitle').textContent=p.name;
+        document.getElementById('productDetailPrice').textContent=money(p.price);
+        document.getElementById('productDetailDesc').textContent=p.desc||'Описание в открытом меню не указано.';
+        document.getElementById('productDetailMedia').innerHTML=productMedia(p);
+        modal.classList.add('open');
+        document.body.style.overflow='hidden';
+      }
+
+      modal.querySelectorAll('[data-product-detail-close]').forEach(function(btn){btn.addEventListener('click',closeDetail);});
+      document.addEventListener('click',function(e){
+        if(e.target.closest('button,a,.qty,.client-action-wrap,.client-counter')) return;
+        var card=e.target.closest('.product-card');
+        if(!card) return;
+        var add=card.querySelector('[data-add]');
+        if(!add) return;
+        openDetail(add.dataset.add);
+      });
+      document.addEventListener('keydown',function(e){
+        if(e.key==='Escape'&&modal.classList.contains('open')) closeDetail();
+      });
+    }
+
+
     renderCatalog();
     renderCart();
+    installProductDetails();
 
     document.querySelectorAll('[data-cart-open]').forEach(function(btn){btn.addEventListener('click',openCart);});
     var siteMenu=document.getElementById('siteMenu');
