@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <iframe id="stage" src="client-fixes.html?v=polish-v3" title="Rolls Bar"></iframe>
+  <iframe id="stage" src="client-fixes.html?v=cart-icon-v4" title="Rolls Bar"></iframe>
   <script>
   (function(){
     var stage=document.getElementById('stage');
@@ -60,8 +60,16 @@
         /* Акцентные карточки остаются демонстрацией выбора стиля из WP, но тоже аккуратно парят */
         .product-card.client-accent{border:1px solid rgba(20,24,30,.045)!important;box-shadow:0 10px 28px rgba(18,22,26,.055),0 2px 8px rgba(18,22,26,.035)!important}
 
-        /* Объёмный + и счётчик */
-        .client-plus{width:42px!important;height:42px!important;border-radius:15px!important;background:linear-gradient(180deg,#ff6668 0%,#e23a40 55%,#cf252d 100%)!important;color:#fff!important;box-shadow:0 11px 22px rgba(210,38,47,.28),inset 0 1px 0 rgba(255,255,255,.46),inset 0 -2px 4px rgba(118,10,17,.18)!important;text-shadow:0 1px 0 rgba(0,0,0,.08)!important;border:1px solid rgba(173,21,31,.18)!important;transition:transform .12s ease,box-shadow .12s ease!important}
+        /* Цена и действие строго в одной горизонтальной строке */
+        .product-card__footer{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;min-height:44px!important}
+        .product-card__footer .price{display:flex!important;align-items:baseline!important;gap:6px!important;flex-wrap:wrap!important;min-height:42px!important;align-content:center!important;margin:0!important}
+        .product-card__footer .price strong{display:inline-flex!important;align-items:center!important;min-height:42px!important;line-height:1!important}
+        .product-card__footer .price s{line-height:1!important}
+        .client-action-wrap{display:flex!important;align-items:center!important;justify-content:flex-end!important;min-height:42px!important;flex:none!important}
+
+        /* Вместо + — объёмная кнопка-корзина */
+        .client-plus{width:42px!important;height:42px!important;border-radius:15px!important;background:linear-gradient(180deg,#ff6668 0%,#e23a40 55%,#cf252d 100%)!important;color:#fff!important;box-shadow:0 11px 22px rgba(210,38,47,.28),inset 0 1px 0 rgba(255,255,255,.46),inset 0 -2px 4px rgba(118,10,17,.18)!important;border:1px solid rgba(173,21,31,.18)!important;transition:transform .12s ease,box-shadow .12s ease!important;display:grid!important;place-items:center!important;padding:0!important;font-size:0!important;line-height:0!important}
+        .client-plus svg{width:21px!important;height:21px!important;display:block!important}
         .client-plus:active{transform:translateY(2px) scale(.98)!important;box-shadow:0 6px 13px rgba(210,38,47,.22),inset 0 2px 5px rgba(118,10,17,.16)!important}
         .client-counter{box-shadow:0 9px 20px rgba(210,38,47,.12),inset 0 1px 0 rgba(255,255,255,.8)!important}
 
@@ -192,9 +200,23 @@
         },true);
       }
 
+      function patchCartIcons(){
+        d.querySelectorAll('.client-plus').forEach(function(btn){
+          if(btn.dataset.cartIconPatched==='1') return;
+          btn.dataset.cartIconPatched='1';
+          btn.setAttribute('aria-label','Добавить в корзину');
+          btn.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.5 9h9.8l1.7-6H7.1M10 19a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 10 19Zm8 0a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 18 19Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        });
+      }
+
       patchMinimumButton();
       installMinimumGuard();
-      var patchObserver=new MutationObserver(function(){patchMinimumButton();installMinimumGuard();});
+      patchCartIcons();
+      var patchObserver=new MutationObserver(function(){
+        patchMinimumButton();
+        installMinimumGuard();
+        patchCartIcons();
+      });
       patchObserver.observe(d.body,{subtree:true,childList:true});
 
       return true;
