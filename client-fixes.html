@@ -65,10 +65,10 @@
         .product-card p{font-size:12px!important;line-height:1.38!important;min-height:34px!important;margin-bottom:10px!important;color:#7b7d80!important}
         .price{display:flex!important;align-items:baseline!important;gap:6px!important;flex-wrap:nowrap!important;min-height:38px!important;align-content:center!important;min-width:0!important;white-space:nowrap!important}
         .price strong{font-size:18px!important;line-height:1!important;white-space:nowrap!important;display:inline-flex!important;align-items:baseline!important}
-        .price s{line-height:1!important;white-space:nowrap!important;flex:none!important}
+        .price s{display:none!important}
         .product-card__footer{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-height:40px!important;width:100%!important}
-        .product-badges{top:11px!important;left:11px!important}
-        .badge{box-shadow:none!important;border:1px solid rgba(0,0,0,.045)!important}
+        .product-badges{display:none!important}
+        .badge{display:none!important}
 
         .product-card.client-accent{padding:10px!important;border-radius:24px!important;transition:.2s transform}
         .product-card.client-accent-blue{background:#edf3ff!important}
@@ -88,6 +88,14 @@
         .client-choose::before{content:'';display:block;width:20px;height:20px;background:center/20px 20px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 5h2l1.5 9h9.8l1.7-6H7.1M10 19a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 10 19Zm8 0a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 18 19Z' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
         .client-price-from{white-space:nowrap!important;display:inline-flex!important;align-items:baseline!important}
         .client-price-from:before{content:'от ';font-size:12px;font-weight:800;color:#777;white-space:nowrap;flex:none}
+
+        .client-back-top{position:fixed;right:24px;bottom:28px;z-index:175;width:48px;height:48px;border:1px solid rgba(0,0,0,.08);border-radius:16px;background:#fff;color:#222;display:grid;place-items:center;box-shadow:0 12px 30px rgba(18,22,26,.16);opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .2s ease,transform .2s ease,visibility .2s ease}
+        .client-back-top.show{opacity:1;visibility:visible;transform:translateY(0)}
+        .client-back-top svg{width:22px;height:22px}
+        @media(max-width:700px){
+          .client-back-top{right:16px;bottom:86px;width:46px;height:46px;border-radius:15px}
+          body.client-orderbar-active .client-back-top{bottom:98px}
+        }
 
         .client-modal{position:fixed;inset:0;z-index:180;display:none;align-items:center;justify-content:center;padding:16px}
         .client-modal.open{display:flex}
@@ -208,6 +216,26 @@
         }
       }
       addReviewsLinks();
+
+      if(!d.querySelector('.client-back-top')){
+        var backTop=d.createElement('button');
+        backTop.type='button';
+        backTop.className='client-back-top';
+        backTop.setAttribute('aria-label','Вернуться в начало меню');
+        backTop.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        d.body.appendChild(backTop);
+        var w=frame.contentWindow;
+        function syncBackTop(){
+          var y=w ? (w.scrollY||d.documentElement.scrollTop||d.body.scrollTop||0) : 0;
+          backTop.classList.toggle('show',y>650);
+        }
+        backTop.addEventListener('click',function(){
+          if(w&&w.scrollTo) w.scrollTo({top:0,behavior:'smooth'});
+          else d.documentElement.scrollTop=0;
+        });
+        if(w) w.addEventListener('scroll',syncBackTop,{passive:true});
+        syncBackTop();
+      }
 
       var highlightMap={'pizza-pepperoni':'client-accent-blue','hit-set':'client-accent-red','tom-yam':'client-accent-warm'};
       function applyHighlights(){
