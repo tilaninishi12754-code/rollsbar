@@ -63,9 +63,9 @@
         .product-card__body{padding:13px 2px 0!important}
         .product-card h3{font-size:17px!important;line-height:1.16!important;margin:0 0 6px!important;letter-spacing:-.025em!important}
         .product-card p{font-size:12px!important;line-height:1.38!important;min-height:34px!important;margin-bottom:10px!important;color:#7b7d80!important}
-        .price{display:flex!important;align-items:baseline!important;gap:6px!important;flex-wrap:wrap!important;min-height:38px!important;align-content:center!important}
-        .price strong{font-size:18px!important;line-height:1!important}
-        .price s{line-height:1!important}
+        .price{display:flex!important;align-items:baseline!important;gap:6px!important;flex-wrap:nowrap!important;min-height:38px!important;align-content:center!important;min-width:0!important;white-space:nowrap!important}
+        .price strong{font-size:18px!important;line-height:1!important;white-space:nowrap!important;display:inline-flex!important;align-items:baseline!important}
+        .price s{line-height:1!important;white-space:nowrap!important;flex:none!important}
         .product-card__footer{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-height:40px!important;width:100%!important}
         .product-badges{top:11px!important;left:11px!important}
         .badge{box-shadow:none!important;border:1px solid rgba(0,0,0,.045)!important}
@@ -84,8 +84,10 @@
         .client-counter{display:inline-grid;grid-template-columns:34px 30px 34px;align-items:center;background:#fff0ef;border-radius:999px;overflow:hidden;border:1px solid #ffd7d4}
         .client-counter button{width:34px;height:38px;border:0;background:transparent;color:#d92525;font-size:19px;font-weight:900}
         .client-counter span{font-size:12px;font-weight:900;text-align:center;color:#171717}
-        .client-choose{border:0;border-radius:999px;background:#fff0ef;color:#d92525;font-weight:900;padding:10px 15px;white-space:nowrap}
-        .client-price-from:before{content:'от ';font-size:12px;font-weight:800;color:#777}
+        .client-choose{width:40px;height:40px;border:0;border-radius:13px;background:linear-gradient(180deg,#ff625f 0%,#e83e3a 58%,#d52825 100%);color:#fff;display:grid;place-items:center;line-height:0;box-shadow:0 10px 20px rgba(213,40,37,.24),inset 0 1px 0 rgba(255,255,255,.34);padding:0;font-size:0;white-space:nowrap}
+        .client-choose::before{content:'';display:block;width:20px;height:20px;background:center/20px 20px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 5h2l1.5 9h9.8l1.7-6H7.1M10 19a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 10 19Zm8 0a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 18 19Z' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+        .client-price-from{white-space:nowrap!important;display:inline-flex!important;align-items:baseline!important}
+        .client-price-from:before{content:'от ';font-size:12px;font-weight:800;color:#777;white-space:nowrap;flex:none}
 
         .client-modal{position:fixed;inset:0;z-index:180;display:none;align-items:center;justify-content:center;padding:16px}
         .client-modal.open{display:flex}
@@ -163,7 +165,8 @@
           .client-plus svg{width:19px;height:19px}
           .client-counter{grid-template-columns:30px 27px 30px}
           .client-counter button{width:30px;height:35px}
-          .client-choose{padding:9px 10px;font-size:11px}
+          .client-choose{width:36px;height:36px;border-radius:12px;padding:0;font-size:0}
+          .client-choose::before{width:19px;height:19px;background-size:19px 19px}
 
           .client-modal{align-items:flex-end;padding:0}
           .client-modal__panel{width:100%;border-radius:25px 25px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
@@ -292,7 +295,7 @@
           ctrl.dataset.clientControl=id;
           footer.appendChild(ctrl);
           if(variableIds[id]){
-            ctrl.innerHTML='<button class="client-choose" type="button" data-client-choose="'+id+'">Выбрать</button>';
+            ctrl.innerHTML='<button class="client-choose" type="button" data-client-choose="'+id+'" aria-label="Выбрать вариант и добавить в корзину"></button>';
             var price=card.querySelector('.price strong');
             if(price&&id.indexOf('pizza-')===0) price.classList.add('client-price-from');
           }else renderSimpleControl(ctrl,id);
