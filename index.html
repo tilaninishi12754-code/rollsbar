@@ -325,6 +325,44 @@
     .cookie-banner__ok{border:0;border-radius:12px;background:var(--red);color:#fff;font-weight:900;padding:10px 15px;white-space:nowrap}
     @media(max-width:700px){.cookie-banner{bottom:82px;align-items:flex-start;flex-direction:column;gap:10px}.cookie-banner__ok{width:100%}}
   </style>
+
+  <style>
+    /* product-search-v1 */
+    .search-toggle{width:42px;height:42px;border:1px solid var(--line);background:#fff;border-radius:14px;display:inline-grid;place-items:center;padding:0;color:#202020;flex:none}
+    .search-toggle svg{width:20px;height:20px}
+    .product-search{position:fixed;inset:0;z-index:205;display:none;align-items:flex-start;justify-content:center;padding:92px 18px 18px}
+    .product-search.open{display:flex}
+    .product-search__backdrop{position:absolute;inset:0;border:0;background:rgba(18,18,20,.48);backdrop-filter:blur(6px)}
+    .product-search__panel{position:relative;z-index:1;width:min(760px,100%);max-height:min(78vh,760px);overflow:hidden;background:#fff;border-radius:26px;box-shadow:0 34px 110px rgba(0,0,0,.28);display:flex;flex-direction:column}
+    .product-search__head{display:grid;grid-template-columns:1fr 44px;gap:10px;padding:16px;border-bottom:1px solid var(--line)}
+    .product-search__input-wrap{position:relative}
+    .product-search__input-wrap svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:#777}
+    .product-search__input{width:100%;height:48px;border:1px solid var(--line);border-radius:16px;background:#f7f7f8;padding:0 16px 0 44px;outline:none;font-size:16px}
+    .product-search__input:focus{border-color:#d9a7a5;background:#fff;box-shadow:0 0 0 4px rgba(220,47,47,.07)}
+    .product-search__close{width:44px;height:44px;border:0;border-radius:14px;background:#f4f4f5;font-size:25px}
+    .product-search__meta{padding:12px 18px 6px;color:#85858a;font-size:12px}
+    .product-search__results{overflow:auto;padding:8px 12px 16px;display:grid;gap:8px}
+    .search-result{width:100%;border:1px solid transparent;background:#fff;border-radius:18px;padding:10px;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;color:var(--text)}
+    .search-result:hover,.search-result:focus-visible{border-color:#eee;background:#fafafa;outline:none}
+    .search-result__media{width:72px;height:64px;border-radius:14px;background:#f7f7f8;overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .search-result__media img,.search-result__media .vk-sprite{width:100%;height:100%;object-fit:contain;background-color:#fff;background-repeat:no-repeat}
+    .search-result__copy{min-width:0}.search-result__copy b{display:block;font-size:15px;line-height:1.18}.search-result__copy span{display:block;margin-top:5px;color:#85858a;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .search-result__price{font-weight:900;white-space:nowrap}
+    .product-search__empty{padding:30px 18px;text-align:center;color:#7c7d81}
+    @media(max-width:900px){.search-toggle{width:38px;height:38px;border-radius:13px}.search-toggle svg{width:19px;height:19px}}
+    @media(max-width:700px){
+      .search-toggle{width:36px;height:36px;border-radius:12px}
+      .product-search{align-items:flex-start;padding:72px 8px 8px}
+      .product-search__panel{max-height:calc(100vh - 80px);border-radius:22px}
+      .product-search__head{padding:12px;grid-template-columns:1fr 40px}
+      .product-search__input{height:46px;font-size:16px}
+      .product-search__close{width:40px;height:40px;border-radius:12px}
+      .search-result{grid-template-columns:62px minmax(0,1fr) auto;padding:8px;gap:10px}
+      .search-result__media{width:62px;height:58px}
+      .search-result__copy b{font-size:14px}.search-result__price{font-size:14px}
+    }
+    @media(max-width:350px){.search-toggle{width:34px;height:34px}.header-actions{gap:4px}}
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -338,6 +376,9 @@
         <button class="cart-button" type="button" data-cart-open aria-label="Открыть корзину">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.5 9h9.8l1.7-6H7.1M10 19a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 10 19Zm8 0a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 18 19Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span class="cart-label">Корзина</span><span class="cart-count">0</span>
+        </button>
+        <button class="search-toggle" type="button" aria-label="Поиск по меню" aria-controls="productSearch" aria-expanded="false" data-search-open>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
         <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-controls="siteMenu" aria-expanded="false" data-menu-open>
           <span></span><span></span><span></span>
@@ -385,6 +426,22 @@
       </nav>
       <a class="site-menu__phone" href="tel:+79786882288">+7 978 688-22-88</a>
     </aside>
+  </div>
+
+  
+  <div class="product-search" id="productSearch" aria-hidden="true">
+    <button class="product-search__backdrop" type="button" aria-label="Закрыть поиск" data-search-close></button>
+    <section class="product-search__panel" role="dialog" aria-modal="true" aria-labelledby="productSearchTitle">
+      <div class="product-search__head">
+        <div class="product-search__input-wrap">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input class="product-search__input" id="productSearchInput" type="search" autocomplete="off" placeholder="Например: Филадельфия, пицца, Том Ям" aria-label="Поиск блюда">
+        </div>
+        <button class="product-search__close" type="button" aria-label="Закрыть поиск" data-search-close>×</button>
+      </div>
+      <div class="product-search__meta" id="productSearchTitle">Поиск по названию, категории и составу</div>
+      <div class="product-search__results" id="productSearchResults"></div>
+    </section>
   </div>
 
   <main id="top">
@@ -954,6 +1011,7 @@
         modal.classList.add('open');
         document.body.style.overflow='hidden';
       }
+      window.rollsBarOpenProductDetail=openDetail;
 
       document.getElementById('productDetailAdd').addEventListener('click',function(){
         if(!currentDetailId) return;
@@ -982,9 +1040,93 @@
     }
 
 
+
+    function installProductSearch(){
+      var modal=document.getElementById('productSearch');
+      var input=document.getElementById('productSearchInput');
+      var results=document.getElementById('productSearchResults');
+      var meta=document.getElementById('productSearchTitle');
+      var openBtn=document.querySelector('[data-search-open]');
+      if(!modal||!input||!results||!openBtn) return;
+
+      var categoryNames={rolls:'Роллы',pizza:'Пицца',sets:'Сеты',hot:'Горячее',wok:'WOK и рис',soups:'Супы',snacks:'Закуски',combo:'Комбо',desserts:'Десерты',sauces:'Соусы и дополнения'};
+      function norm(v){
+        return String(v||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9\s]/gi,' ').replace(/\s+/g,' ').trim();
+      }
+      function closeSearch(){
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden','true');
+        openBtn.setAttribute('aria-expanded','false');
+        if(!document.getElementById('cartDrawer').classList.contains('open')&&!document.getElementById('checkoutModal').classList.contains('open')&&!document.getElementById('productDetailModal').classList.contains('open')) document.body.style.overflow='';
+      }
+      function openSearch(){
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden','false');
+        openBtn.setAttribute('aria-expanded','true');
+        document.body.style.overflow='hidden';
+        renderSearch(input.value);
+        setTimeout(function(){input.focus();input.select();},40);
+      }
+      function scoreProduct(p,q){
+        var n=norm(p.name), d=norm(p.desc), c=norm(categoryNames[p.cat]||p.cat);
+        if(!q) return 0;
+        if(n===q) return 100;
+        if(n.indexOf(q)===0) return 80;
+        if(n.indexOf(q)!==-1) return 65;
+        if(c.indexOf(q)!==-1) return 45;
+        if(d.indexOf(q)!==-1) return 30;
+        return -1;
+      }
+      function renderSearch(raw){
+        var q=norm(raw);
+        if(!q){
+          meta.textContent='Начните вводить название блюда — поиск работает уже с 1–2 букв';
+          var starters=products.slice(0,8);
+          results.innerHTML=starters.map(resultHtml).join('');
+          bindResults();
+          return;
+        }
+        var found=products.map(function(p){return {p:p,score:scoreProduct(p,q)};}).filter(function(x){return x.score>=0;}).sort(function(a,b){return b.score-a.score||a.p.name.localeCompare(b.p.name,'ru');}).slice(0,16).map(function(x){return x.p;});
+        meta.textContent=found.length?'Найдено: '+found.length:'Ничего не найдено';
+        results.innerHTML=found.length?found.map(resultHtml).join(''):'<div class="product-search__empty">Попробуйте другое название или категорию.</div>';
+        bindResults();
+      }
+      function resultHtml(p){
+        return '<button class="search-result" type="button" data-search-product="'+p.id+'"><span class="search-result__media">'+productMedia(p)+'</span><span class="search-result__copy"><b>'+p.name+'</b><span>'+(categoryNames[p.cat]||'Меню')+(p.desc?' · '+p.desc:'')+'</span></span><span class="search-result__price">'+money(p.price)+'</span></button>';
+      }
+      function bindResults(){
+        results.querySelectorAll('[data-search-product]').forEach(function(btn){
+          btn.addEventListener('click',function(){
+            var id=btn.dataset.searchProduct;
+            closeSearch();
+            setTimeout(function(){
+              if(window.rollsBarOpenProductDetail){window.rollsBarOpenProductDetail(id);return;}
+              var add=document.querySelector('[data-add="'+id+'"]');
+              var card=add&&add.closest('.product-card');
+              if(card){card.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){card.click();},350);}
+            },40);
+          });
+        });
+      }
+      openBtn.addEventListener('click',openSearch);
+      modal.querySelectorAll('[data-search-close]').forEach(function(btn){btn.addEventListener('click',closeSearch);});
+      input.addEventListener('input',function(){renderSearch(input.value);});
+      input.addEventListener('keydown',function(e){
+        if(e.key==='Enter'){
+          e.preventDefault();
+          var first=results.querySelector('[data-search-product]');
+          if(first) first.click();
+        }
+      });
+      document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modal.classList.contains('open')) closeSearch();});
+      renderSearch('');
+    }
+
+
     renderCatalog();
     renderCart();
     installProductDetails();
+    installProductSearch();
 
     document.querySelectorAll('[data-cart-open]').forEach(function(btn){btn.addEventListener('click',openCart);});
     var siteMenu=document.getElementById('siteMenu');
