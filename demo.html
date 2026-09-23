@@ -142,7 +142,10 @@
         bar.querySelector('.client-order-bar__total').textContent=total;
         var desktopTotal=d.querySelector('.client-desktop-cart-total');
         if(desktopTotal) desktopTotal.textContent=total;
-        var show=count>0;
+        var drawer=d.getElementById('cartDrawer');
+        var checkout=d.getElementById('checkoutModal');
+        var cartUiOpen=(drawer&&drawer.classList.contains('open'))||(checkout&&checkout.classList.contains('open'));
+        var show=count>0&&!cartUiOpen;
         bar.classList.toggle('show',show);
         d.body.classList.toggle('client-orderbar-active',show);
       }
@@ -152,11 +155,18 @@
         (d.defaultView.requestAnimationFrame||function(fn){setTimeout(fn,16);})(updateBar);
       }
       bar.addEventListener('click',function(){
+        bar.classList.remove('show');
+        d.body.classList.remove('client-orderbar-active');
         var cartOpen=d.querySelector('[data-cart-open]');
         if(cartOpen) cartOpen.click();
+        scheduleBar();
       });
       var observer=new MutationObserver(scheduleBar);
       observer.observe(d.body,{subtree:true,childList:true,characterData:true});
+      var cartDrawer=d.getElementById('cartDrawer');
+      var checkoutModal=d.getElementById('checkoutModal');
+      if(cartDrawer) new MutationObserver(scheduleBar).observe(cartDrawer,{attributes:true,attributeFilter:['class','aria-hidden']});
+      if(checkoutModal) new MutationObserver(scheduleBar).observe(checkoutModal,{attributes:true,attributeFilter:['class','aria-hidden']});
       scheduleBar();
 
       function backToMenu(e){
