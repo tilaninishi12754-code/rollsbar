@@ -1,0 +1,32 @@
+<?php
+/**
+ * Plugin Name: Rolls Bar Core
+ * Description: Business logic for Rolls Bar: delivery zones, checkout fields, minimum order rules, catalog behavior and integrations.
+ * Version: 0.1.0
+ * Author: Rolls Bar project
+ * Requires at least: 6.6
+ * Requires PHP: 8.1
+ * WC requires at least: 9.0
+ * Text Domain: rollsbar-core
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+define( 'ROLLSBAR_CORE_VERSION', '0.1.0' );
+define( 'ROLLSBAR_CORE_FILE', __FILE__ );
+define( 'ROLLSBAR_CORE_DIR', plugin_dir_path( __FILE__ ) );
+
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-core.php';
+
+add_action(
+	'plugins_loaded',
+	static function () {
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return;
+		}
+
+		RollsBar_Core::instance();
+	}
+);
