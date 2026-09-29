@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <iframe id="site" src="./?client-review=11" title="Rolls Bar"></iframe>
+  <iframe id="site" src="./?client-review=12" title="Rolls Bar"></iframe>
   <script>
   (function(){
     var frame=document.getElementById('site');
@@ -237,7 +237,7 @@
         syncBackTop();
       }
 
-      var highlightMap={'pizza-pepperoni':'client-accent-blue','hit-set':'client-accent-red','tom-yam':'client-accent-warm'};
+      var highlightMap={'pizza-pepperoni':'client-accent-blue','sets-hit-set':'client-accent-red','soups-tom-yam':'client-accent-warm'};
       function applyHighlights(){
         Object.keys(highlightMap).forEach(function(id){
           var btn=d.querySelector('[data-add="'+id+'"]');
@@ -246,10 +246,14 @@
         });
       }
 
+      function getProduct(id){
+        return d.defaultView&&typeof d.defaultView.rollsBarGetProduct==='function' ? d.defaultView.rollsBarGetProduct(id) : null;
+      }
       var variableIds={};
       d.querySelectorAll('[data-add]').forEach(function(btn){
         var id=btn.dataset.add;
-        if(id.indexOf('pizza-')===0||id==='baked-rolls'||id.indexOf('wok-')===0) variableIds[id]=true;
+        var product=getProduct(id);
+        if(product&&((product.variants&&product.variants.length)||(product.options&&product.options.length))) variableIds[id]=true;
       });
 
       var counts={};
@@ -288,40 +292,74 @@
       productModal.innerHTML='<button class="client-modal__backdrop" type="button" data-client-product-close></button><div class="client-modal__panel"><div class="client-modal__head"><div><small style="color:#999;font-weight:800">Настройка товара</small><h3 id="clientProductTitle">Товар</h3></div><button class="client-modal__close" type="button" data-client-product-close>×</button></div><div class="client-options" id="clientProductOptions"></div><button class="client-modal__add" type="button" id="clientProductAdd">Добавить в корзину</button></div>';
       d.body.appendChild(productModal);
       var selectedVariable=null;
+      function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
       function openProductModal(id){
         selectedVariable=id;
+        var product=getProduct(id);
         var original=d.querySelector('[data-original-add="'+id+'"]');
         var card=original&&original.closest('.product-card');
-        d.getElementById('clientProductTitle').textContent=card&&card.querySelector('h3')?card.querySelector('h3').textContent:id;
+        d.getElementById('clientProductTitle').textContent=product?product.name:(card&&card.querySelector('h3')?card.querySelector('h3').textContent:id);
         var html='';
-        if(id.indexOf('pizza-')===0){
-          html+='<div class="client-option"><label>Размер</label><select><option>50 см — текущая позиция</option></select><div class="client-option-note">Дополнительные размеры будут синхронизированы при полном проходе по Excel.</div></div>';
-          html+='<div class="client-option"><label>Тесто</label><select><option>Классическое</option></select></div>';
-        }else if(id==='baked-rolls'){
-          html+='<div class="client-option"><label>Начинка</label><select><option>Лосось</option><option>Креветка</option><option>Угорь</option><option>Краб</option><option>Мидии</option></select></div>';
-        }else if(id.indexOf('wok-')===0){
-          html+='<div class="client-option"><label>Соус</label><select><option>Сливочный</option><option>Кисло-сладкий</option><option>Терияки</option></select><div class="client-option-note">Варианты соуса взяты из актуальной Excel-таблицы.</div></div>';
+        var blocked=false;
+        if(product&&product.variants&&product.variants.length){
+          html+='<div class="client-option" data-client-variant><label>Вариант</label><select>';
+          product.variants.forEach(function(v){
+            html+='<option value="'+esc(v.label)+'" data-price="'+Number(v.price)+'">'+esc(v.label)+' — '+new Intl.NumberFormat('ru-RU').format(Number(v.price))+' ₽</option>';
+          });
+          html+='</select></div>';
+        }
+        if(product&&product.options){
+          product.options.forEach(function(opt){
+            var choices=Array.isArray(opt.choices)?opt.choices:[];
+            if(opt.pending||!choices.length){
+              blocked=true;
+              html+='<div class="client-option"><label>'+esc(opt.label||'Опция')+'</label><div class="client-option-note" style="font-size:13px;color:#555;margin:0">Выбор должен быть в этой карточке, как просил заказчик, но точный список вариантов в переданной таблице не указан. Не подставляем соусы наугад.</div></div>';
+              return;
+            }
+            html+='<div class="client-option" data-client-option><label>'+esc(opt.label||'Опция')+'</label><select>';
+            choices.forEach(function(choice){html+='<option value="'+esc(choice)+'">'+esc(choice)+'</option>';});
+            html+='</select></div>';
+          });
         }
         d.getElementById('clientProductOptions').innerHTML=html;
+        var add=d.getElementById('clientProductAdd');
+        add.disabled=blocked;
+        add.style.opacity=blocked?'.45':'1';
+        add.style.cursor=blocked?'not-allowed':'pointer';
+        add.textContent=blocked?'Ожидаем список вариантов':'Добавить в корзину';
         productModal.classList.add('open');
       }
       function closeProductModal(){productModal.classList.remove('open');selectedVariable=null;}
       productModal.querySelectorAll('[data-client-product-close]').forEach(function(x){x.addEventListener('click',closeProductModal);});
       d.getElementById('clientProductAdd').addEventListener('click',function(){
-        if(!selectedVariable) return;
-        var labels=Array.from(d.getElementById('clientProductOptions').querySelectorAll('.client-option')).map(function(row){
+        if(!selectedVariable||this.disabled) return;
+        var labels=[];
+        var selectedPrice=null;
+        var variant=d.querySelector('#clientProductOptions [data-client-variant]');
+        if(variant){
+          var vlabel=variant.querySelector('label');
+          var vselect=variant.querySelector('select');
+          var vopt=vselect&&vselect.options[vselect.selectedIndex];
+          if(vlabel&&vselect) labels.push(vlabel.textContent+': '+vselect.value);
+          if(vopt&&vopt.dataset.price) selectedPrice=Number(vopt.dataset.price);
+        }
+        d.querySelectorAll('#clientProductOptions [data-client-option]').forEach(function(row){
           var label=row.querySelector('label');
           var select=row.querySelector('select');
-          return label&&select ? label.textContent+': '+select.value : '';
-        }).filter(Boolean).join(', ');
-        if(d.defaultView&&typeof d.defaultView.rollsBarSetPendingOption==='function'&&labels){
-          d.defaultView.rollsBarSetPendingOption(selectedVariable,labels);
+          if(label&&select) labels.push(label.textContent+': '+select.value);
+        });
+        if(d.defaultView&&typeof d.defaultView.rollsBarSetPendingOption==='function'){
+          d.defaultView.rollsBarSetPendingOption(selectedVariable,labels.join(', '),selectedPrice);
         }
         originalAdd(selectedVariable);
         closeProductModal();
       });
 
       function enhanceProductActions(){
+        d.querySelectorAll('[data-add]').forEach(function(btn){
+          var p=getProduct(btn.dataset.add);
+          if(p&&((p.variants&&p.variants.length)||(p.options&&p.options.length))) variableIds[btn.dataset.add]=true;
+        });
         d.querySelectorAll('.product-card').forEach(function(card){
           if(card.dataset.clientAction==='1') return;
           var btn=card.querySelector('[data-add]');
@@ -337,7 +375,8 @@
           if(variableIds[id]){
             ctrl.innerHTML='<button class="client-choose" type="button" data-client-choose="'+id+'" aria-label="Выбрать вариант и добавить в корзину"></button>';
             var price=card.querySelector('.price strong');
-            if(price&&id.indexOf('pizza-')===0) price.classList.add('client-price-from');
+            var product=getProduct(id);
+            if(price&&product&&product.variants&&product.variants.length>1) price.classList.add('client-price-from');
           }else renderSimpleControl(ctrl,id);
           card.dataset.clientAction='1';
         });
