@@ -302,7 +302,8 @@
         var html='';
         var blocked=false;
         if(product&&product.variants&&product.variants.length){
-          html+='<div class="client-option" data-client-variant><label>Вариант</label><select>';
+          var variantLabel=product.cat==='pizza'?'Размер':(product.name==='Наггетсы'?'Количество':'Вариант');
+          html+='<div class="client-option" data-client-variant><label>'+variantLabel+'</label><select>';
           product.variants.forEach(function(v){
             html+='<option value="'+esc(v.label)+'" data-price="'+Number(v.price)+'">'+esc(v.label)+' — '+new Intl.NumberFormat('ru-RU').format(Number(v.price))+' ₽</option>';
           });
