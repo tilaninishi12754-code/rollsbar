@@ -393,13 +393,26 @@
   </style>
 
   <style>
-    /* yandex-map-pass-2026-09-29 */
-    .yandex-map-wrap{position:relative;width:100%;overflow:hidden;background:#eef1f4;isolation:isolate}
+    /* yandex-map-schematic-v2-2026-09-29 */
+    .yandex-map-wrap{position:relative;width:100%;overflow:hidden;background:#eef1f4;isolation:isolate;touch-action:none}
     .yandex-map-wrap--delivery{height:420px}
-    .yandex-map-wrap--checkout{height:250px;border-radius:16px}
-    .yandex-map-frame{display:block;width:100%;height:100%;border:0;background:#eef1f4}
+    .yandex-map-wrap--checkout{height:270px;border-radius:16px}
+    .yandex-map-frame{display:block;width:100%;height:100%;border:0;background:#eef1f4;pointer-events:none;user-select:none}
     .delivery-zone-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
-    .map-schema-chip{position:absolute;left:14px;top:14px;z-index:4;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 6px 20px rgba(0,0,0,.12);font-size:10px;font-weight:900;color:#353535;pointer-events:none}
+    .delivery-zone-overlay .zone-3{fill:rgba(223,85,79,.14);stroke:#d9453f;stroke-width:4}
+    .delivery-zone-overlay .zone-2{fill:rgba(229,174,53,.17);stroke:#d59b1d;stroke-width:4}
+    .delivery-zone-overlay .zone-1{fill:rgba(57,168,107,.20);stroke:#278a54;stroke-width:4}
+    .map-schema-chip{position:absolute;left:14px;top:14px;z-index:6;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.95);box-shadow:0 6px 20px rgba(0,0,0,.12);font-size:10px;font-weight:900;color:#353535;pointer-events:none}
+    .map-open-yandex{position:absolute;right:12px;top:12px;z-index:7;text-decoration:none;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.96);box-shadow:0 6px 20px rgba(0,0,0,.11);font-size:10px;font-weight:900;color:#242424}
+    .map-store-marker,.checkout-map-marker{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-100%);display:grid;place-items:center;border:0;padding:0;background:transparent}
+    .map-store-marker:before,.checkout-map-marker:before{content:'';display:block;width:34px;height:34px;border-radius:50% 50% 50% 12%;transform:rotate(-45deg);background:#d92525;border:3px solid #fff;box-shadow:0 7px 18px rgba(0,0,0,.26)}
+    .map-store-marker:after,.checkout-map-marker:after{content:'R';position:absolute;left:50%;top:50%;transform:translate(-50%,-72%);font-size:11px;font-weight:950;color:#fff;pointer-events:none}
+    .checkout-map-marker{cursor:grab;touch-action:none}
+    .checkout-map-marker.dragging{cursor:grabbing}
+    .checkout-map-marker:before{width:38px;height:38px;background:#171717}
+    .checkout-map-marker:after{content:'';width:10px;height:10px;border-radius:50%;background:#fff;transform:translate(-50%,-78%)}
+    .map-zone-readout{position:absolute;left:12px;bottom:12px;z-index:7;padding:9px 11px;border-radius:13px;background:rgba(255,255,255,.96);box-shadow:0 6px 20px rgba(0,0,0,.11);font-size:10px;line-height:1.25;color:#444;pointer-events:none}
+    .map-zone-readout strong{display:block;color:#171717;font-size:11px;margin-bottom:2px}
     .map-zone-legend{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 16px;border-top:1px solid var(--line);background:#fff;font-size:11px;color:#666}
     .map-zone-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
     .map-zone-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -407,9 +420,10 @@
     .checkout-yandex-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:9px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line);font-size:11px;font-weight:850;color:#242424}
     @media(max-width:700px){
       .yandex-map-wrap--delivery{height:350px}
-      .yandex-map-wrap--checkout{height:225px}
+      .yandex-map-wrap--checkout{height:235px}
       .map-zone-legend{gap:8px;padding:9px 11px;font-size:10px}
       .map-schema-chip{left:10px;top:10px}
+      .map-open-yandex{right:9px;top:9px}
     }
   </style>
 </head>
@@ -456,7 +470,6 @@
       </button>
     </div>
     <div class="category-more-popover" id="categoryMoreMenu" aria-hidden="true">
-      <a href="vacancies.html" target="_top">Работа в Rolls Bar</a>
       <a href="#delivery">Доставка и оплата</a>
       <a href="reviews.html" target="_top">Отзывы клиентов</a>
       <a href="#contacts">Контакты</a>
@@ -599,14 +612,17 @@
             <h2>Карта доставки</h2>
             <p>Адрес будет автоматически сопоставляться с утверждённой зоной. Реальные границы и минимальные суммы загрузим после финального согласования.</p>
           </div>
-          <div class="yandex-map-wrap yandex-map-wrap--delivery" aria-label="Яндекс Карта доставки Rolls Bar со схематичными зонами">
+          <div class="yandex-map-wrap yandex-map-wrap--delivery" aria-label="Яндекс Карта Rolls Bar со схематичными зонами доставки">
             <iframe class="yandex-map-frame" title="Rolls Bar на Яндекс Картах" src="https://yandex.ru/map-widget/v1/?ll=34.099398%2C44.973541&mode=search&oid=229692973623&ol=biz&z=12&lang=ru_RU" loading="lazy" allowfullscreen></iframe>
             <svg class="delivery-zone-overlay" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
-              <ellipse cx="500" cy="310" rx="430" ry="260" fill="#df554f" fill-opacity=".13" stroke="#d9453f" stroke-opacity=".72" stroke-width="5"/>
-              <ellipse cx="500" cy="310" rx="325" ry="195" fill="#e5ae35" fill-opacity=".16" stroke="#d59b1d" stroke-opacity=".8" stroke-width="5"/>
-              <ellipse cx="500" cy="310" rx="215" ry="125" fill="#39a86b" fill-opacity=".18" stroke="#278a54" stroke-opacity=".85" stroke-width="5"/>
+              <polygon class="zone-3" points="70,155 210,55 510,35 805,80 955,235 930,445 735,570 405,585 145,505 35,330"/>
+              <polygon class="zone-2" points="185,190 300,110 525,95 745,135 850,255 815,405 665,495 430,505 250,445 145,320"/>
+              <polygon class="zone-1" points="330,230 420,175 555,170 675,220 715,315 655,390 535,430 410,405 320,335 285,275"/>
             </svg>
-            <span class="map-schema-chip">Схема зон, не финальные границы</span>
+            <span class="map-schema-chip">Демо-зоны на карте</span>
+            <span class="map-store-marker" aria-hidden="true"></span>
+            <a class="map-open-yandex" href="https://yandex.ru/maps/?ll=34.099398%2C44.973541&z=12" target="_blank" rel="noopener">Открыть Яндекс.Карты ↗</a>
+            <div class="map-zone-readout"><strong>Схематичные границы</strong>Карта зафиксирована, поэтому зоны не «съезжают» при панорамировании.</div>
           </div>
           <div class="map-zone-legend" aria-label="Схематичные зоны доставки">
             <span><i class="map-zone-dot map-zone-dot--1"></i>Зона 1</span>
@@ -614,7 +630,7 @@
             <span><i class="map-zone-dot map-zone-dot--3"></i>Зона 3</span>
             <span>Без вымышленных минимальных сумм</span>
           </div>
-          <div class="map-note">Цветные границы сейчас показаны только схематично, чтобы сохранить согласованную механику интерфейса. Реальные полигоны и минимальные суммы подключаются после получения данных заказчика; вне утверждённых зон будет доступен только самовывоз.</div>
+          <div class="map-note">Сейчас это рабочая схема интерфейса: зоны нарисованы поверх зафиксированного фрагмента Яндекс Карты и поэтому остаются на своих местах. После подключения Yandex Maps JavaScript API заменим их географическими полигонами, которые будут корректно двигаться и масштабироваться вместе с картой.</div>
         </article>
         <aside class="conditions-card">
           <h3>Доставка и оплата</h3>
@@ -702,19 +718,22 @@
           <input name="phone" type="tel" inputmode="tel" autocomplete="tel" value="+7 " maxlength="18" placeholder="+7 999 999-99-99" required id="phoneField">
           <div class="checkout-location-card" data-delivery-block>
             <div class="checkout-map-shell" id="checkoutMapShell">
-              <div class="yandex-map-wrap yandex-map-wrap--checkout">
+              <div class="yandex-map-wrap yandex-map-wrap--checkout" id="checkoutSchematicMap" aria-label="Яндекс Карта для выбора точки доставки">
                 <iframe class="yandex-map-frame" title="Яндекс Карта адреса доставки" src="https://yandex.ru/map-widget/v1/?ll=34.099398%2C44.973541&mode=search&oid=229692973623&ol=biz&z=13&lang=ru_RU" loading="lazy" allowfullscreen></iframe>
                 <svg class="delivery-zone-overlay" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
-              <ellipse cx="500" cy="310" rx="430" ry="260" fill="#df554f" fill-opacity=".13" stroke="#d9453f" stroke-opacity=".72" stroke-width="5"/>
-              <ellipse cx="500" cy="310" rx="325" ry="195" fill="#e5ae35" fill-opacity=".16" stroke="#d59b1d" stroke-opacity=".8" stroke-width="5"/>
-              <ellipse cx="500" cy="310" rx="215" ry="125" fill="#39a86b" fill-opacity=".18" stroke="#278a54" stroke-opacity=".85" stroke-width="5"/>
+              <polygon class="zone-3" points="70,155 210,55 510,35 805,80 955,235 930,445 735,570 405,585 145,505 35,330"/>
+              <polygon class="zone-2" points="185,190 300,110 525,95 745,135 850,255 815,405 665,495 430,505 250,445 145,320"/>
+              <polygon class="zone-1" points="330,230 420,175 555,170 675,220 715,315 655,390 535,430 410,405 320,335 285,275"/>
             </svg>
-                <span class="map-schema-chip">Зоны схематично</span>
+                <span class="map-schema-chip">Перетащите метку</span>
+                <button class="checkout-map-marker" id="checkoutMapMarker" type="button" aria-label="Метка адреса доставки"></button>
+                <a class="map-open-yandex" href="https://yandex.ru/maps/?ll=34.099398%2C44.973541&z=13" target="_blank" rel="noopener">Яндекс.Карты ↗</a>
+                <div class="map-zone-readout" id="checkoutMapZoneReadout"><strong>Демо-зона 1</strong>Метка двигается вручную.</div>
               </div>
-              <div class="checkout-map-note">Яндекс Карта уже встроена. Цветные зоны пока схематичные; точная автоматическая привязка адреса к зоне включится после загрузки реальных полигонов.</div>
+              <div class="checkout-map-note">Кликните по карте или перетащите метку. Три зоны пока демонстрационные; адресное геокодирование и настоящие полигоны подключатся после добавления Yandex Maps API-ключа.</div>
             </div>
             <div class="checkout-location-copy">
-              <h3>Укажите ваш адрес</h3>
+              <h3>Укажите адрес и поставьте метку</h3>
               <p>Подъезд, код двери, этаж и квартира вынесены в отдельные обязательные поля.</p>
             </div>
             <div class="checkout-location-fields">
@@ -1228,31 +1247,103 @@
     }
 
     function installCheckoutMap(){
+      var map=document.getElementById('checkoutSchematicMap');
+      var marker=document.getElementById('checkoutMapMarker');
+      var readout=document.getElementById('checkoutMapZoneReadout');
       var address=document.getElementById('addressField');
       var city=document.querySelector('input[name="city"]');
       var status=document.getElementById('deliveryZoneStatus');
       var link=document.getElementById('checkoutYandexAddressLink');
-      if(!address) return;
-      function syncAddress(){
+      var latInput=document.getElementById('deliveryLat');
+      var lngInput=document.getElementById('deliveryLng');
+      if(!map||!marker||!address) return;
+
+      // Coordinates are normalized to the fixed demo viewport. These polygons are not production delivery boundaries.
+      var zones=[
+        {name:'Демо-зона 1',poly:[[.330,.230],[.420,.175],[.555,.170],[.675,.220],[.715,.315],[.655,.390],[.535,.430],[.410,.405],[.320,.335],[.285,.275]]},
+        {name:'Демо-зона 2',poly:[[.185,.190],[.300,.110],[.525,.095],[.745,.135],[.850,.255],[.815,.405],[.665,.495],[.430,.505],[.250,.445],[.145,.320]]},
+        {name:'Демо-зона 3',poly:[[.070,.155],[.210,.055],[.510,.035],[.805,.080],[.955,.235],[.930,.445],[.735,.570],[.405,.585],[.145,.505],[.035,.330]]}
+      ];
+      function inPolygon(x,y,poly){
+        var inside=false;
+        for(var i=0,j=poly.length-1;i<poly.length;j=i++){
+          var xi=poly[i][0], yi=poly[i][1], xj=poly[j][0], yj=poly[j][1];
+          var hit=((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/((yj-yi)||1e-9)+xi);
+          if(hit) inside=!inside;
+        }
+        return inside;
+      }
+      function zoneAt(x,y){
+        for(var i=0;i<zones.length;i++) if(inPolygon(x,y,zones[i].poly)) return zones[i].name;
+        return 'Вне демо-зон';
+      }
+      function syncYandexLink(){
         var q=address.value.trim();
         var cityValue=city&&city.value.trim()?city.value.trim():'Симферополь';
         if(link){
           var text=[cityValue,q].filter(Boolean).join(', ');
           link.href='https://yandex.ru/maps/?text='+encodeURIComponent(text||'Симферополь');
         }
-        if(status&&q.length>=4){
+      }
+      function setPoint(x,y){
+        x=Math.max(.025,Math.min(.975,x));
+        y=Math.max(.05,Math.min(.94,y));
+        marker.style.left=(x*100).toFixed(2)+'%';
+        marker.style.top=(y*100).toFixed(2)+'%';
+        var zone=zoneAt(x,y);
+
+        // Approximate coordinates only for the demo viewport; production values will come from Yandex geocoding.
+        var lng=34.020 + x*(34.185-34.020);
+        var lat=45.045 - y*(45.045-44.915);
+        if(latInput) latInput.value=lat.toFixed(6);
+        if(lngInput) lngInput.value=lng.toFixed(6);
+
+        if(readout){
+          readout.innerHTML='<strong>'+zone+'</strong>'+ (zone==='Вне демо-зон' ? 'Для демо — только самовывоз.' : 'Метка попала в схематичную зону.');
+        }
+        if(status){
           status.dataset.mapUpdated='1';
-          status.innerHTML='<strong>Адрес указан</strong>Яндекс Карта подключена. Точная зона, минимальная сумма и недостающая сумма будут рассчитываться автоматически после загрузки утверждённых полигонов; сейчас эти значения не выдумываем.';
-        }else if(status){
-          delete status.dataset.mapUpdated;
-          status.innerHTML='<strong>Зона определится автоматически</strong>Введите улицу и дом. Ручного выбора зоны нет; цветные зоны на карте пока показаны схематично.';
+          status.innerHTML='<strong>'+zone+'</strong>'+(zone==='Вне демо-зон'
+            ? 'Точка находится вне схематичных зон. В рабочей версии здесь будет доступен самовывоз.'
+            : 'Точка выбрана вручную. Минимальные суммы пока не подставляем, потому что реальные значения заказчик ещё не передал.');
         }
       }
-      address.addEventListener('input',syncAddress);
-      address.addEventListener('change',syncAddress);
-      if(city) city.addEventListener('input',syncAddress);
+      function pointFromEvent(e){
+        var r=map.getBoundingClientRect();
+        return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height];
+      }
+
+      var dragging=false;
+      marker.addEventListener('pointerdown',function(e){
+        dragging=true;
+        marker.classList.add('dragging');
+        marker.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      });
+      marker.addEventListener('pointermove',function(e){
+        if(!dragging) return;
+        var p=pointFromEvent(e); setPoint(p[0],p[1]); e.preventDefault();
+      });
+      function stopDrag(e){
+        if(!dragging) return;
+        dragging=false;
+        marker.classList.remove('dragging');
+        try{marker.releasePointerCapture(e.pointerId);}catch(_){}
+      }
+      marker.addEventListener('pointerup',stopDrag);
+      marker.addEventListener('pointercancel',stopDrag);
+
+      map.addEventListener('pointerdown',function(e){
+        if(e.target===marker||e.target.closest('.map-open-yandex')) return;
+        var p=pointFromEvent(e); setPoint(p[0],p[1]);
+      });
+
+      address.addEventListener('input',syncYandexLink);
+      address.addEventListener('change',syncYandexLink);
+      if(city) city.addEventListener('input',syncYandexLink);
       window.rollsBarCheckoutMapInvalidate=function(){};
-      syncAddress();
+      syncYandexLink();
+      setPoint(.50,.50);
     }
 
     renderCatalog();
