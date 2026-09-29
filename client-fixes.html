@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <iframe id="site" src="./?client-review=13" title="Rolls Bar"></iframe>
+  <iframe id="site" src="./?client-review=14" title="Rolls Bar"></iframe>
   <script>
   (function(){
     var frame=document.getElementById('site');
@@ -389,15 +389,8 @@
         var choose=e.target.closest('[data-client-choose]');if(choose){e.preventDefault();openProductModal(choose.dataset.clientChoose);return;}
       });
 
-      var checkoutForm=d.getElementById('checkoutForm');
-      var address=d.getElementById('addressField');
-      var legacyZone=d.getElementById('clientDeliveryZone');
-      if(legacyZone){
-        var legacyWrap=legacyZone.closest('.delivery-zone-wrap');
-        if(legacyWrap) legacyWrap.remove(); else legacyZone.remove();
-      }
-      // Реальные зоны определяются по адресу в основном checkout.
-      // Старые демонстрационные 500/800/1200 ₽ больше не вставляем поверх страницы.
+      // Зона определяется только по адресу в основном checkout.
+      // Ручного селектора зоны и демонстрационных порогов в этом слое больше нет.
 
       enhanceProductActions();
       applyHighlights();
