@@ -194,32 +194,6 @@
         btn.addEventListener('click',backToMenu,true);
       }
 
-      function installMinimumGuard(){
-        var form=d.getElementById('checkoutForm');
-        if(!form||form.dataset.finalMinimumGuard==='1') return;
-        form.dataset.finalMinimumGuard='1';
-        form.addEventListener('submit',function(e){
-          var zone=d.getElementById('clientDeliveryZone');
-          if(!zone||!zone.value) return;
-          var modeText=(d.getElementById('checkoutMode')||{}).textContent||'';
-          if(modeText.toLowerCase().indexOf('самовывоз')!==-1) return;
-          var min=parseInt(zone.value,10)||0;
-          var total=rublesFrom((d.getElementById('checkoutItemsTotal')||{}).textContent);
-          if(total>=min) return;
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          var modal=d.querySelector('.minimum-modal');
-          if(!modal) return;
-          var title=d.getElementById('minimumTitle');
-          var text=d.getElementById('minimumText');
-          var diff=Math.max(0,min-total);
-          if(title) title.textContent='Минимальная сумма заказа — '+new Intl.NumberFormat('ru-RU').format(min)+' ₽';
-          if(text) text.textContent='Для оформления заказа наберите в корзине ещё товаров на сумму '+new Intl.NumberFormat('ru-RU').format(diff)+' ₽';
-          patchMinimumButton();
-          modal.classList.add('open');
-        },true);
-      }
-
       function patchCartIcons(){
         d.querySelectorAll('.client-plus,.client-choose').forEach(function(btn){
           btn.dataset.cartIconPatched='1';
@@ -229,11 +203,9 @@
       }
 
       patchMinimumButton();
-      installMinimumGuard();
       patchCartIcons();
       var patchObserver=new MutationObserver(function(){
         patchMinimumButton();
-        installMinimumGuard();
         patchCartIcons();
       });
       patchObserver.observe(d.body,{subtree:true,childList:true});
