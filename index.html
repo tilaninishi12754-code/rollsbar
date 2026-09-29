@@ -46,6 +46,8 @@
     .category-nav__scroll::-webkit-scrollbar{display:none}
     .category-nav a{color:#545454;text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap;padding:9px 12px;border-radius:999px}
     .category-nav a:hover,.category-nav a.active{background:var(--red);color:#fff}
+    .category-nav a.category-nav__work{background:#171717;color:#fff;border:1px solid #171717}
+    .category-nav a.category-nav__work:hover{background:var(--red);border-color:var(--red);color:#fff}
     .section{padding-top:56px}.catalog-first{padding-top:22px}
     .section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:22px}
     .section-heading h2{font-size:36px;line-height:1;letter-spacing:-.045em;margin:0}
@@ -403,6 +405,7 @@
   <nav class="category-nav" aria-label="Категории меню">
     <div class="shell category-nav__scroll">
       <a class="active" href="#rolls">Роллы</a>
+      <a class="category-nav__work" href="vacancies.html" target="_top">Работа</a>
       <a href="#pizza">Пицца</a>
       <a href="#hits">Хит-меню</a>
       <a href="#combo">Комбо</a>
