@@ -629,7 +629,7 @@
           <div id="cartTotals"></div>
         </section>
       </div>
-      <div class="drawer-foot"><button class="wide" type="button" id="checkoutOpen">Перейти к оформлению</button><div class="helper">Стоимость и условия доставки уточнит оператор при подтверждении заказа.</div></div>
+      <div class="drawer-foot"><button class="wide" type="button" id="checkoutOpen">Перейти к оформлению</button><div class="helper">При доставке зона и минимальная сумма определяются по адресу. Вне утверждённых зон доступен самовывоз.</div></div>
     </div>
   </div>
 
@@ -966,7 +966,7 @@
       document.querySelectorAll('[data-upsell]').forEach(function(btn){btn.addEventListener('click',function(){addUpsell(btn.dataset.upsell);});});
 
       var t = totals();
-      var deliveryLine = mode==='delivery' ? 'Уточнит оператор' : 'По условиям самовывоза';
+      var deliveryLine = mode==='delivery' ? 'По зоне адреса' : 'По условиям самовывоза';
       document.getElementById('cartTotals').innerHTML =
         '<div class="total-row"><span>Сумма товаров</span><span>' + money(t.items) + '</span></div>' +
         '<div class="total-row"><span>Получение</span><span>' + (mode==='delivery'?'Доставка':'Самовывоз') + '</span></div>' +
@@ -1002,7 +1002,7 @@
       }).join('');
       document.getElementById('checkoutItemsTotal').textContent = money(t.items);
       document.getElementById('checkoutMode').textContent = mode==='delivery'?'Доставка':'Самовывоз';
-      document.getElementById('checkoutDelivery').textContent = mode==='delivery'?'Уточнит оператор':'По условиям самовывоза';
+      document.getElementById('checkoutDelivery').textContent = mode==='delivery'?'По зоне адреса':'По условиям самовывоза';
       document.getElementById('checkoutTotal').textContent = money(t.total);
       var deliveryFields=Array.from(document.querySelectorAll('[data-delivery-required="1"]'));
       deliveryFields.forEach(function(field){field.required=mode==='delivery';});
@@ -1010,9 +1010,17 @@
       if(address) address.placeholder = mode==='delivery'?'Улица и дом':'Адрес не требуется при самовывозе';
       var zoneStatus=document.getElementById('deliveryZoneStatus');
       var mapShell=document.getElementById('checkoutMapShell');
-      if(zoneStatus&&mode==='pickup') zoneStatus.innerHTML='<strong>Самовывоз</strong>Адрес доставки не требуется. Точка самовывоза: Кечкеметская улица, 1.';
-      if(zoneStatus&&mode==='delivery'&&!zoneStatus.dataset.mapUpdated) zoneStatus.innerHTML='<strong>Зона определится автоматически</strong>Введите адрес или поставьте метку на карте. Вне утверждённых зон доставка недоступна, остаётся самовывоз.';
+      if(zoneStatus&&mode==='pickup'){
+        zoneStatus.innerHTML='<strong>Самовывоз</strong>Адрес доставки не требуется. Точка самовывоза: Кечкеметская улица, 1.';
+      }
+      if(zoneStatus&&mode==='delivery'){
+        var hasPoint=!!(document.getElementById('deliveryLat')||{}).value;
+        zoneStatus.innerHTML=hasPoint
+          ? '<strong>Метка адреса установлена</strong>После загрузки утверждённых зон сайт автоматически покажет зону, минимальную сумму и сколько нужно добрать. Вне зон будет доступен только самовывоз.'
+          : '<strong>Зона определится автоматически</strong>Введите адрес или поставьте метку на карте. Вне утверждённых зон доставка недоступна, остаётся самовывоз.';
+      }
       if(mapShell) mapShell.style.display=mode==='delivery'?'block':'none';
+      if(mode==='delivery'&&typeof window.rollsBarCheckoutMapInvalidate==='function') setTimeout(window.rollsBarCheckoutMapInvalidate,60);
     }
 
 
@@ -1199,6 +1207,7 @@
       var map=L.map(el,{scrollWheelZoom:false}).setView(store,13);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
       var marker=L.marker(store,{draggable:true}).addTo(map);
+      window.rollsBarCheckoutMapInvalidate=function(){map.invalidateSize();};
       function savePoint(lat,lng,message){
         document.getElementById('deliveryLat').value=Number(lat).toFixed(6);
         document.getElementById('deliveryLng').value=Number(lng).toFixed(6);
@@ -1217,7 +1226,7 @@
         if(q.length<4) return;
         if(status){status.dataset.mapUpdated='1';status.innerHTML='<strong>Ищем адрес на карте…</strong>Зона доставки не подставляется до загрузки реальных полигонов.';}
         try{
-          var url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ru&q='+encodeURIComponent(q+', Симферополь');
+          var url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(q+', Симферополь');
           var res=await fetch(url,{headers:{'Accept':'application/json'}});
           var data=await res.json();
           if(data&&data[0]){
