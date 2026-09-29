@@ -255,6 +255,19 @@
       .catalog-first{padding-top:0!important}
     }
 
+    /* Late client fixes 2026-09-29: checkout address/map */
+    .checkout-address-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .checkout-address-grid .span-2{grid-column:1/-1}
+    .delivery-zone-status{padding:12px 13px;border-radius:14px;background:#fff6f4;border:1px solid #f1d8d3;color:#5c4d49;font-size:12px;line-height:1.45}
+    .delivery-zone-status strong{display:block;color:#262626;margin-bottom:3px}
+    .checkout-map-shell{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+    #checkout-map{height:230px;width:100%}
+    .checkout-map-note{padding:10px 12px;font-size:11px;line-height:1.45;color:var(--muted);background:#faf9f8;border-top:1px solid var(--line)}
+    @media(max-width:700px){
+      .checkout-address-grid{grid-template-columns:1fr}
+      .checkout-address-grid .span-2{grid-column:auto}
+      #checkout-map{height:210px}
+    }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 
@@ -420,6 +433,7 @@
         <a href="#rolls">Меню</a>
         <a href="#delivery">Доставка и оплата</a>
         <a href="#contacts">Контакты</a>
+        <a href="vacancies.html" target="_top">Работа в Rolls Bar</a>
         <a href="legal.html" target="_top">Документы и оплата</a>
         <a href="privacy.html" target="_top">Политика персональных данных</a>
         <a href="https://vk.ru/rollsbar82" target="_blank" rel="noopener">VK Rolls Bar</a>
@@ -537,15 +551,15 @@
         <article class="delivery-card">
           <div class="delivery-card__head">
             <span class="badge badge--sale">Доставка</span>
-            <h2>Зоны доставки</h2>
-            <p>На карте показана структура из трёх зон. Финальные границы и тарифы будут установлены после согласования.</p>
+            <h2>Карта доставки</h2>
+            <p>Адрес будет автоматически сопоставляться с утверждённой зоной. Реальные границы и минимальные суммы загрузим после финального согласования.</p>
           </div>
-          <div id="delivery-map" aria-label="Карта зон доставки Rolls Bar"></div>
-          <div class="map-note">Демонстрационные границы зон. Точная стоимость и условия доставки подтверждаются оператором.</div>
+          <div id="delivery-map" aria-label="Карта доставки Rolls Bar"></div>
+          <div class="map-note">Фейковые зоны на демо не показываем. После загрузки утверждённых границ сайт сам определит зону по адресу; вне зон будет доступен только самовывоз.</div>
         </article>
         <aside class="conditions-card">
           <h3>Доставка и оплата</h3>
-          <div class="condition"><b>Доставка курьером</b><span>Стоимость и условия уточнит оператор при подтверждении заказа.</span></div>
+          <div class="condition"><b>Доставка курьером</b><span>Только внутри утверждённых зон. Зона, минимальная сумма и стоимость будут определяться автоматически по адресу. Вне зон — только самовывоз.</span></div>
           <div class="condition"><b>Самовывоз</b><span>Кечкеметская улица, 1. Скидка за самовывоз предусмотрена и будет настроена по согласованным условиям.</span></div>
           <div class="condition"><b>Оплата</b><span>На старте — при получении заказа. Онлайн-оплата будет подключаться отдельно при необходимости.</span></div>
           <div class="notice">Уважаемые клиенты, в связи с возможными сбоями связи, пожалуйста, будьте готовы оплатить заказ наличными при получении.</div>
@@ -580,6 +594,7 @@
         <a href="cookies.html" target="_top">Cookies</a>
         <a href="payment-security.html" target="_top">Безопасность оплаты</a>
         <a href="reviews.html" target="_top">Отзывы</a>
+        <a href="vacancies.html" target="_top">Работа в Rolls Bar</a>
       </div>
     </div>
   </footer>
@@ -625,10 +640,23 @@
       <div class="checkout-grid">
         <form class="checkout-form" id="checkoutForm">
           <input name="name" type="text" placeholder="Имя" required>
-          <input name="phone" type="tel" placeholder="Телефон" required>
+          <input name="phone" type="tel" inputmode="tel" autocomplete="tel" value="+7 " maxlength="18" placeholder="+7 999 999-99-99" required id="phoneField">
           <input name="city" type="text" value="Симферополь" required>
-          <input name="address" type="text" placeholder="Улица и дом" required id="addressField">
-          <textarea name="comment" placeholder="Комментарий к заказу: желаемое время, подъезд, этаж, домофон, пожелания"></textarea>
+          <div class="checkout-address-grid">
+            <input class="span-2" name="address" type="text" autocomplete="street-address" placeholder="Улица и дом" required data-delivery-required="1" id="addressField">
+            <input name="entrance" type="text" placeholder="Подъезд" required data-delivery-required="1">
+            <input name="door_code" type="text" placeholder="Код двери / домофон" required data-delivery-required="1">
+            <input name="floor" type="text" inputmode="numeric" placeholder="Этаж" required data-delivery-required="1">
+            <input name="apartment" type="text" placeholder="Квартира" required data-delivery-required="1">
+          </div>
+          <div class="delivery-zone-status" id="deliveryZoneStatus"><strong>Зона определится автоматически</strong>Введите адрес или поставьте метку на карте. Реальные зоны и минимальные суммы ещё не загружены, поэтому демо не подставляет вымышленные значения.</div>
+          <div class="checkout-map-shell" id="checkoutMapShell">
+            <div id="checkout-map" aria-label="Карта адреса доставки"></div>
+            <div class="checkout-map-note">Можно ввести адрес или передвинуть метку. После загрузки утверждённых полигонов здесь автоматически появятся зона, минимальная сумма и сколько нужно добрать.</div>
+          </div>
+          <input name="delivery_lat" type="hidden" id="deliveryLat">
+          <input name="delivery_lng" type="hidden" id="deliveryLng">
+          <textarea name="comment" placeholder="Комментарий к заказу (необязательно): желаемое время, пожелания"></textarea>
           <div class="checkout-receipt-note">Телефон используется для связи по заказу и после подключения онлайн-оплаты может использоваться для направления электронного кассового чека.</div>
           <div class="checkout-consents">
             <label class="checkout-consent"><input name="terms_accept" type="checkbox" required><span>Я принимаю условия <a href="offer.html" target="_blank" rel="noopener">Публичной оферты</a> и ознакомлен(а) с условиями <a href="payment-refund.html" target="_blank" rel="noopener">оплаты и возврата</a>.</span></label>
@@ -676,14 +704,19 @@
       {id:'red-dragon',cat:'rolls',name:'Красный дракон',price:420,old:450,img:'https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL',desc:'Фирменный ролл Красный дракон.',hit:false},
 
       {id:'baked-rolls',cat:'hot',name:'Запечённые роллы',price:470,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL',desc:'8 шт. На выбор: с лососем, креветкой, угрём, крабом или мидиями.',hit:true},
-      {id:'baked-rice',cat:'hot',name:'Запечённый рис',price:300,old:360,img:'https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ae42b149456eaf19588627438/XL',desc:'Горячая позиция на рисе.',hit:false},
-      {id:'baked-mussels',cat:'hot',name:'Запечённые мидии',price:280,old:350,img:'https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019ef92985ac5e638b1beceb7fb844/XL',desc:'4 шт. Соус на выбор: спайси или унаги.',hit:false},
+      {id:'baked-rice-spicy',cat:'wok',name:'Запеченный рис спайси',price:300,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ae42b149456eaf19588627438/XL',desc:'Рис, креветка, сыр моцарелла, спайси соус.',hit:false},
+      {id:'baked-rice-unagi',cat:'wok',name:'Запеченный рис унаги',price:300,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ae42b149456eaf19588627438/XL',desc:'Рис, лосось, сыр моцарелла, унаги соус.',hit:false},
+      {id:'baked-mussels-spicy',cat:'snacks',name:'Запеченные мидии спайси',price:280,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019ef92985ac5e638b1beceb7fb844/XL',desc:'Запечённые мидии Спайси. Состав в исходной таблице не указан.',hit:false},
+      {id:'baked-mussels-unagi',cat:'snacks',name:'Запеченные мидии унаги',price:280,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019ef92985ac5e638b1beceb7fb844/XL',desc:'Запечённые мидии Унаги. Состав в исходной таблице не указан.',hit:false},
 
-      {id:'wok-veg',cat:'wok',name:'Удон/Соба/Фунчоза с овощами',price:230,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/2510998/2a0000017cb180f1f8c4c8c7b84d89dbd3a8/XL',desc:'240 г. Лапша на выбор, овощи и соус: сливочный, терияки или сладкий чили.',hit:false},
-      {id:'tyahan-sea',cat:'wok',name:'Тяхан с морепродуктами',price:430,old:520,img:'https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000017cb183a6c74fd62c6ae0185f5887/XL',desc:'300 г. Рис, лосось, креветки, мидии, овощи и соус терияки.',hit:false},
-      {id:'tyahan-chicken',cat:'wok',name:'Тяхан с курицей',price:410,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000017cb183a6c74fd62c6ae0185f5887/XL',desc:'300 г. Рис, куриное филе, овощи и соус терияки.',hit:false},
-      {id:'wok-sea',cat:'wok',name:'WOK с морепродуктами',price:430,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL',desc:'300 г. Лапша на выбор, лосось, креветка, мидии, овощи и соус.',hit:false},
-      {id:'wok-chicken',cat:'wok',name:'WOK с курицей',price:410,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL',desc:'300 г. Лапша на выбор, куриное филе, овощи и соус.',hit:false},
+      {id:'wok-fun-chicken',cat:'wok',name:'Фунчоза с курицей',price:390,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/2510998/2a0000017cb180f1f8c4c8c7b84d89dbd3a8/XL',desc:'Рисовая лапша фунчоза, курочка, шампиньоны, болгарский перец, морковь, лук, кабачок. Соус на выбор.',hit:false},
+      {id:'wok-fun-sea',cat:'wok',name:'Фунчоза с морепродуктами',price:430,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL',desc:'Рисовая лапша фунчоза, креветки, мидии, лосось, шампиньоны, болгарский перец, морковь, лук, кабачок. Соус на выбор.',hit:false},
+      {id:'wok-udon-chicken',cat:'wok',name:'Удон с курицей',price:390,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/2510998/2a0000017cb180f1f8c4c8c7b84d89dbd3a8/XL',desc:'Лапша удон, курочка, шампиньоны, болгарский перец, морковь, лук, кабачок. Соус на выбор.',hit:false},
+      {id:'wok-udon-sea',cat:'wok',name:'Удон с морепродуктами',price:430,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL',desc:'Лапша удон, креветки, мидии, лосось, шампиньоны, болгарский перец, морковь, лук, кабачок. Соус на выбор.',hit:false},
+      {id:'wok-soba-chicken',cat:'wok',name:'Соба с курицей',price:390,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/2510998/2a0000017cb180f1f8c4c8c7b84d89dbd3a8/XL',desc:'Гречневая лапша, курочка, шампиньоны, болгарский перец, морковь, лук, кабачок. Соус на выбор.',hit:false},
+      {id:'wok-soba-sea',cat:'wok',name:'Соба с морепродуктами',price:430,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL',desc:'Гречневая лапша, креветки, мидии, лосось, шампиньоны, болгарский перец, морковь, лук, кабачок. Соус на выбор.',hit:false},
+      {id:'tyahan-sea',cat:'wok',name:'Тяхан с морепродуктами',price:430,old:520,img:'https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000017cb183a6c74fd62c6ae0185f5887/XL',desc:'Строки тяханов в исходной таблице противоречат названию/составу. Значения не меняем до подтверждения.',hit:false},
+      {id:'tyahan-chicken',cat:'wok',name:'Тяхан с курицей',price:410,old:null,img:'https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000017cb183a6c74fd62c6ae0185f5887/XL',desc:'Строки тяханов в исходной таблице противоречат названию/составу. Значения не меняем до подтверждения.',hit:false},
 
       {id:'tom-yam',cat:'soups',name:'Суп Том Ям',price:510,old:580,img:'https://avatars.mds.yandex.net/get-sprav-products/17712810/2a0000019d0abdb6877deb8b80dc33c2f2f1/XL',desc:'Лосось, креветка, мидии, кальмар, грибы. Подаётся с рисом, лаймом, перцем и черри.',hit:true},
 
@@ -877,11 +910,17 @@
       });
     }
 
+    var pendingProductOptions={};
+    window.rollsBarSetPendingOption=function(id,label){pendingProductOptions[id]=String(label||'').trim();};
+
     function addProduct(id){
       var p = products.find(function(x){return x.id===id;});
       if(!p) return;
-      var existing = cart.find(function(x){return x.id===id;});
-      if(existing){existing.qty+=1;}else{cart.push({id:p.id,name:p.name,price:p.price,img:p.img,vkRow:p.vkRow,vkCol:p.vkCol,qty:1});}
+      var option=pendingProductOptions[id]||'';
+      delete pendingProductOptions[id];
+      var cartId=option ? id+'::'+option : id;
+      var existing = cart.find(function(x){return x.id===cartId;});
+      if(existing){existing.qty+=1;}else{cart.push({id:cartId,productId:p.id,name:p.name+(option?' · '+option:''),price:p.price,img:p.img,vkRow:p.vkRow,vkCol:p.vkCol,qty:1});}
       renderCart();
     }
 
@@ -965,9 +1004,15 @@
       document.getElementById('checkoutMode').textContent = mode==='delivery'?'Доставка':'Самовывоз';
       document.getElementById('checkoutDelivery').textContent = mode==='delivery'?'Уточнит оператор':'По условиям самовывоза';
       document.getElementById('checkoutTotal').textContent = money(t.total);
+      var deliveryFields=Array.from(document.querySelectorAll('[data-delivery-required="1"]'));
+      deliveryFields.forEach(function(field){field.required=mode==='delivery';});
       var address = document.getElementById('addressField');
-      address.required = mode==='delivery';
-      address.placeholder = mode==='delivery'?'Улица и дом':'Адрес не требуется при самовывозе';
+      if(address) address.placeholder = mode==='delivery'?'Улица и дом':'Адрес не требуется при самовывозе';
+      var zoneStatus=document.getElementById('deliveryZoneStatus');
+      var mapShell=document.getElementById('checkoutMapShell');
+      if(zoneStatus&&mode==='pickup') zoneStatus.innerHTML='<strong>Самовывоз</strong>Адрес доставки не требуется. Точка самовывоза: Кечкеметская улица, 1.';
+      if(zoneStatus&&mode==='delivery'&&!zoneStatus.dataset.mapUpdated) zoneStatus.innerHTML='<strong>Зона определится автоматически</strong>Введите адрес или поставьте метку на карте. Вне утверждённых зон доставка недоступна, остаётся самовывоз.';
+      if(mapShell) mapShell.style.display=mode==='delivery'?'block':'none';
     }
 
 
@@ -1123,10 +1168,84 @@
     }
 
 
+    function installCheckoutPhone(){
+      var input=document.getElementById('phoneField');
+      if(!input) return;
+      function formatPhone(){
+        var digits=String(input.value||'').replace(/\D/g,'');
+        if(digits.charAt(0)==='8') digits='7'+digits.slice(1);
+        if(digits.charAt(0)!=='7') digits='7'+digits.replace(/^7/,'');
+        digits=digits.slice(0,11);
+        var tail=digits.slice(1);
+        var out='+7';
+        if(tail.length) out+=' '+tail.slice(0,3);
+        if(tail.length>3) out+=' '+tail.slice(3,6);
+        if(tail.length>6) out+='-'+tail.slice(6,8);
+        if(tail.length>8) out+='-'+tail.slice(8,10);
+        input.value=out+' ';
+      }
+      input.addEventListener('input',formatPhone);
+      input.addEventListener('focus',function(){if(!input.value.trim()) input.value='+7 ';});
+      input.addEventListener('blur',function(){input.value=input.value.trimEnd();});
+      formatPhone();
+    }
+
+    function installCheckoutMap(){
+      var el=document.getElementById('checkout-map');
+      var address=document.getElementById('addressField');
+      var status=document.getElementById('deliveryZoneStatus');
+      if(!el||!address||typeof L==='undefined') return;
+      var store=[44.973541,34.099398];
+      var map=L.map(el,{scrollWheelZoom:false}).setView(store,13);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+      var marker=L.marker(store,{draggable:true}).addTo(map);
+      function savePoint(lat,lng,message){
+        document.getElementById('deliveryLat').value=Number(lat).toFixed(6);
+        document.getElementById('deliveryLng').value=Number(lng).toFixed(6);
+        if(status){
+          status.dataset.mapUpdated='1';
+          status.innerHTML='<strong>Метка адреса установлена</strong>'+message+' После загрузки утверждённых зон сайт автоматически покажет зону, минимальную сумму и сколько нужно добрать. Вне зон будет доступен только самовывоз.';
+        }
+      }
+      marker.on('dragend',function(){
+        var p=marker.getLatLng();
+        savePoint(p.lat,p.lng,'Проверьте улицу и дом.');
+      });
+      var geocodeTimer=null;
+      async function geocode(){
+        var q=address.value.trim();
+        if(q.length<4) return;
+        if(status){status.dataset.mapUpdated='1';status.innerHTML='<strong>Ищем адрес на карте…</strong>Зона доставки не подставляется до загрузки реальных полигонов.';}
+        try{
+          var url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ru&q='+encodeURIComponent(q+', Симферополь');
+          var res=await fetch(url,{headers:{'Accept':'application/json'}});
+          var data=await res.json();
+          if(data&&data[0]){
+            var lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon);
+            marker.setLatLng([lat,lng]);map.setView([lat,lng],16);
+            savePoint(lat,lng,'Адрес найден на карте.');
+          }else if(status){
+            status.dataset.mapUpdated='1';
+            status.innerHTML='<strong>Адрес не найден автоматически</strong>Уточните улицу и дом или передвиньте метку вручную. Вне утверждённых зон доставка недоступна.';
+          }
+        }catch(err){
+          if(status){
+            status.dataset.mapUpdated='1';
+            status.innerHTML='<strong>Карту можно выставить вручную</strong>Автопоиск адреса сейчас недоступен. Передвиньте метку; реальные зоны и минималки не подменяем демо-значениями.';
+          }
+        }
+      }
+      address.addEventListener('input',function(){clearTimeout(geocodeTimer);geocodeTimer=setTimeout(geocode,700);});
+      address.addEventListener('change',geocode);
+      setTimeout(function(){map.invalidateSize();},300);
+    }
+
     renderCatalog();
     renderCart();
     installProductDetails();
     installProductSearch();
+    installCheckoutPhone();
+    installCheckoutMap();
 
     document.querySelectorAll('[data-cart-open]').forEach(function(btn){btn.addEventListener('click',openCart);});
     var siteMenu=document.getElementById('siteMenu');
@@ -1176,12 +1295,8 @@
       var store=[44.973541,34.099398];
       var map=L.map('delivery-map',{scrollWheelZoom:true}).setView(store,12);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
-      var zone3=[[45.008,34.024],[45.020,34.105],[44.998,34.185],[44.954,34.208],[44.912,34.180],[44.897,34.107],[44.914,34.038],[44.956,34.016]];
-      var zone2=[[44.992,34.060],[45.002,34.113],[44.980,34.163],[44.950,34.178],[44.924,34.151],[44.914,34.102],[44.930,34.060],[44.958,34.045]];
-      var zone1=[[44.983,34.079],[44.989,34.112],[44.974,34.139],[44.948,34.146],[44.934,34.124],[44.940,34.091],[44.958,34.079]];
-      L.polygon(zone3,{color:'#df4a44',weight:2,fillColor:'#df4a44',fillOpacity:.12}).addTo(map);
-      L.polygon(zone2,{color:'#dda72f',weight:2,fillColor:'#f0b646',fillOpacity:.18}).addTo(map);
-      L.polygon(zone1,{color:'#2f9564',weight:2,fillColor:'#42b883',fillOpacity:.22}).addTo(map);
+      // Реальные полигоны доставки не рисуем, пока заказчик не передал утверждённые границы.
+      // Это намеренно: демо не должно выдавать вымышленные зоны за рабочие.
       var icon=L.divIcon({className:'',html:'<div style="width:38px;height:38px;border-radius:13px;background:#d92525;color:#fff;display:grid;place-items:center;font-weight:900;border:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.25)">R</div>',iconSize:[38,38],iconAnchor:[19,19]});
       L.marker(store,{icon:icon}).addTo(map).bindPopup('<b>ROLLS BAR</b><br>Кечкеметская, 1');
       };
