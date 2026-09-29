@@ -46,6 +46,16 @@
     .category-nav__scroll::-webkit-scrollbar{display:none}
     .category-nav a{color:#545454;text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap;padding:9px 12px;border-radius:999px}
     .category-nav a:hover,.category-nav a.active{background:var(--red);color:#fff}
+
+    .category-more__toggle{border:0;background:transparent;color:#545454;font:inherit;font-size:13px;font-weight:800;white-space:nowrap;padding:9px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
+    .category-more__toggle:hover,.category-more__toggle[aria-expanded="true"]{background:#f3f3f3;color:#171717}
+    .category-more__toggle svg{width:12px;height:12px;transition:transform .18s ease}
+    .category-more__toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+    .category-more-popover{position:absolute;right:max(20px,calc((100vw - 1240px)/2));top:calc(100% - 3px);z-index:48;width:250px;padding:9px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 48px rgba(0,0,0,.14);display:none}
+    .category-more-popover.open{display:grid}
+    .category-more-popover a{display:block;text-decoration:none;padding:12px 13px;border-radius:12px;font-size:13px;font-weight:800;color:#292929}
+    .category-more-popover a:hover{background:#f5f5f5;color:#171717}
+    @media(max-width:700px){.category-more__toggle,.category-more-popover{display:none!important}}
     .section{padding-top:56px}.catalog-first{padding-top:22px}
     .section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:22px}
     .section-heading h2{font-size:36px;line-height:1;letter-spacing:-.045em;margin:0}
@@ -440,6 +450,16 @@
       <a href="#snacks">Закуски</a>
       <a href="#wok">WOK и рис</a>
       <a href="#soups">Супы</a>
+      <button class="category-more__toggle" type="button" aria-expanded="false" aria-controls="categoryMoreMenu" data-category-more-open>
+        Ещё
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="category-more-popover" id="categoryMoreMenu" aria-hidden="true">
+      <a href="vacancies.html" target="_top">Работа в Rolls Bar</a>
+      <a href="#delivery">Доставка и оплата</a>
+      <a href="reviews.html" target="_top">Отзывы клиентов</a>
+      <a href="#contacts">Контакты</a>
     </div>
   </nav>
 
@@ -1250,6 +1270,35 @@
     menuToggle.addEventListener('click',openMenu);
     document.querySelectorAll('[data-menu-close]').forEach(function(btn){btn.addEventListener('click',closeMenu);});
     document.querySelectorAll('.site-menu__links a').forEach(function(a){a.addEventListener('click',closeMenu);});
+
+    var categoryMoreToggle=document.querySelector('[data-category-more-open]');
+    var categoryMoreMenu=document.getElementById('categoryMoreMenu');
+    function closeCategoryMore(){
+      if(!categoryMoreToggle||!categoryMoreMenu) return;
+      categoryMoreMenu.classList.remove('open');
+      categoryMoreMenu.setAttribute('aria-hidden','true');
+      categoryMoreToggle.setAttribute('aria-expanded','false');
+    }
+    if(categoryMoreToggle&&categoryMoreMenu){
+      categoryMoreToggle.addEventListener('click',function(e){
+        e.stopPropagation();
+        var open=!categoryMoreMenu.classList.contains('open');
+        closeCategoryMore();
+        if(open){
+          categoryMoreMenu.classList.add('open');
+          categoryMoreMenu.setAttribute('aria-hidden','false');
+          categoryMoreToggle.setAttribute('aria-expanded','true');
+        }
+      });
+      categoryMoreMenu.addEventListener('click',function(e){
+        var a=e.target.closest('a');
+        if(a) closeCategoryMore();
+      });
+      document.addEventListener('click',function(e){
+        if(!categoryMoreMenu.contains(e.target)&&e.target!==categoryMoreToggle) closeCategoryMore();
+      });
+      document.addEventListener('keydown',function(e){if(e.key==='Escape') closeCategoryMore();});
+    }
     document.querySelectorAll('[data-cart-close]').forEach(function(btn){btn.addEventListener('click',closeCart);});
     document.querySelectorAll('[data-checkout-close]').forEach(function(btn){btn.addEventListener('click',closeCheckout);});
     document.getElementById('checkoutOpen').addEventListener('click',openCheckout);
