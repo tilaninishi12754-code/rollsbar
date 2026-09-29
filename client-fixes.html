@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <iframe id="site" src="./?client-review=17" title="Rolls Bar"></iframe>
+  <iframe id="site" src="./?client-review=18" title="Rolls Bar"></iframe>
   <script>
   (function(){
     var frame=document.getElementById('site');
@@ -39,17 +39,29 @@
         .category-nav a.active,.category-nav a:hover{background:#d92525!important;color:#fff!important}
         .quick-menu{display:none!important}
 
-        .client-promo-wrap{background:#f3f4f5;padding:24px 0 26px}
-        .client-promo{width:var(--shell);margin:0 auto;min-height:208px;border-radius:30px;overflow:hidden;position:relative;display:grid;grid-template-columns:minmax(0,1fr) 330px;align-items:stretch;background:linear-gradient(118deg,#c91924 0%,#e32f32 48%,#f36a52 100%);box-shadow:0 18px 50px rgba(173,22,31,.16);color:#fff;cursor:pointer}
-        .client-promo:before{content:'';position:absolute;left:-80px;bottom:-125px;width:310px;height:230px;border-radius:55px;background:rgba(255,255,255,.08);transform:rotate(18deg)}
-        .client-promo__copy{position:relative;z-index:2;padding:31px 35px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
-        .client-promo__eyebrow{display:inline-flex;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.18);padding:7px 10px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
-        .client-promo h1{margin:12px 0 7px;font-size:52px;line-height:.92;letter-spacing:-.055em;color:#fff}
-        .client-promo p{margin:0;max-width:520px;font-size:15px;line-height:1.45;color:rgba(255,255,255,.9)}
-        .client-promo__cta{display:inline-flex;align-items:center;gap:9px;margin-top:19px;padding:11px 15px;border-radius:14px;background:#fff;color:#bd1e25;font-size:13px;font-weight:900}
-        .client-promo__art{position:relative;z-index:1;margin:16px 18px 16px 0;border-radius:24px;background:#fff;overflow:hidden;box-shadow:0 18px 40px rgba(106,16,22,.18)}
-        .client-promo__food{position:absolute;inset:0;background-image:url('assets/vk-products-row2.webp');background-repeat:no-repeat;background-size:600% 100%;background-position:60% 50%}
-        .client-promo__art:after{content:'ROLLS BAR';position:absolute;right:14px;bottom:12px;padding:7px 9px;border-radius:10px;background:rgba(20,20,20,.78);color:#fff;font-size:9px;font-weight:900;letter-spacing:.08em}
+        .client-promo-wrap{background:#f3f4f5;padding:22px 0 24px}
+        .client-stories{width:var(--shell);margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+        .client-story{position:relative;min-width:0;height:210px;border-radius:28px;overflow:hidden;text-decoration:none;color:#fff;display:flex;align-items:flex-end;padding:20px;box-shadow:0 12px 34px rgba(26,30,34,.09);transition:transform .18s ease,box-shadow .18s ease;isolation:isolate}
+        .client-story:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(26,30,34,.13)}
+        .client-story:before{content:'';position:absolute;inset:0;z-index:-2}
+        .client-story:after{content:'';position:absolute;left:0;right:0;bottom:0;height:62%;z-index:-1;background:linear-gradient(180deg,transparent,rgba(0,0,0,.44))}
+        .client-story--promo:before{background:linear-gradient(140deg,#cb1e29 0%,#f0443e 58%,#ff8b63 100%)}
+        .client-story--work:before{background:linear-gradient(140deg,#2b2d31 0%,#5b626b 100%)}
+        .client-story--delivery:before{background:linear-gradient(140deg,#e27b28 0%,#f2ad54 100%)}
+        .client-story--reviews:before{background:linear-gradient(140deg,#2e8b63 0%,#63b88f 100%)}
+        .client-story__copy{position:relative;z-index:3;max-width:90%}
+        .client-story__eyebrow{display:inline-flex;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.2);font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+        .client-story h3{margin:8px 0 4px;font-size:25px;line-height:1.03;letter-spacing:-.045em;color:#fff}
+        .client-story p{margin:0;font-size:11px;line-height:1.28;color:rgba(255,255,255,.92);max-width:210px}
+        .client-story__art{position:absolute;right:-14px;top:-8px;width:148px;height:148px;border-radius:36px;transform:rotate(5deg);opacity:.98;overflow:hidden}
+        .client-story--promo .client-story__art{background:#fff}
+        .client-story--promo .client-story__art:before{content:'';position:absolute;inset:0;background-image:url('assets/vk-products-row2.webp');background-repeat:no-repeat;background-size:600% 100%;background-position:60% 50%}
+        .client-story__ninja{position:absolute;right:10px;top:10px;width:104px;height:126px;object-fit:contain;filter:drop-shadow(0 10px 18px rgba(0,0,0,.16))}
+        .client-story__pin{position:absolute;right:28px;top:22px;width:92px;height:92px;border-radius:50% 50% 50% 10%;background:rgba(255,255,255,.95);transform:rotate(-45deg);box-shadow:0 12px 30px rgba(112,62,10,.17)}
+        .client-story__pin:after{content:'';position:absolute;width:30px;height:30px;border-radius:50%;background:#e27b28;left:31px;top:31px}
+        .client-story__stars{position:absolute;right:22px;top:26px;font-size:30px;letter-spacing:2px;transform:rotate(-6deg);text-shadow:0 9px 24px rgba(0,0,0,.16)}
+        .client-story__arrow{display:inline-block;margin-left:4px;font-weight:900}
+        .client-story:focus-visible{outline:3px solid #fff;outline-offset:-6px}
 
         main{background:#fff!important;border-radius:34px 34px 0 0;margin-top:0;padding-top:30px;min-height:70vh;box-shadow:0 -1px 0 rgba(0,0,0,.035)}
         main>.section:first-of-type{padding-top:0!important}
@@ -133,8 +145,9 @@
 
         @media(max-width:1050px){
           :root{--shell:min(100% - 32px,940px)}
-          .client-promo{grid-template-columns:1fr 280px;min-height:190px}
-          .client-promo h1{font-size:46px}
+          .client-stories{grid-template-columns:repeat(2,minmax(0,1fr))}
+          .client-story{height:184px}
+          .client-story h3{font-size:23px}
           .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
         }
         @media(max-width:700px){
@@ -149,15 +162,17 @@
           .category-nav__scroll{min-height:50px!important;padding:7px 0!important}
           .category-nav a{font-size:12px!important;padding:8px 11px!important}
 
-          .client-promo-wrap{padding:11px 0 14px}
-          .client-promo{min-height:126px;grid-template-columns:minmax(0,1fr) 116px;border-radius:20px;box-shadow:none}
-          .client-promo__copy{padding:17px 16px}
-          .client-promo__eyebrow{font-size:8px;padding:5px 7px}
-          .client-promo h1{font-size:30px;margin:8px 0 4px}
-          .client-promo p{font-size:10.5px;line-height:1.3;max-width:205px}
-          .client-promo__cta{margin-top:9px;padding:7px 9px;border-radius:10px;font-size:9px}
-          .client-promo__art{margin:9px 9px 9px 0;border-radius:15px;box-shadow:none}
-          .client-promo__art:after{display:none}
+          .client-promo-wrap{padding:10px 0 12px;overflow:hidden}
+          .client-stories{display:flex;overflow-x:auto;gap:9px;padding:0 14px 2px;width:100%;scroll-snap-type:x mandatory;scrollbar-width:none}
+          .client-stories::-webkit-scrollbar{display:none}
+          .client-story{min-width:178px;height:170px;border-radius:20px;padding:14px;box-shadow:none;scroll-snap-align:start}
+          .client-story h3{font-size:20px;margin-top:7px}
+          .client-story p{font-size:9.5px;max-width:145px}
+          .client-story__art{width:102px;height:102px;border-radius:26px}
+          .client-story__ninja{width:72px;height:88px;right:7px;top:8px}
+          .client-story__pin{width:66px;height:66px;right:22px;top:19px}
+          .client-story__pin:after{width:22px;height:22px;left:22px;top:22px}
+          .client-story__stars{font-size:22px;right:15px;top:20px}
 
           main{border-radius:24px 24px 0 0;padding-top:23px!important}
           .section{padding-top:44px!important}
@@ -187,9 +202,9 @@
         }
         @media(max-width:350px){
           .header-phone-number{font-size:10px!important}
-          .client-promo{grid-template-columns:minmax(0,1fr) 98px}
-          .client-promo h1{font-size:27px}
-          .client-promo p{font-size:10px}
+          .client-story{min-width:164px;height:158px}
+          .client-story h3{font-size:18px}
+          .client-story p{font-size:9px}
         }
       `;
       d.head.appendChild(style);
@@ -200,11 +215,21 @@
       if(nav&&!d.querySelector('.client-promo-wrap')){
         var promoWrap=d.createElement('section');
         promoWrap.className='client-promo-wrap';
-        promoWrap.innerHTML='<div class="client-promo" id="clientPromo"><div class="client-promo__copy"><span class="client-promo__eyebrow">Rolls Bar</span><h1>Акции</h1><p>Скидки, комбо и специальные предложения — всё выгодное в одном месте.</p><span class="client-promo__cta">Смотреть предложения <b>→</b></span></div><div class="client-promo__art"><span class="client-promo__food"></span></div></div>';
+        promoWrap.innerHTML='<div class="client-stories" aria-label="Полезные разделы Rolls Bar">'+
+          '<a class="client-story client-story--promo" href="#hits"><span class="client-story__art" aria-hidden="true"></span><span class="client-story__copy"><span class="client-story__eyebrow">Rolls Bar</span><h3>Акции</h3><p>Скидки, комбо и специальные предложения<span class="client-story__arrow">→</span></p></span></a>'+
+          '<a class="client-story client-story--work" href="vacancies.html" target="_top"><img class="client-story__ninja" alt="" aria-hidden="true"><span class="client-story__copy"><span class="client-story__eyebrow">Команда</span><h3>Работа в Rolls Bar</h3><p>Вакансии и анкета кандидата<span class="client-story__arrow">→</span></p></span></a>'+
+          '<a class="client-story client-story--delivery" href="#delivery"><span class="client-story__pin" aria-hidden="true"></span><span class="client-story__copy"><span class="client-story__eyebrow">Симферополь</span><h3>Доставка</h3><p>Зоны, самовывоз и оплата<span class="client-story__arrow">→</span></p></span></a>'+
+          '<a class="client-story client-story--reviews" href="reviews.html" target="_top"><span class="client-story__stars" aria-hidden="true">★★★★★</span><span class="client-story__copy"><span class="client-story__eyebrow">Гости</span><h3>Отзывы</h3><p>Что говорят о Rolls Bar<span class="client-story__arrow">→</span></p></span></a>'+
+          '</div>';
         nav.insertAdjacentElement('afterend',promoWrap);
-        promoWrap.querySelector('#clientPromo').addEventListener('click',function(){
-          var target=d.getElementById('hits')||d.getElementById('sets');
-          if(target) target.scrollIntoView({behavior:'smooth'});
+        var ninjaSource=d.querySelector('.brand__ninja');
+        var storyNinja=promoWrap.querySelector('.client-story__ninja');
+        if(ninjaSource&&storyNinja) storyNinja.src=ninjaSource.src;
+        promoWrap.querySelectorAll('a[href^="#"]').forEach(function(link){
+          link.addEventListener('click',function(e){
+            var target=d.querySelector(link.getAttribute('href'));
+            if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth'});}
+          });
         });
       }
 
