@@ -21,28 +21,80 @@ $categories = array(
 );
 ?>
 
+<?php
+$utility_cards = array(
+	'promo' => array(
+		'eyebrow' => 'Rolls Bar',
+		'title'   => 'Акции',
+		'text'    => 'Скидки, комбо и специальные предложения',
+		'url'     => '#hits',
+		'image'   => '',
+	),
+	'work' => array(
+		'eyebrow' => 'Команда',
+		'title'   => 'Работа в Rolls Bar',
+		'text'    => 'Вакансии и анкета кандидата',
+		'url'     => home_url( '/rabota-v-rolls-bar/' ),
+		'image'   => '',
+	),
+	'delivery' => array(
+		'eyebrow' => 'Симферополь',
+		'title'   => 'Доставка',
+		'text'    => 'Зоны, самовывоз и оплата',
+		'url'     => '#delivery',
+		'image'   => '',
+	),
+	'reviews' => array(
+		'eyebrow' => 'Гости',
+		'title'   => 'Отзывы',
+		'text'    => 'Что говорят о Rolls Bar',
+		'url'     => home_url( '/otzyvy/' ),
+		'image'   => '',
+	),
+);
+
+$promo_posts = get_posts(
+	array(
+		'post_type'      => 'rb_promo',
+		'post_status'    => 'publish',
+		'posts_per_page' => 20,
+		'orderby'        => array( 'menu_order' => 'ASC', 'date' => 'ASC' ),
+	)
+);
+
+foreach ( $promo_posts as $promo_post ) {
+	$variant = (string) get_post_meta( $promo_post->ID, '_rollsbar_promo_variant', true );
+
+	if ( ! isset( $utility_cards[ $variant ] ) ) {
+		continue;
+	}
+
+	$eyebrow = trim( (string) get_post_meta( $promo_post->ID, '_rollsbar_promo_eyebrow', true ) );
+	$url     = trim( (string) get_post_meta( $promo_post->ID, '_rollsbar_promo_url', true ) );
+	$image   = get_the_post_thumbnail_url( $promo_post->ID, 'large' );
+
+	$utility_cards[ $variant ] = array(
+		'eyebrow' => $eyebrow ?: $utility_cards[ $variant ]['eyebrow'],
+		'title'   => get_the_title( $promo_post ) ?: $utility_cards[ $variant ]['title'],
+		'text'    => has_excerpt( $promo_post ) ? get_the_excerpt( $promo_post ) : $utility_cards[ $variant ]['text'],
+		'url'     => $url ?: $utility_cards[ $variant ]['url'],
+		'image'   => $image ?: '',
+	);
+}
+?>
+
 <section class="rollsbar-utilities">
 	<div class="rollsbar-shell rollsbar-utilities__track">
-		<a class="rollsbar-utility rollsbar-utility--promo" href="#hits">
-			<span class="rollsbar-utility__eyebrow">Rolls Bar</span>
-			<strong>Акции</strong>
-			<span>Скидки, комбо и специальные предложения →</span>
-		</a>
-		<a class="rollsbar-utility rollsbar-utility--work" href="<?php echo esc_url( home_url( '/rabota-v-rolls-bar/' ) ); ?>">
-			<span class="rollsbar-utility__eyebrow">Команда</span>
-			<strong>Работа в Rolls Bar</strong>
-			<span>Вакансии и анкета кандидата →</span>
-		</a>
-		<a class="rollsbar-utility rollsbar-utility--delivery" href="#delivery">
-			<span class="rollsbar-utility__eyebrow">Симферополь</span>
-			<strong>Доставка</strong>
-			<span>Зоны, самовывоз и оплата →</span>
-		</a>
-		<a class="rollsbar-utility rollsbar-utility--reviews" href="<?php echo esc_url( home_url( '/otzyvy/' ) ); ?>">
-			<span class="rollsbar-utility__eyebrow">Гости</span>
-			<strong>Отзывы</strong>
-			<span>Что говорят о Rolls Bar →</span>
-		</a>
+		<?php foreach ( $utility_cards as $variant => $card ) : ?>
+			<a class="rollsbar-utility rollsbar-utility--<?php echo esc_attr( $variant ); ?>" href="<?php echo esc_url( $card['url'] ); ?>">
+				<?php if ( $card['image'] ) : ?>
+					<span class="rollsbar-utility__image" style="background-image:url('<?php echo esc_url( $card['image'] ); ?>')" aria-hidden="true"></span>
+				<?php endif; ?>
+				<span class="rollsbar-utility__eyebrow"><?php echo esc_html( $card['eyebrow'] ); ?></span>
+				<strong><?php echo esc_html( $card['title'] ); ?></strong>
+				<span><?php echo esc_html( $card['text'] ); ?> →</span>
+			</a>
+		<?php endforeach; ?>
 	</div>
 </section>
 
