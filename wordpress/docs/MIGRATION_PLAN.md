@@ -60,7 +60,8 @@ Prepared architecture / pending staging or client input:
 - [ ] automatic delivery-zone resolution from real polygons
 - [ ] minimum order / delivery fee / free-delivery threshold by zone
 - [ ] courier shipping method enabled only after real zone rules exist
-- [ ] Telegram/email notifications with real credentials
+- [x] order notification architecture: native WooCommerce email + async Telegram via Action Scheduler
+- [ ] staging credentials + real email/Telegram delivery test
 - [ ] final vacancy questionnaire
 - [ ] reviews moderation flow
 - [ ] future integrations
