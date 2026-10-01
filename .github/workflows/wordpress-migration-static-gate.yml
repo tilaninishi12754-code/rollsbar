@@ -39,7 +39,12 @@ jobs:
 
       - name: Order notification architecture guard
         run: |
-          grep -q "woocommerce_store_api_checkout_order_processed" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-notifications.php
+          grep -q "woocommerce_order_status_changed" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-notifications.php
+          grep -q "processing.*on-hold.*completed" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-notifications.php
+          if grep -q "woocommerce_store_api_checkout_order_processed" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-notifications.php; then
+            echo "Telegram must not notify before payment processing"
+            exit 1
+          fi
           grep -q "as_enqueue_async_action" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-notifications.php
           grep -q "rollsbar_telegram_include_personal_data" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-notifications.php
           grep -q "CheckoutFields::class" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-order-details.php
