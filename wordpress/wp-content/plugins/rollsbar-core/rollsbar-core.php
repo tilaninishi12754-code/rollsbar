@@ -25,12 +25,16 @@ require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-content-types.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-product-fields.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-seo.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-checkout.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-order-details.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-notifications.php';
 
 RollsBar_Settings::init();
 RollsBar_Content_Types::init();
 RollsBar_Product_Fields::init();
 RollsBar_SEO::init();
 RollsBar_Checkout::init();
+RollsBar_Order_Details::init();
+RollsBar_Notifications::init();
 
 RollsBar_Catalog_Importer::register_cli();
 
