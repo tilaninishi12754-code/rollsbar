@@ -29,6 +29,23 @@ Reason:
 
 This is a project best-fit choice, not a universal statement that SEOPress is objectively the best WordPress SEO plugin.
 
+## Implementation status — 2026-10-01
+
+Already implemented in `rollsbar-core`:
+- `RollsBar_SEO` outputs one minimal `Restaurant` JSON-LD entity on the front page;
+- entity values come from the same editable Rolls Bar settings used by the frontend;
+- no opening hours, geo or price range are invented;
+- cart, checkout, account and internal search surfaces receive project-level `noindex, follow`;
+- the Restaurant schema has an explicit filter switch so it can be disabled if another single schema owner takes responsibility.
+
+Still pending staging:
+- install/configure one SEO plugin (default candidate: SEOPress);
+- verify that its Product/LocalBusiness features do not duplicate WooCommerce Product schema or RollsBar Restaurant schema;
+- configure editable title/meta/canonical/Open Graph/XML sitemap;
+- validate robots, sitemap and JSON-LD in rendered staging HTML;
+- run Google Rich Results validation;
+- connect Search Console only after the production domain is ready.
+
 ## Structured data ownership
 
 ### Products
