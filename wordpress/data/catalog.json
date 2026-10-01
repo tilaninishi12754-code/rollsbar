@@ -1,0 +1,1387 @@
+{
+  "schema_version": 1,
+  "project": "Rolls Bar",
+  "approved_source_commit": "a5e524392abcf89ffd5ace2a18218a6b59ed3b61",
+  "approved_date": "2026-10-01",
+  "card_count": 118,
+  "source_row_count": 131,
+  "products": [
+    {
+      "id": "rolls-filadelfiya",
+      "cat": "rolls",
+      "name": "Филадельфия",
+      "price": 420,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL",
+      "desc": "250 г (8 шт.). сыр креметте, лосось, огурец, рис, нори",
+      "hit": true
+    },
+    {
+      "id": "rolls-filadelfiya-s-ugrem",
+      "cat": "rolls",
+      "name": "Филадельфия с угрем",
+      "price": 420,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL",
+      "desc": "Сыр креметте, угорь, огурец, соус унаги, кунжут, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-filadelfiya-s-krevetkoy",
+      "cat": "rolls",
+      "name": "Филадельфия с креветкой",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, лосось, крветка, огурец, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-krasnyy-drakon",
+      "cat": "rolls",
+      "name": "Красный дракон",
+      "price": 420,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL",
+      "desc": "Сыр креметте, лосось, угорь, огурец, кунжут, соус унаги, соус спайси, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-kani",
+      "cat": "rolls",
+      "name": "Кани",
+      "price": 420,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL",
+      "desc": "Креветка, снежный краб, икра масаго, огурец, чесночный соус, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-kaliforniya-klassicheskaya",
+      "cat": "rolls",
+      "name": "Калифорния классическая",
+      "price": 420,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20340178/2a0000019d0aba0f22e945a344d906aabdfa/XL",
+      "desc": "Сыр креметте, лосось, огурец, икра масаго, рис, нори",
+      "hit": true
+    },
+    {
+      "id": "rolls-kaliforniya-s-kopchennym-lososem",
+      "cat": "rolls",
+      "name": "Калифорния с копченным лососем",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, огурец, копченый лосось, икра масаго, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-kaliforniya-s-krabom",
+      "cat": "rolls",
+      "name": "Калифорния с крабом",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Снежный краб, огурец, икра масаго, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-kaliforniya-s-krevetkoy",
+      "cat": "rolls",
+      "name": "Калифорния с креветкой",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, огурец, креветка, икра масаго, рис ,нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-chizzi",
+      "cat": "rolls",
+      "name": "Чиззи",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, креветка, сыр сливочный, кунжут, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-bonito",
+      "cat": "rolls",
+      "name": "Бонито",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, лосось, такуан, стружка тунца, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-italyanskiy",
+      "cat": "rolls",
+      "name": "Итальянский",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, угорь, икра масаго, сливочный сыр, соус унаги, кунжут, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-mamenori-s-krevetkoy",
+      "cat": "rolls",
+      "name": "Маменори с креветкой",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, маменори, креветка, огурец, рис, маменори",
+      "hit": false
+    },
+    {
+      "id": "rolls-mamenori-s-krabom",
+      "cat": "rolls",
+      "name": "Маменори с крабом",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, маменори, снежный краб, огурец, рис, маменори",
+      "hit": false
+    },
+    {
+      "id": "rolls-chuka-roll",
+      "cat": "rolls",
+      "name": "Чука ролл",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, лосось, огурец, салат чука, ореховый соус, кунжут, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-pikant",
+      "cat": "rolls",
+      "name": "Пикант",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, лосось, огурец, сыр Чедр, кунжут, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-surimi",
+      "cat": "rolls",
+      "name": "Сурими",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Сыр креметте, лосось, снежный краб,огурец, икра масаго, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-in-yan",
+      "cat": "rolls",
+      "name": "Инь-Янь",
+      "price": 420,
+      "old": null,
+      "img": "",
+      "desc": "Лосось, тунец, соус спайси, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-maki-s-lososem",
+      "cat": "rolls",
+      "name": "Маки с лососем",
+      "price": 230,
+      "old": null,
+      "img": "",
+      "desc": "лосось, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-maki-s-kopchennym-lososem",
+      "cat": "rolls",
+      "name": "Маки с копченным лососем",
+      "price": 230,
+      "old": null,
+      "img": "",
+      "desc": "копченный лосось, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-maki-s-krevetkoy",
+      "cat": "rolls",
+      "name": "Маки с креветкой",
+      "price": 205,
+      "old": null,
+      "img": "",
+      "desc": "креветка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-maki-s-midiyami",
+      "cat": "rolls",
+      "name": "Маки с мидиями",
+      "price": 205,
+      "old": null,
+      "img": "",
+      "desc": "мидии, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-maki-s-ugrem",
+      "cat": "rolls",
+      "name": "Маки с угрем",
+      "price": 205,
+      "old": null,
+      "img": "",
+      "desc": "угорь, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-maki-s-tuncom",
+      "cat": "rolls",
+      "name": "Маки с тунцом",
+      "price": 205,
+      "old": null,
+      "img": "",
+      "desc": "тунец, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-maki-s-krabom",
+      "cat": "rolls",
+      "name": "Маки с крабом",
+      "price": 205,
+      "old": null,
+      "img": "",
+      "desc": "краб, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-maki-s-ogurcom",
+      "cat": "rolls",
+      "name": "Маки с огурцом",
+      "price": 130,
+      "old": null,
+      "img": "",
+      "desc": "огурец, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-gunkan-spaysi-losos",
+      "cat": "rolls",
+      "name": "Гункан спайси лосось",
+      "price": 100,
+      "old": null,
+      "img": "",
+      "desc": "лосось, соус спайси, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "rolls-gunkan-spaysi-krevetka",
+      "cat": "rolls",
+      "name": "Гункан спайси креветка",
+      "price": 100,
+      "old": null,
+      "img": "",
+      "desc": "крветка, соус спайси, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "pizza-margarita",
+      "cat": "pizza",
+      "name": "Маргарита",
+      "price": 400,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17712810/2a0000019d0aafd162aab992f44beb962076/XL",
+      "desc": "сыр моцарелла, помидоры, соус красный",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 400
+        },
+        {
+          "label": "50 см",
+          "price": 720
+        }
+      ]
+    },
+    {
+      "id": "pizza-pepperoni",
+      "cat": "pizza",
+      "name": "Пепперони",
+      "price": 590,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17712810/2a0000019d0aaf4583d1955f7dbae2ed908d/XL",
+      "desc": "колбаса пепперони, сыр моцарелла, соус красный",
+      "hit": true,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 590
+        },
+        {
+          "label": "50 см",
+          "price": 890
+        }
+      ]
+    },
+    {
+      "id": "pizza-derevenskaya",
+      "cat": "pizza",
+      "name": "Деревенская",
+      "price": 650,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab138a7722db853c44a7d07d3/XL",
+      "desc": "охотничьи колбаски, ветчина, огурец, укроп, лук ялтинский, сыр моцарелла, соус красный, соус барбекю,",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 650
+        },
+        {
+          "label": "50 см",
+          "price": 1040
+        }
+      ]
+    },
+    {
+      "id": "pizza-cezar",
+      "cat": "pizza",
+      "name": "Цезарь",
+      "price": 690,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab19f7a2435901d0539c5909c/XL",
+      "desc": "курица, бекон, черри, лист салата, сыр пармезан, сыр моцарелла, соус сливочный, соус цезарь",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 690
+        },
+        {
+          "label": "50 см",
+          "price": 1190
+        }
+      ]
+    },
+    {
+      "id": "pizza-gribnaya",
+      "cat": "pizza",
+      "name": "Грибная",
+      "price": 570,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019d0aaf107c2711a5adc7fa88d701/XL",
+      "desc": "курица, шампиньоны, сыр моцарелла, соус сливочный",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 570
+        },
+        {
+          "label": "50 см",
+          "price": 990
+        }
+      ]
+    },
+    {
+      "id": "pizza-karbonara",
+      "cat": "pizza",
+      "name": "Карбонара",
+      "price": 580,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019d0aaf8f03770d3a6db573860545/XL",
+      "desc": "курица, бекон, сыр пармезан, сыр моцарелла, соус сливочный,",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 580
+        },
+        {
+          "label": "50 см",
+          "price": 1070
+        }
+      ]
+    },
+    {
+      "id": "pizza-4-syra-chedder",
+      "cat": "pizza",
+      "name": "4 сыра Чеддер",
+      "price": 620,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019d0ab0c3ee544b0404c1bbaeee9f/XL",
+      "desc": "сыр чеддер, сыр фета, сыр пармезан, сыр моцарелла, соус сливочный",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 620
+        },
+        {
+          "label": "50 см",
+          "price": 1030
+        }
+      ]
+    },
+    {
+      "id": "pizza-cypochka",
+      "cat": "pizza",
+      "name": "Цыпочка",
+      "price": 595,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab08671e1247c3239cd657032/XL",
+      "desc": "курица, бекон, помидоры, сыр моцарелла, соус сливочный,",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 595
+        },
+        {
+          "label": "50 см",
+          "price": 1020
+        }
+      ]
+    },
+    {
+      "id": "pizza-ogonek",
+      "cat": "pizza",
+      "name": "Огонек",
+      "price": 550,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab011ba794fbdb74b5d9ce75d/XL",
+      "desc": "колбаса салями, бекон, шампиньоны, перец чили, сыр моцарелла, соус красный",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 550
+        },
+        {
+          "label": "50 см",
+          "price": 1090
+        }
+      ]
+    },
+    {
+      "id": "pizza-byanka",
+      "cat": "pizza",
+      "name": "Бьянка",
+      "price": 690,
+      "old": null,
+      "img": "",
+      "desc": "курица, шампиньоны, укроп, помидор, болгарский перец, сыр моцарелла, соус сливочный",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 690
+        },
+        {
+          "label": "50 см",
+          "price": 1150
+        }
+      ]
+    },
+    {
+      "id": "pizza-myasnaya",
+      "cat": "pizza",
+      "name": "Мясная",
+      "price": 700,
+      "old": null,
+      "img": "",
+      "desc": "филе куриное копченое, колбаски куриные рубленые, ветчина Тамбовская, ветчина Мраморная, сыр моцарелла, соус красный, соус горчичный, огурцы маринованые",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 700
+        },
+        {
+          "label": "50 см",
+          "price": 1190
+        }
+      ]
+    },
+    {
+      "id": "pizza-ranch",
+      "cat": "pizza",
+      "name": "Ранч",
+      "price": 700,
+      "old": null,
+      "img": "",
+      "desc": "ветчина Тамбовская, бекон, колбаски куриные рубленые, шампиньоны, помидор, сыр моцарелла, соус сливочный, соус чесночный, соус бальзамик",
+      "hit": false,
+      "variants": [
+        {
+          "label": "30 см",
+          "price": 700
+        },
+        {
+          "label": "50 см",
+          "price": 1190
+        }
+      ]
+    },
+    {
+      "id": "sets-filadelfiya-set",
+      "cat": "sets",
+      "name": "Филадельфия сет",
+      "price": 1390,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000019d4fd4589291f4fd19ee29da6c94/XL",
+      "desc": "0,9 кг (26 шт). Филадельфия, Филадельфия с копченныйм лососем, Филадельфия с угрем, Гункан с лососем спайси 2 шт, соевый соус 2 шт, имбирь 2 шт, васаби 1 шт",
+      "hit": true
+    },
+    {
+      "id": "sets-kaliforniya-set",
+      "cat": "sets",
+      "name": "Калифорния сет",
+      "price": 1800,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/2413620/2a0000019d4fd416399e0c202849efecc256/XL",
+      "desc": "1,2 кг (34 шт). Калифорния классическая, Калифорния с копченным лососем, Калифорния с креветкой, Калифорния с крабом, Гункан с креветкой спайси 2 шт, соевый соус 3 шт, имбирь 2 шт, васаби 2 шт",
+      "hit": false
+    },
+    {
+      "id": "sets-maki-set",
+      "cat": "sets",
+      "name": "Маки сет",
+      "price": 1265,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/5234963/2a0000019d4fd02236279b8f8d8d7e033d08/XL",
+      "desc": "0,9 кг . Маки краб, Маки лосось, Маки креветка, Маки копченный лосось, Маки тунец, Маки угорь, Маки огурец, соевый соус 2 шт, имбирь 1 шт, васаби 1 шт",
+      "hit": false
+    },
+    {
+      "id": "sets-inari-set",
+      "cat": "sets",
+      "name": "Инари сет",
+      "price": 1340,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/11939409/2a0000019d4fd32ace264a8eade4afddd5c9/XL",
+      "desc": "0,9 кг (30 шт). Филадельфия, Калифорния классическая, Бонито, маки краб, соевый соус 1 шт, имбирь 1 шт, васаби 1 шт",
+      "hit": false
+    },
+    {
+      "id": "sets-tanuki-set",
+      "cat": "sets",
+      "name": "Тануки сет",
+      "price": 1350,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/11939409/2a0000019d4fd32ace264a8eade4afddd5c9/XL",
+      "desc": "0,9 кг (30 шт). Филадельфия, Калифорния классическая, Бонито, маки лосось, соевый соус 1 шт, имбирь 1 шт, васаби 1 шт",
+      "hit": false
+    },
+    {
+      "id": "sets-hit-set",
+      "cat": "sets",
+      "name": "Хит сет",
+      "price": 1700,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/11939409/2a0000019d4fd4aa9d172efcc6de7c29cde2/XL",
+      "desc": "1,2 кг (32 шт). Филадельфия, Калифорния классическая, Запеченный с лососем, Запеченный с угрем, соевый соус 2 шт, имбирь 2 шт, васаби 1 шт",
+      "hit": true
+    },
+    {
+      "id": "sets-goriyachiy-devishnik",
+      "cat": "sets",
+      "name": "Гориячий девишник",
+      "price": 1650,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17700615/2a0000019d4fcfd4e1ffee0ec10fa93769bd/XL",
+      "desc": "1,0 кг (28 шт). Запеченные маменори с креветкой, запеченные с тунцом, запеченные с угрем, запеченные мидии, соевый соус 2 шт, имбирь 2 шт, васаби 1 шт",
+      "hit": false
+    },
+    {
+      "id": "sets-tyapnica",
+      "cat": "sets",
+      "name": "Тяпница",
+      "price": 2210,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000019d4fcfadbfddec2b3a40bf276ca7/XL",
+      "desc": "1,6 кг (40 шт). Запеченные с лососем, Запеченные с крабом, Запеченные с креветкой, Запеченные с мидиями, Запеченная филадельфия, соевый соус 2 шт, имбирь 2 шт, васаби 1 шт",
+      "hit": false
+    },
+    {
+      "id": "sets-super-set",
+      "cat": "sets",
+      "name": "Супер сет",
+      "price": 2590,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/5393394/2a0000019d4fcf50b47f650ae4c477a73e51/XL",
+      "desc": "1,8 кг (48 шт). Филадельфия, Калифорния классическая, Пикант, Запеченный с лососем, Запеченный с угрем, Запеченный с лососем терияки, соус соевый 3 шт, имбирь 3 шт, васаби 3 шт",
+      "hit": false
+    },
+    {
+      "id": "sets-mega-set",
+      "cat": "sets",
+      "name": "Мега сет",
+      "price": 3200,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17700615/2a0000019ef4798edcb378aee99027723bb4/XL",
+      "desc": "2,2 кг (70 шт). Красный дракон, Филадельфия, Итальянский, Калифорния с копченным лососем, Калифорния краб, Чука ролл, Сурими, Пикант, Маки тунец, соевый соус 3 шт, имбирь 2 шт, васаби 2 шт",
+      "hit": false
+    },
+    {
+      "id": "combo-kombo-1",
+      "cat": "combo",
+      "name": "Комбо 1",
+      "price": 790,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17700615/2a0000019c9a2c4f5025392cc3d58df182cb/XL",
+      "desc": "пицца «Цыпочка» 30 см, картофель фри, колла 0,33 л, соус на выбор",
+      "hit": false
+    },
+    {
+      "id": "combo-kombo-2",
+      "cat": "combo",
+      "name": "Комбо 2",
+      "price": 1160,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17763327/2a0000019c9a2eb883aad2b4405f6205a96c/XL",
+      "desc": "пицца «Пепперони» 30 см, пицца «Грибная» 30 см, кола 0,33 л (2 шт)",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-roll-s-lososem",
+      "cat": "baked",
+      "name": "Запеченные ролл с лососем",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, лосось, огурец, сырная шапка, рис,нори",
+      "hit": true
+    },
+    {
+      "id": "baked-zapechennye-roll-s-krevetkoy",
+      "cat": "baked",
+      "name": "Запеченные ролл с креветкой",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, крветка, огурец, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-roll-s-ugrem",
+      "cat": "baked",
+      "name": "Запеченные ролл с угрем",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, угарь, огурец, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-roll-s-midiyami",
+      "cat": "baked",
+      "name": "Запеченные ролл с мидиями",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, мидии, огурец, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-roll-s-tuncom",
+      "cat": "baked",
+      "name": "Запеченные ролл с тунцом",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, тунец, огурец, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-roll-s-krabom",
+      "cat": "baked",
+      "name": "Запеченные ролл с крабом",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, краб, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-mamenori-s-lososem",
+      "cat": "baked",
+      "name": "Запеченные маменори с лососем",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, лосось, сырная шапка, рис, маменори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-mamenori-s-krevetkoy",
+      "cat": "baked",
+      "name": "Запеченные маменори с креветкой",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, крветка, сырная шапка, рис, маменори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-mamenori-s-ugrem",
+      "cat": "baked",
+      "name": "Запеченные маменори с угрем",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, угарь сырная шапка, рис, маменори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-mamenori-s-midiyami",
+      "cat": "baked",
+      "name": "Запеченные маменори с мидиями",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, мидии сырная шапка, рис, маменори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-mamenori-tuncom",
+      "cat": "baked",
+      "name": "Запеченные маменори тунцом",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, тунец сырная шапка, рис, маменори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-mamenori-s-krabom",
+      "cat": "baked",
+      "name": "Запеченные маменори с крабом",
+      "price": 470,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(8 шт). сыр креметте, краб сырная шапка, рис, маменори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-maki-s-lososem",
+      "cat": "baked",
+      "name": "Запеченные маки с лососем",
+      "price": 310,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(6 шт). лосось, сырная шапка, рис,нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-maki-s-krevetkoy",
+      "cat": "baked",
+      "name": "Запеченные маки с креветкой",
+      "price": 310,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(6 шт). крветка, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-maki-s-ugrem",
+      "cat": "baked",
+      "name": "Запеченные маки с угрем",
+      "price": 310,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(6 шт). угарь, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-maki-s-midiyami",
+      "cat": "baked",
+      "name": "Запеченные маки с мидиями",
+      "price": 310,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(6 шт). мидии, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-maki-s-tuncom",
+      "cat": "baked",
+      "name": "Запеченные маки с тунцом",
+      "price": 310,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(6 шт). тунец, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-maki-s-krabom",
+      "cat": "baked",
+      "name": "Запеченные маки с крабом",
+      "price": 310,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(6 шт). краб, сырная шапка, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-gunkan-s-lososem",
+      "cat": "baked",
+      "name": "Запеченные гункан с лососем",
+      "price": 110,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(2 шт). лосось, сырная шапка, рис,нори",
+      "hit": false
+    },
+    {
+      "id": "baked-zapechennye-gunkan-s-krevetkoy",
+      "cat": "baked",
+      "name": "Запеченные гункан с креветкой",
+      "price": 110,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ab9b18ec5c5abf1092dcc1717/XL",
+      "desc": "(2 шт). крветка, сырная шапка,  рис,нори",
+      "hit": false
+    },
+    {
+      "id": "tempura-tempura-roll-s-lososem",
+      "cat": "tempura",
+      "name": "Темпура ролл с лососем",
+      "price": 430,
+      "old": null,
+      "img": "",
+      "desc": "(8 шт). сыр креметте, лосось, огурец, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "tempura-tempura-roll-s-krevetkoy",
+      "cat": "tempura",
+      "name": "Темпура ролл с креветкой",
+      "price": 430,
+      "old": null,
+      "img": "",
+      "desc": "(8 шт). сыр креметте, креветка, огурец, рис, нори",
+      "hit": false
+    },
+    {
+      "id": "tempura-tempura-roll-s-ugrem",
+      "cat": "tempura",
+      "name": "Темпура ролл с угрем",
+      "price": 430,
+      "old": null,
+      "img": "",
+      "desc": "(8 шт). сыр креметте, угорь, огурец, рис,нори",
+      "hit": false
+    },
+    {
+      "id": "tempura-tempura-roll-s-midiyami",
+      "cat": "tempura",
+      "name": "Темпура ролл с мидиями",
+      "price": 430,
+      "old": null,
+      "img": "",
+      "desc": "(8 шт). сыр креметте, мидии, огурец, рис,нори",
+      "hit": false
+    },
+    {
+      "id": "tempura-tempura-roll-s-tuncom",
+      "cat": "tempura",
+      "name": "Темпура ролл с тунцом",
+      "price": 430,
+      "old": null,
+      "img": "",
+      "desc": "(8 шт). сыр креметте, тунец, огурец, рис,нори",
+      "hit": false
+    },
+    {
+      "id": "tempura-tempura-roll-s-krabom",
+      "cat": "tempura",
+      "name": "Темпура ролл с крабом",
+      "price": 430,
+      "old": null,
+      "img": "",
+      "desc": "(8 шт). сыр креметте, краб,  рис, нори",
+      "hit": false
+    },
+    {
+      "id": "shrimp-tempura",
+      "cat": "tempura",
+      "name": "Креветка темпура",
+      "price": 390,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab91cd9907110248fba57786d/XL",
+      "desc": "(5 шт). Цельные креветки в хрустящей панировке, обжаренные до золотистой корочки",
+      "hit": true,
+      "options": [
+        {
+          "label": "Соус",
+          "choices": [],
+          "pending": true
+        }
+      ]
+    },
+    {
+      "id": "tempura-sendvich-tempura-s-lososem",
+      "cat": "tempura",
+      "name": "Сендвич темпура с лососем",
+      "price": 300,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/1358381/2a0000019ef3f6348e0ea28cff737c1cc67c/XL",
+      "desc": "(4 шт). Японская закуска с начинкой из лосося, завернутого в рис и нори с добавлением соус цезарь и унаги",
+      "hit": false
+    },
+    {
+      "id": "tempura-sendvich-tempura-s-krevetka",
+      "cat": "tempura",
+      "name": "Сендвич темпура с креветка",
+      "price": 300,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/1358381/2a0000019ef3f6348e0ea28cff737c1cc67c/XL",
+      "desc": "(4 шт). Японская закуска с начинкой из креветки, завернутого в рис и нори с добавлением соус цезарь и унаги",
+      "hit": false
+    },
+    {
+      "id": "wok-fun-chicken",
+      "cat": "wok",
+      "name": "Фунчоза с курицей",
+      "price": 390,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/2510998/2a0000017cb180f1f8c4c8c7b84d89dbd3a8/XL",
+      "desc": "Рисовая лапша фунчоза, курочка, ароматные шампиньоны, болгарский перец, марковка, лук, кабачок (соус на выбор)",
+      "hit": false,
+      "options": [
+        {
+          "label": "Соус",
+          "choices": [
+            "сливочный соус",
+            "кислосладкий соус",
+            "терияки соус"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wok-fun-sea",
+      "cat": "wok",
+      "name": "Фунчоза с морепродуктами",
+      "price": 430,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL",
+      "desc": "Рисовая лапша фунчоза, креветки, мидии, лосось, ароматные шампиньоны, болгарский перец, марковка, лук, кабачок (соус на выбор)",
+      "hit": false,
+      "options": [
+        {
+          "label": "Соус",
+          "choices": [
+            "сливочный соус",
+            "кислосладкий соус",
+            "терияки соус"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wok-udon-chicken",
+      "cat": "wok",
+      "name": "Удон с курицей",
+      "price": 390,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/2510998/2a0000017cb180f1f8c4c8c7b84d89dbd3a8/XL",
+      "desc": "Лапша удон, курочка, ароматные шампиньоны, болгарский перец, марковка, лук, кабачок (соус на выбор)",
+      "hit": false,
+      "options": [
+        {
+          "label": "Соус",
+          "choices": [
+            "сливочный соус",
+            "кислосладкий соус",
+            "терияки соус"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wok-udon-sea",
+      "cat": "wok",
+      "name": "Удон с морепродуктами",
+      "price": 430,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL",
+      "desc": "Лапша удон, креветки, мидии, лосось, ароматные шампиньоны, болгарский перец, марковка, лук, кабачок (соус на выбор)",
+      "hit": false,
+      "options": [
+        {
+          "label": "Соус",
+          "choices": [
+            "сливочный соус",
+            "кислосладкий соус",
+            "терияки соус"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wok-soba-chicken",
+      "cat": "wok",
+      "name": "Соба с курицей",
+      "price": 390,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/2510998/2a0000017cb180f1f8c4c8c7b84d89dbd3a8/XL",
+      "desc": "Гречневая лапша, курочка, ароматные шампиньоны, болгарский перец, марковка, лук, кабачок (соус на выбор)",
+      "hit": false,
+      "options": [
+        {
+          "label": "Соус",
+          "choices": [
+            "сливочный соус",
+            "кислосладкий соус",
+            "терияки соус"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wok-soba-sea",
+      "cat": "wok",
+      "name": "Соба с морепродуктами",
+      "price": 430,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/1643978/2a0000017b9df761afb7659977d8d3d9a95d/XL",
+      "desc": "Гречневая лапша, креветки, мидии, лосось, ароматные шампиньоны, болгарский перец, марковка, лук, кабачок (соус на выбор)",
+      "hit": false,
+      "options": [
+        {
+          "label": "Соус",
+          "choices": [
+            "сливочный соус",
+            "кислосладкий соус",
+            "терияки соус"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tyahan-sea",
+      "cat": "wok",
+      "name": "Тяхан с морепродуктами и соусом терияки",
+      "price": 390,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000017cb183a6c74fd62c6ae0185f5887/XL",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "tyahan-chicken",
+      "cat": "wok",
+      "name": "Тяхан с курицей и соусом терияки",
+      "price": 430,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/3912342/2a0000017cb183a6c74fd62c6ae0185f5887/XL",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "baked-rice-shrimp",
+      "cat": "wok",
+      "name": "Запечённый рис с креветкой",
+      "price": 300,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ae42b149456eaf19588627438/XL",
+      "desc": "Рис, креветка, сыр моцарелла, спайси соус",
+      "hit": false
+    },
+    {
+      "id": "baked-rice-salmon",
+      "cat": "wok",
+      "name": "Запечённый рис с лососем",
+      "price": 300,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17791271/2a0000019d0ae42b149456eaf19588627438/XL",
+      "desc": "Рис, лосось, сыр моцарелла, унаги соус",
+      "hit": false
+    },
+    {
+      "id": "soups-tom-yam",
+      "cat": "soups",
+      "name": "Том Ям",
+      "price": 510,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/17712810/2a0000019d0abdb6877deb8b80dc33c2f2f1/XL",
+      "desc": "Креветка, мидии, кольца кальмара, лосось, грибы, рис, лайм, острый перец, помидор церри",
+      "hit": true
+    },
+    {
+      "id": "snacks-onigiri-s-lososem",
+      "cat": "snacks",
+      "name": "Онигири с лососем",
+      "price": 239,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "snacks-onigiri-s-krevetkoy",
+      "cat": "snacks",
+      "name": "Онигири с креветкой",
+      "price": 239,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "baked-mussels-spicy",
+      "cat": "snacks",
+      "name": "Запеченные мидии спайси",
+      "price": 280,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019ef92985ac5e638b1beceb7fb844/XL",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "baked-mussels-unagi",
+      "cat": "snacks",
+      "name": "Запеченные мидии унаги",
+      "price": 280,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/20222640/2a0000019ef92985ac5e638b1beceb7fb844/XL",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "snacks-kartofel-fri",
+      "cat": "snacks",
+      "name": "Картофель фри",
+      "price": 150,
+      "old": null,
+      "img": "",
+      "desc": "150 г. Хрустящий картофель фри, обжаренный до золотистой корочки",
+      "hit": false
+    },
+    {
+      "id": "snacks-kartofelnye-dolki",
+      "cat": "snacks",
+      "name": "Картофельные дольки",
+      "price": 150,
+      "old": null,
+      "img": "",
+      "desc": "200 г. Хрустящие картофельные дольки, обжаренные до золотистой корочки",
+      "hit": false
+    },
+    {
+      "id": "snacks-syrnye-palochki",
+      "cat": "snacks",
+      "name": "Сырные палочки",
+      "price": 199,
+      "old": null,
+      "img": "https://avatars.mds.yandex.net/get-sprav-products/19861719/2a0000019d0ab8dc8421354687da9466a2f7/XL",
+      "desc": "5 шт. Золотистые трубочки с тягучей сырной начинкой внутри",
+      "hit": false
+    },
+    {
+      "id": "snacks-naggetsy",
+      "cat": "snacks",
+      "name": "Наггетсы",
+      "price": 150,
+      "old": null,
+      "img": "",
+      "desc": "6 шт. Сочные куриные наггетсы обжаренные до золотистой корочки",
+      "hit": false,
+      "variants": [
+        {
+          "label": "6 шт",
+          "price": 150
+        },
+        {
+          "label": "10 шт",
+          "price": 200
+        }
+      ]
+    },
+    {
+      "id": "snacks-lukovye-kolca",
+      "cat": "snacks",
+      "name": "Луковые кольца",
+      "price": 140,
+      "old": null,
+      "img": "",
+      "desc": "7 шт. Хрустящие луковые кольца обжаренные до золотистой корочки",
+      "hit": false
+    },
+    {
+      "id": "desserts-moti-smorodina",
+      "cat": "desserts",
+      "name": "Моти смородина",
+      "price": 160,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "desserts-moti-klubnika",
+      "cat": "desserts",
+      "name": "Моти клубника",
+      "price": 160,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "desserts-moti-kivi",
+      "cat": "desserts",
+      "name": "Моти киви",
+      "price": 160,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "desserts-moti-persik",
+      "cat": "desserts",
+      "name": "Моти персик",
+      "price": 160,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "desserts-moti-vishnya",
+      "cat": "desserts",
+      "name": "Моти вишня",
+      "price": 160,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "desserts-korpusnyy-desert-yabloko",
+      "cat": "desserts",
+      "name": "Корпусный десерт яблоко",
+      "price": 350,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "desserts-korpusnyy-desert-serdce",
+      "cat": "desserts",
+      "name": "Корпусный десерт сердце",
+      "price": 350,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "desserts-korpusnyy-desert-banan",
+      "cat": "desserts",
+      "name": "Корпусный десерт банан",
+      "price": 350,
+      "old": null,
+      "img": "",
+      "desc": "",
+      "hit": false
+    },
+    {
+      "id": "drinks-dobryy-kola",
+      "cat": "drinks",
+      "name": "Добрый Кола",
+      "price": 100,
+      "old": null,
+      "img": "",
+      "desc": "0.3 ж/б. Газированный напиток",
+      "hit": false
+    },
+    {
+      "id": "drinks-dobryy-kola-bez-sahara",
+      "cat": "drinks",
+      "name": "Добрый Кола без сахара",
+      "price": 100,
+      "old": null,
+      "img": "",
+      "desc": "0.3 ж/б. Газированный напиток без сахара",
+      "hit": false
+    },
+    {
+      "id": "drinks-bern-originalnyy",
+      "cat": "drinks",
+      "name": "Берн оригинальный",
+      "price": 195,
+      "old": null,
+      "img": "",
+      "desc": "0,449 ж/б. Газированный энергетический напиток (+18)",
+      "hit": false
+    },
+    {
+      "id": "drinks-bern-bez-sahara",
+      "cat": "drinks",
+      "name": "Берн без сахара",
+      "price": 195,
+      "old": null,
+      "img": "",
+      "desc": "0,449 ж/б. Газированный энергетический напиток (+18)",
+      "hit": false
+    },
+    {
+      "id": "drinks-bern-sochnaya-energiya",
+      "cat": "drinks",
+      "name": "Берн сочная энергия",
+      "price": 195,
+      "old": null,
+      "img": "",
+      "desc": "0,449 ж/б. Газированный энергетический напиток (+18)",
+      "hit": false
+    },
+    {
+      "id": "drinks-bern-guava",
+      "cat": "drinks",
+      "name": "Берн гуава",
+      "price": 195,
+      "old": null,
+      "img": "",
+      "desc": "0,449 ж/б. Газированный энергетический напиток (+18)",
+      "hit": false
+    },
+    {
+      "id": "drinks-bern-yabloko-kivi",
+      "cat": "drinks",
+      "name": "Берн яблоко киви",
+      "price": 195,
+      "old": null,
+      "img": "",
+      "desc": "0,449 ж/б. Газированный энергетический напиток (+18)",
+      "hit": false
+    },
+    {
+      "id": "drinks-bern-apelsinovyy",
+      "cat": "drinks",
+      "name": "Берн апельсиновый",
+      "price": 195,
+      "old": null,
+      "img": "",
+      "desc": "0,449 ж/б. Газированный энергетический напиток (+18)",
+      "hit": false
+    },
+    {
+      "id": "drinks-bern-tropicheskiy",
+      "cat": "drinks",
+      "name": "Берн тропический",
+      "price": 195,
+      "old": null,
+      "img": "",
+      "desc": "0,449 ж/б. Газированный энергетический напиток (+18)",
+      "hit": false
+    }
+  ]
+}
