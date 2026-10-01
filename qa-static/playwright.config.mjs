@@ -16,7 +16,7 @@ export default defineConfig({
     { name: 'webkit-iphone13', use: { ...devices['iPhone 13'], browserName: 'webkit' } }
   ],
   webServer: {
-    command: 'python3 -m http.server 8080 --bind 127.0.0.1',
+    command: 'cd .. && python3 -m http.server 8080 --bind 127.0.0.1',
     port: 8080,
     reuseExistingServer: false,
     timeout: 10000
