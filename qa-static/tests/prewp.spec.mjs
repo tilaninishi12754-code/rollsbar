@@ -110,8 +110,9 @@ test.describe('Rolls Bar pre-WordPress approved/static audit', () => {
     await expect(site.locator('#checkoutMapMarker')).toBeVisible();
   });
 
-  test('mobile sticky cart does not cover cart or checkout UI', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'webkit-iphone13', 'mobile-only regression');
+  test('mobile sticky cart does not cover cart or checkout UI', async ({ page }) => {
+    const viewport = page.viewportSize();
+    test.skip(!viewport || viewport.width > 700, 'mobile-only regression');
 
     const site = await waitForSite(page);
     await site.locator('[data-client-plus]').first().click();
