@@ -19,12 +19,16 @@ final class RollsBar_Settings {
 
 	public static function defaults(): array {
 		return array(
-			'phone_display' => '+7 978 688-22-88',
-			'phone_href'    => '+79786882288',
-			'city'          => 'Симферополь',
-			'address'       => 'Кечкеметская улица, 1',
-			'telegram_url'  => 'https://telegram.me/rollsbar82',
-			'vk_url'        => 'https://vk.ru/rollsbar82',
+			'phone_display'                => '+7 978 688-22-88',
+			'phone_href'                   => '+79786882288',
+			'city'                         => 'Симферополь',
+			'address'                      => 'Кечкеметская улица, 1',
+			'telegram_url'                 => 'https://telegram.me/rollsbar82',
+			'vk_url'                       => 'https://vk.ru/rollsbar82',
+			'checkout_entrance_required'   => '0',
+			'checkout_door_code_required'  => '0',
+			'checkout_floor_required'      => '0',
+			'checkout_apartment_required'  => '0',
 		);
 	}
 
@@ -43,16 +47,26 @@ final class RollsBar_Settings {
 		return isset( $all[ $key ] ) ? (string) $all[ $key ] : $fallback;
 	}
 
+	public static function get_bool( string $key, bool $fallback = false ): bool {
+		$value = self::get( $key, $fallback ? '1' : '0' );
+
+		return in_array( $value, array( '1', 'yes', 'true', 'on' ), true );
+	}
+
 	public static function sanitize( array $input ): array {
 		$defaults = self::defaults();
 
 		return array(
-			'phone_display' => sanitize_text_field( $input['phone_display'] ?? $defaults['phone_display'] ),
-			'phone_href'    => preg_replace( '/[^+0-9]/', '', (string) ( $input['phone_href'] ?? $defaults['phone_href'] ) ),
-			'city'          => sanitize_text_field( $input['city'] ?? $defaults['city'] ),
-			'address'       => sanitize_text_field( $input['address'] ?? $defaults['address'] ),
-			'telegram_url'  => esc_url_raw( $input['telegram_url'] ?? $defaults['telegram_url'] ),
-			'vk_url'        => esc_url_raw( $input['vk_url'] ?? $defaults['vk_url'] ),
+			'phone_display'               => sanitize_text_field( $input['phone_display'] ?? $defaults['phone_display'] ),
+			'phone_href'                  => preg_replace( '/[^+0-9]/', '', (string) ( $input['phone_href'] ?? $defaults['phone_href'] ) ),
+			'city'                        => sanitize_text_field( $input['city'] ?? $defaults['city'] ),
+			'address'                     => sanitize_text_field( $input['address'] ?? $defaults['address'] ),
+			'telegram_url'                => esc_url_raw( $input['telegram_url'] ?? $defaults['telegram_url'] ),
+			'vk_url'                      => esc_url_raw( $input['vk_url'] ?? $defaults['vk_url'] ),
+			'checkout_entrance_required'  => isset( $input['checkout_entrance_required'] ) ? '1' : '0',
+			'checkout_door_code_required' => isset( $input['checkout_door_code_required'] ) ? '1' : '0',
+			'checkout_floor_required'     => isset( $input['checkout_floor_required'] ) ? '1' : '0',
+			'checkout_apartment_required' => isset( $input['checkout_apartment_required'] ) ? '1' : '0',
 		);
 	}
 
@@ -101,6 +115,39 @@ final class RollsBar_Settings {
 				},
 				'rollsbar-settings',
 				'rollsbar_business'
+			);
+		}
+
+		add_settings_section(
+			'rollsbar_checkout',
+			'Оформление заказа',
+			static function (): void {
+				echo '<p>Дополнительные адресные поля всегда видны в checkout. Галочки ниже определяют только обязательность. Пока заказчик не подтвердил правила, безопасный дефолт — необязательные поля.</p>';
+			},
+			'rollsbar-settings'
+		);
+
+		$checkout_flags = array(
+			'checkout_entrance_required'  => 'Подъезд обязателен',
+			'checkout_door_code_required' => 'Код двери / домофона обязателен',
+			'checkout_floor_required'     => 'Этаж обязателен',
+			'checkout_apartment_required' => 'Квартира / офис обязателен',
+		);
+
+		foreach ( $checkout_flags as $key => $label ) {
+			add_settings_field(
+				$key,
+				$label,
+				static function () use ( $key ): void {
+					printf(
+						'<label><input type="checkbox" name="%1$s[%2$s]" value="1" %3$s> Сделать поле обязательным</label>',
+						esc_attr( RollsBar_Settings::OPTION ),
+						esc_attr( $key ),
+						checked( RollsBar_Settings::get_bool( $key ), true, false )
+					);
+				},
+				'rollsbar-settings',
+				'rollsbar_checkout'
 			);
 		}
 	}
