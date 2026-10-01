@@ -44,3 +44,45 @@
 	document.body.addEventListener('wc_fragments_refreshed',syncMobileCart);
 	syncMobileCart();
 })();
+
+// Careers: fixed layout, editable vacancy content.
+(function(){
+	var tabs=document.querySelector('[data-rb-vacancy-tabs]');
+	if(tabs){
+		tabs.addEventListener('click',function(e){
+			var button=e.target.closest('button[data-area]');
+			if(!button)return;
+			var area=button.getAttribute('data-area');
+			tabs.querySelectorAll('button[data-area]').forEach(function(btn){
+				btn.classList.toggle('active',btn===button);
+			});
+			document.querySelectorAll('[data-vacancy-area]').forEach(function(card){
+				card.hidden=area!=='all'&&card.getAttribute('data-vacancy-area')!==area;
+			});
+		});
+	}
+
+	var modal=document.querySelector('[data-rb-career-chat-modal]');
+	var open=document.querySelector('[data-rb-career-chat]');
+	function openChat(){
+		if(!modal)return;
+		modal.classList.add('open');
+		modal.setAttribute('aria-hidden','false');
+		document.body.style.overflow='hidden';
+	}
+	function closeChat(){
+		if(!modal)return;
+		modal.classList.remove('open');
+		modal.setAttribute('aria-hidden','true');
+		document.body.style.overflow='';
+	}
+	if(open)open.addEventListener('click',openChat);
+	if(modal){
+		modal.querySelectorAll('[data-rb-career-chat-close]').forEach(function(btn){
+			btn.addEventListener('click',closeChat);
+		});
+	}
+	document.addEventListener('keydown',function(e){
+		if(e.key==='Escape')closeChat();
+	});
+})();
