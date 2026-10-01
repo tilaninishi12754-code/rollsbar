@@ -41,17 +41,31 @@ Verify catalog -> cart -> checkout -> order admin.
 Generate WooCommerce CSV from the approved master table and import the full catalog.
 
 ## Phase 6 — Rolls Bar behavior
-Implement in rollsbar-core:
-- custom checkout fields
-- phone normalization (+7)
-- address/map
-- automatic delivery zone
-- minimum order by zone
-- delivery/pickup
-- Telegram/email notifications
-- reviews moderation
-- jobs/vacancies
-- future integrations
+
+Status: **IN PROGRESS**
+
+Implemented before staging:
+- [x] block-native additional checkout fields via WooCommerce Additional Checkout Fields API
+- [x] configurable requiredness for entrance / door code / floor / apartment-office
+- [x] +7 phone helper prepared for checkout
+- [x] editable promo cards connected to frontend
+- [x] editable vacancies connected to careers page
+- [x] Restaurant schema / transactional noindex ownership layer
+- [x] client-safe settings for phone/address/socials
+- [x] product weight/volume + optional KBJU fields
+
+Prepared architecture / pending staging or client input:
+- [ ] native WooCommerce Blocks Local Pickup configuration on staging
+- [ ] Yandex address/map integration
+- [ ] automatic delivery-zone resolution from real polygons
+- [ ] minimum order / delivery fee / free-delivery threshold by zone
+- [ ] courier shipping method enabled only after real zone rules exist
+- [ ] Telegram/email notifications with real credentials
+- [ ] final vacancy questionnaire
+- [ ] reviews moderation flow
+- [ ] future integrations
+
+Rule: do not invent production delivery prices, minimums, polygons or required checkout fields.
 
 ## Phase 7 — payments
 Connect acquiring only after the site, legal pages, SSL, catalog and checkout are ready for bank review.
