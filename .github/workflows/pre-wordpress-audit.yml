@@ -17,21 +17,16 @@ permissions:
 jobs:
   browser-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 12
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.0-noble
+      options: --user 1001
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
 
       - name: Install QA dependencies
         working-directory: qa-static
         run: npm install --no-audit --no-fund
-
-      - name: Install Chromium and WebKit
-        working-directory: qa-static
-        run: npx playwright install --with-deps chromium webkit
 
       - name: Run pre-WordPress browser audit
         working-directory: qa-static
