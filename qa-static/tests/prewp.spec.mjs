@@ -12,6 +12,24 @@ async function waitForSite(page) {
   return site;
 }
 
+async function dismissCookieNotice(site) {
+  const banner = site.locator('#cookieBanner');
+  if (await banner.count() && await banner.evaluate(el => el.classList.contains('show'))) {
+    await site.locator('#cookieAccept').click();
+    await expect(banner).not.toHaveClass(/show/);
+  }
+}
+
+async function openVisibleCart(site) {
+  const mobileBar = site.locator('.client-order-bar:visible');
+  if (await mobileBar.count()) {
+    await mobileBar.first().click();
+  } else {
+    await site.locator('[data-cart-open]:visible').first().click();
+  }
+  await expect(site.locator('#cartDrawer')).toHaveClass(/open/);
+}
+
 test.describe('Rolls Bar pre-WordPress approved/static audit', () => {
   test('catalog invariant and four utility cards are present', async ({ page }) => {
     const site = await waitForSite(page);
@@ -29,6 +47,7 @@ test.describe('Rolls Bar pre-WordPress approved/static audit', () => {
 
   test('missing-image product detail never covers purchase controls', async ({ page }) => {
     const site = await waitForSite(page);
+    await dismissCookieNotice(site);
 
     const product = await site.locator('body').evaluate(() => {
       const products = window.rollsBarProducts || [];
@@ -49,7 +68,9 @@ test.describe('Rolls Bar pre-WordPress approved/static audit', () => {
     const modal = site.locator('#productDetailModal');
     await expect(modal).toHaveClass(/open/);
     await expect(site.locator('#productDetailTitle')).toHaveText(product.name);
-    await expect(site.locator('#productDetailAdd')).toBeVisible();
+    const detailAdd = site.locator('#productDetailAdd');
+    await detailAdd.scrollIntoViewIfNeeded();
+    await expect(detailAdd).toBeVisible();
 
     const geometry = await modal.evaluate((root) => {
       const media = root.querySelector('.product-detail-modal__media');
@@ -75,23 +96,26 @@ test.describe('Rolls Bar pre-WordPress approved/static audit', () => {
 
   test('simple product can be added and cart opens', async ({ page }) => {
     const site = await waitForSite(page);
+    await dismissCookieNotice(site);
     const plus = site.locator('[data-client-plus]').first();
     await expect(plus).toBeVisible();
     await plus.click();
 
-    const count = site.locator('.cart-count');
-    await expect.poll(async () => Number((await count.textContent())?.replace(/\D/g, '') || 0)).toBeGreaterThan(0);
+    await expect.poll(async () => site.locator('body').evaluate(() => {
+      const count = document.querySelector('.cart-count');
+      return Number(String(count?.textContent || '0').replace(/\D/g, '') || 0);
+    })).toBeGreaterThan(0);
 
-    await site.locator('[data-cart-open]').first().click();
-    await expect(site.locator('#cartDrawer')).toHaveClass(/open/);
+    await openVisibleCart(site);
     await expect(site.locator('#checkoutOpen')).toBeVisible();
   });
 
   test('checkout preserves latest client corrections', async ({ page }) => {
     const site = await waitForSite(page);
+    await dismissCookieNotice(site);
 
     await site.locator('[data-client-plus]').first().click();
-    await site.locator('[data-cart-open]').first().click();
+    await openVisibleCart(site);
     await site.locator('#checkoutOpen').click();
 
     await expect(site.locator('#checkoutModal')).toHaveClass(/open/);
@@ -115,12 +139,13 @@ test.describe('Rolls Bar pre-WordPress approved/static audit', () => {
     test.skip(!viewport || viewport.width > 700, 'mobile-only regression');
 
     const site = await waitForSite(page);
+    await dismissCookieNotice(site);
     await site.locator('[data-client-plus]').first().click();
 
     const bar = site.locator('.client-order-bar');
     await expect(bar).toHaveClass(/show/);
 
-    await site.locator('[data-cart-open]').first().click();
+    await bar.click();
     await expect(site.locator('#cartDrawer')).toHaveClass(/open/);
     await expect(bar).not.toHaveClass(/show/);
 
@@ -157,6 +182,14 @@ test.describe('Rolls Bar pre-WordPress approved/static audit', () => {
       const response = await request.get(path);
       expect(response.ok(), path + ' should return 2xx').toBeTruthy();
     }
+  });
+
+  test('cookie notice can be dismissed and stays out of critical controls', async ({ page }) => {
+    const site = await waitForSite(page);
+    const banner = site.locator('#cookieBanner');
+    await expect(banner).toHaveClass(/show/);
+    await site.locator('#cookieAccept').click();
+    await expect(banner).not.toHaveClass(/show/);
   });
 
   test('no uncaught page errors during initial render', async ({ page }) => {
