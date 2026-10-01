@@ -156,7 +156,7 @@ final class RollsBar_Notifications {
 		}
 
 		$message = self::build_telegram_message( $order );
-		$url     = 'https://api.telegram.org/bot' . rawurlencode( $token ) . '/sendMessage';
+		$url     = 'https://api.telegram.org/bot' . $token . '/sendMessage';
 
 		$response = wp_remote_post(
 			$url,
@@ -261,9 +261,15 @@ final class RollsBar_Notifications {
 			$value = (string) getenv( 'ROLLSBAR_TELEGRAM_BOT_TOKEN' );
 		}
 
-		return trim(
+		$value = trim(
 			(string) apply_filters( 'rollsbar_telegram_bot_token', $value )
 		);
+
+		if ( '' === $value || ! preg_match( '/^[A-Za-z0-9:_-]+$/', $value ) ) {
+			return '';
+		}
+
+		return $value;
 	}
 
 	private static function telegram_chat_id(): string {
@@ -275,9 +281,15 @@ final class RollsBar_Notifications {
 			$value = (string) getenv( 'ROLLSBAR_TELEGRAM_CHAT_ID' );
 		}
 
-		return trim(
+		$value = trim(
 			(string) apply_filters( 'rollsbar_telegram_chat_id', $value )
 		);
+
+		if ( '' === $value || ! preg_match( '/^-?[0-9]+$/', $value ) ) {
+			return '';
+		}
+
+		return $value;
 	}
 
 	private static function log_error( int $order_id, int $attempt, string $error ): void {
