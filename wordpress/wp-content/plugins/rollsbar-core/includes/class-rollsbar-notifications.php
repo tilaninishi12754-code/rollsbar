@@ -19,18 +19,10 @@ final class RollsBar_Notifications {
 
 	public static function init(): void {
 		add_action(
-			'woocommerce_store_api_checkout_order_processed',
-			array( __CLASS__, 'queue_from_store_api' ),
+			'woocommerce_order_status_changed',
+			array( __CLASS__, 'queue_when_order_is_actionable' ),
 			30,
-			1
-		);
-
-		// Defensive fallback if the store temporarily uses classic checkout.
-		add_action(
-			'woocommerce_checkout_order_processed',
-			array( __CLASS__, 'queue_from_classic_checkout' ),
-			30,
-			3
+			4
 		);
 
 		add_action(
@@ -41,13 +33,25 @@ final class RollsBar_Notifications {
 		);
 	}
 
-	public static function queue_from_store_api( WC_Order $order ): void {
-		self::queue_order( $order );
-	}
+	public static function queue_when_order_is_actionable(
+		int $order_id,
+		string $from_status,
+		string $to_status,
+		WC_Order $order
+	): void {
+		unset( $order_id, $from_status );
 
-	public static function queue_from_classic_checkout( int $order_id, array $posted_data, WC_Order $order ): void {
-		unset( $posted_data );
-		self::queue_order( $order ?: wc_get_order( $order_id ) );
+		$notify_statuses = apply_filters(
+			'rollsbar_notification_order_statuses',
+			array( 'processing', 'on-hold', 'completed' ),
+			$order
+		);
+
+		if ( ! is_array( $notify_statuses ) || ! in_array( $to_status, $notify_statuses, true ) ) {
+			return;
+		}
+
+		self::queue_order( $order );
 	}
 
 	private static function queue_order( $order ): void {
