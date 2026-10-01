@@ -96,7 +96,7 @@ A Telegram HTTP request must not delay the checkout response.
 
 Flow:
 
-`Checkout Block → WooCommerce order → woocommerce_store_api_checkout_order_processed → Action Scheduler → Telegram API`
+`Checkout Block / payment → WooCommerce order status becomes processing/on-hold/completed → Action Scheduler → Telegram API`
 
 Action group: `rollsbar`
 
@@ -121,6 +121,8 @@ Status:
 - `failed`
 
 Already queued/sent orders are not queued a second time.
+
+Important: Telegram is not queued on the pre-payment Store API checkout hook. It waits for an actionable order status so a failed card payment cannot create a false operator alert.
 
 Failed delivery is retried up to 3 attempts, with a delayed retry.
 
