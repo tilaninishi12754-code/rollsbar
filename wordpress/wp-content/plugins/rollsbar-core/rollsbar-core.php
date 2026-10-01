@@ -19,6 +19,9 @@ define( 'ROLLSBAR_CORE_FILE', __FILE__ );
 define( 'ROLLSBAR_CORE_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-core.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-catalog-importer.php';
+
+RollsBar_Catalog_Importer::register_cli();
 
 add_action(
 	'plugins_loaded',
