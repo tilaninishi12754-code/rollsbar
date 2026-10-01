@@ -24,12 +24,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: qa-static/package-lock.json
 
       - name: Install QA dependencies
         working-directory: qa-static
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Install Chromium and WebKit
         working-directory: qa-static
