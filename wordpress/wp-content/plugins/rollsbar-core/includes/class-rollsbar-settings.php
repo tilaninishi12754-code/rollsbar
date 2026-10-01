@@ -199,6 +199,40 @@ final class RollsBar_Settings {
 			</form>
 
 			<hr>
+			<h2>Уведомления и интеграции</h2>
+			<?php
+			$notification_status = class_exists( 'RollsBar_Notifications' )
+				? RollsBar_Notifications::configuration_status()
+				: array( 'telegram' => false, 'email' => true );
+			?>
+			<table class="widefat striped" style="max-width:820px;margin:12px 0 22px;">
+				<tbody>
+					<tr>
+						<td><strong>WooCommerce email «Новый заказ»</strong></td>
+						<td><span style="color:#16803b;font-weight:700;">Используется штатный WooCommerce</span></td>
+						<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-settings&tab=email' ) ); ?>">Настроить email</a></td>
+					</tr>
+					<tr>
+						<td><strong>Telegram для оператора</strong></td>
+						<td>
+							<?php if ( ! empty( $notification_status['telegram'] ) ) : ?>
+								<span style="color:#16803b;font-weight:700;">Готов к отправке</span>
+							<?php else : ?>
+								<span style="color:#a05a00;font-weight:700;">Не настроен</span>
+							<?php endif; ?>
+						</td>
+						<td>Секреты задаются вне Git через <code>ROLLSBAR_TELEGRAM_BOT_TOKEN</code> и <code>ROLLSBAR_TELEGRAM_CHAT_ID</code>.</td>
+					</tr>
+					<tr>
+						<td><strong>Очередь уведомлений</strong></td>
+						<td>Action Scheduler / WooCommerce</td>
+						<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-status&tab=action-scheduler' ) ); ?>">Scheduled Actions</a></td>
+					</tr>
+				</tbody>
+			</table>
+			<p class="description" style="max-width:820px;">Telegram по умолчанию получает только номер заказа, сумму, количество позиций, способ получения, статус и ссылку в wp-admin. ФИО, телефон и адрес клиента туда не отправляются.</p>
+
+			<hr>
 			<h2>Логотип</h2>
 			<p>Логотип меняется штатно через Внешний вид → Настроить → Логотип сайта. Код для этого не нужен.</p>
 		</div>
