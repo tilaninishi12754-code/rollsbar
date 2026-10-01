@@ -25,7 +25,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</a>
 
 		<div class="rollsbar-header__actions">
-			<a class="rollsbar-phone" href="tel:+79786882288">+7 978 688-22-88</a>
+			<?php
+			$phone_display = function_exists( 'rollsbar_setting' ) ? rollsbar_setting( 'phone_display', '+7 978 688-22-88' ) : '+7 978 688-22-88';
+			$phone_href    = function_exists( 'rollsbar_setting' ) ? rollsbar_setting( 'phone_href', '+79786882288' ) : '+79786882288';
+			?>
+			<a class="rollsbar-phone" href="tel:<?php echo esc_attr( $phone_href ); ?>"><?php echo esc_html( $phone_display ); ?></a>
 
 			<button class="rollsbar-search-toggle" type="button" aria-controls="rollsbarProductSearch" aria-expanded="false" data-rollsbar-search-open>
 				<span aria-hidden="true">⌕</span>
