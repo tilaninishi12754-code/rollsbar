@@ -1,0 +1,51 @@
+name: Pre-WordPress Browser Audit
+
+on:
+  push:
+    branches:
+      - audit/pre-wordpress-2026-10-01
+    paths:
+      - '**/*.html'
+      - 'catalog-part-*.js'
+      - 'qa-static/**'
+      - '.github/workflows/pre-wordpress-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: qa-static/package-lock.json
+
+      - name: Install QA dependencies
+        working-directory: qa-static
+        run: npm ci
+
+      - name: Install Chromium and WebKit
+        working-directory: qa-static
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run pre-WordPress browser audit
+        working-directory: qa-static
+        run: npx playwright test
+
+      - name: Upload browser audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollsbar-pre-wordpress-browser-audit
+          path: |
+            qa-static/test-results
+            qa-static/playwright-report
+          if-no-files-found: ignore
+          retention-days: 30
