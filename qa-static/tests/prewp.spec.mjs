@@ -21,15 +21,23 @@ async function dismissCookieNotice(site) {
 }
 
 async function openVisibleCart(site) {
-  const mobileBar = site.locator('.client-order-bar').first();
-  const mobileShown = await mobileBar.count()
-    ? await mobileBar.evaluate(el => el.classList.contains('show'))
-    : false;
+  const clientBar = site.locator('.client-order-bar').first();
+  const desktopCart = site.locator('.cart-button[data-cart-open]').first();
+  const mobileCart = site.locator('.mobile-cart[data-cart-open]').first();
 
-  if (mobileShown) {
-    await mobileBar.click();
+  await expect.poll(async () => {
+    if (await clientBar.isVisible()) return 'client';
+    if (await desktopCart.isVisible()) return 'desktop';
+    if (await mobileCart.isVisible()) return 'mobile';
+    return '';
+  }, { timeout: 5000 }).not.toBe('');
+
+  if (await clientBar.isVisible()) {
+    await clientBar.click();
+  } else if (await desktopCart.isVisible()) {
+    await desktopCart.click();
   } else {
-    await site.locator('.cart-button[data-cart-open]').click();
+    await mobileCart.click();
   }
 
   await expect(site.locator('#cartDrawer')).toHaveClass(/open/);
