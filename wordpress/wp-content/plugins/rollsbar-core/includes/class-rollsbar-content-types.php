@@ -10,6 +10,8 @@ final class RollsBar_Content_Types {
 		add_action( 'init', array( __CLASS__, 'register_post_types' ) );
 		add_action( 'add_meta_boxes', array( __CLASS__, 'register_promo_meta' ) );
 		add_action( 'save_post_rb_promo', array( __CLASS__, 'save_promo_meta' ) );
+		add_action( 'add_meta_boxes', array( __CLASS__, 'register_vacancy_meta' ) );
+		add_action( 'save_post_rb_vacancy', array( __CLASS__, 'save_vacancy_meta' ) );
 	}
 
 	public static function register_post_types(): void {
@@ -131,4 +133,54 @@ final class RollsBar_Content_Types {
 		update_post_meta( $post_id, '_rollsbar_promo_url', $url );
 		update_post_meta( $post_id, '_rollsbar_promo_variant', $variant );
 	}
+
+	public static function register_vacancy_meta(): void {
+		add_meta_box(
+			'rollsbar_vacancy_details',
+			'Параметры вакансии',
+			array( __CLASS__, 'render_vacancy_meta' ),
+			'rb_vacancy',
+			'side',
+			'high'
+		);
+	}
+
+	public static function render_vacancy_meta( WP_Post $post ): void {
+		wp_nonce_field( 'rollsbar_save_vacancy', 'rollsbar_vacancy_nonce' );
+
+		$area = (string) get_post_meta( $post->ID, '_rollsbar_vacancy_area', true );
+		?>
+		<p>
+			<label for="rollsbar_vacancy_area"><strong>Направление</strong></label><br>
+			<select id="rollsbar_vacancy_area" name="rollsbar_vacancy_area" style="width:100%;">
+				<option value="other" <?php selected( $area, 'other' ); ?>>Другое</option>
+				<option value="kitchen" <?php selected( $area, 'kitchen' ); ?>>Кухня и касса</option>
+				<option value="delivery" <?php selected( $area, 'delivery' ); ?>>Доставка</option>
+			</select>
+		</p>
+		<p class="description">Название вакансии задаётся заголовком. Краткое описание — полем «Отрывок». Подробности — основным текстом.</p>
+		<?php
+	}
+
+	public static function save_vacancy_meta( int $post_id ): void {
+		if (
+			! isset( $_POST['rollsbar_vacancy_nonce'] ) ||
+			! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rollsbar_vacancy_nonce'] ) ), 'rollsbar_save_vacancy' ) ||
+			( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) ||
+			! current_user_can( 'edit_post', $post_id )
+		) {
+			return;
+		}
+
+		$area = isset( $_POST['rollsbar_vacancy_area'] )
+			? sanitize_key( wp_unslash( $_POST['rollsbar_vacancy_area'] ) )
+			: 'other';
+
+		if ( ! in_array( $area, array( 'kitchen', 'delivery', 'other' ), true ) ) {
+			$area = 'other';
+		}
+
+		update_post_meta( $post_id, '_rollsbar_vacancy_area', $area );
+	}
+
 }
