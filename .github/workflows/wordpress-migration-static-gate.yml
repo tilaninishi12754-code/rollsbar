@@ -1,0 +1,52 @@
+name: WordPress Migration Static Gate
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - 'wordpress/**'
+      - '.github/workflows/wordpress-migration-static-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PHP syntax
+        run: |
+          find wordpress -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: JavaScript syntax
+        run: |
+          node --check wordpress/wp-content/themes/rollsbar-theme/assets/js/app.js
+
+      - name: Catalog JSON + invariants
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('wordpress/data/catalog.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          products=d['products']
+          cards=len(products)
+          rows=sum(len(x.get('variants') or []) or 1 for x in products)
+          assert cards==118, f'cards={cards}, expected 118'
+          assert rows==131, f'rows={rows}, expected 131'
+          assert d.get('approved_source_commit')=='a5e524392abcf89ffd5ace2a18218a6b59ed3b61'
+          print(f'Catalog PASS: {cards} cards / {rows} source rows')
+          PY
+
+      - name: No obvious secrets in tracked WordPress source
+        run: |
+          if grep -RniE --exclude-dir=.git --exclude='*.md' '(BEGIN PRIVATE KEY|client_secret[[:space:]]*=|api[_-]?key[[:space:]]*=|password[[:space:]]*=|sk-[A-Za-z0-9]{20,})' wordpress; then
+            echo 'Potential secret material found'
+            exit 1
+          fi
+          echo 'Secret-pattern scan PASS'
