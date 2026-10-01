@@ -26,6 +26,16 @@ jobs:
       - name: JavaScript syntax
         run: |
           node --check wordpress/wp-content/themes/rollsbar-theme/assets/js/app.js
+          node --check wordpress/wp-content/plugins/rollsbar-core/assets/js/checkout.js
+
+      - name: Checkout architecture guard
+        run: |
+          grep -q "woocommerce_register_additional_checkout_field" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-checkout.php
+          if grep -Rni --include='*.php' "woocommerce_checkout_fields" wordpress/wp-content/plugins/rollsbar-core; then
+            echo "Legacy checkout field API found in rollsbar-core"
+            exit 1
+          fi
+          echo "Block-native checkout architecture PASS"
 
       - name: Catalog JSON + invariants
         run: |
