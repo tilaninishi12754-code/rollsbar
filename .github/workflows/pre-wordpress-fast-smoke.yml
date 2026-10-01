@@ -1,0 +1,39 @@
+name: Pre-WordPress Fast Smoke
+
+on:
+  push:
+    branches:
+      - audit/pre-wordpress-2026-10-01
+    paths:
+      - '**/*.html'
+      - 'catalog-part-*.js'
+      - 'qa-static/**'
+      - '.github/workflows/pre-wordpress-fast-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chrome-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install QA dependency
+        working-directory: qa-static
+        run: npm install --no-audit --no-fund
+      - name: Run desktop + mobile Chrome smoke
+        working-directory: qa-static
+        run: npx playwright test --config=playwright.fast.config.mjs
+      - name: Upload fast smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollsbar-pre-wordpress-fast-smoke
+          path: qa-static/test-results-fast
+          if-no-files-found: ignore
+          retention-days: 30
