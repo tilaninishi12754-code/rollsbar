@@ -37,6 +37,25 @@ jobs:
           fi
           echo "Block-native checkout architecture PASS"
 
+      - name: Order notification architecture guard
+        run: |
+          grep -q "woocommerce_store_api_checkout_order_processed" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-notifications.php
+          grep -q "as_enqueue_async_action" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-notifications.php
+          grep -q "rollsbar_telegram_include_personal_data" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-notifications.php
+          grep -q "CheckoutFields::class" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-order-details.php
+
+          if grep -Rni --include='*.php' "woocommerce_email_order_meta_fields" wordpress/wp-content/plugins/rollsbar-core; then
+            echo "Duplicate custom email meta renderer found; WooCommerce core should own Additional Checkout Fields email rendering"
+            exit 1
+          fi
+
+          if grep -RniE --include='*.php' "define\([[:space:]]*['\"]ROLLSBAR_TELEGRAM_(BOT_TOKEN|CHAT_ID)['\"][[:space:]]*,[[:space:]]*['\"][^'\"]+['\"]" wordpress; then
+            echo "Hard-coded Telegram credential found"
+            exit 1
+          fi
+
+          echo "Order notification architecture PASS"
+
       - name: Catalog JSON + invariants
         run: |
           python3 - <<'PY'
