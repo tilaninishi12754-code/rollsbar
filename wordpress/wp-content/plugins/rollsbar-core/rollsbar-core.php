@@ -20,6 +20,11 @@ define( 'ROLLSBAR_CORE_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-core.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-catalog-importer.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-settings.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-content-types.php';
+
+RollsBar_Settings::init();
+RollsBar_Content_Types::init();
 
 RollsBar_Catalog_Importer::register_cli();
 
