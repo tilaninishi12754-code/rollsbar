@@ -1,7 +1,7 @@
 # Rolls Bar — Pre-WordPress Baseline Audit
 
 Date: 2026-10-01
-Status: PRE-MIGRATION AUDIT / ACTIVE
+Status: PRE-MIGRATION AUDIT / FAST BROWSER PASS / FULL WEBKIT PASS PENDING
 Approved baseline: `approved/site-2026-10-01`
 Approved commit: `a5e524392abcf89ffd5ace2a18218a6b59ed3b61`
 
@@ -63,13 +63,20 @@ The audit is repeated at two later gates:
    - WordPress solution: Media Library + native Custom Logo, not embedded giant data URIs.
 
 4. **External image dependency.**
-   - many product images currently reference external Yandex-hosted URLs;
+   - catalog inventory: 63 cards currently have external HTTP image URLs; 55 have no direct `img` value and rely on local sprite/fallback behavior;
    - migration should import controlled product media into WordPress Media Library where rights/source allow;
-   - deliberate placeholder must exist for missing media.
+   - deliberate placeholder must exist for missing media and must never block purchase controls.
 
 5. **Static architecture is too layered for production.**
    - multiple iframe/runtime patch layers create cache/order/timing risk;
    - WordPress production should have one server-rendered theme + rollsbar-core behavior, not reproduce the demo layering.
+
+### P3 / low-impact static findings
+
+1. **Missing favicon in current static audit environment.**
+   - browser audit logs contain `/favicon.ico → 404`;
+   - does not block purchase/user flows;
+   - WordPress solution: native Site Icon / Media Library.
 
 ### P2 / SEO and discoverability gaps in static baseline
 
@@ -93,6 +100,12 @@ These are migration tasks, not reasons to mutate the approved visual baseline.
 - approved baseline remains immutable.
 - WordPress migration branch isolated from approved baseline.
 - QA scaffold created before staging.
+- repository secret-pattern search returned no matches for common API key/private key/password/client-secret/token patterns.
+- fast real-browser pre-WordPress audit branch: `audit/pre-wordpress-2026-10-01`.
+- fast Chrome run `36895390413`: **SUCCESS — 17 PASS / 1 expected desktop skip**.
+- passed in real browser execution: 118/131 invariant, 4 utility cards, missing-image product modal, simple add-to-cart, checkout, +7 phone, no manual zone selector, address fields/map marker, mobile sticky-cart regression, search, cookie dismissal, core pages 2xx and initial-render page errors.
+- WordPress migration static gate run `36896570281`: **SUCCESS** — PHP syntax, JS syntax, 118/131 catalog JSON invariant, approved-source pointer and secret-pattern scan.
+- full Chromium + WebKit audit is still a separate pending evidence layer; do not call the complete cross-browser gate PASS until that run finishes.
 
 ## Audit layers for this project
 
@@ -132,5 +145,12 @@ These are migration tasks, not reasons to mutate the approved visual baseline.
 
 **PASS TO CONTINUE MIGRATION WITH KNOWN PENDING INPUTS.**
 
+Evidence level at this checkpoint:
+- source/static audit: PASS for migration continuation;
+- fast real-browser desktop + mobile Chrome gate: PASS;
+- WordPress candidate static gate: PASS;
+- full WebKit/Safari-equivalent gate: PENDING;
+- production integrations: PENDING STAGING.
+
 This does not mean “production-ready”.
-It means the approved baseline is sufficiently inventoried to continue WordPress migration without silently treating known demo defects as intended production behavior.
+It means the approved baseline and current static hotfix layer are sufficiently inventoried to continue WordPress migration without silently treating known demo defects as intended production behavior.
