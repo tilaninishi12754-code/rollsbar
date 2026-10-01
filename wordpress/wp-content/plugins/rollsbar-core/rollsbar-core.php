@@ -22,9 +22,11 @@ require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-core.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-catalog-importer.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-settings.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-content-types.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-product-fields.php';
 
 RollsBar_Settings::init();
 RollsBar_Content_Types::init();
+RollsBar_Product_Fields::init();
 
 RollsBar_Catalog_Importer::register_cli();
 
