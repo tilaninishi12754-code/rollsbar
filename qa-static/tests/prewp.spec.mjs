@@ -21,12 +21,17 @@ async function dismissCookieNotice(site) {
 }
 
 async function openVisibleCart(site) {
-  const mobileBar = site.locator('.client-order-bar:visible');
-  if (await mobileBar.count()) {
-    await mobileBar.first().click();
+  const mobileBar = site.locator('.client-order-bar').first();
+  const mobileShown = await mobileBar.count()
+    ? await mobileBar.evaluate(el => el.classList.contains('show'))
+    : false;
+
+  if (mobileShown) {
+    await mobileBar.click();
   } else {
-    await site.locator('[data-cart-open]:visible').first().click();
+    await site.locator('.cart-button[data-cart-open]').click();
   }
+
   await expect(site.locator('#cartDrawer')).toHaveClass(/open/);
 }
 
