@@ -1,7 +1,7 @@
 # Rolls Bar — Pre-WordPress Baseline Audit
 
 Date: 2026-10-01
-Status: PRE-MIGRATION AUDIT / FAST BROWSER PASS / FULL WEBKIT PASS PENDING
+Status: **GATE A PASS — PRE-WORDPRESS / CROSS-BROWSER PASS / MIGRATION MAY CONTINUE WITH KNOWN PENDING INPUTS**
 Approved baseline: `approved/site-2026-10-01`
 Approved commit: `a5e524392abcf89ffd5ace2a18218a6b59ed3b61`
 
@@ -105,7 +105,9 @@ These are migration tasks, not reasons to mutate the approved visual baseline.
 - fast Chrome run `36895390413`: **SUCCESS — 17 PASS / 1 expected desktop skip**.
 - passed in real browser execution: 118/131 invariant, 4 utility cards, missing-image product modal, simple add-to-cart, checkout, +7 phone, no manual zone selector, address fields/map marker, mobile sticky-cart regression, search, cookie dismissal, core pages 2xx and initial-render page errors.
 - WordPress migration static gate run `36896570281`: **SUCCESS** — PHP syntax, JS syntax, 118/131 catalog JSON invariant, approved-source pointer and secret-pattern scan.
-- full Chromium + WebKit audit is still a separate pending evidence layer; do not call the complete cross-browser gate PASS until that run finishes.
+- final cross-browser run `36897918375` at audit commit `f2a88f6f742ef2c94eca12740f3c085e332fb9a1`: **SUCCESS — 17 PASS / 1 expected desktop skip**.
+- full browser matrix in that run: Chromium desktop + WebKit/iPhone 13.
+- prior failed audit runs are preserved as harness-debug history; their failures were traced to test-server root, cookie/visible-control modeling and Playwright package/container version mismatch, not accepted site regressions.
 
 ## Audit layers for this project
 
@@ -149,7 +151,7 @@ Evidence level at this checkpoint:
 - source/static audit: PASS for migration continuation;
 - fast real-browser desktop + mobile Chrome gate: PASS;
 - WordPress candidate static gate: PASS;
-- full WebKit/Safari-equivalent gate: PENDING;
+- full Chromium + WebKit/Safari-equivalent gate: PASS;
 - production integrations: PENDING STAGING.
 
 This does not mean “production-ready”.
