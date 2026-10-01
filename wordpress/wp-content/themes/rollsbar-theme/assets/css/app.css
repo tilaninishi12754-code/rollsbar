@@ -124,3 +124,61 @@ img{max-width:100%;display:block}
 	.rollsbar-mobile-cart:not([hidden]){display:block}
 	.rollsbar-mobile-cart__inner{display:flex;align-items:center;justify-content:space-between}
 }
+
+
+/* Careers page */
+.rb-career-hero{position:relative;min-height:560px;overflow:hidden;background:#111;color:#fff;border-radius:0 0 34px 34px}
+.rb-career-hero__inner{min-height:560px;padding-top:42px;display:flex;flex-direction:column}
+.rb-career-hero h1{font-size:clamp(42px,7vw,74px);line-height:.98;letter-spacing:-.065em;margin:0;max-width:760px}
+.rb-career-hero p{max-width:620px;margin:16px 0 0;color:#bdbdbd;line-height:1.5}
+.rb-career-art{position:relative;height:285px;margin-top:auto;display:flex;align-items:flex-end;justify-content:center}
+.rb-career-circle{width:min(470px,88vw);aspect-ratio:1.65/1;border-radius:999px 999px 0 0;display:grid;place-items:center;background:linear-gradient(145deg,#343434,#1d1d1d);border:1px solid #383838}
+.rb-career-circle span{font-size:34px;font-weight:950;letter-spacing:.08em}
+.rb-career-arc{position:absolute;left:50%;bottom:205px;transform:translateX(-50%) rotate(-5deg);font-size:clamp(30px,5vw,54px);font-weight:950;white-space:nowrap;letter-spacing:-.05em}
+.rb-career-tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1.4fr 1fr;background:rgba(0,0,0,.72);border-top:1px solid #2c2c2c}
+.rb-career-tabs button{height:56px;border:0;background:transparent;color:#eee;font-weight:850;font-size:15px;cursor:pointer}
+.rb-career-tabs button.active{background:#ff5a24;color:#fff}
+.rb-career-section{padding-top:42px;scroll-margin-top:150px}
+.rb-career-section h2{font-size:clamp(32px,5vw,48px);line-height:1;letter-spacing:-.055em;margin:0 0 18px}
+.rb-vacancy-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.rb-vacancy-card{border:1px solid var(--rb-line);border-radius:24px;padding:22px;background:#fff}
+.rb-vacancy-card[hidden]{display:none}
+.rb-vacancy-card h3{margin:0 0 9px;font-size:20px}
+.rb-vacancy-card p{margin:0;color:var(--rb-muted);line-height:1.5;font-size:14px}
+.rb-vacancy-card details{margin-top:15px}
+.rb-vacancy-card summary{cursor:pointer;font-weight:850}
+.rb-vacancy-card__details{margin-top:10px;color:#555;font-size:13px;line-height:1.55}
+.rb-vacancy-card--empty{grid-column:1/-1;background:#f7f7f7;border-style:dashed}
+.rb-questionnaire{margin-top:16px;padding:34px;border-radius:34px;background:#111;color:#fff}
+.rb-questionnaire__kicker{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#ff7a4f}
+.rb-questionnaire h2{max-width:650px;margin:10px 0 18px;font-size:clamp(40px,6vw,64px)}
+.rb-questionnaire p{max-width:700px;color:#aaa;line-height:1.55}
+.rb-questionnaire__pending{margin-top:18px;padding:14px 16px;border:1px solid #363636;border-radius:15px;color:#c8c8c8;font-size:12px}
+.rb-career-actions{position:fixed;left:50%;bottom:calc(13px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:120;width:min(760px,calc(100% - 26px));padding:8px;background:rgba(19,19,19,.96);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.11);border-radius:22px;box-shadow:0 16px 45px rgba(0,0,0,.26);display:grid;grid-template-columns:1fr 58px 58px;gap:8px}
+.rb-career-actions a,.rb-career-actions button{height:54px;border:0;border-radius:17px;text-decoration:none;display:flex;align-items:center;justify-content:center;font-weight:900;cursor:pointer}
+.rb-career-actions__apply{background:#050505;color:#fff;border:1px solid #303030!important}
+.rb-career-actions__round{background:#ff5a24;color:#fff;font-size:21px}
+.rb-career-chat{position:fixed;inset:0;z-index:160;display:none}
+.rb-career-chat.open{display:block}
+.rb-career-chat__backdrop{position:absolute;inset:0;border:0;background:rgba(0,0,0,.55);width:100%}
+.rb-career-chat__panel{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(430px,calc(100% - 28px));padding:22px;background:#fff;border-radius:24px;box-shadow:0 28px 90px rgba(0,0,0,.32)}
+.rb-career-chat__panel h3{margin:0 0 8px}
+.rb-career-chat__panel p{color:#777;line-height:1.45;font-size:13px}
+.rb-career-chat__links{display:grid;gap:9px}
+.rb-career-chat__links a{padding:13px;border:1px solid var(--rb-line);border-radius:14px;text-decoration:none;font-weight:850}
+.rb-career-chat__close{width:100%;padding:12px;border:0;border-radius:13px;margin-top:10px;font-weight:850;cursor:pointer}
+@media(max-width:700px){
+	.rb-career-hero{min-height:560px;border-radius:0 0 28px 28px}
+	.rb-career-hero__inner{min-height:560px;padding-top:28px}
+	.rb-career-hero h1{font-size:46px}
+	.rb-career-hero p{font-size:14px}
+	.rb-career-art{height:300px}
+	.rb-career-arc{bottom:210px}
+	.rb-career-tabs button{font-size:13px}
+	.rb-career-section{padding-top:34px}
+	.rb-vacancy-list{grid-template-columns:1fr}
+	.rb-questionnaire{padding:24px 18px;border-radius:27px}
+	.rb-questionnaire h2{font-size:44px}
+	.rb-career-actions{grid-template-columns:1fr 56px 56px}
+	.rb-career-actions a,.rb-career-actions button{height:52px}
+}
