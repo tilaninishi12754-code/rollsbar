@@ -117,6 +117,25 @@ jobs:
           echo "Rolls Bar admin model runtime PASS\n";
           '
 
+      - name: Verify delivery thresholds runtime
+        run: |
+          wp --path="$WP_PATH" eval '
+          $rows = RollsBar_Delivery_Rules::all();
+          if (count($rows) !== 7) {
+            fwrite(STDERR, "Expected 7 delivery tiers, got: " . count($rows) . "\n");
+            exit(1);
+          }
+          if ((int) $rows[0]["min_order"] !== 1200 || (int) $rows[6]["min_order"] !== 4000) {
+            fwrite(STDERR, "Delivery threshold endpoints are invalid\n");
+            exit(1);
+          }
+          if (!in_array("М. Жукова", $rows[1]["areas"], true) || !in_array("Мазанка", $rows[6]["areas"], true)) {
+            fwrite(STDERR, "Delivery area source mapping is incomplete\n");
+            exit(1);
+          }
+          echo "Delivery thresholds runtime PASS\n";
+          '
+
       - name: Verify packaged checkout fields register
         run: |
           wp --path="$WP_PATH" eval '
