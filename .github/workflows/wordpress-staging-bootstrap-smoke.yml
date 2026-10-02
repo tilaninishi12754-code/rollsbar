@@ -1,0 +1,116 @@
+name: WordPress Staging Bootstrap Smoke
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - 'wordpress/deploy/**'
+      - 'wordpress/data/**'
+      - 'wordpress/wp-content/**'
+      - '.github/workflows/wordpress-staging-bootstrap-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: rollsbar
+          MYSQL_USER: rollsbar
+          MYSQL_PASSWORD: rollsbar_test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      WP_PATH: /tmp/rollsbar-staging
+      PROJECT_ROOT: ${{ github.workspace }}
+      STAGING_URL: http://127.0.0.1:8090
+      WP_ADMIN_USER: rollsbar-ci-admin
+      WP_ADMIN_EMAIL: ci@example.invalid
+      WP_ADMIN_PASSWORD: ci-temporary-password-not-a-secret
+      DB_NAME: rollsbar
+      DB_USER: rollsbar
+      DB_PASSWORD: rollsbar_test_password
+      DB_HOST: 127.0.0.1:3306
+      ROLLSBAR_IMPORT_SMOKE: 1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install WP-CLI
+        run: |
+          curl -fsSL -o /tmp/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          php /tmp/wp-cli.phar --info
+          chmod +x /tmp/wp-cli.phar
+          sudo mv /tmp/wp-cli.phar /usr/local/bin/wp
+
+      - name: Preflight deployment scripts
+        run: bash wordpress/deploy/preflight.sh
+
+      - name: Bootstrap clean WordPress staging
+        run: bash wordpress/deploy/bootstrap-staging.sh
+
+      - name: Start local WordPress HTTP server
+        run: |
+          php -S 127.0.0.1:8090 -t "$WP_PATH" >/tmp/rollsbar-php-server.log 2>&1 &
+          echo $! >/tmp/rollsbar-php-server.pid
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:8090/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/rollsbar-php-server.log
+          exit 1
+
+      - name: Verify staging bootstrap
+        run: bash wordpress/deploy/verify-staging.sh
+
+      - name: Verify five-product smoke import
+        run: |
+          count="$(wp --path="$WP_PATH" post list --post_type=product --post_status=publish --format=count)"
+          test "$count" = "5"
+          wp --path="$WP_PATH" rollsbar catalog validate
+
+      - name: Verify packaged checkout fields register
+        run: |
+          wp --path="$WP_PATH" eval '
+          $fields = AutomatticWooCommerceBlocksPackage::container()
+            ->get(AutomatticWooCommerceBlocksDomainServicesCheckoutFields::class)
+            ->get_additional_fields();
+          $ids = array_keys($fields);
+          foreach (array("rollsbar/entrance","rollsbar/door-code","rollsbar/floor","rollsbar/apartment-office") as $required) {
+            if (!in_array($required, $ids, true)) {
+              fwrite(STDERR, "Missing checkout field: {$required}\n");
+              exit(1);
+            }
+          }
+          echo "Checkout fields PASS\n";
+          '
+
+      - name: Verify staging safety
+        run: |
+          test "$(wp --path="$WP_PATH" option get blog_public)" = "0"
+          test "$(wp --path="$WP_PATH" eval 'echo wp_get_environment_type();')" = "staging"
+          test "$(wp --path="$WP_PATH" config get DISALLOW_FILE_EDIT)" = "1"
+          echo "Staging safety PASS"
+
+      - name: Show debug log on failure
+        if: failure()
+        run: |
+          test -f "$WP_PATH/wp-content/debug.log" && cat "$WP_PATH/wp-content/debug.log" || true
+          test -f /tmp/rollsbar-php-server.log && cat /tmp/rollsbar-php-server.log || true
