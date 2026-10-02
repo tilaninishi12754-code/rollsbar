@@ -63,6 +63,7 @@ Prepared architecture / pending staging or client input:
 - [x] editable delivery-area table with 7 confirmed free-delivery minimum thresholds
 - [x] storefront delivery table sourced from the same editable WordPress data
 - [ ] Yandex address/map integration
+- [ ] minimal client-safe polygon editor in WordPress during Gate B/staging
 - [ ] automatic delivery-zone resolution from real polygons
 - [ ] enforce the confirmed minimum-order threshold after an address resolves to a polygon
 - [ ] courier shipping method enabled only after real zone polygons exist
@@ -73,6 +74,8 @@ Prepared architecture / pending staging or client input:
 - [ ] future integrations
 
 Rule: do not invent production delivery prices, minimums, polygons or required checkout fields.
+
+Polygon editor rule: do not build a standalone GIS/map-management system. During Gate B/staging, implement only the minimum client-safe Yandex Maps polygon editor needed to select a delivery tier, draw/edit its boundary, save coordinates, and test real addresses. Business users may edit zone geometry; code/layout/checkout mechanics remain protected. Exact polygons are created and corrected with the client on staging, not guessed pre-hosting.
 
 ## Phase 7 — payments
 Connect acquiring only after the site, legal pages, SSL, catalog and checkout are ready for bank review.
