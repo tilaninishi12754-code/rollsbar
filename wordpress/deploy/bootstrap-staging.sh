@@ -33,10 +33,10 @@ if [[ ! -f "$WP_PATH/wp-load.php" ]]; then
     echo
   fi
 
-  wp core download --path="$WP_PATH" --version="$WP_VERSION" --locale="$WP_LOCALE" --force
+  echo "Downloading canonical WordPress $WP_VERSION core..."
+  wp core download --path="$WP_PATH" --version="$WP_VERSION" --locale=en_US --force
 
-  wp config create     --path="$WP_PATH"     --dbname="$DB_NAME"     --dbuser="$DB_USER"     --dbpass="$DB_PASSWORD"     --dbhost="$DB_HOST"     --skip-check
-
+  printf '%s\n' "$DB_PASSWORD" | wp config create --path="$WP_PATH" --dbname="$DB_NAME" --dbuser="$DB_USER" --dbhost="$DB_HOST" --skip-check --prompt=dbpass
   unset DB_PASSWORD
 
   if [[ -z "${WP_ADMIN_PASSWORD:-}" ]]; then
@@ -44,9 +44,14 @@ if [[ ! -f "$WP_PATH/wp-load.php" ]]; then
     echo
   fi
 
-  wp core install     --path="$WP_PATH"     --url="$STAGING_URL"     --title="$WP_TITLE"     --admin_user="$WP_ADMIN_USER"     --admin_password="$WP_ADMIN_PASSWORD"     --admin_email="$WP_ADMIN_EMAIL"     --skip-email
-
+  printf '%s\n' "$WP_ADMIN_PASSWORD" | wp core install --path="$WP_PATH" --url="$STAGING_URL" --title="$WP_TITLE" --admin_user="$WP_ADMIN_USER" --admin_email="$WP_ADMIN_EMAIL" --locale=en_US --skip-email --prompt=admin_password
   unset WP_ADMIN_PASSWORD
+
+  if [[ "$WP_LOCALE" != "en_US" ]]; then
+    echo "Installing WordPress language pack: $WP_LOCALE"
+    wp_cmd language core install "$WP_LOCALE" --activate
+    wp_cmd site switch-language "$WP_LOCALE"
+  fi
 else
   echo "Existing WordPress detected; core download/install skipped."
 fi
