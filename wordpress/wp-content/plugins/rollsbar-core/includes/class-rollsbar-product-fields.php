@@ -16,6 +16,16 @@ final class RollsBar_Product_Fields {
 		echo '<div class="options_group">';
 		echo '<p style="padding:0 12px 2px;"><strong>Rolls Bar — карточка товара</strong><br><span class="description">Размер карточки и дизайн фиксированы темой. Здесь меняется только содержимое.</span></p>';
 
+		woocommerce_wp_textarea_input(
+			array(
+				'id'          => '_rollsbar_composition',
+				'label'       => 'Состав / ингредиенты',
+				'rows'        => 4,
+				'desc_tip'    => true,
+				'description' => 'Отдельное поле состава. Исходное описание товара сохраняется независимо и не затирается.',
+			)
+		);
+
 		woocommerce_wp_text_input(
 			array(
 				'id'          => '_rollsbar_weight_display',
@@ -64,6 +74,13 @@ final class RollsBar_Product_Fields {
 	}
 
 	public static function save_fields( WC_Product $product ): void {
+		if ( isset( $_POST['_rollsbar_composition'] ) ) {
+			$product->update_meta_data(
+				'_rollsbar_composition',
+				sanitize_textarea_field( wp_unslash( $_POST['_rollsbar_composition'] ) )
+			);
+		}
+
 		$text_fields = array(
 			'_rollsbar_weight_display',
 			'_rollsbar_calories',
@@ -80,6 +97,10 @@ final class RollsBar_Product_Fields {
 				);
 			}
 		}
+	}
+
+	public static function composition( WC_Product $product ): string {
+		return trim( (string) $product->get_meta( '_rollsbar_composition', true ) );
 	}
 
 	public static function weight_display( WC_Product $product ): string {
@@ -105,14 +126,19 @@ final class RollsBar_Product_Fields {
 			return;
 		}
 
-		$weight = self::weight_display( $product );
-		$kbju   = self::nutrition( $product );
+		$composition = self::composition( $product );
+		$weight      = self::weight_display( $product );
+		$kbju        = self::nutrition( $product );
 
-		if ( ! $weight && ! $kbju ) {
+		if ( ! $composition && ! $weight && ! $kbju ) {
 			return;
 		}
 
 		echo '<section class="rollsbar-product-facts" aria-label="Характеристики товара">';
+
+		if ( $composition ) {
+			echo '<div class="rollsbar-product-composition"><strong>Состав / ингредиенты:</strong><br>' . nl2br( esc_html( $composition ) ) . '</div>';
+		}
 
 		if ( $weight ) {
 			echo '<p><strong>Вес / объём:</strong> ' . esc_html( $weight ) . '</p>';
