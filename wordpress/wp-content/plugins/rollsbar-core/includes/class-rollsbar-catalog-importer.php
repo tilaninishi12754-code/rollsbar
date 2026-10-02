@@ -31,6 +31,12 @@ final class RollsBar_Catalog_Importer {
 	);
 
 	public static function catalog_path(): string {
+		$packaged = ROLLSBAR_CORE_DIR . 'data/catalog.json';
+
+		if ( is_readable( $packaged ) ) {
+			return $packaged;
+		}
+
 		return dirname( ROLLSBAR_CORE_DIR, 3 ) . '/data/catalog.json';
 	}
 
