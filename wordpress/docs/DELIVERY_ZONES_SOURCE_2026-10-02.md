@@ -1,7 +1,7 @@
 # Rolls Bar — delivery zones source input
 
 Date: 2026-10-02
-Status: SOURCE INPUT / NOT YET POLYGONIZED / NOT YET PRODUCTION-ENABLED
+Status: THRESHOLDS CONFIRMED / NOT YET POLYGONIZED / NOT YET PRODUCTION-ENABLED
 
 ## Owner-provided source
 
@@ -55,15 +55,13 @@ Status: SOURCE INPUT / NOT YET POLYGONIZED / NOT YET PRODUCTION-ENABLED
 
 ## Current interpretation
 
-The numeric values are preserved exactly as provided. They are treated as candidate minimum-order thresholds by area, pending explicit confirmation.
+The numeric values are preserved exactly as provided. Father clarified that each value is the minimum order threshold from which delivery to that listed territory is free. If the cart is below the threshold, the intended flow is to ask the customer to add items up to the minimum.
 
 This source replaces neither exact polygons nor geocoding rules by itself. Directional descriptions such as "ж/д вокзал до Павленко", "от гостиницы Москва до Марьино", "всё, что от ул. Батурина", and "Долина от Лозового" require exact map boundaries before automatic address -> zone resolution can be production-enabled.
 
 ## Still unresolved
 
-- confirm that 1200/1500/.../4000 ₽ mean minimum order amount, not delivery fee;
-- confirm whether courier delivery is free once the minimum is met or whether a separate delivery fee applies;
-- define free-delivery thresholds if any;
+- no separate courier fee has been supplied; current confirmed rule is free delivery from the listed minimum order threshold;
 - convert the area descriptions into exact polygons/boundaries;
 - define behavior for addresses on a boundary or outside all polygons.
 
