@@ -66,3 +66,17 @@ This source replaces neither exact polygons nor geocoding rules by itself. Direc
 - define behavior for addresses on a boundary or outside all polygons.
 
 Rule: do not invent polygons, fees or thresholds not explicitly supplied.
+
+
+## Polygon editing decision
+
+Client confirmed the preferred workflow: exact zone boundaries will be created and corrected during testing on the staging site rather than repeatedly redrawn before the site exists.
+
+Project rule:
+- do not guess exact polygons from district/landmark wording;
+- do not build a complex GIS subsystem;
+- during Gate B/staging, add only a minimal Yandex Maps-based polygon editor inside the Rolls Bar delivery admin;
+- the operator selects a delivery tier, draws or edits its polygon, saves coordinates, and tests real addresses;
+- polygon geometry is client-editable business data;
+- map/editor implementation, checkout logic and site layout remain code-controlled;
+- production address -> zone -> minimum-order enforcement is enabled only after the staging polygons are accepted.
