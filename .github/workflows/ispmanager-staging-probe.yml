@@ -1,0 +1,46 @@
+name: ISPmanager Staging Probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollsbar-ispmanager-staging
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate required staging secrets
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: |
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          case "$ISP_MANAGER_URL" in
+            https://*) ;;
+            *) echo "ISP_MANAGER_URL must use https://"; exit 1 ;;
+          esac
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+
+      - name: Read-only ISPmanager API probe
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ISP_TLS_VERIFY: "1"
+        run: python3 wordpress/deploy/ispmanager_probe.py
