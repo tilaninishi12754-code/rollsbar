@@ -61,6 +61,17 @@ jobs:
 
           echo "Order notification architecture PASS"
 
+      - name: Admin model compatibility guard
+        run: |
+          grep -q "_rollsbar_composition" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-product-fields.php
+          grep -q "_rollsbar_weight_display" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-catalog-importer.php
+          grep -q "manage_woocommerce_page_wc-orders_columns" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-order-details.php
+          grep -q "manage_woocommerce_page_wc-orders_custom_column" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-order-details.php
+          grep -q "custom_order_tables" wordpress/wp-content/plugins/rollsbar-core/rollsbar-core.php
+          grep -q "cart_checkout_blocks" wordpress/wp-content/plugins/rollsbar-core/rollsbar-core.php
+          grep -q "WC tested up to: 11.1.2" wordpress/wp-content/plugins/rollsbar-core/rollsbar-core.php
+          echo "Admin model + Woo compatibility PASS"
+
       - name: Deployment shell syntax
         run: |
           for script in wordpress/deploy/*.sh; do
