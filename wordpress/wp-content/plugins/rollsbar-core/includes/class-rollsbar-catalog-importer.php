@@ -5,6 +5,7 @@
  * Usage:
  *   wp rollsbar catalog validate
  *   wp rollsbar catalog import --dry-run
+ *   wp rollsbar catalog import --limit=5
  *   wp rollsbar catalog import
  */
 
@@ -192,13 +193,18 @@ final class RollsBar_Catalog_Importer {
 		return $product_id;
 	}
 
-	public static function import_all( bool $dry_run = false ): array {
+	public static function import_all( bool $dry_run = false, int $limit = 0 ): array {
 		$catalog = self::load_catalog();
+
+		if ( $limit > 0 ) {
+			$catalog['products'] = array_slice( $catalog['products'], 0, $limit );
+		}
 		$result  = array(
 			'cards'       => 0,
 			'source_rows' => 0,
 			'created_or_updated' => 0,
 			'dry_run'     => $dry_run,
+			'limit'       => max( 0, $limit ),
 		);
 
 		foreach ( $catalog['products'] as $row ) {
@@ -263,17 +269,24 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		 *
 		 * [--dry-run]
 		 * : Validate traversal without writing products.
+		 *
+		 * [--limit=<number>]
+		 * : Import only the first N product cards. Useful for staging smoke tests.
 		 */
 		public function import( array $args, array $assoc_args ): void {
+			unset( $args );
+
 			$dry_run = isset( $assoc_args['dry-run'] );
-			$result  = RollsBar_Catalog_Importer::import_all( $dry_run );
+			$limit   = isset( $assoc_args['limit'] ) ? absint( $assoc_args['limit'] ) : 0;
+			$result  = RollsBar_Catalog_Importer::import_all( $dry_run, $limit );
 
 			WP_CLI::success(
 				sprintf(
-					'%s: %d cards / %d source rows.',
+					'%s: %d cards / %d source rows%s.',
 					$dry_run ? 'Dry run complete' : 'Import complete',
 					$result['cards'],
-					$result['source_rows']
+					$result['source_rows'],
+					$result['limit'] ? ' (limit=' . $result['limit'] . ')' : ''
 				)
 			);
 		}
