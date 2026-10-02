@@ -1,5 +1,7 @@
 name: WordPress Staging Bootstrap Smoke
 
+# Bootstrap smoke revision: 2026-10-02b
+
 on:
   push:
     branches:
