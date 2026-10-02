@@ -88,6 +88,35 @@ jobs:
           test "$count" = "5"
           wp --path="$WP_PATH" rollsbar catalog validate
 
+      - name: Verify Rolls Bar admin model runtime
+        run: |
+          wp --path="$WP_PATH" eval '
+          $product_id = wc_get_product_id_by_sku("RB-ROLLS-FILADELFIYA");
+          $product = wc_get_product($product_id);
+          if (!$product) {
+            fwrite(STDERR, "Smoke product not found\n");
+            exit(1);
+          }
+          $composition = trim((string) $product->get_meta("_rollsbar_composition", true));
+          $weight = trim((string) $product->get_meta("_rollsbar_weight_display", true));
+          if (strpos($composition, "сыр креметте") === false) {
+            fwrite(STDERR, "Composition field was not seeded\n");
+            exit(1);
+          }
+          if ($weight !== "250 г") {
+            fwrite(STDERR, "Expected display weight 250 г, got: {$weight}\n");
+            exit(1);
+          }
+          $columns = RollsBar_Order_Details::add_order_list_columns(array("order_number" => "Order", "order_status" => "Status", "order_total" => "Total"));
+          foreach (array("rollsbar_customer","rollsbar_phone","rollsbar_address","rollsbar_zone","rollsbar_time") as $required) {
+            if (!array_key_exists($required, $columns)) {
+              fwrite(STDERR, "Missing operator column: {$required}\n");
+              exit(1);
+            }
+          }
+          echo "Rolls Bar admin model runtime PASS\n";
+          '
+
       - name: Verify packaged checkout fields register
         run: |
           wp --path="$WP_PATH" eval '
