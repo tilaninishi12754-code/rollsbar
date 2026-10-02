@@ -81,7 +81,7 @@ Connect acquiring only after the site, legal pages, SSL, catalog and checkout ar
 
 ## Staging deployment readiness — 2026-10-02
 
-Status: **PACKAGE READY / HOSTING INPUT PENDING**
+Status: **PACKAGE + CLEAN BOOTSTRAP VERIFIED / REG.RU INPUT PENDING**
 
 Prepared:
 - REG.RU staging runbook;
@@ -94,8 +94,12 @@ Prepared:
 - deterministic manifest/SHA package;
 - static + shell + secret CI gates.
 
-Build run `36960345717`: SUCCESS.
-Latest static gate `36960411777`: SUCCESS.
+Package-of-record build run `36961212326`: SUCCESS.
+Static gate run `36961212345`: SUCCESS.
+Clean ephemeral WordPress staging bootstrap run `36961218015`: SUCCESS.
+
+The clean smoke proved WP 7.1.2 + WooCommerce 11.1.2 install, language pack, theme/core activation, 5-card import, HTTP startup, WooCommerce pages, CheckoutFields registration and staging safety before access to REG.RU.
+
 See `STAGING_PACKAGE_RECEIPT_2026-10-02.md`.
 
 FIRST NEXT ACTION when REG.RU access arrives:
