@@ -60,10 +60,12 @@ Implemented before staging:
 
 Prepared architecture / pending staging or client input:
 - [ ] native WooCommerce Blocks Local Pickup configuration on staging
+- [x] editable delivery-area table with 7 confirmed free-delivery minimum thresholds
+- [x] storefront delivery table sourced from the same editable WordPress data
 - [ ] Yandex address/map integration
 - [ ] automatic delivery-zone resolution from real polygons
-- [ ] minimum order / delivery fee / free-delivery threshold by zone
-- [ ] courier shipping method enabled only after real zone rules exist
+- [ ] enforce the confirmed minimum-order threshold after an address resolves to a polygon
+- [ ] courier shipping method enabled only after real zone polygons exist
 - [x] order notification architecture: native WooCommerce email + async Telegram via Action Scheduler
 - [ ] staging credentials + real email/Telegram delivery test
 - [ ] final vacancy questionnaire
@@ -128,9 +130,41 @@ Verification:
 - runtime smoke confirmed the first imported product has separate composition + `250 г` display weight and that the HPOS operator columns register.
 
 Still intentionally pending:
-- real delivery polygons / zone minimums / fees / free-delivery thresholds;
+- real delivery polygons (minimum/free-delivery thresholds are now confirmed and implemented as editable data);
 - exact final vacancy questionnaire;
 - any weight/volume values absent from the approved catalog source;
 - final decision on splitting Street and House into separate checkout fields;
 - any WOK remodel beyond the already approved catalog model.
 
+
+
+## Delivery threshold checkpoint — 2026-10-02
+
+Father clarified the supplied amounts are both the minimum order threshold for the listed territory and the amount from which courier delivery is free. No separate courier fee was supplied.
+
+Implemented:
+- dedicated client-editable Rolls Bar → Delivery admin screen;
+- 7 confirmed thresholds: 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 ₽;
+- area lists preserved as source wording;
+- storefront delivery table uses the same WordPress data;
+- manual zone selection remains absent;
+- no polygon or address matching is guessed from neighborhood names.
+
+Safety:
+- backup branch: `backup/pre-delivery-rules-2026-10-02`;
+- exact polygon resolver remains disabled until precise boundaries exist.
+
+Verification:
+- package build run `37007807192`: SUCCESS;
+- static gate run `37007811445`: SUCCESS;
+- clean WordPress bootstrap smoke run `37007818359`: SUCCESS;
+- runtime smoke verified all 7 tiers and representative mappings `М. Жукова → 1500 ₽`, `Мазанка → 4000 ₽`.
+
+Current non-blocking missing data:
+- exact polygon boundaries for address → zone automation;
+- Yandex Maps production API key/runtime configuration;
+- final vacancy questionnaire;
+- source weights/volumes absent from the approved catalog;
+- direct decision if Street and House should be split in checkout.
+
+These items do not block continued WordPress migration. They block only their corresponding final production behaviors.
