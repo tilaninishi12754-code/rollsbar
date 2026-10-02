@@ -91,9 +91,9 @@ jobs:
       - name: Verify packaged checkout fields register
         run: |
           wp --path="$WP_PATH" eval '
-          $fields = AutomatticWooCommerceBlocksPackage::container()
-            ->get(AutomatticWooCommerceBlocksDomainServicesCheckoutFields::class)
-            ->get_additional_fields();
+          $container = \Automattic\WooCommerce\Blocks\Package::container();
+          $service = "Automattic\\WooCommerce\\Blocks\\Domain\\Services\\CheckoutFields";
+          $fields = $container->get($service)->get_additional_fields();
           $ids = array_keys($fields);
           foreach (array("rollsbar/entrance","rollsbar/door-code","rollsbar/floor","rollsbar/apartment-office") as $required) {
             if (!in_array($required, $ids, true)) {
@@ -103,6 +103,15 @@ jobs:
           }
           echo "Checkout fields PASS\n";
           '
+
+      - name: Verify checkout registration produced no API misuse notices
+        run: |
+          if test -f "$WP_PATH/wp-content/debug.log" && grep -q "Invalid attribute found when registering field" "$WP_PATH/wp-content/debug.log"; then
+            cat "$WP_PATH/wp-content/debug.log"
+            echo "Unsupported WooCommerce checkout field attribute detected"
+            exit 1
+          fi
+          echo "Checkout registration log PASS"
 
       - name: Verify staging safety
         run: |
