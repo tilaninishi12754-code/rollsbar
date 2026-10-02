@@ -52,7 +52,11 @@ Implemented before staging:
 - [x] editable vacancies connected to careers page
 - [x] Restaurant schema / transactional noindex ownership layer
 - [x] client-safe settings for phone/address/socials
+- [x] separate editable Composition / Ingredients field
 - [x] product weight/volume + optional KBJU fields
+- [x] catalog importer seeds composition and only explicit source weight/volume values without overwriting later admin edits
+- [x] HPOS-compatible operator order-list columns: name / phone / address / delivery zone / time
+- [x] explicit WooCommerce compatibility declarations for HPOS + Cart/Checkout Blocks
 
 Prepared architecture / pending staging or client input:
 - [ ] native WooCommerce Blocks Local Pickup configuration on staging
@@ -104,3 +108,29 @@ See `STAGING_PACKAGE_RECEIPT_2026-10-02.md`.
 
 FIRST NEXT ACTION when REG.RU access arrives:
 inspect hosting facts → create staging subdomain/DB/HTTPS → preflight → bootstrap → 5-card Gate B smoke.
+
+## Admin model no-loss checkpoint — 2026-10-02
+
+Recovered source/chat reconciliation confirmed the latest admin requirements are preserved. Safe pre-staging gaps were implemented on `wordpress/migration-2026-10-01` without changing the frozen approved site.
+
+Implemented and verified:
+- separate `Состав / ингредиенты` product field;
+- catalog seed maps source description into Composition while preserving the original Woo description;
+- display weight is seeded only where the approved source explicitly states a leading weight/volume value; missing source weights are not invented;
+- HPOS-compatible operator order columns for customer name, phone, address, delivery zone and order time, alongside WooCommerce status/total;
+- `WC tested up to: 11.1.2` plus `custom_order_tables` and `cart_checkout_blocks` compatibility declarations;
+- backup branch: `backup/pre-admin-gaps-2026-10-02`.
+
+Verification:
+- package build run `37002184393`: SUCCESS;
+- static gate run `37002184427`: SUCCESS;
+- clean runtime smoke run `37002348736`: SUCCESS;
+- runtime smoke confirmed the first imported product has separate composition + `250 г` display weight and that the HPOS operator columns register.
+
+Still intentionally pending:
+- real delivery polygons / zone minimums / fees / free-delivery thresholds;
+- exact final vacancy questionnaire;
+- any weight/volume values absent from the approved catalog source;
+- final decision on splitting Street and House into separate checkout fields;
+- any WOK remodel beyond the already approved catalog model.
+
