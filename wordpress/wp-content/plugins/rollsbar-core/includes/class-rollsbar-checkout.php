@@ -28,22 +28,18 @@ final class RollsBar_Checkout {
 		$fields = array(
 			'entrance' => array(
 				'label'       => 'Подъезд',
-				'placeholder' => 'Например: 2',
 				'required'    => RollsBar_Settings::get_bool( 'checkout_entrance_required' ),
 			),
 			'door-code' => array(
 				'label'       => 'Код двери / домофона',
-				'placeholder' => 'Если есть',
 				'required'    => RollsBar_Settings::get_bool( 'checkout_door_code_required' ),
 			),
 			'floor' => array(
 				'label'       => 'Этаж',
-				'placeholder' => 'Например: 5',
 				'required'    => RollsBar_Settings::get_bool( 'checkout_floor_required' ),
 			),
 			'apartment-office' => array(
 				'label'       => 'Квартира / офис',
-				'placeholder' => 'Если применимо',
 				'required'    => RollsBar_Settings::get_bool( 'checkout_apartment_required' ),
 			),
 		);
@@ -58,7 +54,6 @@ final class RollsBar_Checkout {
 					'required'   => $config['required'],
 					'attributes' => array(
 						'autocomplete' => 'off',
-						'placeholder'  => $config['placeholder'],
 					),
 				)
 			);
