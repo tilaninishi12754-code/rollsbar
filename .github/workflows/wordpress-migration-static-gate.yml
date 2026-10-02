@@ -72,6 +72,15 @@ jobs:
           grep -q "WC tested up to: 11.1.2" wordpress/wp-content/plugins/rollsbar-core/rollsbar-core.php
           echo "Admin model + Woo compatibility PASS"
 
+      - name: Delivery rules architecture guard
+        run: |
+          grep -q "class RollsBar_Delivery_Rules" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-delivery-rules.php
+          grep -q "'min_order' => 1200" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-delivery-rules.php
+          grep -q "'min_order' => 4000" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-delivery-rules.php
+          grep -q "Бесплатная доставка от суммы по району" wordpress/wp-content/themes/rollsbar-theme/front-page.php
+          grep -q "Ручного выбора зоны клиентом не будет" wordpress/wp-content/themes/rollsbar-theme/front-page.php
+          echo "Delivery rules architecture PASS"
+
       - name: Deployment shell syntax
         run: |
           for script in wordpress/deploy/*.sh; do
