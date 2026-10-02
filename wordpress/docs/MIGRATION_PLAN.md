@@ -77,3 +77,26 @@ Connect acquiring only after the site, legal pages, SSL, catalog and checkout ar
 - point domain to production host
 - monitor checkout/orders
 - do not overwrite production database with staging after live orders begin
+
+
+## Staging deployment readiness — 2026-10-02
+
+Status: **PACKAGE READY / HOSTING INPUT PENDING**
+
+Prepared:
+- REG.RU staging runbook;
+- credential-free deployment scripts;
+- exact WordPress 7.1.2 / WooCommerce 11.1.2 pin;
+- isolated 5-product smoke import via `--limit=5`;
+- guarded full-catalog promotion;
+- self-contained `rollsbar-core.zip` with catalog;
+- `rollsbar-theme.zip`;
+- deterministic manifest/SHA package;
+- static + shell + secret CI gates.
+
+Build run `36960345717`: SUCCESS.
+Latest static gate `36960411777`: SUCCESS.
+See `STAGING_PACKAGE_RECEIPT_2026-10-02.md`.
+
+FIRST NEXT ACTION when REG.RU access arrives:
+inspect hosting facts → create staging subdomain/DB/HTTPS → preflight → bootstrap → 5-card Gate B smoke.
