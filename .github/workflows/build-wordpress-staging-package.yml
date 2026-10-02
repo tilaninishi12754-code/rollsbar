@@ -1,0 +1,118 @@
+name: Build WordPress Staging Package
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - 'wordpress/**'
+      - '.github/workflows/build-wordpress-staging-package.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build deterministic staging artifacts
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, os, shutil, zipfile
+
+          out=Path('dist/rollsbar-staging')
+          work=Path('dist/work')
+          shutil.rmtree('dist', ignore_errors=True)
+          out.mkdir(parents=True)
+          work.mkdir(parents=True)
+
+          theme_src=Path('wordpress/wp-content/themes/rollsbar-theme')
+          core_src=Path('wordpress/wp-content/plugins/rollsbar-core')
+          catalog=Path('wordpress/data/catalog.json')
+
+          theme_work=work/'rollsbar-theme'
+          core_work=work/'rollsbar-core'
+          shutil.copytree(theme_src, theme_work)
+          shutil.copytree(core_src, core_work)
+          (core_work/'data').mkdir(parents=True, exist_ok=True)
+          shutil.copy2(catalog, core_work/'data/catalog.json')
+
+          def zip_dir(src: Path, output: Path):
+              with zipfile.ZipFile(output,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+                  for p in sorted(src.rglob('*')):
+                      if not p.is_file():
+                          continue
+                      arc=(Path(src.name)/p.relative_to(src)).as_posix()
+                      info=zipfile.ZipInfo(arc,date_time=(2026,10,2,0,0,0))
+                      info.compress_type=zipfile.ZIP_DEFLATED
+                      info.external_attr=(0o644 << 16)
+                      z.writestr(info,p.read_bytes())
+              with zipfile.ZipFile(output) as z:
+                  assert z.testzip() is None
+
+          theme_zip=out/'rollsbar-theme.zip'
+          core_zip=out/'rollsbar-core.zip'
+          zip_dir(theme_work,theme_zip)
+          zip_dir(core_work,core_zip)
+
+          catalog_data=json.loads(catalog.read_text(encoding='utf-8'))
+          products=catalog_data['products']
+          rows=sum(len(x.get('variants') or []) or 1 for x in products)
+          assert len(products)==118
+          assert rows==131
+
+          manifest={
+              'project':'Rolls Bar',
+              'environment':'staging',
+              'git_sha':os.environ.get('GITHUB_SHA',''),
+              'wordpress_version':'7.1.2',
+              'woocommerce_version':'11.1.2',
+              'approved_source_commit':'a5e524392abcf89ffd5ace2a18218a6b59ed3b61',
+              'catalog_cards':118,
+              'catalog_source_rows':131,
+              'secrets_included':False
+          }
+          (out/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          sums=[]
+          for p in sorted(out.iterdir()):
+              if p.is_file():
+                  sums.append(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}")
+          (out/'SHA256SUMS').write_text('\n'.join(sums)+'\n',encoding='utf-8')
+
+          bundle=Path('dist/rollsbar-staging-bundle.zip')
+          with zipfile.ZipFile(bundle,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in sorted(out.iterdir()):
+                  info=zipfile.ZipInfo(p.name,date_time=(2026,10,2,0,0,0))
+                  info.compress_type=zipfile.ZIP_DEFLATED
+                  info.external_attr=(0o644 << 16)
+                  z.writestr(info,p.read_bytes())
+              for p in sorted(Path('wordpress/deploy').glob('*')):
+                  if not p.is_file():
+                      continue
+                  if p.suffix not in {'.sh','.md','.example'}:
+                      continue
+                  info=zipfile.ZipInfo(('deploy/'+p.name),date_time=(2026,10,2,0,0,0))
+                  info.compress_type=zipfile.ZIP_DEFLATED
+                  info.external_attr=((0o755 if p.suffix=='.sh' else 0o644) << 16)
+                  z.writestr(info,p.read_bytes())
+
+          print('bundle_sha256='+hashlib.sha256(bundle.read_bytes()).hexdigest())
+          print('bundle_size='+str(bundle.stat().st_size))
+          PY
+
+      - name: Upload staging bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollsbar-wordpress-staging-${{ github.sha }}
+          path: |
+            dist/rollsbar-staging/
+            dist/rollsbar-staging-bundle.zip
+          if-no-files-found: error
+          retention-days: 30
