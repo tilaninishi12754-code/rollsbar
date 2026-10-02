@@ -26,12 +26,12 @@ add_action(
 			return;
 		}
 
-		\\Automattic\\WooCommerce\\Utilities\\FeaturesUtil::declare_compatibility(
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
 			'custom_order_tables',
 			__FILE__,
 			true
 		);
-		\\Automattic\\WooCommerce\\Utilities\\FeaturesUtil::declare_compatibility(
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
 			'cart_checkout_blocks',
 			__FILE__,
 			true
