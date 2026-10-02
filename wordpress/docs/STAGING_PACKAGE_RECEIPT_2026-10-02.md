@@ -216,3 +216,30 @@ When REG.RU access is available:
 8. only after Gate B PASS promote to all 118 cards.
 
 Do not switch the production domain or enable live acquiring during this step.
+
+
+## Current package-of-record update — 2026-10-02
+
+After the admin-model and confirmed delivery-threshold work, the package-of-record has advanced to the current migration head:
+
+- source commit: `6c1593ac433ae04fdc53605799e221d6d2cf807f`
+- build workflow run: `37007973195` — **SUCCESS**
+- GitHub artifact ID: `11226651586`
+- artifact name: `rollsbar-wordpress-staging-6c1593ac433ae04fdc53605799e221d6d2cf807f`
+- uploaded artifact SHA-256: `b4ca1fd0a17553ff7cb2f4c26f3b4488c8faac9e0137604e04282952ebadadc7`
+- deterministic inner `rollsbar-staging-bundle.zip` SHA-256: `1f9e48ab06af55d3195fe424b6f9fa84ecc9392ff782dc24c878c9e4112954b2`
+- inner bundle size: 47,190 bytes
+- uploaded artifact size: 88,538 bytes
+- artifact expiry: 2026-11-01
+
+The current head also has:
+- WordPress Migration Static Gate run `37007973071`: **SUCCESS**
+- delivery runtime clean bootstrap smoke run `37007818359`: **SUCCESS**
+
+This supersedes the older package as the deployment payload for the next REG.RU Gate B attempt. Historical package evidence above remains retained for audit history.
+
+### Current deployment status
+
+**READY FOR REAL REG.RU STAGING / GATE B**
+
+No further pre-hosting implementation is required before creating the real staging environment. Missing map polygons, Yandex Maps production credentials, final vacancy questionnaire, absent catalog weights, and the Street-vs-House decision are tracked as non-blocking inputs for their specific production behavior.
