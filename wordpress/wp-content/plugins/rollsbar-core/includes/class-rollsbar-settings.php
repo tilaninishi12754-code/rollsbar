@@ -188,6 +188,7 @@ final class RollsBar_Settings {
 				<a class="button button-hero" href="<?php echo esc_url( admin_url( 'upload.php' ) ); ?>">Фото и файлы</a>
 				<a class="button button-hero" href="<?php echo esc_url( admin_url( 'edit.php?post_type=rb_promo' ) ); ?>">Промо-карточки</a>
 				<a class="button button-hero" href="<?php echo esc_url( admin_url( 'edit.php?post_type=rb_vacancy' ) ); ?>">Вакансии</a>
+				<a class="button button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=rollsbar-delivery' ) ); ?>">Доставка</a>
 			</div>
 
 			<form action="options.php" method="post">
