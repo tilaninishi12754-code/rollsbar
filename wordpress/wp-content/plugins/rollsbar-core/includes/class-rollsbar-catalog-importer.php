@@ -93,6 +93,38 @@ final class RollsBar_Catalog_Importer {
 		return $id ? (int) $id : 0;
 	}
 
+	/**
+	 * Derive only fields that are explicit in the approved source text.
+	 * The original WooCommerce description remains untouched for provenance.
+	 *
+	 * @return array{composition:string,weight_display:string}
+	 */
+	private static function derive_product_fields( array $row ): array {
+		$description = trim( wp_strip_all_tags( (string) ( $row['desc'] ?? '' ) ) );
+		$composition = $description;
+		$weight      = '';
+
+		$weight_pattern = '/^\\s*(\\d+(?:[.,]\\d+)?)\\s*(г|гр|кг|мл|л)(?=\\s|\\(|\\.|$)/ui';
+
+		if ( preg_match( $weight_pattern, $description, $matches ) ) {
+			$unit   = str_ireplace( 'гр', 'г', (string) $matches[2] );
+			$weight = trim( (string) $matches[1] . ' ' . $unit );
+
+			$composition = (string) preg_replace(
+				'/^\\s*\\d+(?:[.,]\\d+)?\\s*(?:г|гр|кг|мл|л)(?:\\s*\\(\\s*\\d+\\s*шт\\.?\\s*\\))?\\s*[.\\-:]*\\s*/ui',
+				'',
+				$description,
+				1
+			);
+			$composition = trim( $composition );
+		}
+
+		return array(
+			'composition'    => $composition,
+			'weight_display' => $weight,
+		);
+	}
+
 	private static function configure_common( WC_Product $product, array $row ): void {
 		$product->set_name( (string) $row['name'] );
 		$product->set_status( 'publish' );
@@ -101,6 +133,24 @@ final class RollsBar_Catalog_Importer {
 		$product->set_short_description( (string) ( $row['desc'] ?? '' ) );
 		$product->set_category_ids( array( self::category_id( (string) $row['cat'] ) ) );
 		$product->set_stock_status( 'instock' );
+
+		$derived = self::derive_product_fields( $row );
+
+		// Seed client-editable fields only when they are empty, so later admin edits
+		// are not silently overwritten by a routine catalog re-import.
+		if (
+			'' !== $derived['composition'] &&
+			'' === trim( (string) $product->get_meta( '_rollsbar_composition', true ) )
+		) {
+			$product->update_meta_data( '_rollsbar_composition', $derived['composition'] );
+		}
+
+		if (
+			'' !== $derived['weight_display'] &&
+			'' === trim( (string) $product->get_meta( '_rollsbar_weight_display', true ) )
+		) {
+			$product->update_meta_data( '_rollsbar_weight_display', $derived['weight_display'] );
+		}
 
 		if ( ! empty( $row['img'] ) ) {
 			$product->update_meta_data( '_rollsbar_source_image', esc_url_raw( (string) $row['img'] ) );
