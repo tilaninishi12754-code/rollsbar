@@ -32,7 +32,7 @@ DENY = ("pass", "secret", "token", "auth", "session")
 
 def raw_request(params: dict[str, str]) -> tuple[ET.Element, dict[str, str] | None]:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.1"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.2"})
     with urllib.request.urlopen(req, context=CTX, timeout=20) as response:
         body = response.read()
     root = ET.fromstring(body)
@@ -91,12 +91,44 @@ def print_rows(label: str, root: ET.Element) -> None:
         print(f"{i}. " + ", ".join(f"{k}={v}" for k, v in sorted(row.items())))
 
 
+def print_form_metadata(label: str, root: ET.Element) -> None:
+    """Print only field/option identifiers from ISPmanager form metadata."""
+    print(f"## {label} form metadata")
+    emitted: set[str] = set()
+    count = 0
+    for node in root.iter():
+        attrs = {k.lower(): clean(v) for k, v in node.attrib.items()}
+        joined = " ".join(attrs.values()).lower()
+        if any(x in joined for x in DENY):
+            continue
+        parts: list[str] = []
+        for key in ("name", "id", "key", "type", "value"):
+            val = attrs.get(key)
+            if val and not any(x in key for x in DENY):
+                parts.append(f"{key}={val}")
+        tag = node.tag.lower()
+        text = clean(node.text or "")
+        if tag in {"field", "select", "option", "item", "value", "msg"} and text and not any(x in tag for x in DENY):
+            if len(text) <= 120:
+                parts.append(f"text={text}")
+        if parts:
+            line = f"{tag}:" + ",".join(parts)
+            if line not in emitted:
+                emitted.add(line)
+                print(line)
+                count += 1
+                if count >= 120:
+                    break
+
+
 def probe(func: str, auth: dict[str, str]) -> None:
     root, error = raw_request({**auth, "out": "xml", "func": func})
     if error is not None:
         print(f"## {func}: unsupported/error {error}")
         return
     print_rows(func, root)
+    if func == "db.edit":
+        print_form_metadata(func, root)
 
 
 if not BASE.startswith("https://"):
