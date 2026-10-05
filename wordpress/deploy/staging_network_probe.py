@@ -12,13 +12,18 @@ import urllib.request
 DOMAIN = "staging.rollsbar.ru"
 BASE_DOMAIN = "rollsbar.ru"
 EXPECTED_IPV4 = "37.140.192.67"
+AUTHORITATIVE_NS = ("ns1.reg.ru", "ns2.reg.ru")
 
 
-def dig(record_type: str, name: str) -> str:
+def dig(record_type: str, name: str, server: str | None = None) -> str:
     if not shutil.which("dig"):
         return "dig-unavailable"
+    cmd = ["dig", "+short"]
+    if server:
+        cmd.append("@" + server)
+    cmd.extend([record_type, name])
     proc = subprocess.run(
-        ["dig", "+short", record_type, name],
+        cmd,
         check=False,
         capture_output=True,
         text=True,
@@ -30,8 +35,9 @@ def dig(record_type: str, name: str) -> str:
 print(f"domain={DOMAIN}")
 print(f"base_ns={dig('NS', BASE_DOMAIN)}")
 print(f"base_soa={dig('SOA', BASE_DOMAIN)}")
-print(f"staging_ns={dig('NS', DOMAIN)}")
-print(f"staging_a_dig={dig('A', DOMAIN)}")
+for server in AUTHORITATIVE_NS:
+    print(f"authoritative_{server}_a={dig('A', DOMAIN, server)}")
+print(f"staging_a_recursive={dig('A', DOMAIN)}")
 
 try:
     infos = socket.getaddrinfo(DOMAIN, 80, type=socket.SOCK_STREAM)
@@ -51,7 +57,7 @@ for scheme in ("http", "https"):
     url = f"{scheme}://{DOMAIN}/"
     try:
         ctx = ssl.create_default_context() if scheme == "https" else None
-        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "rollsbar-staging-network-probe/1.1"})
+        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "rollsbar-staging-network-probe/1.2"})
         with urllib.request.urlopen(req, context=ctx, timeout=12) as response:
             print(f"{scheme}_status={response.status}")
     except urllib.error.HTTPError as exc:
