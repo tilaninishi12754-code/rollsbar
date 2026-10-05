@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Enable trusted Let's Encrypt TLS for the isolated RollsBar staging site.
 
-Narrow, idempotent mutation: only staging.rollsbar.ru is touched. DNS is checked
-first. ISPmanager's explicit `letsencrypt.generate` function is used; a temporary
-self-signed placeholder does not count as success. After public HTTPS verifies,
-WordPress home/siteurl are switched to HTTPS over SSH. No credentials are printed.
+Public TLS validation is the source of truth. ISPmanager can lag in how it labels
+a freshly issued certificate, so a browser-trusted HTTPS 200 is accepted even if
+the panel's certificate list has not yet changed type. No credentials are printed.
 """
 from __future__ import annotations
 
@@ -33,7 +32,7 @@ CTX = ssl.create_default_context()
 
 def api(params: dict[str, str]) -> ET.Element:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-enable-staging-ssl/1.1"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-enable-staging-ssl/1.2"})
     with urllib.request.urlopen(req, context=CTX, timeout=30) as response:
         body = response.read()
     root = ET.fromstring(body)
@@ -81,28 +80,35 @@ def trusted_cert(sid: str) -> dict[str, str] | None:
     return None
 
 
-def wait_trusted_cert(sid: str, timeout: int = 180) -> dict[str, str]:
+def trusted_https_once() -> int | None:
+    try:
+        req = urllib.request.Request(f"https://{DOMAIN}/", method="HEAD", headers={"User-Agent": "rollsbar-ssl-verify/1.2"})
+        with urllib.request.urlopen(req, context=ssl.create_default_context(), timeout=12) as response:
+            return response.status
+    except Exception:
+        return None
+
+
+def wait_https(timeout: int = 120) -> int:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        status = trusted_https_once()
+        if status is not None:
+            return status
+        time.sleep(5)
+    raise RuntimeError("Browser-trusted HTTPS did not become available in time")
+
+
+def wait_trusted_cert(sid: str, timeout: int = 180) -> dict[str, str] | None:
     deadline = time.time() + timeout
     while time.time() < deadline:
         row = trusted_cert(sid)
         if row:
             return row
+        if trusted_https_once() is not None:
+            return None
         time.sleep(5)
-    raise RuntimeError("ISPmanager did not expose a non-self-signed certificate in time")
-
-
-def wait_https(timeout: int = 90) -> int:
-    deadline = time.time() + timeout
-    last = "unavailable"
-    while time.time() < deadline:
-        try:
-            req = urllib.request.Request(f"https://{DOMAIN}/", method="HEAD", headers={"User-Agent": "rollsbar-ssl-verify/1.1"})
-            with urllib.request.urlopen(req, context=ssl.create_default_context(), timeout=12) as response:
-                return response.status
-        except Exception as exc:
-            last = exc.__class__.__name__
-            time.sleep(5)
-    raise RuntimeError(f"Trusted HTTPS did not become available in time; last={last}")
+    raise RuntimeError("Neither trusted ISPmanager cert nor browser-trusted HTTPS became available in time")
 
 
 def attach_cert_if_needed(sid: str, cert_name: str) -> None:
@@ -164,9 +170,12 @@ wp --path="$WP_PATH" option update siteurl "https://{DOMAIN}" >/dev/null
 wp --path="$WP_PATH" config set FORCE_SSL_ADMIN true --raw >/dev/null
 home="$(wp --path="$WP_PATH" option get home)"
 siteurl="$(wp --path="$WP_PATH" option get siteurl)"
+force_ssl="$(wp --path="$WP_PATH" config get FORCE_SSL_ADMIN)"
 [[ "$home" == "https://{DOMAIN}" ]]
 [[ "$siteurl" == "https://{DOMAIN}" ]]
+[[ "$force_ssl" == "true" || "$force_ssl" == "1" ]]
 echo "wordpress_https_urls=pass"
+echo "force_ssl_admin=pass"
 '''
         _, stdout, stderr = client.exec_command("bash -lc " + shlex.quote(command), timeout=60)
         out = stdout.read().decode("utf-8", errors="replace")
@@ -191,38 +200,40 @@ if EXPECTED_IP not in resolved:
     raise SystemExit(f"DNS safety gate failed: {DOMAIN} does not resolve to expected IPv4")
 print("dns_gate=pass")
 
-sid = auth()
-cert = trusted_cert(sid)
-if cert:
-    print("letsencrypt_state=trusted_certificate_already_present")
+status_now = trusted_https_once()
+if status_now is not None:
+    print(f"trusted_https=already_available status={status_now}")
 else:
-    # ISPmanager documentation: letsencrypt.generate with sok=ok creates the certificate;
-    # these are the exact defaults returned by this panel's read-only form.
-    api({
-        "out": "xml",
-        "func": "letsencrypt.generate",
-        "auth": sid,
-        "sok": "ok",
-        "domain_name": DOMAIN,
-        "domain": DOMAIN,
-        "email": EMAIL,
-        "keylen": "2048",
-        "enable_cert": "on",
-        "wildcard": "off",
-        "dns_check": "off",
-    })
-    print("letsencrypt_generate=submitted")
-    cert = wait_trusted_cert(sid)
+    sid = auth()
+    cert = trusted_cert(sid)
+    if cert:
+        cert_name = cert.get("name") or cert.get("key") or ""
+        if cert_name:
+            attach_cert_if_needed(sid, cert_name)
+    else:
+        api({
+            "out": "xml",
+            "func": "letsencrypt.generate",
+            "auth": sid,
+            "sok": "ok",
+            "domain_name": DOMAIN,
+            "domain": DOMAIN,
+            "email": EMAIL,
+            "keylen": "2048",
+            "enable_cert": "on",
+            "wildcard": "off",
+            "dns_check": "off",
+        })
+        print("letsencrypt_generate=submitted")
+        cert = wait_trusted_cert(sid)
+        if cert:
+            cert_name = cert.get("name") or cert.get("key") or ""
+            if cert_name:
+                attach_cert_if_needed(sid, cert_name)
+    status_now = wait_https()
+    print(f"trusted_https=available status={status_now}")
 
-cert_name = cert.get("name") or cert.get("key") or ""
-if not cert_name:
-    raise RuntimeError("Trusted certificate exists but its ISPmanager name is unavailable")
-print(f"trusted_certificate={cert_name}")
-attach_cert_if_needed(sid, cert_name)
-
-status = wait_https()
-print(f"https_pre_wp_status={status}")
 update_wordpress_https()
-status2 = wait_https(timeout=45)
-print(f"https_final_status={status2}")
+status_final = wait_https(timeout=45)
+print(f"https_final_status={status_final}")
 print("ENABLE STAGING SSL PASS")
