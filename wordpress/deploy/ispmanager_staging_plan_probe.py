@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Read-only ISPmanager probe for RollsBar staging and SSL parameters.
 
-Reads current website/database/SSL lists and edit forms. It never sends `sok`,
-so it cannot create or modify objects. Secrets are masked/omitted.
+Reads current website/database/SSL lists, Let's Encrypt form and event logs. It
+never sends `sok`, so it cannot create or modify objects. Secrets are masked.
 """
 from __future__ import annotations
 
@@ -27,14 +27,16 @@ SAFE_TAGS = {
     "server_hostandport", "charset", "php_mode", "php_version", "home",
     "docroot", "ipaddr", "ipaddrs", "ssl", "secure", "sslcert", "ssl_cert",
     "active", "status", "state", "version", "valid_after", "valid_before",
-    "aliases", "email", "domains", "domain"
+    "aliases", "email", "domains", "domain", "domain_name", "crtname",
+    "username", "keylen", "enable_cert", "wildcard", "dns_check", "date",
+    "message", "description", "code", "city", "org", "department"
 }
-DENY = ("pass", "secret", "token", "auth", "session", "keydata", "private")
+DENY = ("pass", "secret", "token", "auth", "session", "keydata", "private", "crt", "cacrt")
 
 
 def raw_request(params: dict[str, str]) -> tuple[ET.Element, dict[str, str] | None]:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.3"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.4"})
     with urllib.request.urlopen(req, context=CTX, timeout=20) as response:
         body = response.read()
     root = ET.fromstring(body)
@@ -63,7 +65,7 @@ def auth_params() -> dict[str, str]:
 
 def clean(text: str) -> str:
     text = text.replace(PASSWORD, "***").replace(USER, "<account-user>")
-    return " ".join(text.split())[:240]
+    return " ".join(text.split())[:300]
 
 
 def scalar_children(node: ET.Element) -> dict[str, str]:
@@ -89,7 +91,7 @@ def print_rows(label: str, root: ET.Element) -> None:
                 seen.add(sig)
                 rows.append(row)
     print(f"## {label}: {len(rows)} safe row(s)")
-    for i, row in enumerate(rows[:80], 1):
+    for i, row in enumerate(rows[:100], 1):
         print(f"{i}. " + ", ".join(f"{k}={v}" for k, v in sorted(row.items())))
 
 
@@ -110,7 +112,7 @@ def print_form_metadata(label: str, root: ET.Element) -> None:
         tag = node.tag.lower()
         text = clean(node.text or "")
         if tag in {"field", "select", "option", "item", "value", "msg"} and text and not any(x in tag for x in DENY):
-            if len(text) <= 120:
+            if len(text) <= 160:
                 parts.append(f"text={text}")
         if parts:
             line = f"{tag}:" + ",".join(parts)
@@ -118,7 +120,7 @@ def print_form_metadata(label: str, root: ET.Element) -> None:
                 emitted.add(line)
                 print(line)
                 count += 1
-                if count >= 160:
+                if count >= 200:
                     break
 
 
@@ -143,6 +145,7 @@ probe("webdomain", auth)
 probe("webdomain.edit", auth, {"elid": STAGING_DOMAIN}, metadata=True)
 probe("sslcert", auth)
 probe("letsencrypt.generate", auth, {"elid": STAGING_DOMAIN}, metadata=True)
+probe("letsencrypt.logs", auth)
 probe("db", auth)
 probe("db.edit", auth, metadata=True)
 print("mutation=not attempted")
