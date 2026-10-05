@@ -1,0 +1,45 @@
+name: ISPmanager Read-only Inventory
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/ispmanager-inventory.yml
+      - wordpress/deploy/ispmanager_inventory.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollsbar-ispmanager-inventory
+  cancel-in-progress: true
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate secrets
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: |
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+      - name: Read-only inventory
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: python3 wordpress/deploy/ispmanager_inventory.py
