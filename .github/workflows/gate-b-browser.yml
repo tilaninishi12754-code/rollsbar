@@ -1,6 +1,6 @@
 name: RollsBar Live Browser Gate B
 
-# Rerun after staging rewrite repair.
+# Rerun after HTTPS + Woo AJAX cart fixes.
 on:
   push:
     branches:
