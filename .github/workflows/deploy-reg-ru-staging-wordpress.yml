@@ -1,5 +1,6 @@
 name: Deploy REG.RU RollsBar Staging WordPress
 
+# Retry-safe live deploy; current staging is already promoted to 118 products.
 on:
   push:
     branches:
@@ -43,7 +44,7 @@ jobs:
           echo "::add-mask::$ISP_MANAGER_PASSWORD"
       - name: Install SSH dependency
         run: python3 -m pip install --disable-pip-version-check --quiet paramiko
-      - name: Bootstrap WordPress staging and 5-product Gate B seed
+      - name: Deploy WordPress staging while preserving promoted catalog
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
