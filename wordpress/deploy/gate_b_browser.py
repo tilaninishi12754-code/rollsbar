@@ -54,9 +54,43 @@ def add_first_simple_product(page: Page) -> str:
     product_name = norm(card.locator("h3").inner_text())
     require(bool(product_name), "selected smoke product has a visible name")
 
+    href = button.get_attribute("href") or ""
+    product_id = button.get_attribute("data-product_id") or ""
+    print(f"INFO  add button href={href} product_id={product_id}")
+
+    observed: list[tuple[int, str]] = []
+    def capture(response) -> None:
+        url = response.url
+        if "wc-ajax=add_to_cart" in url or "add-to-cart=" in url:
+            observed.append((response.status, url))
+    page.on("response", capture)
+
+    before_badge = ""
+    badge = page.locator(".rollsbar-cart-count").first
+    if badge.count():
+        before_badge = norm(badge.inner_text())
+
     button.click()
-    page.wait_for_timeout(1500)
-    # Woo AJAX add-to-cart normally adds the class; session/cart is the real proof below.
+    page.wait_for_timeout(2500)
+
+    after_badge = ""
+    if badge.count():
+        after_badge = norm(badge.inner_text())
+    cookie_names = sorted({c.get("name", "") for c in page.context.cookies() if "woocommerce" in c.get("name", "") or "wp_woocommerce" in c.get("name", "")})
+    button_classes = button.get_attribute("class") or ""
+    print(f"INFO  add responses={observed}")
+    print(f"INFO  cart badge before={before_badge!r} after={after_badge!r}")
+    print(f"INFO  add button classes after click={button_classes}")
+    print(f"INFO  Woo cookie names={cookie_names}")
+    print(f"INFO  browser URL after click={page.url}")
+
+    # If the native AJAX path is active, wait for Woo's observable success
+    # signals instead of assuming a click alone is enough.
+    if any("wc-ajax=add_to_cart" in url and 200 <= status < 300 for status, url in observed):
+        require("added" in button_classes or (after_badge and after_badge != before_badge), "Woo AJAX add-to-cart emitted a browser success signal")
+    else:
+        require("add-to-cart=" in page.url or any("add-to-cart=" in url and 200 <= status < 400 for status, url in observed), "add-to-cart produced either AJAX or fallback navigation")
+
     print(f"INFO  added product: {product_name}")
     return product_name
 
@@ -135,8 +169,6 @@ def assert_checkout(page: Page) -> None:
             bad_zone_controls.append(item)
     require(not bad_zone_controls, "checkout has no manual delivery-zone input/select")
 
-    # Native Blocks Local Pickup is part of Gate B target. If absent, fail so the
-    # deployment automation can configure it rather than silently accepting less.
     pickup_present = "Самовывоз" in body or "Local pickup" in body or "Pickup" in body
     require(pickup_present, "native Local Pickup is visible in checkout")
 
