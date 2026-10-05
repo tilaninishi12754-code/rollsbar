@@ -1,6 +1,6 @@
 name: WordPress Staging Bootstrap Smoke
 
-# Bootstrap smoke revision: 2026-10-02b
+# Bootstrap smoke revision: 2026-10-05 polygon-resolver
 
 on:
   push:
@@ -134,6 +134,58 @@ jobs:
             exit(1);
           }
           echo "Delivery thresholds runtime PASS\n";
+          '
+
+      - name: Verify delivery polygon sanitation and resolver
+        run: |
+          wp --path="$WP_PATH" eval '
+          $had_original = get_option("rollsbar_delivery_rules", null) !== null;
+          $original = get_option("rollsbar_delivery_rules", null);
+          try {
+            $synthetic = array(array(
+              "min_order" => 1200,
+              "areas" => array("CI synthetic polygon"),
+              "polygon" => array(
+                array(34.00, 44.90),
+                array(34.20, 44.90),
+                array(34.20, 45.00),
+                array(34.00, 45.00),
+                array(34.00, 44.90)
+              )
+            ));
+            $sanitized = RollsBar_Delivery_Rules::sanitize($synthetic);
+            if (count($sanitized) !== 1 || count($sanitized[0]["polygon"]) !== 4) {
+              fwrite(STDERR, "Polygon sanitation did not normalize the closing point\n");
+              exit(1);
+            }
+            update_option("rollsbar_delivery_rules", $sanitized, false);
+            $inside = RollsBar_Delivery_Rules::resolve_point(34.10, 44.95);
+            $outside = RollsBar_Delivery_Rules::resolve_point(35.00, 45.50);
+            if (!$inside || (int) $inside["min_order"] !== 1200) {
+              fwrite(STDERR, "Point-in-polygon resolver missed an inside point\n");
+              exit(1);
+            }
+            if ($outside !== null) {
+              fwrite(STDERR, "Point-in-polygon resolver matched an outside point\n");
+              exit(1);
+            }
+            $invalid = RollsBar_Delivery_Rules::sanitize(array(array(
+              "min_order" => 1200,
+              "areas" => array("Invalid"),
+              "polygon" => array(array(999, 999), array(34.1, 44.9))
+            )));
+            if (!empty($invalid[0]["polygon"])) {
+              fwrite(STDERR, "Invalid polygon coordinates were not rejected\n");
+              exit(1);
+            }
+            echo "Delivery polygon resolver runtime PASS\n";
+          } finally {
+            if ($had_original) {
+              update_option("rollsbar_delivery_rules", $original, false);
+            } else {
+              delete_option("rollsbar_delivery_rules");
+            }
+          }
           '
 
       - name: Verify packaged checkout fields register
