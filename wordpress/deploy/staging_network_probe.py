@@ -2,21 +2,44 @@
 """Read-only DNS/HTTP readiness probe for RollsBar staging."""
 from __future__ import annotations
 
+import shutil
 import socket
 import ssl
+import subprocess
 import urllib.error
 import urllib.request
 
 DOMAIN = "staging.rollsbar.ru"
+BASE_DOMAIN = "rollsbar.ru"
 EXPECTED_IPV4 = "37.140.192.67"
 
+
+def dig(record_type: str, name: str) -> str:
+    if not shutil.which("dig"):
+        return "dig-unavailable"
+    proc = subprocess.run(
+        ["dig", "+short", record_type, name],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    return "|".join(line.strip() for line in proc.stdout.splitlines() if line.strip()) or "none"
+
+
 print(f"domain={DOMAIN}")
+print(f"base_ns={dig('NS', BASE_DOMAIN)}")
+print(f"base_soa={dig('SOA', BASE_DOMAIN)}")
+print(f"staging_ns={dig('NS', DOMAIN)}")
+print(f"staging_a_dig={dig('A', DOMAIN)}")
+
 try:
     infos = socket.getaddrinfo(DOMAIN, 80, type=socket.SOCK_STREAM)
     ipv4 = sorted({item[4][0] for item in infos if item[0] == socket.AF_INET})
     ipv6 = sorted({item[4][0] for item in infos if item[0] == socket.AF_INET6})
 except socket.gaierror as exc:
     print(f"dns=unresolved type={exc.__class__.__name__}")
+    print(f"expected_ipv4={EXPECTED_IPV4}")
     raise SystemExit(2)
 
 print("ipv4=" + (",".join(ipv4) if ipv4 else "none"))
@@ -28,7 +51,7 @@ for scheme in ("http", "https"):
     url = f"{scheme}://{DOMAIN}/"
     try:
         ctx = ssl.create_default_context() if scheme == "https" else None
-        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "rollsbar-staging-network-probe/1.0"})
+        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "rollsbar-staging-network-probe/1.1"})
         with urllib.request.urlopen(req, context=ctx, timeout=12) as response:
             print(f"{scheme}_status={response.status}")
     except urllib.error.HTTPError as exc:
