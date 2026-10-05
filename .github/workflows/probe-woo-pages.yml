@@ -6,6 +6,7 @@ on:
       - wordpress/migration-2026-10-01
     paths:
       - .github/workflows/probe-woo-pages.yml
+      - wordpress/deploy/probe_woo_pages.py
   workflow_dispatch:
 
 permissions:
