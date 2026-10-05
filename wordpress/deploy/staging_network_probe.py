@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only DNS/HTTP readiness probe for RollsBar staging."""
+"""Read-only DNS/HTTP readiness probe for RollsBar staging. Recheck after REG.RU DNS update."""
 from __future__ import annotations
 
 import shutil
@@ -57,7 +57,7 @@ for scheme in ("http", "https"):
     url = f"{scheme}://{DOMAIN}/"
     try:
         ctx = ssl.create_default_context() if scheme == "https" else None
-        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "rollsbar-staging-network-probe/1.2"})
+        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "rollsbar-staging-network-probe/1.3"})
         with urllib.request.urlopen(req, context=ctx, timeout=12) as response:
             print(f"{scheme}_status={response.status}")
     except urllib.error.HTTPError as exc:
