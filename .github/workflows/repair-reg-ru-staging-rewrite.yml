@@ -1,0 +1,31 @@
+name: Repair REG.RU RollsBar Staging Rewrite
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/repair-reg-ru-staging-rewrite.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SSH dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+      - name: Repair staging rewrite and verify public URLs
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_CONFIRM_REWRITE_REPAIR: YES
+        run: python3 wordpress/deploy/repair_staging_rewrite.py
