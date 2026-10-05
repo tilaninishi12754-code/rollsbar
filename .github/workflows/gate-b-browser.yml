@@ -1,5 +1,6 @@
 name: RollsBar Live Browser Gate B
 
+# Rerun after staging rewrite repair.
 on:
   push:
     branches:
