@@ -1,0 +1,26 @@
+name: Diagnose RollsBar Cart Session
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/diagnose-cart-session.yml
+      - wordpress/deploy/diagnose_cart_session.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Playwright
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet playwright
+          python3 -m playwright install --with-deps chromium
+      - name: Diagnose cart persistence and rendering
+        run: python3 wordpress/deploy/diagnose_cart_session.py
