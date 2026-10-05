@@ -20,8 +20,8 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 BASE = os.environ["ISP_MANAGER_URL"].strip().rstrip("/")
-USER = os.environ["ISP_MANAGER_USER"]
-PASSWORD = os.environ["ISP_MANAGER_PASSWORD"]
+USER = os.environ["ISP_MANAGER_USER"].strip()
+PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
 VERIFY_TLS = os.environ.get("ISP_TLS_VERIFY", "1").lower() not in {"0", "false", "no"}
 
 if not BASE.startswith("https://"):
@@ -45,7 +45,7 @@ def call(params: dict[str, str]) -> tuple[int, str, bytes]:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "rollsbar-ispmanager-probe/1.1"},
+        headers={"User-Agent": "rollsbar-ispmanager-probe/1.2"},
     )
     try:
         with urllib.request.urlopen(req, context=context, timeout=20) as response:
