@@ -40,9 +40,11 @@ Verify catalog -> cart -> checkout -> order admin.
 ## Phase 5 — full catalog
 Generate WooCommerce CSV from the approved master table and import the full catalog.
 
+Status: **COMPLETE ON STAGING** — 118 product cards / 131 source rows; repeat import leaves exactly 118 products.
+
 ## Phase 6 — Rolls Bar behavior
 
-Status: **IN PROGRESS**
+Status: **IN PROGRESS — LIVE STAGING GATE B PASS**
 
 Implemented before staging:
 - [x] block-native additional checkout fields via WooCommerce Additional Checkout Fields API
@@ -59,12 +61,12 @@ Implemented before staging:
 - [x] explicit WooCommerce compatibility declarations for HPOS + Cart/Checkout Blocks
 
 Prepared architecture / pending staging or client input:
-- [ ] native WooCommerce Blocks Local Pickup configuration on staging
+- [x] native WooCommerce Blocks Local Pickup configuration on staging
 - [x] editable delivery-area table with 7 confirmed free-delivery minimum thresholds
 - [x] storefront delivery table sourced from the same editable WordPress data
-- [ ] Yandex address/map integration
-- [ ] minimal client-safe polygon editor in WordPress during Gate B/staging
-- [ ] automatic delivery-zone resolution from real polygons
+- [ ] Yandex address/map integration — runtime API key still required
+- [x] minimal client-safe polygon editor implemented in WordPress; runtime map activation waits for Yandex JS API key
+- [ ] automatic delivery-zone resolution from real polygons — resolver engine is tested, but no accepted real polygons/address geocoding yet
 - [ ] enforce the confirmed minimum-order threshold after an address resolves to a polygon
 - [ ] courier shipping method enabled only after real zone polygons exist
 - [x] order notification architecture: native WooCommerce email + async Telegram via Action Scheduler
@@ -88,11 +90,38 @@ Connect acquiring only after the site, legal pages, SSL, catalog and checkout ar
 - do not overwrite production database with staging after live orders begin
 
 
-## Staging deployment readiness — 2026-10-02
+## Staging deployment readiness — 2026-10-05
 
-Status: **PACKAGE + CLEAN BOOTSTRAP VERIFIED / REG.RU INPUT PENDING**
+Status: **REG.RU STAGING LIVE / FULL CATALOG + GATE B PASS**
 
-Prepared:
+Verified on real REG.RU staging:
+- `staging.rollsbar.ru` DNS resolves to the isolated REG.RU staging site;
+- trusted HTTPS / Let's Encrypt works;
+- WordPress 7.1.2 + WooCommerce 11.1.2;
+- isolated staging database;
+- `rollsbar-theme` + `rollsbar-core` active;
+- indexing disabled (`blog_public=0`);
+- RUB currency and pretty permalinks fixed as deployment invariants;
+- native WooCommerce Blocks Local Pickup visible in checkout;
+- full catalog promoted from 5-card smoke to 118 cards / 131 source rows;
+- repeat full import leaves exactly 118 products (idempotency proof);
+- routine live code deploy preserves the promoted 118-product catalog and no longer reruns the historical 5-card seed.
+
+Live browser Gate B (desktop + mobile) verifies:
+- HTTPS home/cart/checkout;
+- 118 product cards;
+- add-to-cart + Woo Store API session persistence;
+- ruble prices and no dollar rendering;
+- checkout fields + phone `+7` behavior;
+- no manual delivery-zone selector;
+- native Local Pickup;
+- historical mobile sticky-cart overlay regression absent;
+- no uncaught page JavaScript errors.
+
+Current next action:
+connect a restricted Yandex Maps JS API 3.0 key to staging → live-test the minimal polygon editor → client draws/accepts exact boundaries → then wire address geocoding and production delivery-zone/minimum enforcement.
+
+Historical package/readiness evidence from 2026-10-02 remains valid:
 - REG.RU staging runbook;
 - credential-free deployment scripts;
 - exact WordPress 7.1.2 / WooCommerce 11.1.2 pin;
@@ -107,12 +136,7 @@ Package-of-record build run `36961212326`: SUCCESS.
 Static gate run `36961212345`: SUCCESS.
 Clean ephemeral WordPress staging bootstrap run `36961218015`: SUCCESS.
 
-The clean smoke proved WP 7.1.2 + WooCommerce 11.1.2 install, language pack, theme/core activation, 5-card import, HTTP startup, WooCommerce pages, CheckoutFields registration and staging safety before access to REG.RU.
-
 See `STAGING_PACKAGE_RECEIPT_2026-10-02.md`.
-
-FIRST NEXT ACTION when REG.RU access arrives:
-inspect hosting facts → create staging subdomain/DB/HTTPS → preflight → bootstrap → 5-card Gate B smoke.
 
 ## Admin model no-loss checkpoint — 2026-10-02
 
@@ -138,7 +162,6 @@ Still intentionally pending:
 - any weight/volume values absent from the approved catalog source;
 - final decision on splitting Street and House into separate checkout fields;
 - any WOK remodel beyond the already approved catalog model.
-
 
 
 ## Delivery threshold checkpoint — 2026-10-02
@@ -171,3 +194,18 @@ Current non-blocking missing data:
 - direct decision if Street and House should be split in checkout.
 
 These items do not block continued WordPress migration. They block only their corresponding final production behaviors.
+
+## Live Gate B + polygon-editor checkpoint — 2026-10-05
+
+Closed by observed evidence, not by declaration:
+- live full-catalog Browser Gate B run `37353602056`: SUCCESS;
+- full-catalog promotion run `37353275622`: SUCCESS, `5 -> 118 -> 118` products across initial and repeat import;
+- native Blocks Local Pickup is visible in both desktop and mobile checkout;
+- delivery polygon storage accepts only valid coordinate ranges, strips a duplicate closing point, requires at least 3 valid vertices, and caps geometry at 150 vertices;
+- point-in-polygon resolver passes synthetic inside/outside runtime tests in the clean WordPress smoke environment;
+- Yandex editor code is gated behind `ROLLSBAR_YANDEX_MAPS_API_KEY`, so absence of a key cannot alter current checkout/delivery behavior;
+- no real delivery polygons have been invented or enabled.
+
+Runtime activation blocker:
+- Yandex Maps JS API 3.0 key with HTTP Referer restriction for staging is still absent;
+- therefore live map editing and real address/polygon tests cannot be truthfully marked complete yet.
