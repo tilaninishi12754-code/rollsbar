@@ -25,7 +25,6 @@ SECRET_FILE = ".rollsbar-staging-secrets.json"
 RUNTIME_FILE = ".rollsbar-staging-runtime.env"
 DOMAIN = "staging.rollsbar.ru"
 REPO = "https://github.com/tilaninishi12754-code/rollsbar.git"
-BRANCH = "wordpress/migration-2026-10-01"
 
 
 def shell_quote(value: str) -> str:
@@ -65,6 +64,14 @@ def read_secrets(client: paramiko.SSHClient) -> dict[str, str]:
     return data
 
 
+def mask_dynamic_secrets(data: dict[str, str]) -> None:
+    """Register generated staging secrets with GitHub Actions log masking."""
+    for key in ("db_password", "wp_admin_password"):
+        value = data.get(key, "")
+        if value:
+            print(f"::add-mask::{value}", flush=True)
+
+
 def write_runtime_env(client: paramiko.SSHClient, data: dict[str, str]) -> None:
     values = {
         "DB_NAME": data["db_name"],
@@ -93,7 +100,6 @@ def exec_checked(client: paramiko.SSHClient, command: str) -> str:
     out = stdout.read().decode("utf-8", errors="replace")
     err = stderr.read().decode("utf-8", errors="replace")
     status = stdout.channel.recv_exit_status()
-    # Never print remote stderr wholesale: some tools can echo connection strings.
     print(out, end="" if out.endswith("\n") or not out else "\n")
     if status != 0:
         if err:
@@ -113,6 +119,7 @@ client = None
 try:
     client = connect()
     data = read_secrets(client)
+    mask_dynamic_secrets(data)
     write_runtime_env(client, data)
 
     remote = f'''set -euo pipefail
