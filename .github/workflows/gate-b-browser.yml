@@ -1,0 +1,30 @@
+name: RollsBar Live Browser Gate B
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/gate-b-browser.yml
+      - wordpress/deploy/gate_b_browser.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollsbar-live-browser-gate-b
+  cancel-in-progress: true
+
+jobs:
+  browser-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Playwright
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet playwright
+          python3 -m playwright install --with-deps chromium
+      - name: Run live desktop + mobile Gate B
+        run: python3 wordpress/deploy/gate_b_browser.py
