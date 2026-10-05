@@ -1,12 +1,6 @@
 name: ISPmanager Browser Login Probe
 
 on:
-  push:
-    branches:
-      - wordpress/migration-2026-10-01
-    paths:
-      - '.github/workflows/ispmanager-browser-probe.yml'
-      - 'wordpress/deploy/ispmanager_browser_probe.py'
   workflow_dispatch:
 
 permissions:
