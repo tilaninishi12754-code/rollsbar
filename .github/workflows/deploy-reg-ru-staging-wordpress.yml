@@ -1,12 +1,16 @@
 name: Deploy REG.RU RollsBar Staging WordPress
 
-# Deploy current migration head after Gate B fixes.
 on:
   push:
     branches:
       - wordpress/migration-2026-10-01
     paths:
       - .github/workflows/deploy-reg-ru-staging-wordpress.yml
+      - wordpress/deploy/bootstrap-staging.sh
+      - wordpress/deploy/deploy_staging_wordpress.py
+      - wordpress/wp-content/themes/rollsbar-theme/**
+      - wordpress/wp-content/plugins/rollsbar-core/**
+      - wordpress/data/catalog.json
   workflow_dispatch:
 
 permissions:
