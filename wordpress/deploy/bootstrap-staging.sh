@@ -141,13 +141,57 @@ wp_cmd theme activate rollsbar-theme
 wp_cmd plugin activate rollsbar-core
 wp_cmd rollsbar catalog validate
 
+# Configure WooCommerce's modern Checkout Block Local Pickup, not the legacy
+# shipping-zone method. The pickup address is seeded from Rolls Bar's existing
+# editable business settings, so the deployment does not invent a second
+# address source. Exact client-facing details remain editable in wp-admin.
+wp_cmd eval '
+$rb = get_option( "rollsbar_settings", array() );
+$defaults = class_exists( "RollsBar_Settings" ) ? RollsBar_Settings::defaults() : array();
+$address = trim( (string) ( $rb["address"] ?? $defaults["address"] ?? "" ) );
+$city = trim( (string) ( $rb["city"] ?? $defaults["city"] ?? "" ) );
+if ( "" === $address || "" === $city ) {
+    fwrite( STDERR, "Rolls Bar city/address are required for staging Local Pickup.\n" );
+    exit( 1 );
+}
+update_option( "woocommerce_store_address", $address );
+update_option( "woocommerce_store_city", $city );
+update_option( "woocommerce_default_country", "RU" );
+update_option(
+    "woocommerce_pickup_location_settings",
+    array(
+        "enabled"    => "yes",
+        "title"      => "Самовывоз",
+        "cost"       => "",
+        "tax_status" => "none",
+    )
+);
+update_option(
+    "pickup_location_pickup_locations",
+    array(
+        array(
+            "name"    => "Rolls Bar",
+            "address" => array(
+                "address_1" => $address,
+                "city"      => $city,
+                "state"     => "",
+                "postcode"  => "",
+                "country"   => "RU",
+            ),
+            "details" => "",
+            "enabled" => true,
+        ),
+    )
+);
+'
+
 if [[ "$ROLLSBAR_IMPORT_SMOKE" == "1" ]]; then
   echo "Importing first 5 product cards for Gate B smoke..."
   wp_cmd rollsbar catalog import --limit=5
 fi
 
 # Final invariants: fail the deploy if a later change regresses staging HTTPS,
-# pretty permalinks, or the approved ruble currency.
+# pretty permalinks, ruble currency, or native Blocks Local Pickup.
 [[ "$(wp_cmd option get home)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get siteurl)" == "$STAGING_URL" ]]
 force_ssl="$(wp_cmd config get FORCE_SSL_ADMIN)"
@@ -155,6 +199,8 @@ force_ssl="$(wp_cmd config get FORCE_SSL_ADMIN)"
 grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
 [[ "$(wp_cmd option get woocommerce_currency)" == "RUB" ]]
 [[ "$(wp_cmd option get woocommerce_price_num_decimals)" == "0" ]]
+[[ "$(wp_cmd eval '$s=get_option("woocommerce_pickup_location_settings",array()); echo $s["enabled"] ?? "no";')" == "yes" ]]
+[[ "$(wp_cmd eval '$l=get_option("pickup_location_pickup_locations",array()); echo count(array_filter($l,static fn($x)=>!empty($x["enabled"])));')" -ge 1 ]]
 
 echo
 echo "BOOTSTRAP COMPLETE"
@@ -162,6 +208,7 @@ echo "Staging URL: $STAGING_URL"
 echo "WordPress: $(wp_cmd core version)"
 echo "WooCommerce: $(wp_cmd plugin get woocommerce --field=version)"
 echo "Currency: $(wp_cmd option get woocommerce_currency)"
+echo "Local Pickup: enabled"
 echo
 echo "Next: bash wordpress/deploy/verify-staging.sh"
 echo "Do NOT enable live payments, real Telegram credentials, or production indexing yet."
