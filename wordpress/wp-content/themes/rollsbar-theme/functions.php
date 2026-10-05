@@ -49,6 +49,14 @@ add_action(
 			$version
 		);
 
+		// The custom front page renders WooCommerce add-to-cart buttons itself,
+		// so explicitly load Woo's native AJAX handler and fragment refresh there.
+		// WooCommerce no longer guarantees cart fragments on every page by default.
+		if ( class_exists( 'WooCommerce' ) && is_front_page() ) {
+			wp_enqueue_script( 'wc-add-to-cart' );
+			wp_enqueue_script( 'wc-cart-fragments' );
+		}
+
 		wp_enqueue_script(
 			'rollsbar-app',
 			get_template_directory_uri() . '/assets/js/app.js',
