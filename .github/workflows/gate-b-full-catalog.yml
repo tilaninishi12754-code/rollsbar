@@ -1,0 +1,29 @@
+name: RollsBar Full Catalog Browser Gate B
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/gate-b-full-catalog.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollsbar-full-catalog-browser-gate-b
+  cancel-in-progress: true
+
+jobs:
+  browser-gate-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Playwright
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet playwright
+          python3 -m playwright install --with-deps chromium
+      - name: Run live desktop + mobile full-catalog Gate B
+        run: python3 wordpress/deploy/gate_b_full_catalog.py
