@@ -1,12 +1,6 @@
 name: REG.RU Hosting Access Probe
 
 on:
-  push:
-    branches:
-      - wordpress/migration-2026-10-01
-    paths:
-      - '.github/workflows/hosting-access-probe.yml'
-      - 'wordpress/deploy/hosting_access_probe.py'
   workflow_dispatch:
 
 permissions:
