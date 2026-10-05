@@ -20,13 +20,14 @@ CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_CREATE_STAGING", "")
 DOMAIN = "staging.rollsbar.ru"
 HOME = "www/staging.rollsbar.ru"
 IP = "37.140.192.67"
+ADMIN_EMAIL = "webmaster@staging.rollsbar.ru"
 ENDPOINT = BASE if BASE.endswith("/ispmgr") else BASE + "/ispmgr"
 CTX = ssl.create_default_context()
 
 
 def call(params: dict[str, str]) -> tuple[ET.Element, bytes]:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-create-staging/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-create-staging/1.1"})
     with urllib.request.urlopen(req, context=CTX, timeout=30) as response:
         body = response.read()
     root = ET.fromstring(body)
@@ -68,6 +69,7 @@ params = {
     "home": HOME,
     "owner": USER,
     "ipaddrs": IP,
+    "email": ADMIN_EMAIL,
     "charset": "off",
     "dirindex": "index.php index.html",
     "php": "on",
