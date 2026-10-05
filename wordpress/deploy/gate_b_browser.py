@@ -3,7 +3,8 @@
 
 Covers desktop and mobile customer journeys without placing a real order:
 home -> add product -> cart -> checkout, checkout field behavior, delivery table,
-manual-zone absence, trusted HTTPS, and the historical mobile cart-overlay bug.
+manual-zone absence, trusted HTTPS, ruble pricing, and the historical mobile
+cart-overlay bug.
 """
 from __future__ import annotations
 
@@ -12,7 +13,7 @@ import sys
 from dataclasses import dataclass
 from typing import Iterable
 
-from playwright.sync_api import Browser, Page, sync_playwright
+from playwright.sync_api import Browser, Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 BASE = "https://staging.rollsbar.ru"
 
@@ -43,6 +44,22 @@ def first_visible(page: Page, selectors: Iterable[str]):
     return None
 
 
+def store_cart_state(page: Page) -> dict:
+    return page.evaluate(
+        """async () => {
+          const r = await fetch('/wp-json/wc/store/v1/cart', {credentials:'same-origin'});
+          const j = await r.json();
+          return {
+            status: r.status,
+            names: (j.items || []).map(i => i.name),
+            itemsCount: j.items_count || 0,
+            currencyCode: j.totals ? j.totals.currency_code : '',
+            currencySymbol: j.totals ? j.totals.currency_symbol : ''
+          };
+        }"""
+    )
+
+
 def add_first_simple_product(page: Page) -> str:
     cards = page.locator(".rollsbar-product-card")
     require(cards.count() == 5, f"homepage has exactly 5 smoke product cards (got {cards.count()})")
@@ -59,10 +76,12 @@ def add_first_simple_product(page: Page) -> str:
     print(f"INFO  add button href={href} product_id={product_id}")
 
     observed: list[tuple[int, str]] = []
+
     def capture(response) -> None:
         url = response.url
         if "wc-ajax=add_to_cart" in url or "add-to-cart=" in url:
             observed.append((response.status, url))
+
     page.on("response", capture)
 
     before_badge = ""
@@ -76,7 +95,13 @@ def add_first_simple_product(page: Page) -> str:
     after_badge = ""
     if badge.count():
         after_badge = norm(badge.inner_text())
-    cookie_names = sorted({c.get("name", "") for c in page.context.cookies() if "woocommerce" in c.get("name", "") or "wp_woocommerce" in c.get("name", "")})
+    cookie_names = sorted(
+        {
+            c.get("name", "")
+            for c in page.context.cookies()
+            if "woocommerce" in c.get("name", "") or "wp_woocommerce" in c.get("name", "")
+        }
+    )
     button_classes = button.get_attribute("class") or ""
     print(f"INFO  add responses={observed}")
     print(f"INFO  cart badge before={before_badge!r} after={after_badge!r}")
@@ -84,13 +109,21 @@ def add_first_simple_product(page: Page) -> str:
     print(f"INFO  Woo cookie names={cookie_names}")
     print(f"INFO  browser URL after click={page.url}")
 
-    # If the native AJAX path is active, wait for Woo's observable success
-    # signals instead of assuming a click alone is enough.
     if any("wc-ajax=add_to_cart" in url and 200 <= status < 300 for status, url in observed):
-        require("added" in button_classes or (after_badge and after_badge != before_badge), "Woo AJAX add-to-cart emitted a browser success signal")
+        require(
+            "added" in button_classes or (after_badge and after_badge != before_badge),
+            "Woo AJAX add-to-cart emitted a browser success signal",
+        )
     else:
-        require("add-to-cart=" in page.url or any("add-to-cart=" in url and 200 <= status < 400 for status, url in observed), "add-to-cart produced either AJAX or fallback navigation")
+        require(
+            "add-to-cart=" in page.url
+            or any("add-to-cart=" in url and 200 <= status < 400 for status, url in observed),
+            "add-to-cart produced either AJAX or fallback navigation",
+        )
 
+    state = store_cart_state(page)
+    require(state.get("status") == 200, "Store API cart is reachable after add-to-cart")
+    require(product_name in state.get("names", []), f"Store API contains added product: {product_name}")
     print(f"INFO  added product: {product_name}")
     return product_name
 
@@ -107,9 +140,27 @@ def assert_delivery_table(page: Page) -> None:
 def assert_cart(page: Page, product_name: str) -> None:
     response = page.goto(BASE + "/cart/", wait_until="domcontentloaded")
     response_ok(response, "cart")
-    page.wait_for_timeout(1200)
-    body = norm(page.locator("body").inner_text())
-    require(product_name in body, f"cart contains added product: {product_name}")
+
+    state = store_cart_state(page)
+    require(state.get("status") == 200, "Store API cart remains reachable after cart navigation")
+    require(product_name in state.get("names", []), f"cart session persists added product: {product_name}")
+    require(state.get("currencyCode") == "RUB", "WooCommerce cart currency is RUB")
+    require(state.get("currencySymbol") in ("₽", "руб.", "руб"), "WooCommerce cart exposes a ruble symbol")
+
+    row = page.locator(".wc-block-cart-items__row").filter(has_text=product_name).first
+    try:
+        row.wait_for(state="visible", timeout=10000)
+    except PlaywrightTimeoutError:
+        # Keep the final body assertion for diagnostics, but fail on actual
+        # user-visible hydration rather than on an arbitrary fixed delay.
+        body = norm(page.locator("body").inner_text())
+        raise AssertionError(f"hydrated cart row not visible for {product_name}; body={body[:900]}")
+
+    require(product_name in norm(row.inner_text()), f"cart visibly renders added product: {product_name}")
+    cart_text = norm(page.locator(".wc-block-cart").inner_text())
+    require("₽" in cart_text, "cart visibly renders ruble prices")
+    require("$" not in cart_text, "cart does not render dollar prices")
+
     proceed = first_visible(
         page,
         (
