@@ -1,5 +1,6 @@
 name: Deploy REG.RU RollsBar Staging WordPress
 
+# Deploy current migration head after Gate B fixes.
 on:
   push:
     branches:
