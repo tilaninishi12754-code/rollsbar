@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Read-only ISPmanager probe for values needed to create RollsBar staging.
+"""Read-only ISPmanager probe for RollsBar staging and SSL parameters.
 
-Reads current website/database lists and blank create forms. It never sends
-`sok`, so it cannot create or modify objects. Secrets are masked/omitted.
+Reads current website/database/SSL lists and edit forms. It never sends `sok`,
+so it cannot create or modify objects. Secrets are masked/omitted.
 """
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ USER = os.environ["ISP_MANAGER_USER"].strip()
 PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
 ENDPOINT = BASE if BASE.endswith("/ispmgr") else BASE + "/ispmgr"
 CTX = ssl.create_default_context()
+STAGING_DOMAIN = "staging.rollsbar.ru"
 
 SAFE_TAGS = {
     "name", "id", "key", "pair", "owner", "site_name", "site_home",
@@ -24,15 +25,16 @@ SAFE_TAGS = {
     "lp_db_source", "lp_edit_db_server", "lp_edit_db_server_info",
     "db_server", "db_server_info", "type", "server", "server_host",
     "server_hostandport", "charset", "php_mode", "php_version", "home",
-    "docroot", "ipaddr", "ipaddrs", "ssl", "active", "status", "version",
-    "aliases", "email"
+    "docroot", "ipaddr", "ipaddrs", "ssl", "secure", "sslcert", "ssl_cert",
+    "active", "status", "state", "version", "valid_after", "valid_before",
+    "aliases", "email", "domains", "domain"
 }
-DENY = ("pass", "secret", "token", "auth", "session")
+DENY = ("pass", "secret", "token", "auth", "session", "keydata", "private")
 
 
 def raw_request(params: dict[str, str]) -> tuple[ET.Element, dict[str, str] | None]:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.2"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.3"})
     with urllib.request.urlopen(req, context=CTX, timeout=20) as response:
         body = response.read()
     root = ET.fromstring(body)
@@ -92,7 +94,6 @@ def print_rows(label: str, root: ET.Element) -> None:
 
 
 def print_form_metadata(label: str, root: ET.Element) -> None:
-    """Print only field/option identifiers from ISPmanager form metadata."""
     print(f"## {label} form metadata")
     emitted: set[str] = set()
     count = 0
@@ -117,17 +118,18 @@ def print_form_metadata(label: str, root: ET.Element) -> None:
                 emitted.add(line)
                 print(line)
                 count += 1
-                if count >= 120:
+                if count >= 160:
                     break
 
 
-def probe(func: str, auth: dict[str, str]) -> None:
-    root, error = raw_request({**auth, "out": "xml", "func": func})
+def probe(func: str, auth: dict[str, str], extra: dict[str, str] | None = None, metadata: bool = False) -> None:
+    params = {**auth, "out": "xml", "func": func, **(extra or {})}
+    root, error = raw_request(params)
     if error is not None:
         print(f"## {func}: unsupported/error {error}")
         return
     print_rows(func, root)
-    if func == "db.edit":
+    if metadata:
         print_form_metadata(func, root)
 
 
@@ -137,7 +139,11 @@ if not BASE.startswith("https://"):
 auth = auth_params()
 print("ISPmanager RollsBar staging plan probe")
 print(f"endpoint={urllib.parse.urlsplit(ENDPOINT).hostname}")
-for fn in ("webdomain", "site", "site.edit", "webdomain.edit", "db", "db.edit"):
-    probe(fn, auth)
+probe("webdomain", auth)
+probe("webdomain.edit", auth, {"elid": STAGING_DOMAIN}, metadata=True)
+probe("sslcert", auth)
+probe("letsencrypt.generate", auth, {"elid": STAGING_DOMAIN}, metadata=True)
+probe("db", auth)
+probe("db.edit", auth, metadata=True)
 print("mutation=not attempted")
 print("STAGING PLAN PROBE PASS")
