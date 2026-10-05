@@ -2,12 +2,6 @@ name: ISPmanager Staging Probe
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - wordpress/migration-2026-10-01
-    paths:
-      - '.github/workflows/ispmanager-staging-probe.yml'
-      - 'wordpress/deploy/ispmanager_probe.py'
 
 permissions:
   contents: read
