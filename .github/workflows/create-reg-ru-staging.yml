@@ -1,5 +1,6 @@
 name: Create REG.RU RollsBar Staging
 
+# Explicit deployment workflow: edits to the Python helper alone do not deploy.
 on:
   push:
     branches:
