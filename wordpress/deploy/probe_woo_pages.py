@@ -45,7 +45,6 @@ def run(client: paramiko.SSHClient, command: str) -> str:
 client = None
 try:
     client = connect()
-    wp = f"$HOME/www/{DOMAIN}"
     php = r'''
 $keys = array(
   "cart" => "woocommerce_cart_page_id",
@@ -69,7 +68,7 @@ echo "home=" . home_url("/") . "\n";
 '''
     command = f'''set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
-WP_PATH={shlex.quote(wp)}
+WP_PATH="$HOME/www/{DOMAIN}"
 wp --path="$WP_PATH" eval {shlex.quote(php)}
 printf 'mutation=not attempted\n'
 printf 'WOO PAGE PROBE PASS\n'
