@@ -109,6 +109,15 @@ else
 fi
 wp_cmd plugin activate woocommerce
 
+# Rolls Bar prices are ruble-denominated integer menu prices. A fresh
+# WooCommerce install defaults to USD; enforce the project currency so staging
+# cannot silently render approved prices as dollars.
+wp_cmd option update woocommerce_currency 'RUB'
+wp_cmd option update woocommerce_currency_pos 'right_space'
+wp_cmd option update woocommerce_price_num_decimals '0'
+wp_cmd option update woocommerce_price_decimal_sep ','
+wp_cmd option update woocommerce_price_thousand_sep ' '
+
 theme_src="$PROJECT_ROOT/wordpress/wp-content/themes/rollsbar-theme"
 plugin_src="$PROJECT_ROOT/wordpress/wp-content/plugins/rollsbar-core"
 theme_dst="$WP_PATH/wp-content/themes/rollsbar-theme"
@@ -137,19 +146,22 @@ if [[ "$ROLLSBAR_IMPORT_SMOKE" == "1" ]]; then
   wp_cmd rollsbar catalog import --limit=5
 fi
 
-# Final invariants: fail the deploy if a later change regresses the staging
-# scheme or the pretty-permalink front controller.
+# Final invariants: fail the deploy if a later change regresses staging HTTPS,
+# pretty permalinks, or the approved ruble currency.
 [[ "$(wp_cmd option get home)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get siteurl)" == "$STAGING_URL" ]]
 force_ssl="$(wp_cmd config get FORCE_SSL_ADMIN)"
 [[ "$force_ssl" == "true" || "$force_ssl" == "1" ]]
 grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
+[[ "$(wp_cmd option get woocommerce_currency)" == "RUB" ]]
+[[ "$(wp_cmd option get woocommerce_price_num_decimals)" == "0" ]]
 
 echo
 echo "BOOTSTRAP COMPLETE"
 echo "Staging URL: $STAGING_URL"
 echo "WordPress: $(wp_cmd core version)"
 echo "WooCommerce: $(wp_cmd plugin get woocommerce --field=version)"
+echo "Currency: $(wp_cmd option get woocommerce_currency)"
 echo
 echo "Next: bash wordpress/deploy/verify-staging.sh"
 echo "Do NOT enable live payments, real Telegram credentials, or production indexing yet."
