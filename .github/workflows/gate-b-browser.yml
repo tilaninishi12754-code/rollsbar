@@ -1,6 +1,6 @@
 name: RollsBar Live Browser Gate B
 
-# Rerun after HTTPS + Woo AJAX cart fixes.
+# Rerun after native WooCommerce Blocks Local Pickup configuration.
 on:
   push:
     branches:
