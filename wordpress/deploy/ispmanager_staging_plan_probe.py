@@ -18,6 +18,7 @@ PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
 ENDPOINT = BASE if BASE.endswith("/ispmgr") else BASE + "/ispmgr"
 CTX = ssl.create_default_context()
 STAGING_DOMAIN = "staging.rollsbar.ru"
+STAGING_CERT = "staging.rollsbar.ru_le1"
 
 SAFE_TAGS = {
     "name", "id", "key", "pair", "owner", "site_name", "site_home",
@@ -29,14 +30,14 @@ SAFE_TAGS = {
     "active", "status", "state", "version", "valid_after", "valid_before",
     "aliases", "email", "domains", "domain", "domain_name", "crtname",
     "username", "keylen", "enable_cert", "wildcard", "dns_check", "date",
-    "message", "description", "code", "city", "org", "department"
+    "message", "description", "code", "city", "org", "department", "level"
 }
 DENY = ("pass", "secret", "token", "auth", "session", "keydata", "private", "crt", "cacrt")
 
 
 def raw_request(params: dict[str, str]) -> tuple[ET.Element, dict[str, str] | None]:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.4"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.5"})
     with urllib.request.urlopen(req, context=CTX, timeout=20) as response:
         body = response.read()
     root = ET.fromstring(body)
@@ -65,7 +66,7 @@ def auth_params() -> dict[str, str]:
 
 def clean(text: str) -> str:
     text = text.replace(PASSWORD, "***").replace(USER, "<account-user>")
-    return " ".join(text.split())[:300]
+    return " ".join(text.split())[:500]
 
 
 def scalar_children(node: ET.Element) -> dict[str, str]:
@@ -112,7 +113,7 @@ def print_form_metadata(label: str, root: ET.Element) -> None:
         tag = node.tag.lower()
         text = clean(node.text or "")
         if tag in {"field", "select", "option", "item", "value", "msg"} and text and not any(x in tag for x in DENY):
-            if len(text) <= 160:
+            if len(text) <= 220:
                 parts.append(f"text={text}")
         if parts:
             line = f"{tag}:" + ",".join(parts)
@@ -145,7 +146,7 @@ probe("webdomain", auth)
 probe("webdomain.edit", auth, {"elid": STAGING_DOMAIN}, metadata=True)
 probe("sslcert", auth)
 probe("letsencrypt.generate", auth, {"elid": STAGING_DOMAIN}, metadata=True)
-probe("letsencrypt.logs", auth)
+probe("letsencrypt.logs", auth, {"elid": STAGING_CERT}, metadata=True)
 probe("db", auth)
 probe("db.edit", auth, metadata=True)
 print("mutation=not attempted")
