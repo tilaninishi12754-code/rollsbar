@@ -14,6 +14,13 @@ WP_LOCALE="${WP_LOCALE:-ru_RU}"
 WP_TITLE="${WP_TITLE:-Rolls Bar — Staging}"
 ROLLSBAR_IMPORT_SMOKE="${ROLLSBAR_IMPORT_SMOKE:-1}"
 
+# Once the public staging certificate exists, HTTPS is a permanent staging
+# invariant. Older orchestrators may still pass the historical HTTP URL; do
+# not allow a routine redeploy to downgrade WordPress home/siteurl again.
+if [[ "$STAGING_URL" == "http://staging.rollsbar.ru" || "$STAGING_URL" == "http://staging.rollsbar.ru/" ]]; then
+  STAGING_URL="https://staging.rollsbar.ru"
+fi
+
 wp_cmd(){ wp --path="$WP_PATH" "$@"; }
 
 if ! command -v wp >/dev/null 2>&1; then
@@ -67,12 +74,33 @@ wp_cmd config set DISALLOW_FILE_EDIT true --raw
 wp_cmd config set WP_DEBUG true --raw
 wp_cmd config set WP_DEBUG_LOG true --raw
 wp_cmd config set WP_DEBUG_DISPLAY false --raw
+wp_cmd config set FORCE_SSL_ADMIN true --raw
 
 wp_cmd option update home "$STAGING_URL"
 wp_cmd option update siteurl "$STAGING_URL"
 wp_cmd option update blog_public 0
 wp_cmd option update permalink_structure '/%postname%/'
 wp_cmd rewrite flush --hard
+
+# REG.RU's Apache setup did not create .htaccess on the first WP-CLI hard
+# flush. Ensure the standard WordPress front-controller rules exist so Woo
+# pages such as /cart/ and /checkout/ do not become Apache 404s.
+if [[ ! -f "$WP_PATH/.htaccess" ]] || ! grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"; then
+  cat > "$WP_PATH/.htaccess" <<'HTACCESS'
+# BEGIN WordPress
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+# END WordPress
+HTACCESS
+  chmod 0644 "$WP_PATH/.htaccess"
+fi
 
 if wp_cmd plugin is-installed woocommerce; then
   wp_cmd plugin update woocommerce --version="$WC_VERSION"
@@ -108,6 +136,14 @@ if [[ "$ROLLSBAR_IMPORT_SMOKE" == "1" ]]; then
   echo "Importing first 5 product cards for Gate B smoke..."
   wp_cmd rollsbar catalog import --limit=5
 fi
+
+# Final invariants: fail the deploy if a later change regresses the staging
+# scheme or the pretty-permalink front controller.
+[[ "$(wp_cmd option get home)" == "$STAGING_URL" ]]
+[[ "$(wp_cmd option get siteurl)" == "$STAGING_URL" ]]
+force_ssl="$(wp_cmd config get FORCE_SSL_ADMIN)"
+[[ "$force_ssl" == "true" || "$force_ssl" == "1" ]]
+grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
 
 echo
 echo "BOOTSTRAP COMPLETE"
