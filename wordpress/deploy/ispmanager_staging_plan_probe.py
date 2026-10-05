@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Read-only ISPmanager probe for values needed to create RollsBar staging.
 
-Reads the current site/database lists and blank create forms. It never sends
+Reads current website/database lists and blank create forms. It never sends
 `sok`, so it cannot create or modify objects. Secrets are masked/omitted.
 """
 from __future__ import annotations
@@ -24,21 +24,29 @@ SAFE_TAGS = {
     "lp_db_source", "lp_edit_db_server", "lp_edit_db_server_info",
     "db_server", "db_server_info", "type", "server", "server_host",
     "server_hostandport", "charset", "php_mode", "php_version", "home",
-    "docroot", "ipaddr", "ipaddrs", "ssl", "active", "status", "version"
+    "docroot", "ipaddr", "ipaddrs", "ssl", "active", "status", "version",
+    "aliases", "email"
 }
 DENY = ("pass", "secret", "token", "auth", "session")
 
 
-def request(params: dict[str, str]) -> ET.Element:
+def raw_request(params: dict[str, str]) -> tuple[ET.Element, dict[str, str] | None]:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-staging-plan-probe/1.1"})
     with urllib.request.urlopen(req, context=CTX, timeout=20) as response:
         body = response.read()
     root = ET.fromstring(body)
     err = root.find(".//error")
+    details = None
     if err is not None:
         details = {k: v for k, v in err.attrib.items() if not any(x in k.lower() for x in DENY)}
-        raise SystemExit(f"API error func={params.get('func')}: {details}")
+    return root, details
+
+
+def request(params: dict[str, str]) -> ET.Element:
+    root, error = raw_request(params)
+    if error is not None:
+        raise RuntimeError(str(error))
     return root
 
 
@@ -60,9 +68,7 @@ def scalar_children(node: ET.Element) -> dict[str, str]:
     row: dict[str, str] = {}
     for child in list(node):
         tag = child.tag.lower()
-        if any(x in tag for x in DENY):
-            continue
-        if len(list(child)):
+        if any(x in tag for x in DENY) or len(list(child)):
             continue
         text = clean(child.text or "")
         if text and tag in SAFE_TAGS:
@@ -81,12 +87,15 @@ def print_rows(label: str, root: ET.Element) -> None:
                 seen.add(sig)
                 rows.append(row)
     print(f"## {label}: {len(rows)} safe row(s)")
-    for i, row in enumerate(rows[:60], 1):
+    for i, row in enumerate(rows[:80], 1):
         print(f"{i}. " + ", ".join(f"{k}={v}" for k, v in sorted(row.items())))
 
 
 def probe(func: str, auth: dict[str, str]) -> None:
-    root = request({**auth, "out": "xml", "func": func})
+    root, error = raw_request({**auth, "out": "xml", "func": func})
+    if error is not None:
+        print(f"## {func}: unsupported/error {error}")
+        return
     print_rows(func, root)
 
 
@@ -96,7 +105,7 @@ if not BASE.startswith("https://"):
 auth = auth_params()
 print("ISPmanager RollsBar staging plan probe")
 print(f"endpoint={urllib.parse.urlsplit(ENDPOINT).hostname}")
-for fn in ("site", "site.edit", "db", "db.edit"):
+for fn in ("webdomain", "site", "site.edit", "webdomain.edit", "db", "db.edit"):
     probe(fn, auth)
 print("mutation=not attempted")
 print("STAGING PLAN PROBE PASS")
