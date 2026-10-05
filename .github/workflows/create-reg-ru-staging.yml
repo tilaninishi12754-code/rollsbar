@@ -1,0 +1,33 @@
+name: Create REG.RU RollsBar Staging
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/create-reg-ru-staging.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollsbar-create-reg-ru-staging
+  cancel-in-progress: false
+
+jobs:
+  create-site:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create isolated staging WWW domain
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_CONFIRM_CREATE_STAGING: YES
+        run: python3 wordpress/deploy/create_staging_site.py
