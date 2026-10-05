@@ -6,6 +6,7 @@ on:
       - wordpress/migration-2026-10-01
     paths:
       - .github/workflows/enable-reg-ru-staging-ssl.yml
+      - wordpress/deploy/enable_staging_ssl.py
   workflow_dispatch:
 
 permissions:
