@@ -1,0 +1,22 @@
+name: RollsBar Staging Network Probe
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/staging-network-probe.yml
+      - wordpress/deploy/staging_network_probe.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe staging DNS and HTTP readiness
+        run: python3 wordpress/deploy/staging_network_probe.py
