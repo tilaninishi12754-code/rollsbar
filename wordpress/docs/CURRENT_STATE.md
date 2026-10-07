@@ -14,8 +14,8 @@ This file is the explicit handoff checkpoint for continuing RollsBar in a new Ch
 ## Current branch
 `wordpress/migration-2026-10-01`
 
-Checkpoint at time of writing:
-`5bd00041e7dcb1c58bfd9464a9be5c151f93191c` — `docs: checkpoint full Gate B and polygon editor readiness`
+Implementation checkpoint immediately before this documentation update:
+`f25a0a6c162c32c6ea8b969774344e68afa0b235` — `ci: add manual address-provider comparison workflow`.
 
 A new session MUST read the branch HEAD again because later commits may exist.
 
@@ -68,7 +68,7 @@ Implemented in `rollsbar-core`:
 - polygon vertex limit and coordinate sanitation;
 - point-in-polygon resolver;
 - clean runtime tests for inside/outside resolution;
-- Yandex editor integration is gated behind runtime key configuration so current checkout behavior is unchanged without a key.
+- the existing Yandex editor adapter remains dormant until explicitly configured, so current checkout behavior is unchanged without a key.
 
 ## Map/geocoder provider decision — OPEN
 Do NOT assume Yandex is final merely because the first editor shell targets Yandex.
@@ -83,9 +83,27 @@ Before committing to a provider, compare Yandex Maps, 2GIS and DaData/OSM/MapLib
 - ability to reject low-accuracy geocodes rather than guess a zone;
 - operational ownership under a client-owned account.
 
+### Provider comparison harness — READY, NOT YET RUN
+Added on 2026-10-07:
+- `wordpress/tools/compare_address_providers.py`;
+- `.github/workflows/compare-address-providers.yml`;
+- manual, evidence-only run against Yandex / 2GIS / DaData;
+- accepts up to 50 addresses and records normalized address, coordinates, provider precision signal, latency and pairwise coordinate deltas;
+- writes Markdown + JSON evidence artifacts;
+- does not enable courier logic, modify checkout or choose a provider automatically;
+- credentials are read only from the existing GitHub `staging` environment and are never printed.
+
+Expected staging secret names for the comparison run:
+- `ROLLSBAR_YANDEX_GEOCODER_KEY`;
+- `ROLLSBAR_2GIS_API_KEY`;
+- `ROLLSBAR_DADATA_API_KEY`.
+
+The comparison is not complete until 20–30 real delivery addresses are tested with actual provider credentials.
+
 ## Important unresolved inputs / decisions
+- 20–30 real test addresses spanning central areas, outer areas and delivery boundaries;
 - exact client-drawn polygon boundaries;
-- final map/geocoder provider + API account/key;
+- final map/geocoder provider + client-owned API account/key;
 - final vacancy questionnaire;
 - source weights/volumes not present in approved source;
 - owner/client decision whether checkout should split Street and House;
@@ -94,12 +112,13 @@ Before committing to a provider, compare Yandex Maps, 2GIS and DaData/OSM/MapLib
 - acquiring/payment phase later.
 
 ## NEXT ACTION
-1. Finish provider decision: Yandex vs 2GIS vs DaData + provider-independent map layer.
-2. If needed, collect 20-30 real test addresses spanning central areas, outer areas and polygon boundaries.
-3. Configure the chosen provider in a client-owned account/secret.
-4. Live-test the WordPress polygon editor on staging.
-5. Have client draw/correct exact polygons on staging.
-6. Only then wire `address -> coordinates -> polygon -> confirmed minimum threshold` and enable courier logic.
+1. Assemble 20–30 real Simferopol delivery addresses covering central, outer and boundary cases.
+2. Add whichever test credentials are available to GitHub environment `staging` under the secret names above. Never put keys in chat or Git.
+3. Run `Compare address providers` from the current migration branch and preserve the Markdown/JSON evidence.
+4. Choose provider only after reviewing real accuracy + official licensing/cost.
+5. Configure the selected provider in a client-owned account/secret and live-test the WordPress polygon editor on staging.
+6. Have client draw/correct exact polygons on staging.
+7. Only then wire `address -> coordinates -> polygon -> confirmed minimum threshold` and enable courier logic.
 
 ## New-chat recovery protocol
 In a new chat inside the same ChatGPT Project, the first instruction should be:
