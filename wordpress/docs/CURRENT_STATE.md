@@ -13,13 +13,13 @@ This file is the explicit handoff checkpoint for continuing RollsBar in a new Ch
 
 ## Current Git state
 Working branch: `wordpress/migration-2026-10-01`.
-The working branch advanced through the provider-comparison harness and verified-address dataset work; always re-read its live HEAD before continuing.
+The working branch now includes the DaData-first provider-evaluation update; always re-read its live HEAD before continuing.
 
 Approved baseline remains:
 `approved/site-2026-10-01 = a5e524392abcf89ffd5ace2a18218a6b59ed3b61`.
 Do not modify it.
 
-Default branch `main` now contains one infrastructure-only manual Actions launcher for the provider comparison. It does not contain the migration code and does not deploy anything. The launcher explicitly checks out `wordpress/migration-2026-10-01`, uses environment `staging`, has `contents: read`, and only creates comparison evidence artifacts.
+Default branch `main` contains one infrastructure-only manual Actions launcher for address-provider evaluation. It does not contain migration code and does not deploy anything. The launcher checks out `wordpress/migration-2026-10-01`, uses environment `staging`, has `contents: read`, and only creates evidence artifacts.
 
 A new session MUST read both the working branch HEAD and current `main` HEAD again because later commits may exist.
 
@@ -73,50 +73,61 @@ Implemented in `rollsbar-core`:
 - clean runtime tests for inside/outside resolution;
 - the existing Yandex editor adapter remains dormant until explicitly configured, so current checkout behavior is unchanged without a key.
 
-## Map/geocoder provider decision — OPEN
-Do NOT assume Yandex is final merely because the first editor shell targets Yandex.
+## Address provider direction — DADATA FIRST
+Owner clarified the business constraint on 2026-10-07: do not pay for Yandex/2GIS unless the low-cost path fails on real addresses.
 
-Current architecture intentionally keeps business logic provider-independent:
-`address provider -> lat/lon -> RollsBar polygon resolver -> delivery tier/minimum`.
+Preferred checkout architecture is now:
+`DaData Suggestions -> lat/lon -> RollsBar polygon resolver -> delivery tier/minimum`.
 
-Before committing to a provider, compare Yandex Maps, 2GIS and DaData on:
-- licensing/cost for a small commercial restaurant site;
-- address accuracy in Simferopol and outer delivery areas;
-- client-safe polygon editing;
-- ability to reject low-accuracy geocodes rather than guess a zone;
-- operational ownership under a client-owned account.
+Important distinction:
+- DaData `Suggestions` has a free tier up to 10,000 requests/day;
+- selected address suggestions already expose `geo_lat`, `geo_lon` and `qc_geo`;
+- therefore RollsBar does NOT need DaData's separately billed geocoding endpoint for the normal checkout flow;
+- Yandex and 2GIS are fallback comparators only, not equal first-choice candidates.
 
-## Provider comparison harness — READY, NOT YET RUN WITH LIVE KEYS
+Country-label requirement:
+- production UI must NOT render provider country labels;
+- do not render raw `country` / `country_iso_code` / unrestricted provider strings as customer-facing geography;
+- build the visible checkout address only from approved local components such as locality/city, street and house;
+- the backend may inspect provider country metadata only as a diagnostic/safety signal;
+- before production integration, verify the real 25-address Crimean test set and reject/flag unexpected provider country classification rather than silently trusting it.
+
+This is a product/UI handling rule, not a geopolitical assertion. Provider-returned metadata is treated as implementation data only.
+
+## Provider evaluation harness — READY, LIVE DADATA RUN PENDING
 Working branch contains:
 - `wordpress/tools/compare_address_providers.py`;
 - `wordpress/data/address-provider-test-addresses.json` with 25 publicly verified address probes spanning central Simferopol and outer delivery localities.
+
+The evaluator is now DaData-first:
+- DaData can be tested alone with `ROLLSBAR_DADATA_API_KEY`;
+- Yandex/2GIS are optional fallback comparators if keys are available;
+- DaData output records `country`, `country_iso`, `qc_geo`, coordinates and latency;
+- any non-`RU` DaData country code is explicitly flagged as `COUNTRY_MISMATCH` in evidence;
+- country fields are diagnostic only and must not be displayed in production checkout.
 
 Default branch `main` contains:
 - `.github/workflows/compare-address-providers.yml` as the manual launcher required for GitHub `workflow_dispatch` visibility.
 
 The launcher:
-- checks out only `wordpress/migration-2026-10-01` for the actual test code/data;
+- checks out only `wordpress/migration-2026-10-01` for actual test code/data;
 - uses GitHub environment `staging`;
 - has read-only repository permission;
-- defaults to the 25-address repository set, with an optional JSON override;
-- compares whichever of Yandex / 2GIS / DaData credentials are present;
-- records normalized address, coordinates, provider precision signal, latency and pairwise coordinate deltas;
+- defaults to the verified 25-address repository set, with an optional JSON override;
 - writes Markdown + JSON evidence artifacts;
-- does NOT deploy, modify checkout, enable courier logic or choose a provider automatically;
+- does NOT deploy, modify checkout or enable courier logic;
 - never prints API secret values.
 
 Expected staging secret names:
-- `ROLLSBAR_YANDEX_GEOCODER_KEY`;
-- `ROLLSBAR_2GIS_API_KEY`;
-- `ROLLSBAR_DADATA_API_KEY`.
-
-The comparison is not complete until the workflow is run with actual provider credentials and its output is reviewed.
+- preferred/required next: `ROLLSBAR_DADATA_API_KEY`;
+- optional fallback comparison only: `ROLLSBAR_YANDEX_GEOCODER_KEY`;
+- optional fallback comparison only: `ROLLSBAR_2GIS_API_KEY`.
 
 ## Important unresolved inputs / decisions
-- actual provider test credentials in client/user-controlled GitHub staging environment;
-- provider comparison result on the 25-address set;
+- DaData API key in client/user-controlled GitHub staging environment;
+- DaData result on the 25-address Crimean test set, including country classification and coordinate precision;
 - exact client-drawn polygon boundaries;
-- final map/geocoder provider + client-owned API account/key;
+- whether a separate map-rendering layer is needed for client polygon editing after DaData address lookup is accepted;
 - final vacancy questionnaire;
 - source weights/volumes not present in approved source;
 - owner/client decision whether checkout should split Street and House;
@@ -125,13 +136,12 @@ The comparison is not complete until the workflow is run with actual provider cr
 - acquiring/payment phase later.
 
 ## NEXT ACTION
-1. Add whichever provider test credentials are available to GitHub environment `staging` under the secret names above. Never put keys in chat or Git.
-2. From GitHub Actions run `Compare address providers`; leave the optional address override empty to use the verified 25-address set.
-3. Preserve and review the Markdown/JSON comparison evidence.
-4. Choose provider only after reviewing real address accuracy + official licensing/cost.
-5. Configure the selected provider in a client-owned account/secret and live-test the WordPress polygon editor on staging.
-6. Have client draw/correct exact polygons on staging.
-7. Only then wire `address -> coordinates -> polygon -> confirmed minimum threshold` and enable courier logic.
+1. Create/use a DaData account on the free Suggestions tariff and place only its API key into GitHub environment `staging` as `ROLLSBAR_DADATA_API_KEY`. Never put the key in chat or Git.
+2. Run GitHub Actions -> `Compare address providers`; leave the optional address override empty.
+3. Review all 25 DaData results for: exact/locality precision (`qc_geo`), usable coordinates and country classification. Any non-RU code is a hard review flag.
+4. If DaData passes, use it as the checkout address/coordinate provider and keep country hidden from customer-facing UI.
+5. Only if DaData materially fails coverage/precision, evaluate paid Yandex/2GIS fallback.
+6. Then live-test polygon editing on staging, have the client draw/correct exact polygons, and only after that enable `address -> coordinates -> polygon -> confirmed minimum threshold` courier logic.
 
 ## New-chat recovery protocol
 In a new chat inside the same ChatGPT Project, the first instruction should be:
