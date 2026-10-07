@@ -4,8 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       addresses_json:
-        description: 'JSON array of 20-30 real Simferopol delivery addresses'
-        required: true
+        description: 'Optional JSON array override. Leave empty to use the verified 25-address repository set.'
+        required: false
+        default: ''
         type: string
 
 env:
@@ -24,11 +25,17 @@ jobs:
 
       - name: Run provider comparison
         env:
-          ROLLSBAR_TEST_ADDRESSES_JSON: ${{ inputs.addresses_json }}
+          INPUT_ADDRESSES_JSON: ${{ inputs.addresses_json }}
           ROLLSBAR_YANDEX_GEOCODER_KEY: ${{ secrets.ROLLSBAR_YANDEX_GEOCODER_KEY }}
           ROLLSBAR_2GIS_API_KEY: ${{ secrets.ROLLSBAR_2GIS_API_KEY }}
           ROLLSBAR_DADATA_API_KEY: ${{ secrets.ROLLSBAR_DADATA_API_KEY }}
-        run: python3 wordpress/tools/compare_address_providers.py
+        run: |
+          if [ -n "$INPUT_ADDRESSES_JSON" ]; then
+            export ROLLSBAR_TEST_ADDRESSES_JSON="$INPUT_ADDRESSES_JSON"
+          else
+            export ROLLSBAR_TEST_ADDRESSES_JSON="$(cat wordpress/data/address-provider-test-addresses.json)"
+          fi
+          python3 wordpress/tools/compare_address_providers.py
 
       - name: Add report to workflow summary
         if: always() && hashFiles('address-provider-comparison.md') != ''
