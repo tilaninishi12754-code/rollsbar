@@ -26,6 +26,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import json
+          import re
           import sys
           from playwright.sync_api import sync_playwright
 
@@ -45,18 +46,32 @@ jobs:
                           return candidate
               return None
 
-          def visible_input_meta(page):
-              return page.locator("input").evaluate_all("""els => els.filter(el => {
+          def control_meta(page):
+              return page.locator("input, select, textarea, button").evaluate_all("""els => els.map(el => {
                 const r = el.getBoundingClientRect();
                 const s = getComputedStyle(el);
-                return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none';
-              }).map(el => ({
-                name: el.getAttribute('name') || '',
-                id: el.id || '',
-                autocomplete: el.getAttribute('autocomplete') || '',
-                placeholder: el.getAttribute('placeholder') || '',
-                aria: el.getAttribute('aria-label') || ''
-              }))""")
+                let label = '';
+                if (el.id) {
+                  const l = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');
+                  if (l) label = (l.textContent || '').trim();
+                }
+                if (!label && el.closest('.wc-block-components-text-input')) {
+                  const l = el.closest('.wc-block-components-text-input').querySelector('label');
+                  if (l) label = (l.textContent || '').trim();
+                }
+                return {
+                  tag: el.tagName.toLowerCase(),
+                  visible: r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none',
+                  name: el.getAttribute('name') || '',
+                  id: el.id || '',
+                  type: el.getAttribute('type') || '',
+                  autocomplete: el.getAttribute('autocomplete') || '',
+                  placeholder: el.getAttribute('placeholder') || '',
+                  aria: el.getAttribute('aria-label') || '',
+                  label,
+                  text: el.tagName === 'BUTTON' ? (el.textContent || '').trim().slice(0,120) : ''
+                };
+              })""")
 
           def wait_resolved(page, input_locator):
               for _ in range(40):
@@ -88,7 +103,9 @@ jobs:
                   ctx = browser.new_context(viewport={"width": 1440, "height": 1000}, locale="ru-RU")
                   page = ctx.new_page()
                   page_errors = []
+                  console_errors = []
                   page.on("pageerror", lambda exc: page_errors.append(str(exc)))
+                  page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
 
                   response = page.goto(BASE + "/", wait_until="domcontentloaded")
                   require(response is not None and 200 <= response.status < 400, "staging home is reachable")
@@ -106,7 +123,7 @@ jobs:
 
                   response = page.goto(BASE + "/checkout/", wait_until="domcontentloaded")
                   require(response is not None and 200 <= response.status < 400, "checkout opens with cart session")
-                  page.wait_for_timeout(2500)
+                  page.wait_for_timeout(10000)
 
                   cfg = page.evaluate("""() => {
                     const c = window.rollsBarCheckoutConfig || {};
@@ -124,7 +141,15 @@ jobs:
                       "input[autocomplete='address-line1']",
                   ))
                   if address is None:
-                      print("INFO visible_inputs=" + json.dumps(visible_input_meta(page), ensure_ascii=False))
+                      body = re.sub(r"\s+", " ", page.locator("body").inner_text()).strip()
+                      controls = control_meta(page)
+                      print("INFO checkout_url=" + page.url)
+                      print("INFO total_inputs=" + str(page.locator('input').count()))
+                      print("INFO wc_checkout_count=" + str(page.locator('.wc-block-checkout').count()))
+                      print("INFO body_text=" + body[:2500])
+                      print("INFO controls=" + json.dumps(controls[:80], ensure_ascii=False))
+                      print("INFO page_errors=" + json.dumps(page_errors, ensure_ascii=False))
+                      print("INFO console_errors=" + json.dumps(console_errors[-20:], ensure_ascii=False))
                   require(address is not None, "checkout has a visible address-line input")
 
                   exact = choose_first(page, address, "Симферополь Гагарина 17")
