@@ -51,7 +51,7 @@ Validated polygon storage and point-in-polygon resolver exist. Exact production 
 Owner constraint: do not pay for Yandex/2GIS unless the low-cost path materially fails.
 
 Preferred checkout architecture:
-`DaData Suggestions -> lat/lon -> RollsBar polygon resolver -> delivery tier/minimum`.
+`DaData Suggestions -> qc_geo safety gate -> lat/lon -> RollsBar polygon resolver -> delivery tier/minimum`.
 
 DaData Suggestions is the intended address/coordinate source. Country metadata is diagnostic only; production checkout must not render provider country labels or raw unrestricted provider strings. Visible address should be built from approved local components such as locality/city, street and house.
 
@@ -76,19 +76,37 @@ Observed results on the verified 25-address Simferopol / outer-area set:
 - `qc_geo=3`: 3/25;
 - observed API latency: 233–737 ms, mean ~413 ms.
 
-Important interpretation:
-- the coverage test itself passed;
-- DaData is viable enough to continue as the preferred provider;
-- 8/25 outer-area probes did not return house-level precision (`qc_geo=2/3`), so production delivery-zone assignment must NOT blindly trust every coordinate;
-- exact acceptance/fallback behavior for lower `qc_geo` values must be defined before courier enforcement is enabled.
+Examples of weaker precision from the evidence:
+- Dubki — `qc_geo=2`;
+- Molodyozhnoye (Crimean Spring St) — `qc_geo=3`;
+- Agrarnoye (Parkovaya St) — `qc_geo=2`;
+- Denisovka — `qc_geo=3`;
+- Urozhaynoye — `qc_geo=2`;
+- Fontany — `qc_geo=2`;
+- Mazanka — `qc_geo=3`.
 
-Examples from the evidence:
-- central Simferopol probes were predominantly `qc_geo=0`;
-- weaker precision appeared on some outer localities including Dubki, Molodyozhnoye, Agrarnoye, Denisovka, Urozhaynoye, Fontany and Mazanka.
+## Geocode precision policy — FIXED / FAIL-CLOSED
+DaData documentation defines:
+- `0` exact house;
+- `1` nearest house;
+- `2` street;
+- `3` settlement;
+- `4` city;
+- `5` coordinates not determined.
+
+RollsBar safety rule is now explicit and implemented in `RollsBar_Geocode_Policy`:
+- `qc_geo=0`: may automatically resolve a polygon/zone once approved polygons exist;
+- `qc_geo=1`: must NOT silently auto-assign; require customer confirmation or an approved map-pin flow;
+- `qc_geo=2/3/4`: must NOT auto-assign; require address clarification or approved fallback/manual-point flow;
+- `qc_geo=5`, missing or invalid: no zone lookup.
+
+Default is fail-closed. Only exact-house precision can silently affect delivery-zone/minimum logic.
+
+This guard is prepared before checkout integration. It does not enable courier delivery and does not change production behavior.
 
 ## Important unresolved inputs / decisions
 - exact production polygon boundaries from the client;
-- production policy for DaData low-precision results (`qc_geo=2/3`): reject, require clarification, or fallback;
+- staging UX for low-precision address clarification / optional manual pin;
 - whether a separate free/open map-rendering layer is needed for client polygon editing;
 - checkout Street/House split decision;
 - real email/Telegram delivery test and production credentials;
@@ -96,9 +114,9 @@ Examples from the evidence:
 
 ## NEXT ACTION
 1. Keep DaData as the preferred checkout address provider based on the successful 25/25 live run.
-2. Define and implement a safe precision policy so low-confidence (`qc_geo=2/3`) results cannot silently assign a delivery polygon.
-3. Live-test the address-selection UX on staging with real user input.
-4. Provide a client-safe map/polygon editing layer, then have the client draw/correct exact delivery polygons.
+2. Wire DaData Suggestions into a staging-only address-selection UX while keeping courier enforcement OFF.
+3. Test exact and low-precision selections against the new fail-closed policy.
+4. Prepare a client-safe free/open map layer for polygon editing if practical, then have the client draw/correct exact delivery polygons.
 5. Only after those checks wire `address -> coordinates -> polygon -> confirmed threshold` into checkout and enable courier logic.
 6. Paid Yandex/2GIS should be considered only if the DaData precision caveat cannot be handled acceptably.
 
