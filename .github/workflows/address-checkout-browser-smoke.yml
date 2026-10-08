@@ -1,0 +1,138 @@
+name: RollsBar Staging Address Checkout Browser Smoke
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/address-checkout-browser-smoke.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  address-checkout-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Playwright
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet playwright
+          python3 -m playwright install --with-deps chromium
+      - name: Verify staging-only DaData checkout UX
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import sys
+          from playwright.sync_api import sync_playwright
+
+          BASE = "https://staging.rollsbar.ru"
+
+          def require(condition, message):
+              if not condition:
+                  raise AssertionError(message)
+              print(f"PASS  {message}")
+
+          def first_visible(page, selectors):
+              for selector in selectors:
+                  loc = page.locator(selector)
+                  for i in range(loc.count()):
+                      candidate = loc.nth(i)
+                      if candidate.is_visible():
+                          return candidate
+              return None
+
+          def wait_resolved(page, input_locator):
+              for _ in range(40):
+                  if input_locator.evaluate("el => el.dataset.rollsbarAddressResolved === '1'"):
+                      return
+                  page.wait_for_timeout(250)
+              raise AssertionError("address selection did not reach resolved state")
+
+          def choose_first(page, input_locator, query):
+              input_locator.fill(query)
+              item = page.locator(".rollsbar-address-suggestions__item").first
+              item.wait_for(state="visible", timeout=12000)
+              display = item.inner_text().strip()
+              require(bool(display), f"suggestion rendered for {query}")
+              require("Россия" not in display and "Украина" not in display, "suggestion hides country labels")
+              item.click()
+              wait_resolved(page, input_locator)
+              return {
+                  "value": input_locator.input_value().strip(),
+                  "qc": input_locator.evaluate("el => el.dataset.rollsbarAddressQcGeo || ''"),
+                  "auto": input_locator.evaluate("el => el.dataset.rollsbarAddressAutoZone || ''"),
+                  "lat": input_locator.evaluate("el => el.dataset.rollsbarAddressLat || ''"),
+                  "lon": input_locator.evaluate("el => el.dataset.rollsbarAddressLon || ''"),
+              }
+
+          try:
+              with sync_playwright() as pw:
+                  browser = pw.chromium.launch(headless=True)
+                  ctx = browser.new_context(viewport={"width": 1440, "height": 1000}, locale="ru-RU")
+                  page = ctx.new_page()
+                  page_errors = []
+                  page.on("pageerror", lambda exc: page_errors.append(str(exc)))
+
+                  response = page.goto(BASE + "/", wait_until="domcontentloaded")
+                  require(response is not None and 200 <= response.status < 400, "staging home is reachable")
+                  add = page.locator("a.add_to_cart_button.ajax_add_to_cart").first
+                  add.wait_for(state="visible", timeout=10000)
+                  add.click()
+                  page.wait_for_timeout(2500)
+
+                  cart = page.evaluate("""async () => {
+                    const r = await fetch('/wp-json/wc/store/v1/cart', {credentials:'same-origin'});
+                    const j = await r.json();
+                    return {status:r.status, count:j.items_count || 0};
+                  }""")
+                  require(cart.get("status") == 200 and cart.get("count", 0) > 0, "real Woo cart session exists before checkout")
+
+                  response = page.goto(BASE + "/checkout/", wait_until="domcontentloaded")
+                  require(response is not None and 200 <= response.status < 400, "checkout opens with cart session")
+                  page.wait_for_timeout(2500)
+
+                  cfg = page.evaluate("""() => {
+                    const c = window.rollsBarCheckoutConfig || {};
+                    const a = c.addressSuggestions || {};
+                    return {enabled:a.enabled === true, suggestUrl:a.suggestUrl || '', resolveUrl:a.resolveUrl || ''};
+                  }""")
+                  require(cfg.get("enabled") is True, "DaData suggestions are enabled on staging checkout")
+                  require("/wp-json/rollsbar/v1/address-suggestions" in cfg.get("suggestUrl", ""), "checkout exposes staging suggestion endpoint")
+                  require("/wp-json/rollsbar/v1/address-resolve" in cfg.get("resolveUrl", ""), "checkout exposes staging resolve endpoint")
+
+                  address = first_visible(page, (
+                      "input[name$='address_1']",
+                      "input[name*='address_1' i]",
+                      "input[id*='address_1' i]",
+                  ))
+                  require(address is not None, "checkout has a visible address-line input")
+
+                  exact = choose_first(page, address, "Симферополь Гагарина 17")
+                  require(exact["qc"] == "0", f"exact house resolves with qc_geo=0 (got {exact['qc']})")
+                  require(exact["auto"] == "1", "qc_geo=0 allows future automatic zone lookup")
+                  require(bool(exact["lat"] and exact["lon"]), "exact house carries coordinates")
+                  require("Россия" not in exact["value"] and "Украина" not in exact["value"], "resolved exact address hides country labels")
+
+                  low = choose_first(page, address, "Дубки Раздерина 12")
+                  require(low["qc"] in {"1", "2", "3", "4", "5"}, f"low-precision probe remains non-exact (qc_geo={low['qc']})")
+                  require(low["auto"] == "0", "non-exact address fails closed and cannot auto-assign a zone")
+                  require("Россия" not in low["value"] and "Украина" not in low["value"], "resolved low-precision address hides country labels")
+
+                  status = page.locator(".rollsbar-address-status").filter(has_text="Уточните").first
+                  require(status.count() > 0 and status.is_visible(), "low-precision checkout shows clarification warning")
+                  require(not page_errors, f"checkout has no uncaught page JS errors (got {page_errors})")
+
+                  print("ADDRESS CHECKOUT BROWSER PASS")
+                  print(f"exact_qc_geo={exact['qc']} allow_auto_zone={exact['auto']}")
+                  print(f"low_precision_qc_geo={low['qc']} allow_auto_zone={low['auto']}")
+                  print("country_labels_exposed=no")
+                  print("production_touched=no")
+                  ctx.close()
+                  browser.close()
+          except Exception as exc:
+              print(f"ADDRESS CHECKOUT BROWSER FAIL: {exc.__class__.__name__}: {exc}")
+              sys.exit(1)
+          PY
