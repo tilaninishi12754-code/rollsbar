@@ -116,6 +116,13 @@ else
 fi
 wp_cmd plugin activate woocommerce
 
+# Fresh WooCommerce installs default store pages to Coming Soon. Staging must
+# be reachable by anonymous QA browsers, while WordPress search-engine
+# visibility remains disabled separately via blog_public=0. This affects only
+# the isolated staging database; production is not touched by this bootstrap.
+wp_cmd option update woocommerce_coming_soon 'no'
+wp_cmd option update woocommerce_store_pages_only 'no'
+
 # Rolls Bar prices are ruble-denominated integer menu prices. A fresh
 # WooCommerce install defaults to USD; enforce the project currency so staging
 # cannot silently render approved prices as dollars.
@@ -198,9 +205,13 @@ if [[ "$ROLLSBAR_IMPORT_SMOKE" == "1" ]]; then
 fi
 
 # Final invariants: fail the deploy if a later change regresses staging HTTPS,
-# pretty permalinks, ruble currency, or native Blocks Local Pickup.
+# public QA visibility, pretty permalinks, ruble currency, or native Blocks
+# Local Pickup. Search-engine indexing remains disabled via blog_public=0.
 [[ "$(wp_cmd option get home)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get siteurl)" == "$STAGING_URL" ]]
+[[ "$(wp_cmd option get blog_public)" == "0" ]]
+[[ "$(wp_cmd option get woocommerce_coming_soon)" == "no" ]]
+[[ "$(wp_cmd option get woocommerce_store_pages_only)" == "no" ]]
 force_ssl="$(wp_cmd config get FORCE_SSL_ADMIN)"
 [[ "$force_ssl" == "true" || "$force_ssl" == "1" ]]
 grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
@@ -222,6 +233,7 @@ echo "Staging URL: $STAGING_URL"
 echo "WordPress: $(wp_cmd core version)"
 echo "WooCommerce: $(wp_cmd plugin get woocommerce --field=version)"
 echo "Currency: $(wp_cmd option get woocommerce_currency)"
+echo "Storefront QA visibility: live (search indexing off)"
 echo "Local Pickup: enabled"
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   echo "DaData server-side key: configured"
