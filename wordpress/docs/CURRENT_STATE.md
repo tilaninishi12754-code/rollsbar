@@ -3,7 +3,7 @@
 Updated: 2026-10-08
 
 ## Purpose
-This file is the explicit handoff checkpoint for continuing RollsBar in a new ChatGPT chat or agent session. Do not rely on chat memory alone. First verify this file against the live branch HEAD and recent CI before continuing.
+This file is the explicit handoff checkpoint for continuing RollsBar in a new ChatGPT chat or agent session. Do not rely on chat memory alone. First verify this file against the live branch HEAD and recent CI/runtime evidence before doing any write or deploy.
 
 ## Source of truth order
 1. GitHub branch + actual code + CI/runtime evidence
@@ -14,46 +14,94 @@ This file is the explicit handoff checkpoint for continuing RollsBar in a new Ch
 ## Current Git state
 Working branch: `wordpress/migration-2026-10-01`.
 
-Approved baseline remains:
+Verified implementation checkpoint immediately before this documentation sync:
+`df5f1f01c353e5dc75757e58ce321316bad5f7e9` (`fix: expose Woo checkout on staging for QA`).
+
+Approved baseline remains immutable:
 `approved/site-2026-10-01 = a5e524392abcf89ffd5ace2a18218a6b59ed3b61`.
 Do not modify it.
 
-Default branch `main` contains one infrastructure-only manual Actions launcher for address-provider evaluation. It does not contain migration code and does not deploy anything. The launcher checks out `wordpress/migration-2026-10-01`, uses environment `staging`, has `contents: read`, and only creates evidence artifacts.
+Default branch `main` remains infrastructure-only for the address-provider evaluation launcher. Last verified unchanged HEAD before this checkpoint:
+`af6b829c6c58a072b7bd375af5b8515272c202e7`.
 
-A new session MUST re-read both the working branch HEAD and current `main` HEAD because later commits may exist.
+A new session MUST re-read the working branch HEAD and current `main` HEAD because this documentation commit itself and later commits may exist.
 
-## Live staging
+## Live staging — VERIFIED
 `https://staging.rollsbar.ru`
 
-Verified state:
+Verified after deployment of `df5f1f01c353e5dc75757e58ce321316bad5f7e9`:
 - isolated REG.RU staging site/database;
 - trusted HTTPS;
-- WordPress 7.1.2;
+- WordPress 7.1.3;
 - WooCommerce 11.1.2;
 - `rollsbar-theme` active;
 - `rollsbar-core` active;
-- staging remains non-indexed;
-- production site/domain has not been migrated over staging.
+- full approved catalog preserved: 118 product cards from 131 source rows;
+- RUB currency;
+- native WooCommerce Blocks Local Pickup enabled;
+- DaData API key configured server-side only;
+- WooCommerce Coming Soon disabled on staging so anonymous QA can access Cart/Checkout;
+- WordPress `blog_public=0`, so search-engine indexing remains disabled;
+- production remains untouched.
 
-## Catalog / Gate B
+Do NOT restore the historical 5-product smoke catalog.
+
+## CI / runtime evidence — FINAL PASS FOR THIS CHECKPOINT
+All four workflows triggered by implementation commit `df5f1f01c353e5dc75757e58ce321316bad5f7e9` completed successfully:
+- `WordPress Staging Bootstrap Smoke` — run `37775581498` — success;
+- `Build WordPress Staging Package` — run `37775581476` — success;
+- `WordPress Migration Static Gate` — run `37775581514` — success;
+- `Deploy REG.RU RollsBar Staging WordPress` — run `37775581480` — success.
+
+The deploy runtime smoke reported:
+- `ADDRESS SUGGESTIONS RUNTIME PASS`;
+- exact probe: `qc_geo=0`, `allow_auto_zone=yes`;
+- lower-precision probe: `qc_geo=2`, `allow_auto_zone=no`;
+- `country_labels_exposed=no`;
+- catalog still 118 cards;
+- `blog_public=0`;
+- `STAGING WORDPRESS DEPLOY PASS`.
+
+Interactive checkout was then re-tested in a real anonymous browser session with a real Woo cart. Browser smoke rerun job `113306962222` in workflow run `37775215326` completed successfully and verified:
+- product added to a real Woo Store API cart before checkout;
+- checkout opened normally;
+- staging DaData suggest/resolve endpoints were present;
+- visible checkout address-line input existed;
+- `Симферополь Гагарина 17` produced a suggestion, hid country labels, resolved at `qc_geo=0`, returned coordinates, and set `allow_auto_zone=1`;
+- `Дубки Раздерина 12` produced a suggestion, hid country labels, resolved at `qc_geo=2`, set `allow_auto_zone=0`, and showed the clarification warning;
+- no uncaught checkout JavaScript errors;
+- production untouched.
+
+## Important recovered discrepancy
+During recovery after a connection interruption, the first browser checkout tests showed no checkout form. The actual cause was NOT DaData and NOT the fail-closed policy: WooCommerce Coming Soon was still enabled on the fresh staging store and anonymous visitors were seeing the store-under-development screen instead of Checkout Block.
+
+The staging bootstrap now explicitly sets:
+- `woocommerce_coming_soon = no`;
+- `woocommerce_store_pages_only = no`;
+while preserving `blog_public=0`.
+
+This change is staging-only. It does not alter production.
+
+## Catalog / prior Gate B
 - full approved catalog: 118 product cards from 131 approved source rows;
 - repeat import remains 118 products;
-- desktop + mobile Gate B PASS;
+- prior desktop + mobile Gate B passed;
+- historical mobile cart-overlay regression was absent in Gate B;
 - do NOT restore the historical 5-product smoke state.
 
 ## Delivery rules
 Seven confirmed minimum/free-delivery thresholds remain canonical:
 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB.
 
-Validated polygon storage and point-in-polygon resolver exist. Exact production polygon boundaries have NOT been invented. Courier enforcement remains off.
+Validated polygon storage and point-in-polygon resolver exist. Exact production polygon boundaries have NOT been invented. Courier enforcement remains OFF.
 
 ## Address provider direction — DADATA FIRST
 Owner constraint: do not pay for Yandex/2GIS unless the low-cost path materially fails.
 
-Preferred checkout architecture:
+Preferred architecture:
 `DaData Suggestions -> qc_geo safety gate -> lat/lon -> RollsBar polygon resolver -> delivery tier/minimum`.
 
-DaData Suggestions is the intended address/coordinate source. Country metadata is diagnostic only; production checkout must not render provider country labels or raw unrestricted provider strings. Visible address should be built from approved local components such as locality/city, street and house.
+DaData Suggestions is now implemented on staging checkout as the address/coordinate source. The key remains server-side. Country metadata is diagnostic only; customer-facing suggestions/resolved addresses do not render provider country labels or raw unrestricted provider strings. Visible address is built from local address components such as locality/city, street and house.
 
 Yandex/2GIS remain fallback options only if DaData coverage/precision proves inadequate.
 
@@ -76,7 +124,7 @@ Observed results on the verified 25-address Simferopol / outer-area set:
 - `qc_geo=3`: 3/25;
 - observed API latency: 233–737 ms, mean ~413 ms.
 
-Examples of weaker precision from the evidence:
+Examples of weaker precision:
 - Dubki — `qc_geo=2`;
 - Molodyozhnoye (Crimean Spring St) — `qc_geo=3`;
 - Agrarnoye (Parkovaya St) — `qc_geo=2`;
@@ -85,40 +133,40 @@ Examples of weaker precision from the evidence:
 - Fontany — `qc_geo=2`;
 - Mazanka — `qc_geo=3`.
 
-## Geocode precision policy — FIXED / FAIL-CLOSED
-DaData documentation defines:
-- `0` exact house;
-- `1` nearest house;
-- `2` street;
-- `3` settlement;
-- `4` city;
-- `5` coordinates not determined.
-
-RollsBar safety rule is now explicit and implemented in `RollsBar_Geocode_Policy`:
-- `qc_geo=0`: may automatically resolve a polygon/zone once approved polygons exist;
-- `qc_geo=1`: must NOT silently auto-assign; require customer confirmation or an approved map-pin flow;
-- `qc_geo=2/3/4`: must NOT auto-assign; require address clarification or approved fallback/manual-point flow;
+## Geocode precision policy — IMPLEMENTED / FAIL-CLOSED
+RollsBar safety policy in `RollsBar_Geocode_Policy`:
+- `qc_geo=0`: exact house; may automatically resolve a polygon/zone once approved polygons exist;
+- `qc_geo=1`: must NOT silently auto-assign; require confirmation or an approved fallback/manual-point flow;
+- `qc_geo=2/3/4`: must NOT auto-assign; require address clarification or an approved fallback/manual-point flow;
 - `qc_geo=5`, missing or invalid: no zone lookup.
 
-Default is fail-closed. Only exact-house precision can silently affect delivery-zone/minimum logic.
+Default is fail-closed. Only exact-house precision can silently affect future delivery-zone/minimum logic. The browser smoke proves the staging UI follows this policy for `qc_geo=0` and `qc_geo=2`.
 
-This guard is prepared before checkout integration. It does not enable courier delivery and does not change production behavior.
+This policy does NOT enable courier delivery by itself.
+
+## Country-label / customer-address rule — VERIFIED
+- Customer-facing checkout does not render provider `country` or `country_iso_code` labels.
+- It does not expose raw unrestricted provider strings as customer geography.
+- Exact and low-precision browser probes both displayed no `Россия` / `Украина` country label in the suggestion/resolved address.
+- Provider country metadata remains diagnostic/safety data on the backend only.
 
 ## Important unresolved inputs / decisions
-- exact production polygon boundaries from the client;
-- staging UX for low-precision address clarification / optional manual pin;
-- whether a separate free/open map-rendering layer is needed for client polygon editing;
-- checkout Street/House split decision;
+- exact production polygon boundaries from the client — MUST NOT be invented;
+- client-safe polygon editing / map-rendering layer if a visual editor is required;
+- approved fallback/manual-pin UX if the client wants something stronger than address clarification for low-precision cases;
 - real email/Telegram delivery test and production credentials;
 - acquiring/payment phase later.
 
+The earlier “wire DaData into checkout” item is DONE on staging and must not be repeated.
+
 ## NEXT ACTION
-1. Keep DaData as the preferred checkout address provider based on the successful 25/25 live run.
-2. Wire DaData Suggestions into a staging-only address-selection UX while keeping courier enforcement OFF.
-3. Test exact and low-precision selections against the new fail-closed policy.
-4. Prepare a client-safe free/open map layer for polygon editing if practical, then have the client draw/correct exact delivery polygons.
-5. Only after those checks wire `address -> coordinates -> polygon -> confirmed threshold` into checkout and enable courier logic.
-6. Paid Yandex/2GIS should be considered only if the DaData precision caveat cannot be handled acceptably.
+1. Obtain/confirm the client's exact delivery polygon boundaries; do not invent them.
+2. If needed, provide a client-safe free/open visual map layer for drawing/correcting those polygons.
+3. Load the approved polygons into staging and test `exact address -> coordinates -> polygon -> canonical threshold` across boundary cases.
+4. Keep `qc_geo>=1` fail-closed; low-precision addresses must not silently choose a delivery zone.
+5. Only after polygon QA explicitly enable courier zone/minimum enforcement on staging.
+6. Production remains untouched until staging QA is complete and the owner explicitly approves transition.
+7. Paid Yandex/2GIS remains fallback-only if DaData later proves materially inadequate.
 
 ## New-chat recovery protocol
 In a new chat inside the same ChatGPT Project, the first instruction should be:
