@@ -31,6 +31,8 @@ RUNTIME_FILE = ".rollsbar-staging-runtime.env"
 DOMAIN = "staging.rollsbar.ru"
 REPO = "https://github.com/tilaninishi12754-code/rollsbar.git"
 EXPECTED_STAGING_PRODUCTS = 118
+EXPECTED_WORDPRESS_VERSION = "7.1.3"
+EXPECTED_WOOCOMMERCE_VERSION = "11.1.2"
 
 
 def shell_quote(value: str) -> str:
@@ -177,8 +179,8 @@ echo "assert_theme=$theme_status"
 echo "assert_rollsbar_core=$core_status"
 echo "assert_products=$product_count"
 echo "assert_blog_public=$blog_public"
-[[ "$core_version" == "7.1.2" ]]
-[[ "$woo_version" == "11.1.2" ]]
+[[ "$core_version" == "{EXPECTED_WORDPRESS_VERSION}" ]]
+[[ "$woo_version" == "{EXPECTED_WOOCOMMERCE_VERSION}" ]]
 [[ "$theme_status" == "active" ]]
 [[ "$core_status" == "active" ]]
 [[ "$product_count" == "{EXPECTED_STAGING_PRODUCTS}" ]]
