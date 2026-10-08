@@ -210,6 +210,10 @@ grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
 [[ "$(wp_cmd eval '$l=get_option("pickup_location_pickup_locations",array()); echo count(array_filter($l,static fn($x)=>!empty($x["enabled"])));')" -ge 1 ]]
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   [[ "$(wp_cmd eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')" == "yes" ]]
+  # Exercise the actual registered REST handlers from inside the staging
+  # WordPress runtime. This avoids external runner routing issues while still
+  # verifying live DaData responses and the fail-closed qc_geo policy.
+  wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-address-suggestions.php"
 fi
 
 echo
