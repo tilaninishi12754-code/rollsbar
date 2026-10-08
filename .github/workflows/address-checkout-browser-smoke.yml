@@ -25,6 +25,7 @@ jobs:
         shell: bash
         run: |
           python3 - <<'PY'
+          import json
           import sys
           from playwright.sync_api import sync_playwright
 
@@ -43,6 +44,19 @@ jobs:
                       if candidate.is_visible():
                           return candidate
               return None
+
+          def visible_input_meta(page):
+              return page.locator("input").evaluate_all("""els => els.filter(el => {
+                const r = el.getBoundingClientRect();
+                const s = getComputedStyle(el);
+                return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none';
+              }).map(el => ({
+                name: el.getAttribute('name') || '',
+                id: el.id || '',
+                autocomplete: el.getAttribute('autocomplete') || '',
+                placeholder: el.getAttribute('placeholder') || '',
+                aria: el.getAttribute('aria-label') || ''
+              }))""")
 
           def wait_resolved(page, input_locator):
               for _ in range(40):
@@ -107,7 +121,10 @@ jobs:
                       "input[name$='address_1']",
                       "input[name*='address_1' i]",
                       "input[id*='address_1' i]",
+                      "input[autocomplete='address-line1']",
                   ))
+                  if address is None:
+                      print("INFO visible_inputs=" + json.dumps(visible_input_meta(page), ensure_ascii=False))
                   require(address is not None, "checkout has a visible address-line input")
 
                   exact = choose_first(page, address, "Симферополь Гагарина 17")
