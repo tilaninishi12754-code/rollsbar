@@ -4,7 +4,7 @@ set -euo pipefail
 : "${WP_PATH:?Set WP_PATH}"
 : "${STAGING_URL:?Set STAGING_URL}"
 
-WP_VERSION="7.1.2"
+WP_VERSION="7.1.3"
 WC_VERSION="11.1.2"
 fail=0
 
