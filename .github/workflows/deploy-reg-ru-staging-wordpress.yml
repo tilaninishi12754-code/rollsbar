@@ -30,18 +30,21 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Validate hosting secrets
+      - name: Validate staging secrets
         shell: bash
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DADATA_API_KEY: ${{ secrets.ROLLSBAR_DADATA_API_KEY }}
         run: |
           test -n "$ISP_MANAGER_URL"
           test -n "$ISP_MANAGER_USER"
           test -n "$ISP_MANAGER_PASSWORD"
+          test -n "$ROLLSBAR_DADATA_API_KEY"
           echo "::add-mask::$ISP_MANAGER_USER"
           echo "::add-mask::$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ROLLSBAR_DADATA_API_KEY"
       - name: Install SSH dependency
         run: python3 -m pip install --disable-pip-version-check --quiet paramiko
       - name: Deploy WordPress staging while preserving promoted catalog
@@ -49,6 +52,7 @@ jobs:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DADATA_API_KEY: ${{ secrets.ROLLSBAR_DADATA_API_KEY }}
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
           ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING: YES
         run: python3 wordpress/deploy/deploy_staging_wordpress.py

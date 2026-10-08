@@ -27,20 +27,20 @@ final class RollsBar_Checkout {
 
 		$fields = array(
 			'entrance' => array(
-				'label'       => 'Подъезд',
-				'required'    => RollsBar_Settings::get_bool( 'checkout_entrance_required' ),
+				'label'    => 'Подъезд',
+				'required' => RollsBar_Settings::get_bool( 'checkout_entrance_required' ),
 			),
 			'door-code' => array(
-				'label'       => 'Код двери / домофона',
-				'required'    => RollsBar_Settings::get_bool( 'checkout_door_code_required' ),
+				'label'    => 'Код двери / домофона',
+				'required' => RollsBar_Settings::get_bool( 'checkout_door_code_required' ),
 			),
 			'floor' => array(
-				'label'       => 'Этаж',
-				'required'    => RollsBar_Settings::get_bool( 'checkout_floor_required' ),
+				'label'    => 'Этаж',
+				'required' => RollsBar_Settings::get_bool( 'checkout_floor_required' ),
 			),
 			'apartment-office' => array(
-				'label'       => 'Квартира / офис',
-				'required'    => RollsBar_Settings::get_bool( 'checkout_apartment_required' ),
+				'label'    => 'Квартира / офис',
+				'required' => RollsBar_Settings::get_bool( 'checkout_apartment_required' ),
 			),
 		);
 
@@ -65,6 +65,13 @@ final class RollsBar_Checkout {
 			return;
 		}
 
+		wp_enqueue_style(
+			'rollsbar-checkout',
+			plugins_url( 'assets/css/checkout.css', ROLLSBAR_CORE_FILE ),
+			array(),
+			ROLLSBAR_CORE_VERSION
+		);
+
 		wp_enqueue_script(
 			'rollsbar-checkout',
 			plugins_url( 'assets/js/checkout.js', ROLLSBAR_CORE_FILE ),
@@ -73,11 +80,23 @@ final class RollsBar_Checkout {
 			true
 		);
 
+		$address_suggestions_enabled = 'staging' === wp_get_environment_type()
+			&& defined( 'ROLLSBAR_DADATA_API_KEY' )
+			&& '' !== trim( (string) ROLLSBAR_DADATA_API_KEY );
+
 		wp_add_inline_script(
 			'rollsbar-checkout',
 			'window.rollsBarCheckoutConfig=' . wp_json_encode(
 				array(
-					'phonePrefix' => '+7 ',
+					'phonePrefix'        => '+7 ',
+					'addressSuggestions' => array(
+						'enabled'      => $address_suggestions_enabled,
+						'suggestUrl'   => rest_url( 'rollsbar/v1/address-suggestions' ),
+						'resolveUrl'   => rest_url( 'rollsbar/v1/address-resolve' ),
+						'minChars'     => 3,
+						'debounceMs'   => 300,
+						'attribution'  => 'DaData',
+					),
 				),
 				JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
 			) . ';',

@@ -76,6 +76,13 @@ wp_cmd config set WP_DEBUG_LOG true --raw
 wp_cmd config set WP_DEBUG_DISPLAY false --raw
 wp_cmd config set FORCE_SSL_ADMIN true --raw
 
+# Live staging receives the DaData token from the GitHub `staging`
+# environment. Persist it only server-side; clean CI smoke environments may
+# omit the token and therefore keep the address-suggestion proxy disabled.
+if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
+  wp_cmd config set ROLLSBAR_DADATA_API_KEY "$ROLLSBAR_DADATA_API_KEY" --type=constant
+fi
+
 wp_cmd option update home "$STAGING_URL"
 wp_cmd option update siteurl "$STAGING_URL"
 wp_cmd option update blog_public 0
@@ -201,6 +208,9 @@ grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
 [[ "$(wp_cmd option get woocommerce_price_num_decimals)" == "0" ]]
 [[ "$(wp_cmd eval '$s=get_option("woocommerce_pickup_location_settings",array()); echo $s["enabled"] ?? "no";')" == "yes" ]]
 [[ "$(wp_cmd eval '$l=get_option("pickup_location_pickup_locations",array()); echo count(array_filter($l,static fn($x)=>!empty($x["enabled"])));')" -ge 1 ]]
+if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
+  [[ "$(wp_cmd eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')" == "yes" ]]
+fi
 
 echo
 echo "BOOTSTRAP COMPLETE"
@@ -209,6 +219,9 @@ echo "WordPress: $(wp_cmd core version)"
 echo "WooCommerce: $(wp_cmd plugin get woocommerce --field=version)"
 echo "Currency: $(wp_cmd option get woocommerce_currency)"
 echo "Local Pickup: enabled"
+if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
+  echo "DaData server-side key: configured"
+fi
 echo
 echo "Next: bash wordpress/deploy/verify-staging.sh"
 echo "Do NOT enable live payments, real Telegram credentials, or production indexing yet."
