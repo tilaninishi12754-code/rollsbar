@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WP_VERSION="7.1.2"
+WP_VERSION="7.1.3"
 WC_VERSION="11.1.2"
 
 : "${WP_PATH:?Set WP_PATH}"
