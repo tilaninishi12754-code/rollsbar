@@ -1,11 +1,6 @@
 name: Provision Staging SEO
 
 on:
-  push:
-    branches:
-      - wordpress/migration-2026-10-01
-    paths:
-      - wordpress/deploy/provision_staging_seo.py
   workflow_dispatch:
 
 permissions:
