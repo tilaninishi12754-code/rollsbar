@@ -205,8 +205,9 @@ if [[ "$ROLLSBAR_IMPORT_SMOKE" == "1" ]]; then
 fi
 
 # Final invariants: fail the deploy if a later change regresses staging HTTPS,
-# public QA visibility, pretty permalinks, ruble currency, or native Blocks
-# Local Pickup. Search-engine indexing remains disabled via blog_public=0.
+# public QA visibility, pretty permalinks, ruble currency, native Blocks Local
+# Pickup, or the approved review-moderation flow. Search-engine indexing stays
+# disabled via blog_public=0.
 [[ "$(wp_cmd option get home)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get siteurl)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get blog_public)" == "0" ]]
@@ -219,6 +220,9 @@ grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
 [[ "$(wp_cmd option get woocommerce_price_num_decimals)" == "0" ]]
 [[ "$(wp_cmd eval '$s=get_option("woocommerce_pickup_location_settings",array()); echo $s["enabled"] ?? "no";')" == "yes" ]]
 [[ "$(wp_cmd eval '$l=get_option("pickup_location_pickup_locations",array()); echo count(array_filter($l,static fn($x)=>!empty($x["enabled"])));')" -ge 1 ]]
+
+wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-reviews.php"
+
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   [[ "$(wp_cmd eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')" == "yes" ]]
   # Exercise the actual registered REST handlers from inside the staging
@@ -235,6 +239,7 @@ echo "WooCommerce: $(wp_cmd plugin get woocommerce --field=version)"
 echo "Currency: $(wp_cmd option get woocommerce_currency)"
 echo "Storefront QA visibility: live (search indexing off)"
 echo "Local Pickup: enabled"
+echo "Reviews moderation: verified"
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   echo "DaData server-side key: configured"
 fi
