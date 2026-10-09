@@ -5,11 +5,11 @@ set -euo pipefail
 
 BACKUP_ROOT="${ROLLSBAR_BACKUP_ROOT:-$HOME/rollsbar-backups/staging}"
 RETENTION="${ROLLSBAR_BACKUP_RETENTION:-5}"
+DEPLOYED_SHA_MARKER="${ROLLSBAR_DEPLOYED_SHA_MARKER:-$HOME/.rollsbar-staging-deployed-sha}"
 TIMESTAMP="$(date -u +'%Y%m%dT%H%M%SZ')"
 SNAPSHOT="$BACKUP_ROOT/$TIMESTAMP"
 TMP="$BACKUP_ROOT/.tmp-$TIMESTAMP-$$"
 SNAPSHOT_GLOB='20??????T??????Z'
-PROJECT_COMMIT="${ROLLSBAR_DEPLOY_SHA:-}"
 
 if ! command -v wp >/dev/null 2>&1; then
   echo "BACKUP FAIL: WP-CLI unavailable"
@@ -24,18 +24,25 @@ if ! [[ "$RETENTION" =~ ^[1-9][0-9]*$ ]]; then
   exit 2
 fi
 
-# Recovery requires an exact code revision, not merely a repository URL. During
-# routine deploy PROJECT_ROOT is checked out at the exact GitHub Actions SHA
-# before this script runs. Fall back to that checkout when an explicit SHA was
-# not exported by an older caller.
-if [[ -z "$PROJECT_COMMIT" && -n "${PROJECT_ROOT:-}" && -d "${PROJECT_ROOT}/.git" ]]; then
-  PROJECT_COMMIT="$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null || true)"
+# A recovery-safe snapshot must identify the code that is actually serving at
+# the instant the pre-deploy backup is created. The marker is written only after
+# a complete live staging deploy + HTTP hardening passes. Never substitute the
+# incoming deployment SHA here: that revision has not yet been applied.
+if [[ ! -f "$DEPLOYED_SHA_MARKER" ]]; then
+  echo "BACKUP FAIL: verified deployed-SHA marker is missing"
+  exit 2
 fi
+PROJECT_COMMIT="$(tr -d '[:space:]' < "$DEPLOYED_SHA_MARKER")"
 if [[ -z "$PROJECT_COMMIT" || ! "$PROJECT_COMMIT" =~ ^[0-9a-fA-F]{40}$ ]]; then
-  echo "BACKUP FAIL: exact 40-character project code commit is unavailable"
+  echo "BACKUP FAIL: deployed-SHA marker is invalid"
   exit 2
 fi
 PROJECT_COMMIT="${PROJECT_COMMIT,,}"
+marker_mode="$(stat -c '%a' "$DEPLOYED_SHA_MARKER")"
+if [[ "$marker_mode" != "600" ]]; then
+  echo "BACKUP FAIL: deployed-SHA marker must have mode 600"
+  exit 2
+fi
 
 umask 077
 mkdir -p "$BACKUP_ROOT"
@@ -51,6 +58,7 @@ echo "backup_target=staging"
 echo "backup_timestamp=$TIMESTAMP"
 echo "backup_location=$SNAPSHOT"
 echo "backup_project_commit=$PROJECT_COMMIT"
+echo "backup_project_commit_source=verified_deployed_marker"
 
 # Export directly to gzip so an uncompressed SQL file containing customer/order
 # data never remains on disk. WP-CLI reads DB credentials from wp-config.php.
@@ -73,7 +81,7 @@ fi
 tar -tzf "$TMP/uploads.tar.gz" >/dev/null
 
 {
-  echo "rollsbar_backup_format=2"
+  echo "rollsbar_backup_format=3"
   echo "created_utc=$TIMESTAMP"
   echo "site_url=$(wp_cmd option get home)"
   echo "wordpress_version=$(wp_cmd core version)"
@@ -85,6 +93,7 @@ tar -tzf "$TMP/uploads.tar.gz" >/dev/null
   echo "wp_config_included=no"
   echo "project_code_source=GitHub:tilaninishi12754-code/rollsbar"
   echo "project_code_commit=$PROJECT_COMMIT"
+  echo "project_code_commit_source=verified_deployed_marker"
 } >"$TMP/manifest.txt"
 
 (
