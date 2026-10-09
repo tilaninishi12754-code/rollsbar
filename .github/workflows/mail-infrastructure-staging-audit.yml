@@ -1,0 +1,43 @@
+name: Mail Infrastructure Staging Read-Only Audit
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/mail-infrastructure-staging-audit.yml
+      - wordpress/deploy/audit_staging_mail_infrastructure.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mail-infrastructure-audit:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate read-only ISPmanager access
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: |
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+      - name: Install DNS dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet dnspython
+      - name: Audit mail domains, mailboxes and public DNS without mutation
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: python3 wordpress/deploy/audit_staging_mail_infrastructure.py
