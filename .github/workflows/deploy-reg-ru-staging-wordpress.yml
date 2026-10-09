@@ -9,6 +9,7 @@ on:
       - .github/workflows/deploy-reg-ru-staging-wordpress.yml
       - wordpress/deploy/bootstrap-staging.sh
       - wordpress/deploy/deploy_staging_wordpress.py
+      - wordpress/deploy/verify-staging-notifications.php
       - wordpress/wp-content/themes/rollsbar-theme/**
       - wordpress/wp-content/plugins/rollsbar-core/**
       - wordpress/data/catalog.json
@@ -37,6 +38,8 @@ jobs:
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_DADATA_API_KEY: ${{ secrets.ROLLSBAR_DADATA_API_KEY }}
+          ROLLSBAR_TELEGRAM_BOT_TOKEN: ${{ secrets.ROLLSBAR_TELEGRAM_BOT_TOKEN }}
+          ROLLSBAR_TELEGRAM_CHAT_ID: ${{ secrets.ROLLSBAR_TELEGRAM_CHAT_ID }}
         run: |
           test -n "$ISP_MANAGER_URL"
           test -n "$ISP_MANAGER_USER"
@@ -45,6 +48,12 @@ jobs:
           echo "::add-mask::$ISP_MANAGER_USER"
           echo "::add-mask::$ISP_MANAGER_PASSWORD"
           echo "::add-mask::$ROLLSBAR_DADATA_API_KEY"
+          if [[ -n "$ROLLSBAR_TELEGRAM_BOT_TOKEN" || -n "$ROLLSBAR_TELEGRAM_CHAT_ID" ]]; then
+            test -n "$ROLLSBAR_TELEGRAM_BOT_TOKEN"
+            test -n "$ROLLSBAR_TELEGRAM_CHAT_ID"
+            echo "::add-mask::$ROLLSBAR_TELEGRAM_BOT_TOKEN"
+            echo "::add-mask::$ROLLSBAR_TELEGRAM_CHAT_ID"
+          fi
       - name: Install SSH dependency
         run: python3 -m pip install --disable-pip-version-check --quiet paramiko
       - name: Deploy WordPress staging while preserving promoted catalog
@@ -53,6 +62,8 @@ jobs:
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_DADATA_API_KEY: ${{ secrets.ROLLSBAR_DADATA_API_KEY }}
+          ROLLSBAR_TELEGRAM_BOT_TOKEN: ${{ secrets.ROLLSBAR_TELEGRAM_BOT_TOKEN }}
+          ROLLSBAR_TELEGRAM_CHAT_ID: ${{ secrets.ROLLSBAR_TELEGRAM_CHAT_ID }}
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
           ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING: YES
         run: python3 wordpress/deploy/deploy_staging_wordpress.py
