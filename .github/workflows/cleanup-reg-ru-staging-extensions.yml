@@ -1,0 +1,48 @@
+name: Cleanup REG.RU Staging Extensions
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - wordpress/deploy/cleanup_staging_extensions.py
+      - .github/workflows/cleanup-reg-ru-staging-extensions.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollsbar-cleanup-reg-ru-staging-extensions
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate hosting access secrets
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: |
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+      - name: Install SSH dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+      - name: Backup and remove known-unused extensions
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_CONFIRM_STAGING_EXTENSION_CLEANUP: YES
+        run: python3 wordpress/deploy/cleanup_staging_extensions.py
