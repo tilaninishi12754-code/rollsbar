@@ -5,7 +5,8 @@ Safety invariants:
 - hard-coded staging target only;
 - explicit confirmation required;
 - exact repository SHA checked out on the hosting account;
-- fresh canonical DB+uploads backup verified before mutation;
+- fresh canonical DB+uploads backup verified before mutation unless a parent
+  routine deploy explicitly proves it already passed the same backup gate;
 - WordPress/WooCommerce/catalog/indexability invariants verified before and after;
 - pinned SEOPress version and auto-update disabled;
 - schema-overlap features disabled so WooCommerce remains Product owner and
@@ -26,6 +27,7 @@ USER = os.environ["ISP_MANAGER_USER"].strip()
 PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
 DEPLOY_SHA = os.environ["ROLLSBAR_DEPLOY_SHA"].strip()
 CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_STAGING_SEO", "")
+BACKUP_ALREADY_VERIFIED = os.environ.get("ROLLSBAR_SEO_BACKUP_ALREADY_VERIFIED", "").strip()
 
 DOMAIN = "staging.rollsbar.ru"
 REPO = "https://github.com/tilaninishi12754-code/rollsbar.git"
@@ -71,6 +73,7 @@ SEO_VERSION="__SEO_VERSION__"
 EXPECTED_PRODUCTS="__EXPECTED_PRODUCTS__"
 DEPLOY_SHA="__DEPLOY_SHA__"
 REPO="__REPO__"
+BACKUP_ALREADY_VERIFIED="__BACKUP_ALREADY_VERIFIED__"
 WP_PATH="$HOME/www/$DOMAIN"
 PROJECT_ROOT="$HOME/.rollsbar-deploy"
 BACKUP_ROOT="$HOME/rollsbar-backups/staging"
@@ -111,11 +114,15 @@ git -C "$PROJECT_ROOT" fetch --depth=1 origin "$DEPLOY_SHA"
 git -C "$PROJECT_ROOT" checkout --detach --force "$DEPLOY_SHA"
 [[ "$(git -C "$PROJECT_ROOT" rev-parse HEAD)" == "$DEPLOY_SHA" ]]
 
-echo "stage=backup_before_seo_mutation"
-export WP_PATH
-export ROLLSBAR_BACKUP_ROOT="$BACKUP_ROOT"
-export ROLLSBAR_BACKUP_RETENTION=5
-bash "$PROJECT_ROOT/wordpress/deploy/backup-staging.sh"
+if [[ "$BACKUP_ALREADY_VERIFIED" == "YES" ]]; then
+  echo "stage=backup_reused_from_parent_deploy_gate"
+else
+  echo "stage=backup_before_seo_mutation"
+  export WP_PATH
+  export ROLLSBAR_BACKUP_ROOT="$BACKUP_ROOT"
+  export ROLLSBAR_BACKUP_RETENTION=5
+  bash "$PROJECT_ROOT/wordpress/deploy/backup-staging.sh"
+fi
 
 echo "stage=install_pinned_seopress"
 if wp_cmd plugin is-installed "$SEO_SLUG"; then
@@ -221,6 +228,7 @@ echo "STAGING SEO PROVISION PASS"
         "__EXPECTED_PRODUCTS__": EXPECTED_PRODUCTS,
         "__DEPLOY_SHA__": DEPLOY_SHA,
         "__REPO__": REPO,
+        "__BACKUP_ALREADY_VERIFIED__": BACKUP_ALREADY_VERIFIED,
     }
     for marker, value in replacements.items():
         remote = remote.replace(marker, value)
@@ -245,6 +253,8 @@ if CONFIRM != "YES":
     raise SystemExit("Refusing staging mutation: set ROLLSBAR_CONFIRM_STAGING_SEO=YES")
 if len(DEPLOY_SHA) < 7:
     raise SystemExit("ROLLSBAR_DEPLOY_SHA is missing")
+if BACKUP_ALREADY_VERIFIED not in ("", "YES"):
+    raise SystemExit("ROLLSBAR_SEO_BACKUP_ALREADY_VERIFIED must be empty or YES")
 
 client = None
 try:
