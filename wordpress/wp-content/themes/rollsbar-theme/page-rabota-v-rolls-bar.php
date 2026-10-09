@@ -79,17 +79,17 @@ $vk_url        = function_exists( 'rollsbar_setting' ) ? rollsbar_setting( 'vk_u
 	</div>
 </section>
 
-<section class="rollsbar-shell rb-career-section" id="vacancy-form">
-	<div class="rb-questionnaire rb-questionnaire--pending">
-		<span class="rb-questionnaire__kicker">Анкета кандидата</span>
-		<h2>Заполни небольшую анкету</h2>
-		<p>Точная текстовка и состав полей ещё ожидаются от заказчика. Здесь будет форма в утверждённом дизайне; до получения финальных вопросов мы не выдумываем обязательные данные.</p>
-		<div class="rb-questionnaire__pending">Pending input: финальные вопросы анкеты + канал получения заявок.</div>
-	</div>
-</section>
+<?php
+/*
+ * Final questionnaire wording and receiving channel are a documented pending
+ * client input. Fail closed: do not expose a technical placeholder, invented
+ * questions or a dead application CTA on the public site. Existing approved
+ * contact routes remain available below. The real questionnaire can be added
+ * later without changing the vacancy content model or page layout contract.
+ */
+?>
 
-<nav class="rb-career-actions" aria-label="Действия по вакансии">
-	<a class="rb-career-actions__apply" href="#vacancy-form">Заполнить анкету</a>
+<nav class="rb-career-actions rb-career-actions--contacts-only" aria-label="Связаться по вакансии">
 	<button class="rb-career-actions__round" type="button" data-rb-career-chat aria-label="Написать">💬</button>
 	<a class="rb-career-actions__round" href="tel:<?php echo esc_attr( $phone_href ); ?>" aria-label="Позвонить">☎</a>
 </nav>
