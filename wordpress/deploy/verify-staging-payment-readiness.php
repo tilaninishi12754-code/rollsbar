@@ -56,8 +56,18 @@ if ( ! $payment_page instanceof WP_Post || 'publish' !== $payment_page->post_sta
 	$fail( 'Payment/refund legal page is missing.' );
 }
 $payment_text = wp_strip_all_tags( (string) $payment_page->post_content );
-if ( false === strpos( $payment_text, 'До активации банка этот способ оплаты не должен отображаться как доступный.' ) ) {
-	$fail( 'Payment/refund page does not preserve the pre-acquiring visibility rule.' );
+
+// Verify the meaning of the immutable approved baseline rather than tying the
+// test to one editorial sentence. Before acquiring is connected the site says
+// payment is at receipt; online card payment becomes available only after an
+// actual payment gateway is connected.
+if ( false === strpos( $payment_text, 'До активации интернет-эквайринга заказ оплачивается при получении.' ) ) {
+	$fail( 'Payment/refund page no longer states the approved payment-at-receipt launch mode.' );
+}
+if (
+	false === strpos( $payment_text, 'Онлайн-оплата банковской картой становится доступной только после подключения платёжного шлюза' )
+) {
+	$fail( 'Payment/refund page no longer keeps online card payment conditional on gateway activation.' );
 }
 
 $security_page = get_page_by_path( 'bezopasnost-onlajn-oplaty', OBJECT, 'page' );
@@ -65,8 +75,16 @@ if ( ! $security_page instanceof WP_Post || 'publish' !== $security_page->post_s
 	$fail( 'Payment-security page is missing.' );
 }
 $security_text = wp_strip_all_tags( (string) $security_page->post_content );
-if ( false === stripos( $security_text, 'не сохраня' ) || false === stripos( $security_text, 'банка-эквайера' ) ) {
-	$fail( 'Payment-security page does not preserve safe provider-neutral card-handling language.' );
+$card_storage_safe = false !== stripos( $security_text, 'не должны хранить' )
+	|| false !== stripos( $security_text, 'не сохраня' );
+if ( ! $card_storage_safe ) {
+	$fail( 'Payment-security page no longer states that full card data is not stored by Rolls Bar/WooCommerce.' );
+}
+if ( false !== stripos( $security_text, 'Сбербанк' ) || false !== stripos( $security_text, 'СберБанк' ) ) {
+	$fail( 'Payment-security page still claims an unverified acquiring provider.' );
+}
+if ( false === stripos( $security_text, 'защищённой платёжной форме банка' ) ) {
+	$fail( 'Payment-security page no longer states that card entry belongs on the bank payment form.' );
 }
 
 update_option( 'rollsbar_online_payment_state', 'reserved_disabled', false );
