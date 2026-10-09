@@ -82,12 +82,19 @@ final class RollsBar_Reviews {
 			self::redirect( 'received' );
 		}
 
+		$privacy_consent = isset( $_POST['privacy_consent'] )
+			? sanitize_text_field( wp_unslash( $_POST['privacy_consent'] ) )
+			: '';
+		if ( ! self::consent_is_valid( $privacy_consent ) ) {
+			self::redirect( 'invalid' );
+		}
+
 		$name = isset( $_POST['name'] )
 			? trim( sanitize_text_field( wp_unslash( $_POST['name'] ) ) )
 			: '';
 		$rating = isset( $_POST['rating'] ) ? absint( $_POST['rating'] ) : 0;
 		$text = isset( $_POST['text'] )
-			? trim( sanitize_textarea_field( wp_unslash( $_POST['text'] ) ) )
+			? trim( sanitize_textarea_field( wp_unslash( $_POST['text'] ) )
 			: '';
 
 		if ( '' === $name || '' === $text || $rating < 1 || $rating > 5 ) {
@@ -108,9 +115,18 @@ final class RollsBar_Reviews {
 	}
 
 	/**
-	 * Create a review in the exact state used by public form submissions.
-	 * Kept public so staging runtime verification can prove moderation behavior
-	 * without faking a browser submission or leaving QA content behind.
+	 * Public for runtime verification: the review form must require a separate
+	 * affirmative personal-data consent action before storage.
+	 */
+	public static function consent_is_valid( $value ): bool {
+		$value = strtolower( trim( (string) $value ) );
+		return in_array( $value, array( '1', 'on', 'yes', 'true' ), true );
+	}
+
+	/**
+	 * Create a review in the exact state used by public form submissions after
+	 * request validation. Kept public so staging runtime verification can prove
+	 * moderation behavior without leaving QA content behind.
 	 *
 	 * @return int|WP_Error
 	 */
