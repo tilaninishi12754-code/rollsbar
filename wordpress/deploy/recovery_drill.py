@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
-"""Non-destructive RollsBar staging recovery drill.
+"""Restore the latest staging snapshot into a temporary REG.RU database.
 
-The drill keeps customer/staging data on the same REG.RU hosting account:
-1. validates the latest backup manifest/checksums;
-2. creates a uniquely named temporary MySQL database/user through ISPmanager;
-3. imports the compressed SQL backup into that temporary database;
-4. verifies WordPress tables, site URL, blog_public and the 118-product invariant;
-5. extracts uploads only into a temporary directory outside web-root;
-6. deletes the temporary DB user/database and all temporary files.
-
-It never writes to the live staging database/document root and never touches
-production. Secret values are neither committed nor printed.
+No live staging/production database or document-root data is modified. The
+one-off database/user and temporary extracted files are removed before success.
 """
 from __future__ import annotations
 
-import json
 import os
 import secrets
 import shlex
@@ -37,8 +28,6 @@ CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_RECOVERY_DRILL", "")
 ENDPOINT = BASE if BASE.endswith("/ispmgr") else BASE + "/ispmgr"
 CTX = ssl.create_default_context()
 DOMAIN = "staging.rollsbar.ru"
-BACKUP_ROOT = "rollsbar-backups/staging"
-PROJECT_ROOT = ".rollsbar-deploy"
 
 
 def mask(value: str) -> None:
@@ -54,25 +43,23 @@ def random_password(length: int = 40) -> str:
             return value
 
 
-def call(params: dict[str, str]) -> ET.Element:
+def api_call(params: dict[str, str]) -> ET.Element:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-recovery-drill/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-recovery-drill/1.1"})
     with urllib.request.urlopen(req, context=CTX, timeout=30) as response:
-        body = response.read()
-    root = ET.fromstring(body)
+        root = ET.fromstring(response.read())
     err = root.find(".//error")
     if err is not None:
         safe = {
-            k: v
-            for k, v in err.attrib.items()
+            k: v for k, v in err.attrib.items()
             if not any(x in k.lower() for x in ("pass", "auth", "secret", "token"))
         }
         raise RuntimeError(f"ISPmanager error func={params.get('func')}: {safe}")
     return root
 
 
-def auth() -> str:
-    root = call({"out": "xml", "func": "auth", "username": USER, "password": PASSWORD})
+def api_auth() -> str:
+    root = api_call({"out": "xml", "func": "auth", "username": USER, "password": PASSWORD})
     node = root.find(".//auth")
     sid = node.attrib.get("id", "") if node is not None else ""
     if not sid:
@@ -84,13 +71,13 @@ def auth() -> str:
 def rows(root: ET.Element) -> list[dict[str, str]]:
     result: list[dict[str, str]] = []
     for elem in root.findall(".//elem"):
-        row = {child.tag: (child.text or "").strip() for child in list(elem) if len(list(child)) == 0}
+        row = {c.tag: (c.text or "").strip() for c in list(elem) if len(list(c)) == 0}
         if row.get("name"):
             result.append(row)
     return result
 
 
-def find_by_requested_name(items: list[dict[str, str]], requested: str) -> dict[str, str] | None:
+def find_named(items: list[dict[str, str]], requested: str) -> dict[str, str] | None:
     for row in items:
         name = row.get("name", "")
         if name == requested or name.endswith("_" + requested):
@@ -98,7 +85,7 @@ def find_by_requested_name(items: list[dict[str, str]], requested: str) -> dict[
     return None
 
 
-def ssh_client() -> paramiko.SSHClient:
+def connect_ssh() -> paramiko.SSHClient:
     host = urlsplit(BASE).hostname or ""
     if not host:
         raise RuntimeError("Could not derive hosting hostname")
@@ -126,23 +113,22 @@ def remote(client: paramiko.SSHClient, command: str, timeout: int = 600) -> tupl
     return status, out.strip(), err.strip()
 
 
-def create_temp_db(sid: str, requested_db: str, requested_user: str, password: str) -> tuple[str, str, str, str]:
-    existing = rows(call({"out": "xml", "func": "db", "auth": sid}))
-    if find_by_requested_name(existing, requested_db):
-        raise RuntimeError("Unexpected recovery drill database name collision")
+def create_temp_db(sid: str, requested: str, password: str) -> tuple[str, str, str, str]:
+    if find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested):
+        raise RuntimeError("Recovery drill database name collision")
 
-    call(
+    api_call(
         {
             "out": "xml",
             "func": "db.edit",
             "auth": sid,
             "sok": "ok",
-            "name": requested_db,
+            "name": requested,
             "owner": USER,
             "server": "MySQL8",
             "charset": "utf8mb4",
             "user": "*",
-            "username": requested_user,
+            "username": requested,
             "password": password,
             "confirm": password,
             "remote_access": "off",
@@ -150,90 +136,83 @@ def create_temp_db(sid: str, requested_db: str, requested_user: str, password: s
         }
     )
 
-    db_items = rows(call({"out": "xml", "func": "db", "auth": sid}))
-    target = find_by_requested_name(db_items, requested_db)
+    target = find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested)
     if target is None:
-        raise RuntimeError("Temporary recovery database creation was not observable")
-
+        raise RuntimeError("Temporary recovery database is not observable after creation")
     actual_db = target.get("name", "")
     pair = target.get("pair", "")
     db_key = target.get("key", "")
     if not actual_db or not pair or not db_key:
         raise RuntimeError("Temporary recovery database metadata is incomplete")
 
-    users = rows(call({"out": "xml", "func": "db.users", "auth": sid, "elid": pair}))
+    db_users = rows(api_call({"out": "xml", "func": "db.users", "auth": sid, "elid": pair}))
     actual_user = ""
-    for row in users:
+    for row in db_users:
         name = row.get("name", "")
-        if name == requested_user or name.endswith("_" + requested_user):
+        if name == requested or name.endswith("_" + requested):
             actual_user = name
             break
-    if not actual_user and len(users) == 1:
-        actual_user = users[0].get("name", "")
+    if not actual_user and len(db_users) == 1:
+        actual_user = db_users[0].get("name", "")
     if not actual_user:
         raise RuntimeError("Temporary recovery database user was not found")
-
     return actual_db, actual_user, pair, db_key
 
 
-def cleanup_temp_db(sid: str, actual_user: str, pair: str, db_key: str, requested_db: str) -> list[str]:
+def cleanup_temp_db(sid: str, actual_user: str, pair: str, db_key: str, requested: str) -> list[str]:
     errors: list[str] = []
     if actual_user:
         try:
             params = {"out": "xml", "func": "db.users.delete", "auth": sid, "elid": actual_user}
             if pair:
                 params["plid"] = pair
-            call(params)
+            api_call(params)
         except Exception as exc:
             errors.append(f"db_user_delete={exc.__class__.__name__}")
-
     if db_key:
         try:
-            call({"out": "xml", "func": "db.delete", "auth": sid, "elid": db_key})
+            api_call({"out": "xml", "func": "db.delete", "auth": sid, "elid": db_key})
         except Exception as exc:
             errors.append(f"db_delete={exc.__class__.__name__}")
-
     try:
-        remaining = rows(call({"out": "xml", "func": "db", "auth": sid}))
-        if find_by_requested_name(remaining, requested_db) is not None:
+        if find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested):
             errors.append("db_still_present=yes")
     except Exception as exc:
         errors.append(f"db_cleanup_verify={exc.__class__.__name__}")
     return errors
 
 
-def write_mysql_config(client: paramiko.SSHClient, path: str, db_user: str, db_password: str) -> None:
-    content = f"[client]\nhost=localhost\nuser={db_user}\npassword={db_password}\n"
+def write_client_config(client: paramiko.SSHClient, relpath: str, db_user: str, db_password: str) -> None:
+    body = f"[client]\nhost=localhost\nuser={db_user}\npassword={db_password}\n"
     sftp = client.open_sftp()
     try:
-        with sftp.open(path, "w") as fh:
-            fh.write(content.encode("utf-8"))
-        sftp.chmod(path, 0o600)
+        with sftp.open(relpath, "w") as fh:
+            fh.write(body.encode("utf-8"))
+        sftp.chmod(relpath, 0o600)
     finally:
         sftp.close()
 
 
-def run_restore_drill(client: paramiko.SSHClient, actual_db: str, config_path: str) -> str:
-    db_q = shlex.quote(actual_db)
-    cfg_q = shlex.quote("$HOME/" + config_path)
-    command = f'''
+def restore_and_verify(client: paramiko.SSHClient, actual_db: str, config_relpath: str) -> str:
+    db_literal = shlex.quote(actual_db)
+    config_literal = shlex.quote(config_relpath)
+    script = f'''
 set -euo pipefail
-BACKUP_ROOT="$HOME/{BACKUP_ROOT}"
-PROJECT_ROOT="$HOME/{PROJECT_ROOT}"
+BACKUP_ROOT="$HOME/rollsbar-backups/staging"
+PROJECT_ROOT="$HOME/.rollsbar-deploy"
+DB_NAME={db_literal}
+CFG="$HOME/{config_literal}"
 LATEST="$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name '20??????T??????Z' -printf '%f\n' | sort | tail -n 1)"
 [[ -n "$LATEST" ]]
 SNAPSHOT="$BACKUP_ROOT/$LATEST"
 WORK="$HOME/.rollsbar-recovery-drill-work-$$"
-cleanup() {{ rm -rf "$WORK" {cfg_q}; }}
+cleanup() {{ rm -rf "$WORK" "$CFG"; }}
 trap cleanup EXIT
 umask 077
 mkdir -p "$WORK"
 
 printf 'recovery_snapshot=%s\n' "$LATEST"
-(
-  cd "$SNAPSHOT"
-  sha256sum -c SHA256SUMS >/dev/null
-)
+(cd "$SNAPSHOT" && sha256sum -c SHA256SUMS >/dev/null)
 echo 'snapshot_checksums=pass'
 gzip -t "$SNAPSHOT/database.sql.gz"
 tar -tzf "$SNAPSHOT/uploads.tar.gz" >/dev/null
@@ -261,8 +240,7 @@ printf 'manifest_format=%s\n' "$format"
 printf 'manifest_project_commit=%s\n' "$commit"
 echo 'manifest_invariants=pass'
 
-# Reject path traversal before extraction. No backup content leaves this host.
-if tar -tzf "$SNAPSHOT/uploads.tar.gz" | awk 'BEGIN{{bad=0}} /^\// || /(^|\/)\.\.(\/|$)/ {{bad=1}} END{{exit bad}}'; then :; else
+if ! tar -tzf "$SNAPSHOT/uploads.tar.gz" | awk 'BEGIN{{bad=0}} /^\// || /(^|\/)\.\.(\/|$)/ {{bad=1}} END{{exit bad}}'; then
   echo 'unsafe_upload_archive_paths=yes' >&2
   exit 31
 fi
@@ -287,19 +265,21 @@ echo 'uploads_restore_to_temp=pass'
 
 MYSQL_BIN="$(command -v mysql || command -v mariadb || true)"
 [[ -n "$MYSQL_BIN" ]]
-"$MYSQL_BIN" --defaults-extra-file={cfg_q} {db_q} < "$WORK/database.sql"
+"$MYSQL_BIN" --defaults-extra-file="$CFG" "$DB_NAME" < "$WORK/database.sql"
 echo 'database_import_to_isolated_temp=pass'
 
-table_count="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE();')"
+table_count="$("$MYSQL_BIN" --defaults-extra-file="$CFG" -N -B "$DB_NAME" -e 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE();')"
 [[ "$table_count" -ge 10 ]]
-options_table="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e 'SHOW TABLES;' | grep '_options$' | head -n 1)"
-[[ -n "$options_table" ]]
+options_table="$("$MYSQL_BIN" --defaults-extra-file="$CFG" -N -B "$DB_NAME" -e 'SHOW TABLES;' | grep '_options$' | head -n 1)"
+[[ "$options_table" =~ ^[A-Za-z0-9_]+$ ]]
 prefix="${{options_table%options}}"
 posts_table="${{prefix}}posts"
-"$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e "SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='${{posts_table}}';" | grep -qx '1'
-blog_public="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e "SELECT option_value FROM \\`${{options_table}}\\` WHERE option_name='blog_public' LIMIT 1;")"
-home_url="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e "SELECT option_value FROM \\`${{options_table}}\\` WHERE option_name='home' LIMIT 1;")"
-products="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e "SELECT COUNT(*) FROM \\`${{posts_table}}\\` WHERE post_type='product' AND post_status='publish';")"
+[[ "$posts_table" =~ ^[A-Za-z0-9_]+$ ]]
+exists="$("$MYSQL_BIN" --defaults-extra-file="$CFG" -N -B "$DB_NAME" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='${{posts_table}}';")"
+[[ "$exists" == '1' ]]
+blog_public="$("$MYSQL_BIN" --defaults-extra-file="$CFG" -N -B "$DB_NAME" -e "SELECT option_value FROM ${{options_table}} WHERE option_name='blog_public' LIMIT 1;")"
+home_url="$("$MYSQL_BIN" --defaults-extra-file="$CFG" -N -B "$DB_NAME" -e "SELECT option_value FROM ${{options_table}} WHERE option_name='home' LIMIT 1;")"
+products="$("$MYSQL_BIN" --defaults-extra-file="$CFG" -N -B "$DB_NAME" -e "SELECT COUNT(*) FROM ${{posts_table}} WHERE post_type='product' AND post_status='publish';")"
 [[ "$blog_public" == '0' ]]
 [[ "$home_url" == 'https://{DOMAIN}' ]]
 [[ "$products" == '118' ]]
@@ -308,10 +288,10 @@ printf 'restored_blog_public=%s\n' "$blog_public"
 printf 'restored_products=%s\n' "$products"
 echo 'RESTORE CONTENT INVARIANTS PASS'
 '''
-    status, out, err = remote(client, command, timeout=600)
+    status, out, err = remote(client, script)
     if status != 0:
-        safe_err = " | ".join(line for line in err.splitlines() if "password" not in line.lower())[-1600:]
-        raise RuntimeError(f"Recovery drill remote validation failed exit={status}: {safe_err}")
+        safe = " | ".join(line for line in err.splitlines() if "password" not in line.lower())[-1600:]
+        raise RuntimeError(f"remote restore verification failed exit={status}: {safe}")
     return out
 
 
@@ -323,31 +303,28 @@ def main() -> int:
         print("ISP_MANAGER_URL must use https://")
         return 2
 
-    sid = ""
-    requested_db = f"rbdrill_{int(time.time()) % 100000000:08d}"
-    requested_user = requested_db
+    requested = f"rbdrill_{int(time.time()) % 100000000:08d}"
     temp_password = random_password()
     mask(PASSWORD)
     mask(temp_password)
 
-    actual_db = actual_user = pair = db_key = ""
-    client = None
+    sid = actual_db = actual_user = pair = db_key = ""
+    client: paramiko.SSHClient | None = None
+    config_relpath = f".rollsbar-recovery-drill-{secrets.token_hex(8)}.cnf"
     primary_error: Exception | None = None
     cleanup_errors: list[str] = []
-    config_path = f".rollsbar-recovery-drill-{secrets.token_hex(8)}.cnf"
 
     try:
-        sid = auth()
+        sid = api_auth()
         print("stage=create_isolated_temp_database")
-        actual_db, actual_user, pair, db_key = create_temp_db(sid, requested_db, requested_user, temp_password)
+        actual_db, actual_user, pair, db_key = create_temp_db(sid, requested, temp_password)
         print("temporary_database=created")
         print("temporary_remote_access=disabled")
 
-        client = ssh_client()
-        write_mysql_config(client, config_path, actual_user, temp_password)
+        client = connect_ssh()
+        write_client_config(client, config_relpath, actual_user, temp_password)
         print("stage=restore_latest_snapshot")
-        output = run_restore_drill(client, actual_db, config_path)
-        print(output)
+        print(restore_and_verify(client, actual_db, config_relpath))
     except Exception as exc:
         primary_error = exc
     finally:
@@ -355,7 +332,7 @@ def main() -> int:
             try:
                 sftp = client.open_sftp()
                 try:
-                    sftp.remove(config_path)
+                    sftp.remove(config_relpath)
                 except FileNotFoundError:
                     pass
                 finally:
@@ -363,14 +340,10 @@ def main() -> int:
             except Exception:
                 pass
             client.close()
-
-        if sid and (db_key or actual_user):
+        if sid and (actual_user or db_key):
             print("stage=cleanup_isolated_temp_database")
-            cleanup_errors = cleanup_temp_db(sid, actual_user, pair, db_key, requested_db)
-            if cleanup_errors:
-                print("temporary_database_cleanup=failed " + ",".join(cleanup_errors))
-            else:
-                print("temporary_database_cleanup=pass")
+            cleanup_errors = cleanup_temp_db(sid, actual_user, pair, db_key, requested)
+            print("temporary_database_cleanup=" + ("pass" if not cleanup_errors else "failed:" + ",".join(cleanup_errors)))
 
     if primary_error is not None:
         message = str(primary_error).replace(PASSWORD, "***").replace(temp_password, "***")
