@@ -25,7 +25,10 @@
 		<nav class="rollsbar-footer__links" aria-label="Документы">
 			<a href="<?php echo esc_url( home_url( '/dostavka-i-oplata/' ) ); ?>">Доставка и оплата</a>
 			<a href="<?php echo esc_url( home_url( '/publichnaya-oferta/' ) ); ?>">Публичная оферта</a>
+			<a href="<?php echo esc_url( home_url( '/oplata-i-vozvrat/' ) ); ?>">Оплата и возврат</a>
 			<a href="<?php echo esc_url( home_url( '/politika-konfidencialnosti/' ) ); ?>">Персональные данные</a>
+			<a href="<?php echo esc_url( home_url( '/rekvizity-prodavca/' ) ); ?>">Реквизиты продавца</a>
+			<a href="<?php echo esc_url( home_url( '/pravovaya-informaciya/' ) ); ?>">Правовая информация</a>
 			<a href="<?php echo esc_url( home_url( '/rabota-v-rolls-bar/' ) ); ?>">Работа в Rolls Bar</a>
 		</nav>
 	</div>
