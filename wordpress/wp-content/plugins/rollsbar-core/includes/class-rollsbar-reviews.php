@@ -94,7 +94,7 @@ final class RollsBar_Reviews {
 			: '';
 		$rating = isset( $_POST['rating'] ) ? absint( $_POST['rating'] ) : 0;
 		$text = isset( $_POST['text'] )
-			? trim( sanitize_textarea_field( wp_unslash( $_POST['text'] ) )
+			? trim( sanitize_textarea_field( wp_unslash( $_POST['text'] ) ) )
 			: '';
 
 		if ( '' === $name || '' === $text || $rating < 1 || $rating > 5 ) {
