@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Rolls Bar Core
  * Description: Business logic for Rolls Bar: delivery zones, checkout fields, minimum order rules, catalog behavior and integrations.
- * Version: 0.1.4
+ * Version: 0.1.5
  * Author: Rolls Bar project
  * Requires at least: 6.6
  * Requires PHP: 8.1
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ROLLSBAR_CORE_VERSION', '0.1.4' );
+define( 'ROLLSBAR_CORE_VERSION', '0.1.5' );
 define( 'ROLLSBAR_CORE_FILE', __FILE__ );
 define( 'ROLLSBAR_CORE_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -52,6 +52,7 @@ require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-checkout.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-order-details.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-notifications.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-reviews.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-analytics.php';
 
 RollsBar_Settings::init();
 RollsBar_Delivery_Rules::init();
@@ -63,6 +64,7 @@ RollsBar_Checkout::init();
 RollsBar_Order_Details::init();
 RollsBar_Notifications::init();
 RollsBar_Reviews::init();
+RollsBar_Analytics::init();
 
 RollsBar_Catalog_Importer::register_cli();
 
