@@ -24,14 +24,14 @@ final class RollsBar_Content_Types {
 					'add_new_item'  => 'Добавить промо-карточку',
 					'edit_item'     => 'Редактировать промо-карточку',
 				),
-				'public'              => false,
-				'show_ui'             => true,
-				'show_in_menu'        => 'rollsbar-settings',
-				'show_in_rest'        => true,
-				'supports'            => array( 'title', 'editor', 'excerpt', 'thumbnail', 'page-attributes' ),
-				'menu_icon'           => 'dashicons-images-alt2',
-				'capability_type'     => 'post',
-				'map_meta_cap'        => true,
+				'public'          => false,
+				'show_ui'         => true,
+				'show_in_menu'    => 'rollsbar-settings',
+				'show_in_rest'    => true,
+				'supports'        => array( 'title', 'editor', 'excerpt', 'thumbnail', 'page-attributes' ),
+				'menu_icon'       => 'dashicons-images-alt2',
+				'capability_type' => 'post',
+				'map_meta_cap'    => true,
 			)
 		);
 
@@ -44,14 +44,39 @@ final class RollsBar_Content_Types {
 					'add_new_item'  => 'Добавить вакансию',
 					'edit_item'     => 'Редактировать вакансию',
 				),
-				'public'              => false,
-				'show_ui'             => true,
-				'show_in_menu'        => 'rollsbar-settings',
-				'show_in_rest'        => true,
-				'supports'            => array( 'title', 'editor', 'excerpt', 'page-attributes' ),
-				'menu_icon'           => 'dashicons-businessperson',
-				'capability_type'     => 'post',
-				'map_meta_cap'        => true,
+				'public'          => false,
+				'show_ui'         => true,
+				'show_in_menu'    => 'rollsbar-settings',
+				'show_in_rest'    => true,
+				'supports'        => array( 'title', 'editor', 'excerpt', 'page-attributes' ),
+				'menu_icon'       => 'dashicons-businessperson',
+				'capability_type' => 'post',
+				'map_meta_cap'    => true,
+			)
+		);
+
+		register_post_type(
+			'rb_review',
+			array(
+				'labels' => array(
+					'name'               => 'Отзывы',
+					'singular_name'      => 'Отзыв',
+					'add_new_item'       => 'Добавить отзыв',
+					'edit_item'          => 'Проверить отзыв',
+					'new_item'           => 'Новый отзыв',
+					'view_item'          => 'Просмотреть отзыв',
+					'search_items'       => 'Найти отзывы',
+					'not_found'          => 'Отзывы не найдены',
+					'not_found_in_trash' => 'В корзине отзывов нет',
+				),
+				'public'          => false,
+				'show_ui'         => true,
+				'show_in_menu'    => 'rollsbar-settings',
+				'show_in_rest'    => false,
+				'supports'        => array( 'title', 'editor', 'thumbnail' ),
+				'menu_icon'       => 'dashicons-star-filled',
+				'capability_type' => 'post',
+				'map_meta_cap'    => true,
 			)
 		);
 	}
@@ -182,5 +207,4 @@ final class RollsBar_Content_Types {
 
 		update_post_meta( $post_id, '_rollsbar_vacancy_area', $area );
 	}
-
 }
