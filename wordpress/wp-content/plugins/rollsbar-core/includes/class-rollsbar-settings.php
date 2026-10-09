@@ -25,6 +25,7 @@ final class RollsBar_Settings {
 			'address'                      => 'Кечкеметская улица, 1',
 			'telegram_url'                 => 'https://telegram.me/rollsbar82',
 			'vk_url'                       => 'https://vk.ru/rollsbar82',
+			'metrika_counter_id'           => '',
 			'checkout_entrance_required'   => '0',
 			'checkout_door_code_required'  => '0',
 			'checkout_floor_required'      => '0',
@@ -55,6 +56,10 @@ final class RollsBar_Settings {
 
 	public static function sanitize( array $input ): array {
 		$defaults = self::defaults();
+		$metrika_counter_id = preg_replace( '/[^0-9]/', '', (string) ( $input['metrika_counter_id'] ?? $defaults['metrika_counter_id'] ) );
+		if ( ! preg_match( '/^[1-9][0-9]{3,19}$/', $metrika_counter_id ) ) {
+			$metrika_counter_id = '';
+		}
 
 		return array(
 			'phone_display'               => sanitize_text_field( $input['phone_display'] ?? $defaults['phone_display'] ),
@@ -63,6 +68,7 @@ final class RollsBar_Settings {
 			'address'                     => sanitize_text_field( $input['address'] ?? $defaults['address'] ),
 			'telegram_url'                => esc_url_raw( $input['telegram_url'] ?? $defaults['telegram_url'] ),
 			'vk_url'                      => esc_url_raw( $input['vk_url'] ?? $defaults['vk_url'] ),
+			'metrika_counter_id'          => $metrika_counter_id,
 			'checkout_entrance_required'  => isset( $input['checkout_entrance_required'] ) ? '1' : '0',
 			'checkout_door_code_required' => isset( $input['checkout_door_code_required'] ) ? '1' : '0',
 			'checkout_floor_required'     => isset( $input['checkout_floor_required'] ) ? '1' : '0',
@@ -150,6 +156,29 @@ final class RollsBar_Settings {
 				'rollsbar_checkout'
 			);
 		}
+
+		add_settings_section(
+			'rollsbar_analytics',
+			'Аналитика',
+			static function (): void {
+				echo '<p>Яндекс Метрика остаётся полностью выключенной, пока заказчик не передаст ID счётчика. После сохранения ID код Метрики загружается только после согласия посетителя на аналитические cookies. Webvisor и рекламные инструменты не включаются.</p>';
+			},
+			'rollsbar-settings'
+		);
+
+		add_settings_field(
+			'metrika_counter_id',
+			'ID счётчика Яндекс Метрики',
+			static function (): void {
+				printf(
+					'<input class="regular-text" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="20" name="%1$s[metrika_counter_id]" value="%2$s" placeholder="Например: 12345678"><p class="description">Это не секрет. Оставьте поле пустым, пока счётчик заказчика не создан/не передан.</p>',
+					esc_attr( RollsBar_Settings::OPTION ),
+					esc_attr( RollsBar_Settings::get( 'metrika_counter_id' ) )
+				);
+			},
+			'rollsbar-settings',
+			'rollsbar_analytics'
+		);
 	}
 
 	public static function register_menu(): void {
@@ -229,9 +258,14 @@ final class RollsBar_Settings {
 						<td>Action Scheduler / WooCommerce</td>
 						<td><a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-status&tab=action-scheduler' ) ); ?>">Scheduled Actions</a></td>
 					</tr>
+					<tr>
+						<td><strong>Яндекс Метрика</strong></td>
+						<td><?php echo class_exists( 'RollsBar_Analytics' ) && RollsBar_Analytics::is_enabled() ? '<span style="color:#16803b;font-weight:700;">ID настроен; запуск только после consent</span>' : '<span style="color:#a05a00;font-weight:700;">Выключена — ID счётчика не задан</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+						<td>Цели подготовлены в коде; финальные цели с теми же ID создаются в кабинете Метрики после получения счётчика.</td>
+					</tr>
 				</tbody>
 			</table>
-			<p class="description" style="max-width:820px;">Telegram по умолчанию получает только номер заказа, сумму, количество позиций, способ получения, статус и ссылку в wp-admin. ФИО, телефон и адрес клиента туда не отправляются.</p>
+			<p class="description" style="max-width:820px;">Telegram по умолчанию получает только номер заказа, сумму, количество позиций, способ получения, статус и ссылку в wp-admin. ФИО, телефон и адрес клиента туда не отправляются. Метрика не загружается без ID счётчика и согласия посетителя.</p>
 
 			<hr>
 			<h2>Логотип</h2>
