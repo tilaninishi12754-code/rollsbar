@@ -23,6 +23,11 @@ jobs:
         run: |
           find wordpress -type f -name '*.php' -print0 | xargs -0 -n1 php -l
 
+      - name: Python syntax
+        run: |
+          python3 -m compileall -q wordpress/deploy wordpress/tools
+          echo "Deployment/tool Python syntax PASS"
+
       - name: JavaScript syntax
         run: |
           node --check wordpress/wp-content/themes/rollsbar-theme/assets/js/app.js
