@@ -8,12 +8,24 @@ This section is the current execution plan and supersedes stale "current next ac
 - Phase 1–5 staging foundation/catalog work is complete.
 - Full staging catalog remains 118 product cards from 131 approved source rows.
 - WordPress 7.1.3 + WooCommerce 11.1.2 are live on isolated REG.RU staging.
-- DaData Suggestions is the current checkout address provider on staging.
+- DaData Suggestions is the checkout address provider on staging.
 - Real checkout browser verification passed: exact-house `qc_geo=0` may proceed to future zone lookup; lower precision is fail-closed and cannot silently choose a zone.
 - Provider country labels/raw unrestricted geography are not shown to customers.
 - Native Local Pickup is working.
-- Review moderation flow is implemented and runtime-verified on live staging: `/otzyvy/`, anonymous submission -> `pending`, pending review hidden publicly, admin publish -> public visibility. Synthetic QA review is deleted after verification.
-- Production remains untouched.
+- Review moderation flow is implemented and runtime-verified.
+- Checkout and review flows require explicit personal-data consent.
+- Order-notification INTERNAL pipeline is runtime-verified: Woo new-order email reaches `wp_mail`; Telegram Action Scheduler queue/success/idempotency/retry behavior passes synthetic tests. Real external delivery is NOT yet claimed.
+- Nine legal/payment-readiness pages are published in WordPress, linked to Woo terms/privacy settings and runtime-verified.
+- Published acquiring copy is provider-neutral until an actual current provider is confirmed; stale baseline SberBank wording is not treated as current truth.
+- Deployment can now self-heal a broken active project plugin copy by replacing project code before WP-CLI boots active plugins.
+- Production remains untouched and live payments are OFF.
+
+Latest full proof on implementation commit `3dd7ad2a88f970059335769459d8cf5eb76ac6b8`:
+- static gate `37900012834` — SUCCESS;
+- package build `37900012809` — SUCCESS;
+- clean bootstrap `37900012723` — SUCCESS;
+- live REG.RU deploy `37900012673` — SUCCESS;
+- live runtime: `LEGAL / PAYMENT READINESS RUNTIME PASS`, `ORDER NOTIFICATIONS RUNTIME PASS`, `REVIEWS MODERATION RUNTIME PASS`, `ADDRESS SUGGESTIONS RUNTIME PASS`, catalog=118, `blog_public=0`, staging deploy PASS.
 
 ### Delivery polygons — DEFERRED / NON-BLOCKING
 Exact delivery polygons are not currently available from the client. This does **not** block continued website development.
@@ -31,23 +43,53 @@ Deferred until real geometry exists:
 - automatic polygon -> threshold enforcement;
 - courier zone/minimum enforcement.
 
-Safety rule: NEVER invent real polygons. Courier enforcement stays OFF. We may later provide a client-safe free/open map drawing layer so the client can draw/correct geometry themselves. The historical Yandex-only editor direction below is no longer the required current path; Yandex/2GIS are fallback-only unless DaData materially fails.
+Safety rule: NEVER invent real polygons. Courier enforcement stays OFF. We may later provide a client-safe free/open map drawing layer so the client can draw/correct geometry themselves. Yandex/2GIS are fallback-only unless DaData materially fails.
 
-### Phase 6 remaining work, in execution order
+### Phase 6 remaining work
 - [x] DaData address selection on staging checkout
 - [x] fail-closed `qc_geo` policy and real checkout browser verification
 - [x] reviews moderation flow + live runtime verification
-- [ ] real order-notification delivery test (WooCommerce email + Telegram) — requires actual staging recipient/Telegram credentials before claiming end-to-end delivery
+- [x] explicit privacy consent for checkout + reviews
+- [x] internal Woo email + async Telegram notification pipeline/runtime verification
+- [ ] real external Telegram delivery — current staging bot token/chat ID absent
+- [ ] real external email receipt/deliverability test
 - [ ] final vacancy questionnaire — blocked only on final client wording/input
-- [ ] future integrations only when explicitly required
 - [~] exact delivery polygons / courier enforcement — DEFERRED, NON-BLOCKING
 
+### Phase 7 — payment readiness / acquiring
+Internally ready on staging:
+- [x] HTTPS
+- [x] catalog with prices
+- [x] cart/checkout
+- [x] seller requisites page
+- [x] public offer page
+- [x] delivery/payment page
+- [x] payment/refund page
+- [x] privacy policy
+- [x] separate personal-data consent
+- [x] payment-security page
+- [x] legal links exposed in footer
+- [x] Woo terms/privacy options wired to canonical pages
+- [x] legal runtime verifier prevents stale `.html` links and unverified acquiring-provider claims
+
+Still required before a real online-payment test:
+- [ ] authoritative current acquiring-provider/contract confirmation;
+- [ ] official sandbox/merchant integration details for that provider;
+- [ ] credentials stored through a secret-safe path, never in chat/Git;
+- [ ] staging payment success/failure/cancel callback test;
+- [ ] staging refund flow test where supported/required;
+- [ ] only after those checks decide production enablement.
+
+Historical references to a bank or earlier acquiring discussion are NOT enough to assume the current provider. Do not write provider-specific production code until provider/contract status is confirmed by authoritative project/client input.
+
 ### Next executable path
-1. Finish everything that can be verified without delivery polygons.
-2. Validate order notification behavior and identify the smallest external credential/input still required for a true delivery test.
-3. If notification delivery is externally blocked, continue to the next independent migration/payment-readiness work instead of stopping the project.
-4. Return to polygons later without reworking DaData/checkout architecture.
-5. Production transition remains gated by full staging QA + explicit owner approval.
+1. Treat legal/payment-readiness plumbing as complete on staging.
+2. Confirm the actual current acquiring provider/contract status from authoritative project/client context.
+3. If provider is confirmed, follow that provider's current official integration docs and wire staging/sandbox only.
+4. If provider/credentials are externally blocked, continue any remaining independent work rather than stopping the project.
+5. Complete real Telegram/email receipt tests when approved real credentials/recipients become available.
+6. Return to exact polygons later without reworking DaData/checkout architecture.
+7. Production transition remains gated by full staging QA + explicit owner approval.
 
 ---
 
@@ -115,25 +157,23 @@ Prepared architecture / pending staging or client input:
 - [x] native WooCommerce Blocks Local Pickup configuration on staging
 - [x] editable delivery-area table with 7 confirmed free-delivery minimum thresholds
 - [x] storefront delivery table sourced from the same editable WordPress data
-- [ ] Yandex address/map integration — runtime API key still required
-- [x] minimal client-safe polygon editor implemented in WordPress; runtime map activation waits for Yandex JS API key
-- [ ] automatic delivery-zone resolution from real polygons — resolver engine is tested, but no accepted real polygons/address geocoding yet
-- [ ] enforce the confirmed minimum-order threshold after an address resolves to a polygon
-- [ ] courier shipping method enabled only after real zone polygons exist
 - [x] order notification architecture: native WooCommerce email + async Telegram via Action Scheduler
-- [ ] staging credentials + real email/Telegram delivery test
+- [x] internal notification runtime test without external sends
+- [ ] real email/Telegram receipt test
 - [ ] final vacancy questionnaire
-- [x] reviews moderation flow — implemented and verified on live staging 2026-10-09; see current override above
-- [ ] future integrations
+- [x] reviews moderation flow
+- [x] explicit privacy consent at checkout/reviews
+- [~] automatic real-polygon zone enforcement — DEFERRED, NON-BLOCKING
+- [ ] future integrations only when explicitly required
 
-Rule: do not invent production delivery prices, minimums, polygons or required checkout fields.
+Rule: do not invent production delivery prices, minimums, polygons, required checkout fields, payment-provider facts or missing legal/contact details.
 
-Polygon editor rule: do not build a standalone GIS/map-management system. During Gate B/staging, implement only the minimum client-safe Yandex Maps polygon editor needed to select a delivery tier, draw/edit its boundary, save coordinates, and test real addresses. Business users may edit zone geometry; code/layout/checkout mechanics remain protected. Exact polygons are created and corrected with the client on staging, not guessed pre-hosting.
-
-Historical note: the Yandex-specific wording above records the earlier implementation direction. Current 2026-10-09 direction is provider-independent and DaData-first; visual polygon editing may use a free/open map layer later. This historical section must not be interpreted as a current Yandex-key blocker.
+Historical note: earlier Yandex-specific polygon-editor direction is preserved in prior project history only. Current direction is provider-independent and DaData-first; exact polygons are deferred, and a Yandex key is not a current project blocker.
 
 ## Phase 7 — payments
-Connect acquiring only after the site, legal pages, SSL, catalog and checkout are ready for bank review.
+Current status: **LEGAL / BANK-READINESS LAYER PASS ON STAGING; ACQUIRING ITSELF NOT CONNECTED**.
+
+Connect acquiring only after confirming the actual provider/contract, then use official provider documentation and sandbox/merchant credentials through secret-safe configuration. Do not enable production payments based only on historical bank references.
 
 ## Phase 8 — production
 - backup staging and production
@@ -142,123 +182,5 @@ Connect acquiring only after the site, legal pages, SSL, catalog and checkout ar
 - monitor checkout/orders
 - do not overwrite production database with staging after live orders begin
 
-
-## Staging deployment readiness — 2026-10-05
-
-Status: **REG.RU STAGING LIVE / FULL CATALOG + GATE B PASS**
-
-Verified on real REG.RU staging:
-- `staging.rollsbar.ru` DNS resolves to the isolated REG.RU staging site;
-- trusted HTTPS / Let's Encrypt works;
-- WordPress 7.1.2 + WooCommerce 11.1.2;
-- isolated staging database;
-- `rollsbar-theme` + `rollsbar-core` active;
-- indexing disabled (`blog_public=0`);
-- RUB currency and pretty permalinks fixed as deployment invariants;
-- native WooCommerce Blocks Local Pickup visible in checkout;
-- full catalog promoted from 5-card smoke to 118 cards / 131 source rows;
-- repeat full import leaves exactly 118 products (idempotency proof);
-- routine live code deploy preserves the promoted 118-product catalog and no longer reruns the historical 5-card seed.
-
-Live browser Gate B (desktop + mobile) verifies:
-- HTTPS home/cart/checkout;
-- 118 product cards;
-- add-to-cart + Woo Store API session persistence;
-- ruble prices and no dollar rendering;
-- checkout fields + phone `+7` behavior;
-- no manual delivery-zone selector;
-- native Local Pickup;
-- historical mobile sticky-cart overlay regression absent;
-- no uncaught page JavaScript errors.
-
-Historical current next action (SUPERSEDED by 2026-10-09 override):
-connect a restricted Yandex Maps JS API 3.0 key to staging → live-test the minimal polygon editor → client draws/accepts exact boundaries → then wire address geocoding and production delivery-zone/minimum enforcement.
-
-Historical package/readiness evidence from 2026-10-02 remains valid:
-- REG.RU staging runbook;
-- credential-free deployment scripts;
-- exact WordPress 7.1.2 / WooCommerce 11.1.2 pin;
-- isolated 5-product smoke import via `--limit=5`;
-- guarded full-catalog promotion;
-- self-contained `rollsbar-core.zip` with catalog;
-- `rollsbar-theme.zip`;
-- deterministic manifest/SHA package;
-- static + shell + secret CI gates.
-
-Package-of-record build run `36961212326`: SUCCESS.
-Static gate run `36961212345`: SUCCESS.
-Clean ephemeral WordPress staging bootstrap run `36961218015`: SUCCESS.
-
-See `STAGING_PACKAGE_RECEIPT_2026-10-02.md`.
-
-## Admin model no-loss checkpoint — 2026-10-02
-
-Recovered source/chat reconciliation confirmed the latest admin requirements are preserved. Safe pre-staging gaps were implemented on `wordpress/migration-2026-10-01` without changing the frozen approved site.
-
-Implemented and verified:
-- separate `Состав / ингредиенты` product field;
-- catalog seed maps source description into Composition while preserving the original Woo description;
-- display weight is seeded only where the approved source explicitly states a leading weight/volume value; missing source weights are not invented;
-- HPOS-compatible operator order columns for customer name, phone, address, delivery zone and order time, alongside WooCommerce status/total;
-- `WC tested up to: 11.1.2` plus `custom_order_tables` and `cart_checkout_blocks` compatibility declarations;
-- backup branch: `backup/pre-admin-gaps-2026-10-02`.
-
-Verification:
-- package build run `37002184393`: SUCCESS;
-- static gate run `37002184427`: SUCCESS;
-- clean runtime smoke run `37002348736`: SUCCESS;
-- runtime smoke confirmed the first imported product has separate composition + `250 г` display weight and that the HPOS operator columns register.
-
-Still intentionally pending:
-- real delivery polygons (minimum/free-delivery thresholds are now confirmed and implemented as editable data);
-- exact final vacancy questionnaire;
-- any weight/volume values absent from the approved catalog source;
-- final decision on splitting Street and House into separate checkout fields;
-- any WOK remodel beyond the already approved catalog model.
-
-
-## Delivery threshold checkpoint — 2026-10-02
-
-Father clarified the supplied amounts are both the minimum order threshold for the listed territory and the amount from which courier delivery is free. No separate courier fee was supplied.
-
-Implemented:
-- dedicated client-editable Rolls Bar → Delivery admin screen;
-- 7 confirmed thresholds: 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 ₽;
-- area lists preserved as source wording;
-- storefront delivery table uses the same WordPress data;
-- manual zone selection remains absent;
-- no polygon or address matching is guessed from neighborhood names.
-
-Safety:
-- backup branch: `backup/pre-delivery-rules-2026-10-02`;
-- exact polygon resolver remains disabled until precise boundaries exist.
-
-Verification:
-- package build run `37007807192`: SUCCESS;
-- static gate run `37007811445`: SUCCESS;
-- clean WordPress bootstrap smoke run `37007818359`: SUCCESS;
-- runtime smoke verified all 7 tiers and representative mappings `М. Жукова → 1500 ₽`, `Мазанка → 4000 ₽`.
-
-Current non-blocking missing data:
-- exact polygon boundaries for address → zone automation;
-- Yandex Maps production API key/runtime configuration;
-- final vacancy questionnaire;
-- source weights/volumes absent from the approved catalog;
-- direct decision if Street and House should be split in checkout.
-
-These items do not block continued WordPress migration. They block only their corresponding final production behaviors.
-
-## Live Gate B + polygon-editor checkpoint — 2026-10-05
-
-Closed by observed evidence, not by declaration:
-- live full-catalog Browser Gate B run `37353602056`: SUCCESS;
-- full-catalog promotion run `37353275622`: SUCCESS, `5 -> 118 -> 118` products across initial and repeat import;
-- native Blocks Local Pickup is visible in both desktop and mobile checkout;
-- delivery polygon storage accepts only valid coordinate ranges, strips a duplicate closing point, requires at least 3 valid vertices, and caps geometry at 150 vertices;
-- point-in-polygon resolver passes synthetic inside/outside runtime tests in the clean WordPress smoke environment;
-- Yandex editor code is gated behind `ROLLSBAR_YANDEX_MAPS_API_KEY`, so absence of a key cannot alter current checkout/delivery behavior;
-- no real delivery polygons have been invented or enabled.
-
-Historical runtime activation blocker (SUPERSEDED as global blocker):
-- Yandex Maps JS API 3.0 key with HTTP Referer restriction for staging is still absent;
-- therefore the historical Yandex visual editor cannot be live-tested, but this no longer blocks continued website development. Exact real polygons remain deferred until client input/editor use.
+## Historical checkpoints
+Older detailed staging/catalog/admin/delivery checkpoints remain available in Git history and Project No Loss artifacts. They are evidence, not current execution blockers. In case of conflict, the current override above plus live GitHub/CI/runtime evidence wins.
