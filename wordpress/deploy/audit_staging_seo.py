@@ -195,11 +195,9 @@ def main() -> int:
         )
         product_url = remote(
             client,
-            prefix
-            + " post list --post_type=product --post_status=publish --posts_per_page=1 --field=ID"
-            + " | head -n1 | xargs -r "
-            + prefix
-            + " post url",
+            f"export PATH=\"$HOME/.local/bin:$PATH\"; "
+            f"id=$(wp --path=\"{WP_PATH}\" post list --post_type=product --post_status=publish --posts_per_page=1 --field=ID | head -n1); "
+            f"test -n \"$id\"; wp --path=\"{WP_PATH}\" post url \"$id\"",
         )
         print(f"blog_public={blog_public}")
         print(f"seopress_status={seopress_status}")
