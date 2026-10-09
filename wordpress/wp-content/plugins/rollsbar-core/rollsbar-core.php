@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Rolls Bar Core
  * Description: Business logic for Rolls Bar: delivery zones, checkout fields, minimum order rules, catalog behavior and integrations.
- * Version: 0.1.6
+ * Version: 0.1.7
  * Author: Rolls Bar project
  * Requires at least: 6.6
  * Requires PHP: 8.1
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ROLLSBAR_CORE_VERSION', '0.1.6' );
+define( 'ROLLSBAR_CORE_VERSION', '0.1.7' );
 define( 'ROLLSBAR_CORE_FILE', __FILE__ );
 define( 'ROLLSBAR_CORE_DIR', plugin_dir_path( __FILE__ ) );
 
