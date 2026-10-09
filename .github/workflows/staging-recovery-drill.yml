@@ -2,11 +2,6 @@ name: Staging Recovery Drill
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - wordpress/migration-2026-10-01
-    paths:
-      - .github/workflows/staging-recovery-drill.yml
 
 permissions:
   contents: read
@@ -17,7 +12,6 @@ concurrency:
 
 jobs:
   recovery-drill:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[recovery-drill]')
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -46,5 +40,3 @@ jobs:
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_CONFIRM_RECOVERY_DRILL: YES
         run: python3 wordpress/deploy/recovery_drill_reg_ru.py
-
-# One-shot push trigger used only because the connector cannot dispatch workflow_dispatch directly.
