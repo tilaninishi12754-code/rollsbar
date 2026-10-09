@@ -17,13 +17,13 @@ final class RollsBar_Analytics {
 	private const CONSENT_STORAGE_KEY = 'rollsbar_analytics_consent_v1';
 
 	private const GOALS = array(
-		'add_to_cart'           => 'add_to_cart',
-		'open_cart'             => 'open_cart',
-		'begin_checkout'        => 'begin_checkout',
-		'submit_order'          => 'submit_order',
-		'purchase'              => 'purchase',
-		'phone_click'           => 'phone_click',
-		'shipping_method_select'=> 'shipping_method_select',
+		'add_to_cart'            => 'add_to_cart',
+		'open_cart'              => 'open_cart',
+		'begin_checkout'         => 'begin_checkout',
+		'submit_order'           => 'submit_order',
+		'purchase'               => 'purchase',
+		'phone_click'            => 'phone_click',
+		'shipping_method_select' => 'shipping_method_select',
 	);
 
 	public static function init(): void {
@@ -128,7 +128,7 @@ final class RollsBar_Analytics {
 		<div class="rollsbar-cookie-consent" data-rollsbar-cookie-consent hidden role="region" aria-label="Настройки cookies">
 			<div class="rollsbar-cookie-consent__copy">
 				<strong>Cookies и статистика</strong>
-				<span>Необходимые cookies используются для корзины и оформления заказа. С вашего согласия мы также можем включить Яндекс Метрику для обезличенной статистики использования сайта.</span>
+				<span>Необходимые cookies используются для корзины и оформления заказа. С вашего согласия мы также можем включить Яндекс Метрику для статистики использования сайта.</span>
 				<a href="<?php echo esc_url( home_url( '/cookies/' ) ); ?>">Подробнее</a>
 			</div>
 			<div class="rollsbar-cookie-consent__actions">
