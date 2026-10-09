@@ -170,6 +170,26 @@ wp_cmd option update woocommerce_price_num_decimals '0'
 wp_cmd option update woocommerce_price_decimal_sep ','
 wp_cmd option update woocommerce_price_thousand_sep ' '
 
+# Approved launch payment mode: payment on receipt only. Final project sources
+# explicitly reserve online card acquiring for a later separate phase after a
+# bank/provider contract and real integration parameters exist. Keep core COD
+# provider-neutral, disable unapproved core alternatives, and record the online
+# slot as reserved/disabled. A real provider extension must be integrated and
+# tested separately before this invariant can be intentionally changed.
+wp_cmd eval '
+$cod = get_option( "woocommerce_cod_settings", array() );
+$cod["enabled"] = "yes";
+$cod["title"] = "Оплата при получении";
+$cod["description"] = "Оплата заказа при получении. Финальные условия подтверждает оператор.";
+update_option( "woocommerce_cod_settings", $cod );
+foreach ( array( "bacs", "cheque" ) as $gateway_id ) {
+    $settings = get_option( "woocommerce_{$gateway_id}_settings", array() );
+    $settings["enabled"] = "no";
+    update_option( "woocommerce_{$gateway_id}_settings", $settings );
+}
+update_option( "rollsbar_online_payment_state", "reserved_disabled", false );
+'
+
 wp_cmd theme activate rollsbar-theme
 wp_cmd plugin activate rollsbar-core
 wp_cmd rollsbar catalog validate
@@ -229,9 +249,9 @@ if [[ "$ROLLSBAR_IMPORT_SMOKE" == "1" ]]; then
 fi
 
 # Final invariants: fail the deploy if a later change regresses staging HTTPS,
-# public QA visibility, pretty permalinks, ruble currency, native Blocks Local
-# Pickup, reviews, legal/payment readiness, or order-notification internals.
-# Search-engine indexing stays disabled via blog_public=0.
+# public QA visibility, pretty permalinks, ruble currency, approved launch
+# payment mode, native Blocks Local Pickup, reviews, legal/payment readiness,
+# or order-notification internals. Search indexing stays disabled via blog_public=0.
 [[ "$(wp_cmd option get home)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get siteurl)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get blog_public)" == "0" ]]
@@ -248,6 +268,7 @@ grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
 wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-reviews.php"
 wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-notifications.php"
 wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-legal-pages.php"
+wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-payment-readiness.php"
 
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   [[ "$(wp_cmd eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')" == "yes" ]]
@@ -269,6 +290,7 @@ echo "WooCommerce: $(wp_cmd plugin get woocommerce --field=version)"
 echo "Currency: $(wp_cmd option get woocommerce_currency)"
 echo "Storefront QA visibility: live (search indexing off)"
 echo "Local Pickup: enabled"
+echo "Launch payment mode: payment at receipt only; online acquiring reserved/disabled"
 echo "Reviews moderation: verified"
 echo "Legal/payment readiness pages: verified"
 echo "Order notification pipeline: verified (external delivery not asserted)"
