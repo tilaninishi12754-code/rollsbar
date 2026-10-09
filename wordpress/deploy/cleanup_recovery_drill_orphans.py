@@ -29,7 +29,7 @@ def mask(value: str) -> None:
 
 def api_call(params: dict[str, str]) -> ET.Element:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-recovery-cleanup/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-recovery-cleanup/1.1"})
     with urllib.request.urlopen(req, context=CTX, timeout=30) as response:
         root = ET.fromstring(response.read())
     err = root.find(".//error")
@@ -91,7 +91,6 @@ def enrich_db(sid: str, row: dict[str, str]) -> dict[str, str]:
             detail = api_call({"out": "xml", "func": "db.edit", "auth": sid, "elid": pair})
             for elem in detail.findall(".//elem"):
                 enriched.update({k: v for k, v in elem_row(elem).items() if v})
-            # Some view forms are not wrapped in elem nodes.
             for child in detail.iter():
                 if list(child):
                     continue
@@ -102,7 +101,6 @@ def enrich_db(sid: str, row: dict[str, str]) -> dict[str, str]:
                 if value and tag not in enriched:
                     enriched[tag] = value
         except Exception:
-            # Listing metadata may already be sufficient for deletion.
             pass
     return enriched
 
@@ -114,18 +112,19 @@ def delete_one(sid: str, row: dict[str, str]) -> None:
         raise RuntimeError("Refusing cleanup for non-rbdrill database")
 
     pair = row.get("pair", "")
-    db_key = row.get("key", "")
+    documented_key = row.get("key", "")
+    panel_elid = row.get("elid", "")
+    delete_id = documented_key or panel_elid
     print(
         "orphan_candidate="
         + name
-        + f" pair_present={'yes' if pair else 'no'} key_present={'yes' if db_key else 'no'}"
+        + f" pair_present={'yes' if pair else 'no'} key_present={'yes' if documented_key else 'no'} elid_present={'yes' if panel_elid else 'no'}"
     )
 
-    if not db_key:
+    if not delete_id:
         safe_fields = ",".join(sorted(k for k in row if k not in {"password", "passwd"}))
-        raise RuntimeError(f"rbdrill database key unavailable; safe_fields={safe_fields}")
+        raise RuntimeError(f"rbdrill database delete identifier unavailable; safe_fields={safe_fields}")
 
-    # Remove attached drill users first when the db list exposes its pair.
     if pair:
         try:
             users = db_rows(api_call({"out": "xml", "func": "db.users", "auth": sid, "elid": pair}))
@@ -145,7 +144,7 @@ def delete_one(sid: str, row: dict[str, str]) -> None:
         except Exception as exc:
             print(f"orphan_user_cleanup_warning={exc.__class__.__name__}")
 
-    api_call({"out": "xml", "func": "db.delete", "auth": sid, "elid": db_key})
+    api_call({"out": "xml", "func": "db.delete", "auth": sid, "elid": delete_id})
     print("orphan_database_deleted=" + name)
 
 
