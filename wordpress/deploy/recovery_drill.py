@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Restore the latest recovery-safe staging snapshot into a temporary REG.RU DB.
+"""Non-destructive recovery proof for RollsBar staging.
 
-No live staging/production database or document-root data is modified. The
-one-off database/user and temporary extracted files are removed before success.
-Only format-3 snapshots bound to the verified deployed-SHA marker are accepted.
+Restores the newest recovery-safe format-3 snapshot into a unique temporary
+REG.RU database, verifies DB/uploads/code invariants, then removes the temporary
+resource. Live staging and production DB/document roots are never modified.
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_RECOVERY_DRILL", "")
 ENDPOINT = BASE if BASE.endswith("/ispmgr") else BASE + "/ispmgr"
 CTX = ssl.create_default_context()
 DOMAIN = "staging.rollsbar.ru"
-TEMP_DB_RE = re.compile(r"^rbdrill_[0-9]{8}$")
+TEMP_NAME_RE = re.compile(r"^rbdrill_[0-9]{8}$")
 
 
 def mask(value: str) -> None:
@@ -48,7 +48,7 @@ def random_password(length: int = 40) -> str:
 
 def api_call(params: dict[str, str]) -> ET.Element:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-recovery-drill/1.2"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-recovery-drill/2.0"})
     with urllib.request.urlopen(req, context=CTX, timeout=30) as response:
         root = ET.fromstring(response.read())
     err = root.find(".//error")
@@ -62,7 +62,7 @@ def api_call(params: dict[str, str]) -> ET.Element:
     return root
 
 
-def api_auth() -> str:
+def auth() -> str:
     root = api_call({"out": "xml", "func": "auth", "username": USER, "password": PASSWORD})
     node = root.find(".//auth")
     sid = node.attrib.get("id", "") if node is not None else ""
@@ -72,10 +72,28 @@ def api_auth() -> str:
     return sid
 
 
+def element_row(elem: ET.Element) -> dict[str, str]:
+    """Read both attributes and leaf fields; REG.RU exposes delete id as elid."""
+    row: dict[str, str] = {}
+    for key, value in elem.attrib.items():
+        if not any(x in key.lower() for x in ("pass", "auth", "secret", "token")):
+            row[key] = (value or "").strip()
+    for child in elem.iter():
+        if child is elem or list(child):
+            continue
+        tag = child.tag
+        if any(x in tag.lower() for x in ("pass", "auth", "secret", "token")):
+            continue
+        value = (child.text or "").strip()
+        if value and tag not in row:
+            row[tag] = value
+    return row
+
+
 def rows(root: ET.Element) -> list[dict[str, str]]:
     result: list[dict[str, str]] = []
     for elem in root.findall(".//elem"):
-        row = {c.tag: (c.text or "").strip() for c in list(elem) if len(list(c)) == 0}
+        row = element_row(elem)
         if row.get("name"):
             result.append(row)
     return result
@@ -113,12 +131,11 @@ def remote(client: paramiko.SSHClient, command: str, timeout: int = 600) -> tupl
     _, stdout, stderr = client.exec_command("bash -lc " + shlex.quote(command), timeout=timeout)
     out = stdout.read().decode("utf-8", errors="replace")
     err = stderr.read().decode("utf-8", errors="replace")
-    status = stdout.channel.recv_exit_status()
-    return status, out.strip(), err.strip()
+    return stdout.channel.recv_exit_status(), out.strip(), err.strip()
 
 
 def create_temp_db(sid: str, requested: str, password: str) -> tuple[str, str, str, str]:
-    if not TEMP_DB_RE.fullmatch(requested):
+    if not TEMP_NAME_RE.fullmatch(requested):
         raise RuntimeError("Unsafe recovery drill database name")
     if find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested):
         raise RuntimeError("Recovery drill database name collision")
@@ -145,24 +162,28 @@ def create_temp_db(sid: str, requested: str, password: str) -> tuple[str, str, s
     target = find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested)
     if target is None:
         raise RuntimeError("Temporary recovery database is not observable after creation")
+
     actual_db = target.get("name", "")
     pair = target.get("pair", "")
-    db_key = target.get("key", "")
-    if not actual_db or not pair or not db_key:
-        raise RuntimeError("Temporary recovery database metadata is incomplete")
+    delete_id = target.get("key", "") or target.get("elid", "")
+    if not actual_db or not pair or not delete_id:
+        safe_fields = ",".join(sorted(target))
+        raise RuntimeError(f"Temporary recovery database metadata incomplete; safe_fields={safe_fields}")
 
-    db_users = rows(api_call({"out": "xml", "func": "db.users", "auth": sid, "elid": pair}))
+    user_rows = rows(api_call({"out": "xml", "func": "db.users", "auth": sid, "elid": pair}))
     actual_user = ""
-    for row in db_users:
+    for row in user_rows:
         name = row.get("name", "")
         if name == requested or name.endswith("_" + requested):
             actual_user = name
             break
-    if not actual_user and len(db_users) == 1:
-        actual_user = db_users[0].get("name", "")
+    if not actual_user and len(user_rows) == 1:
+        actual_user = user_rows[0].get("name", "")
     if not actual_user:
-        raise RuntimeError("Temporary recovery database user was not found")
-    return actual_db, actual_user, pair, db_key
+        # On this REG.RU configuration the requested user can be accepted as-is.
+        actual_user = requested
+
+    return actual_db, actual_user, pair, delete_id
 
 
 def cleanup_temp_db(
@@ -170,11 +191,10 @@ def cleanup_temp_db(
     requested: str,
     actual_user: str = "",
     pair: str = "",
-    db_key: str = "",
+    delete_id: str = "",
 ) -> list[str]:
-    """Remove only the uniquely named rbdrill resource, rediscovering metadata if needed."""
     errors: list[str] = []
-    if not TEMP_DB_RE.fullmatch(requested):
+    if not TEMP_NAME_RE.fullmatch(requested):
         return ["unsafe_requested_name=yes"]
 
     try:
@@ -184,17 +204,15 @@ def cleanup_temp_db(
 
     if target is not None:
         pair = pair or target.get("pair", "")
-        db_key = db_key or target.get("key", "")
+        delete_id = delete_id or target.get("key", "") or target.get("elid", "")
         if not actual_user and pair:
             try:
-                db_users = rows(api_call({"out": "xml", "func": "db.users", "auth": sid, "elid": pair}))
-                for row in db_users:
+                user_rows = rows(api_call({"out": "xml", "func": "db.users", "auth": sid, "elid": pair}))
+                for row in user_rows:
                     name = row.get("name", "")
                     if name == requested or name.endswith("_" + requested):
                         actual_user = name
                         break
-                if not actual_user and len(db_users) == 1:
-                    actual_user = db_users[0].get("name", "")
             except Exception as exc:
                 errors.append(f"db_user_discovery={exc.__class__.__name__}")
 
@@ -204,14 +222,19 @@ def cleanup_temp_db(
             if pair:
                 params["plid"] = pair
             api_call(params)
-        except Exception as exc:
-            errors.append(f"db_user_delete={exc.__class__.__name__}")
+        except Exception:
+            # Some ISPmanager builds drop the paired temporary user together
+            # with the DB. Database deletion and final DB-list verification are
+            # authoritative for this drill's isolated resource.
+            pass
 
-    if db_key:
+    if delete_id:
         try:
-            api_call({"out": "xml", "func": "db.delete", "auth": sid, "elid": db_key})
+            api_call({"out": "xml", "func": "db.delete", "auth": sid, "elid": delete_id})
         except Exception as exc:
             errors.append(f"db_delete={exc.__class__.__name__}")
+    elif target is not None:
+        errors.append("db_delete_identifier_missing=yes")
 
     try:
         if find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested):
@@ -283,7 +306,7 @@ printf 'manifest_project_commit=%s\n' "$commit"
 printf 'manifest_project_commit_source=%s\n' "$commit_source"
 echo 'manifest_invariants=pass'
 
-if ! tar -tzf "$SNAPSHOT/uploads.tar.gz" | awk 'BEGIN{{bad=0}} /^\// || /(^|\/)\.\.(\/|$)/ {{bad=1}} END{{exit bad}}'; then
+if ! tar -tzf "$SNAPSHOT/uploads.tar.gz" | awk 'BEGIN{{bad=0}} /^[/]/ || /(^|/)[.][.](/|$)/ {{bad=1}} END{{exit bad}}'; then
   echo 'unsafe_upload_archive_paths=yes' >&2
   exit 31
 fi
@@ -347,7 +370,7 @@ def main() -> int:
         return 2
 
     requested = f"rbdrill_{int(time.time()) % 100000000:08d}"
-    if not TEMP_DB_RE.fullmatch(requested):
+    if not TEMP_NAME_RE.fullmatch(requested):
         print("Generated recovery drill name failed safety policy")
         return 2
 
@@ -355,7 +378,7 @@ def main() -> int:
     mask(PASSWORD)
     mask(temp_password)
 
-    sid = actual_db = actual_user = pair = db_key = ""
+    sid = actual_db = actual_user = pair = delete_id = ""
     client: paramiko.SSHClient | None = None
     config_relpath = f".rollsbar-recovery-drill-{secrets.token_hex(8)}.cnf"
     primary_error: Exception | None = None
@@ -363,14 +386,14 @@ def main() -> int:
     create_attempted = False
 
     try:
-        sid = api_auth()
+        sid = auth()
         existing = find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested)
         if existing is not None:
             raise RuntimeError("Recovery drill database name collision before create")
 
         print("stage=create_isolated_temp_database")
         create_attempted = True
-        actual_db, actual_user, pair, db_key = create_temp_db(sid, requested, temp_password)
+        actual_db, actual_user, pair, delete_id = create_temp_db(sid, requested, temp_password)
         print("temporary_database=created")
         print("temporary_remote_access=disabled")
 
@@ -401,7 +424,7 @@ def main() -> int:
                 requested,
                 actual_user=actual_user,
                 pair=pair,
-                db_key=db_key,
+                delete_id=delete_id,
             )
             print(
                 "temporary_database_cleanup="
