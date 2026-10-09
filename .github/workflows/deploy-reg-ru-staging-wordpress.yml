@@ -7,6 +7,7 @@ on:
       - wordpress/migration-2026-10-01
     paths:
       - .github/workflows/deploy-reg-ru-staging-wordpress.yml
+      - wordpress/deploy/backup-staging.sh
       - wordpress/deploy/bootstrap-staging.sh
       - wordpress/deploy/deploy_staging_wordpress.py
       - wordpress/deploy/harden_staging_http.py
