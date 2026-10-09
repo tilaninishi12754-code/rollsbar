@@ -2,198 +2,196 @@
 
 ## CURRENT EXECUTION OVERRIDE — 2026-10-09
 
-This section is the current execution plan and supersedes stale "current next action" lines in historical checkpoints below. Historical sections are preserved for Project No Loss evidence.
+This section is the current execution plan and supersedes stale "current next action" lines in historical checkpoints. Detailed evidence is in `wordpress/docs/CURRENT_STATE.md` and Git/CI history.
 
 ### Current verified state
 - Phase 1–5 staging foundation/catalog work is complete.
-- Full staging catalog remains 118 product cards from 131 approved source rows.
-- WordPress 7.1.3 + WooCommerce 11.1.2 are live on isolated REG.RU staging.
-- DaData Suggestions is the checkout address provider on staging; real browser QA passed with fail-closed `qc_geo` handling.
-- Provider country labels/raw unrestricted geography are not shown to customers.
-- Native Local Pickup is working.
-- Review moderation flow is runtime-verified.
-- Checkout and review flows require explicit personal-data consent.
-- Order-notification INTERNAL pipeline is runtime-verified; real Telegram/email receipt is still external/pending.
-- Nine legal/payment-readiness pages are published and wired to canonical Woo/WordPress settings.
-- Launch payment mode is deliberately **payment at receipt only**; online-card acquiring is reserved/disabled and hidden until a separate provider stage.
-- Yandex Metrica integration and goal wiring are prepared, but no real counter ID is configured, so no analytics tag loads on staging.
-- Deployment self-heals project theme/plugin files before WP-CLI boots active plugins.
-- Production remains untouched; live acquiring and production indexing are OFF.
+- Live REG.RU staging remains isolated from production.
+- WordPress 7.1.3 + WooCommerce 11.1.2.
+- Full catalog = 118 product cards / 131 approved source rows.
+- DaData Suggestions is the checkout address provider; fail-closed `qc_geo` browser QA passed.
+- Provider country labels/raw unrestricted geography are hidden from customers.
+- Local Pickup works.
+- Reviews moderation + explicit checkout/review privacy consent are runtime-verified.
+- Internal Woo email + async Telegram notification pipeline is runtime-verified; real external delivery remains pending.
+- Nine legal/payment-readiness pages are published and wired to canonical WordPress/WooCommerce settings.
+- Launch payment mode = **payment at receipt only**; online acquiring is reserved/disabled and hidden.
+- Yandex Metrica integration/goals are prepared, but no real counter ID is configured, therefore analytics does not load.
+- Production remains untouched; production indexing/live acquiring are OFF.
 
-Latest full proof on implementation commit `a438412e7e538cf8b6ec0b001af53a6078791cb7`:
-- static gate `37902087037` — SUCCESS;
-- package build `37902086946` — SUCCESS;
-- clean bootstrap `37902086984` — SUCCESS;
-- live REG.RU deploy `37902086959` — SUCCESS;
-- live runtime: `REVIEWS MODERATION RUNTIME PASS`, `ORDER NOTIFICATIONS RUNTIME PASS`, `LEGAL / PAYMENT READINESS RUNTIME PASS`, `PAYMENT LAUNCH MODE RUNTIME PASS`, `ANALYTICS PREPARATION RUNTIME PASS`, `ADDRESS SUGGESTIONS RUNTIME PASS`, catalog=118, `blog_public=0`, staging deploy PASS.
+### Security / backup readiness — VERIFIED
+Completed on real staging:
+- [x] official WordPress 7.1.3 core checksum PASS;
+- [x] `DISALLOW_FILE_EDIT=true`;
+- [x] `FORCE_SSL_ADMIN=true`;
+- [x] `wp-config.php` tightened to mode 640 and verified with WP-CLI + HTTP health;
+- [x] no world-writable PHP/config files found;
+- [x] sensitive `/wp-config.php` and `/.git/config` HTTP probes return 403;
+- [x] canonical server-side DB + uploads backup outside web-root;
+- [x] gzip/tar/SHA-256 verification before a snapshot is considered valid;
+- [x] retention of newest 5 complete snapshots;
+- [x] every routine live staging deploy creates/verifies a fresh backup **before mutation** and aborts if backup fails;
+- [x] deploy final gate re-verifies official core checksums and `wp-config.php=640`;
+- [x] inactive plugins `akismet` and `hello` removed;
+- [x] old bundled themes `twentytwentythree` and `twentytwentyfour` removed;
+- [x] one bundled fallback theme `twentytwentyfive` retained for diagnostics;
+- [x] WooCommerce remains intentionally pinned to tested 11.1.2; per-plugin auto-update is disabled so upgrades go through backup -> staging -> regression.
 
-Analytics proof:
-- `live_counter_configured=no`;
-- synthetic valid counter loader = PASS;
-- consent required before Yandex tag load;
-- Webvisor OFF;
-- marketing tools not configured;
-- goals prepared for `add_to_cart`, `open_cart`, `begin_checkout`, `submit_order`, `purchase`, `phone_click`; delivery/pickup selection is also wired as `shipping_method_select`.
+Key evidence:
+- hardening workflow `37909323728` — SUCCESS;
+- backup-gated live deploy `37909731997` — SUCCESS;
+- static gate `37909732193` — SUCCESS;
+- package build `37909732076` — SUCCESS;
+- clean bootstrap `37909731971` — SUCCESS;
+- extension cleanup `37910173271` — SUCCESS;
+- independent post-cleanup audit rerun job `113754003039` — SUCCESS.
 
-Payment proof:
-- only `cod` enabled;
-- public title `Оплата при получении`;
-- `online_payment_state=reserved_disabled`;
-- `online_card_gateway_visible=no`;
-- no provider-specific gateway assumed.
+Current independent audit proves:
+- inactive plugins = 0;
+- inactive themes = only `twentytwentyfive`;
+- backup snapshot count = 5;
+- latest backup integrity PASS;
+- core checksum PASS;
+- core updates available = 0;
+- only a newer WooCommerce release is offered, but current live staging remains 11.1.2 by design.
+
+Do **not** mass-chmod the shared-hosting WordPress tree solely because many files are group-writable. REG.RU shared ownership/group semantics may require group write. We hardened the sensitive config and proved there are no world-writable PHP/config files.
 
 ### Delivery polygons — DEFERRED / NON-BLOCKING
-Exact delivery polygons are not currently available from the client. This does **not** block continued website development.
+Exact delivery polygons are unavailable from the client. This does **not** block continued development.
 
 Already prepared:
-- 7 canonical minimum/free-delivery thresholds: 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB;
-- polygon storage and sanitation;
-- tested point-in-polygon resolver;
-- DaData address -> coordinate path;
-- fail-closed precision policy.
+- thresholds 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB;
+- editable delivery data;
+- polygon storage/sanitation;
+- point-in-polygon resolver;
+- DaData address -> coordinates;
+- fail-closed geocode precision policy.
 
-Deferred until real geometry exists:
-- client drawing/approval of exact boundaries;
+Deferred:
+- client drawing/approval of real boundaries;
 - boundary-case QA;
-- automatic polygon -> threshold enforcement;
+- polygon -> threshold enforcement;
 - courier zone/minimum enforcement.
 
-Safety rule: NEVER invent real polygons. Courier enforcement stays OFF. Yandex/2GIS remain fallback-only unless DaData materially fails.
+Never invent production polygons. Courier enforcement stays OFF.
 
-### Phase 6 remaining work
-- [x] DaData address selection on staging checkout
-- [x] fail-closed `qc_geo` policy and real checkout browser verification
-- [x] reviews moderation flow + live runtime verification
-- [x] explicit privacy consent for checkout + reviews
-- [x] internal Woo email + async Telegram notification pipeline/runtime verification
-- [x] Yandex Metrica integration + stable goal wiring prepared behind counter-ID + consent gate
-- [ ] real Yandex Metrica counter ID + real goal reception verification
-- [ ] real external Telegram delivery — current staging bot token/chat ID absent
-- [ ] real external email receipt/deliverability test
-- [ ] final vacancy questionnaire — blocked only on final client wording/input
-- [~] exact delivery polygons / courier enforcement — DEFERRED, NON-BLOCKING
+### Phase 6 — behavior / integrations
+Completed:
+- [x] checkout fields + +7 helper;
+- [x] editable promo/vacancy/content/admin model;
+- [x] HPOS/order-list compatibility;
+- [x] Local Pickup;
+- [x] DaData Suggestions + coordinate resolution;
+- [x] fail-closed geocode precision UX;
+- [x] reviews moderation;
+- [x] required privacy consent;
+- [x] internal order notification pipeline + retry/idempotency test;
+- [x] Yandex Metrica code/goal preparation behind counter-ID + consent gate.
+
+External/pending:
+- [ ] real Yandex Metrica counter ID + live goal reception verification;
+- [ ] real Telegram delivery — bot token/chat ID absent on staging;
+- [ ] real email receipt/deliverability;
+- [ ] final vacancy questionnaire — needs final client wording/input;
+- [~] exact polygons/courier enforcement — deferred/non-blocking.
 
 ### Phase 7 — payment readiness / acquiring
-Launch payment state:
-- [x] payment at receipt enabled
-- [x] unapproved core payment alternatives disabled
-- [x] online-card gateway hidden/reserved
-- [x] no acquiring provider assumed from historical references
+Current launch state:
+- [x] payment at receipt enabled;
+- [x] unapproved core alternatives disabled;
+- [x] online-card gateway hidden/reserved;
+- [x] no acquiring provider assumed from historical references.
 
-Payment-readiness layer:
-- [x] HTTPS
-- [x] catalog with prices
-- [x] cart/checkout
-- [x] seller requisites page
-- [x] public offer page
-- [x] delivery/payment page
-- [x] payment/refund page
-- [x] privacy policy
-- [x] separate personal-data consent
-- [x] payment-security page
-- [x] legal links exposed in footer
-- [x] Woo terms/privacy options wired to canonical pages
-- [x] runtime verifier blocks stale `.html` links and unverified acquiring-provider claims
+Readiness layer:
+- [x] HTTPS;
+- [x] catalog/prices/cart/checkout;
+- [x] seller requisites;
+- [x] public offer;
+- [x] delivery/payment page;
+- [x] payment/refund page;
+- [x] privacy policy + separate consent;
+- [x] payment-security page;
+- [x] footer legal links;
+- [x] runtime validation of canonical terms/privacy/provider-neutral copy.
 
-Online acquiring is a separate future stage and requires, before any real test:
-- [ ] authoritative current acquiring-provider/contract confirmation;
-- [ ] official sandbox/merchant integration details;
-- [ ] credentials through a secret-safe path, never chat/Git;
-- [ ] staging success/failure/cancel callback test;
-- [ ] staging refund flow test where supported/required;
-- [ ] explicit decision before production enablement.
+Online acquiring is a separate future stage and requires:
+- [ ] authoritative provider/contract confirmation;
+- [ ] official sandbox/merchant details;
+- [ ] secret-safe credentials;
+- [ ] staging success/failure/cancel callback tests;
+- [ ] refund-flow test where applicable;
+- [ ] explicit production enablement decision.
 
-Historical references to a bank are NOT enough to assume the current provider.
+Historical references to a bank are not enough to assume the current provider.
 
 ### Next executable path
-1. Treat DaData, legal/payment readiness, receipt-only launch payment mode, reviews, privacy consent, notification internals and analytics preparation as internally complete on staging.
-2. Do **not** wait on analytics counter ID, Telegram secrets, email recipient, acquiring provider or polygons; all are external-input blocks.
-3. Continue independent launch-readiness work from the final TЗ: baseline WordPress security, backup/update readiness and remaining acceptance/regression checks that do not require client secrets.
-4. When a real Metrica counter ID arrives, add only the ID and verify actual goal hits in Yandex Metrica before calling analytics complete.
-5. When Telegram/email recipient credentials exist, perform real external delivery tests.
-6. Online acquiring remains a separate later stage; launch payment stays at receipt unless owner explicitly changes scope.
-7. Production transition remains gated by full staging QA + explicit owner approval.
+1. Treat baseline WordPress security + backup/update readiness as **complete and verified on staging**.
+2. Continue independent final acceptance work that needs no client secrets:
+   - public-route/HTTP health and security-header audit;
+   - WordPress Site Health / REST / loopback / cron readiness;
+   - recovery/runbook validation without destructive restore on live staging;
+   - final pre-production acceptance inventory and remaining blockers.
+3. Do not automatically upgrade WooCommerce past 11.1.2. Any version bump must be deliberate and pass a fresh staging regression cycle.
+4. Do not wait on Metrica ID, Telegram/email external credentials, acquiring provider, vacancy wording or polygons.
+5. Production transition remains gated by full staging QA + explicit owner approval.
 
 ---
 
 ## Phase 0 — freeze baseline
-Keep the current GitHub Pages demo as the approved UX reference while WordPress is built.
+Approved UX baseline is immutable: `approved/site-2026-10-01` / `a5e524392abcf89ffd5ace2a18218a6b59ed3b61`.
 
 ## Phase 1 — staging foundation
-- staging hostname
+Status: COMPLETE.
+- isolated staging hostname/database
 - HTTPS
-- clean WordPress
-- WooCommerce
-- backup
-- separate automation/deploy user
+- WordPress/WooCommerce
+- secret-safe deployment access
+- verified backups
 
 ## Phase 2 — code foundation
-- rollsbar-theme
-- rollsbar-core
-- no direct WordPress core edits
-- Git-backed changes
+Status: COMPLETE.
+- `rollsbar-theme`
+- `rollsbar-core`
+- no direct core edits
+- Git-backed deployment
+- self-healing project-code deploy order
 
 ## Phase 3 — catalog model
-Before bulk import:
-- stable SKU for every sellable item/variation
-- categories
-- simple vs variable products
-- sizes / dough / sauce / modifiers
-- prices
-- image mapping
-- stock/visibility policy
+Status: COMPLETE.
+Stable approved catalog model/importer with client-edit preservation.
 
 ## Phase 4 — pilot
-Import a small sample first:
-- simple roll
-- variable pizza
-- WOK with options
-- set
-- sauce/drink
-
-Verify catalog -> cart -> checkout -> order admin.
+Status: COMPLETE.
+Representative catalog/cart/checkout behavior validated.
 
 ## Phase 5 — full catalog
-Generate WooCommerce CSV from the approved master table and import the full catalog.
-
-Status: **COMPLETE ON STAGING** — 118 product cards / 131 source rows; repeat import leaves exactly 118 products.
+Status: COMPLETE ON STAGING.
+118 product cards / 131 source rows; repeat import preserves 118 products.
 
 ## Phase 6 — Rolls Bar behavior
-Status: **IN PROGRESS — LIVE STAGING CORE FLOWS PASS**
-
-Implemented / verified:
-- [x] block-native additional checkout fields via WooCommerce Additional Checkout Fields API
-- [x] configurable requiredness for entrance / door code / floor / apartment-office
-- [x] +7 phone helper
-- [x] editable promo cards connected to frontend
-- [x] editable vacancies connected to careers page
-- [x] Restaurant schema / transactional noindex ownership layer
-- [x] client-safe settings for phone/address/socials
-- [x] separate editable Composition / Ingredients field
-- [x] product weight/volume + optional KBJU fields
-- [x] catalog importer preserves later admin edits
-- [x] HPOS-compatible operator order-list columns
-- [x] WooCommerce compatibility declarations for HPOS + Cart/Checkout Blocks
-- [x] native WooCommerce Blocks Local Pickup
-- [x] editable delivery-area thresholds
-- [x] order notification architecture + internal runtime test
-- [x] reviews moderation
-- [x] explicit privacy consent at checkout/reviews
-- [x] Yandex Metrica code/goal preparation with consent gate
-- [~] automatic real-polygon zone enforcement — DEFERRED, NON-BLOCKING
-
-Rule: do not invent production delivery prices, polygons, required checkout fields, payment-provider facts, analytics IDs or missing legal/contact details.
+Status: IN PROGRESS ONLY FOR EXTERNAL-INPUT ITEMS.
+Core functional flows are internally verified; remaining items are listed in the current override above.
 
 ## Phase 7 — payments
-Current status: **LAUNCH = PAYMENT AT RECEIPT; LEGAL/BANK-READINESS PASS; ONLINE ACQUIRING NOT CONNECTED AND NOT PART OF CURRENT LAUNCH WITHOUT NEW SCOPE**.
+Status: LAUNCH = PAYMENT AT RECEIPT; LEGAL/BANK-READINESS PASS; ONLINE ACQUIRING IS NOT CONNECTED AND IS A SEPARATE FUTURE STAGE.
 
 ## Phase 8 — production
-- backup staging and production
-- regression test
-- explicit owner approval
-- point domain to production host
-- monitor checkout/orders
-- do not overwrite production database with staging after live orders begin
+Not started.
+Required before transition:
+- current staging acceptance pass;
+- production backup/transition plan;
+- explicit owner approval;
+- then domain/runtime transition and monitoring.
 
-## Historical checkpoints
-Older detailed staging/catalog/admin/delivery checkpoints remain available in Git history and Project No Loss artifacts. They are evidence, not current execution blockers. In case of conflict, the current override above plus live GitHub/CI/runtime evidence wins.
+Do not overwrite a production database with staging after live orders begin.
+
+## Project No Loss rules
+- live GitHub/CI/runtime evidence outranks stale summaries;
+- approved baseline immutable;
+- migration work stays off `main`;
+- no secret values in chat or Git;
+- never invent polygons, product facts, payment-provider facts, client wording or analytics IDs;
+- do not restore the five-product CI smoke catalog onto live staging;
+- production remains untouched until explicit owner approval;
+- Todoist recovery task `6hf5v5J535WvjJx5` stays open until owner explicitly confirms closure.
