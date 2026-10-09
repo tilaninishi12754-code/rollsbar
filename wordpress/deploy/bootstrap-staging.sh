@@ -30,6 +30,25 @@ fi
 
 mkdir -p "$WP_PATH"
 
+theme_src="$PROJECT_ROOT/wordpress/wp-content/themes/rollsbar-theme"
+plugin_src="$PROJECT_ROOT/wordpress/wp-content/plugins/rollsbar-core"
+theme_dst="$WP_PATH/wp-content/themes/rollsbar-theme"
+plugin_dst="$WP_PATH/wp-content/plugins/rollsbar-core"
+
+sync_rollsbar_code(){
+  rm -rf "$theme_dst" "$plugin_dst"
+  if command -v rsync >/dev/null 2>&1; then
+    mkdir -p "$theme_dst" "$plugin_dst"
+    rsync -a --delete "$theme_src/" "$theme_dst/"
+    rsync -a --delete "$plugin_src/" "$plugin_dst/"
+  else
+    cp -a "$theme_src" "$theme_dst"
+    cp -a "$plugin_src" "$plugin_dst"
+  fi
+  mkdir -p "$plugin_dst/data"
+  cp "$PROJECT_ROOT/wordpress/data/catalog.json" "$plugin_dst/data/catalog.json"
+}
+
 if [[ ! -f "$WP_PATH/wp-load.php" ]]; then
   : "${DB_NAME:?Set DB_NAME for a fresh install}"
   : "${DB_USER:?Set DB_USER for a fresh install}"
@@ -68,6 +87,12 @@ if [[ "$actual_core" != "$WP_VERSION" ]]; then
   echo "Expected WordPress $WP_VERSION, got $actual_core"
   exit 3
 fi
+
+# Recovery invariant: replace project-owned theme/plugin files from the exact
+# Git commit BEFORE any WP-CLI command that boots active plugins. This lets a
+# later good deployment self-heal staging even if an interrupted/failed prior
+# deploy left an active PHP file syntactically broken.
+sync_rollsbar_code
 
 wp_cmd config set WP_ENVIRONMENT_TYPE staging --type=constant
 wp_cmd config set DISALLOW_FILE_EDIT true --raw
@@ -144,25 +169,6 @@ wp_cmd option update woocommerce_currency_pos 'right_space'
 wp_cmd option update woocommerce_price_num_decimals '0'
 wp_cmd option update woocommerce_price_decimal_sep ','
 wp_cmd option update woocommerce_price_thousand_sep ' '
-
-theme_src="$PROJECT_ROOT/wordpress/wp-content/themes/rollsbar-theme"
-plugin_src="$PROJECT_ROOT/wordpress/wp-content/plugins/rollsbar-core"
-theme_dst="$WP_PATH/wp-content/themes/rollsbar-theme"
-plugin_dst="$WP_PATH/wp-content/plugins/rollsbar-core"
-
-rm -rf "$theme_dst" "$plugin_dst"
-
-if command -v rsync >/dev/null 2>&1; then
-  mkdir -p "$theme_dst" "$plugin_dst"
-  rsync -a --delete "$theme_src/" "$theme_dst/"
-  rsync -a --delete "$plugin_src/" "$plugin_dst/"
-else
-  cp -a "$theme_src" "$theme_dst"
-  cp -a "$plugin_src" "$plugin_dst"
-fi
-
-mkdir -p "$plugin_dst/data"
-cp "$PROJECT_ROOT/wordpress/data/catalog.json" "$plugin_dst/data/catalog.json"
 
 wp_cmd theme activate rollsbar-theme
 wp_cmd plugin activate rollsbar-core
