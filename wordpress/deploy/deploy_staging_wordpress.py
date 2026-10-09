@@ -33,6 +33,7 @@ PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
 DADATA_API_KEY = os.environ["ROLLSBAR_DADATA_API_KEY"].strip()
 TELEGRAM_BOT_TOKEN = os.environ.get("ROLLSBAR_TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_CHAT_ID = os.environ.get("ROLLSBAR_TELEGRAM_CHAT_ID", "").strip()
+TELEGRAM_EXPECTED = "yes" if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID else "no"
 DEPLOY_SHA = os.environ["ROLLSBAR_DEPLOY_SHA"].strip()
 CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING", "")
 SECRET_FILE = ".rollsbar-staging-secrets.json"
@@ -219,7 +220,7 @@ echo "assert_telegram_server_credentials=$telegram_configured"
 [[ "$product_count" == "{EXPECTED_STAGING_PRODUCTS}" ]]
 [[ "$blog_public" == "0" ]]
 [[ "$dadata_configured" == "yes" ]]
-if [[ -n "{shell_quote(TELEGRAM_BOT_TOKEN) if TELEGRAM_BOT_TOKEN else ''}" ]]; then
+if [[ "{TELEGRAM_EXPECTED}" == "yes" ]]; then
   [[ "$telegram_configured" == "yes" ]]
 fi
 echo "STAGING WORDPRESS DEPLOY PASS"
