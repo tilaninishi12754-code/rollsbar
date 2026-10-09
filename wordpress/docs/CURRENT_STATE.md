@@ -3,22 +3,23 @@
 Updated: 2026-10-09
 
 ## Purpose
-This is the current recovery checkpoint for RollsBar. Do not continue from chat memory alone. First read this file, the current override in `wordpress/docs/MIGRATION_PLAN.md`, live branch HEAD, recent CI/runtime evidence, and Todoist task `6hf5v5J535WvjJx5`.
+This is the canonical current-state checkpoint for continuing RollsBar without relying on chat memory. Before any future write, re-read this file, the current execution override in `wordpress/docs/MIGRATION_PLAN.md`, the live migration-branch HEAD, recent CI/runtime evidence and Todoist task `6hf5v5J535WvjJx5`.
 
 ## Source of truth order
-1. Live GitHub branch/code + current CI/runtime evidence.
+1. Live GitHub branch/code + actual CI/runtime evidence.
 2. `wordpress/docs/MIGRATION_PLAN.md` current execution override.
 3. This file / Todoist recovery task / Drive handoff.
 4. Historical Git/chat only when provenance is disputed.
 
-Historical detailed checkpoints remain in Git history. This file intentionally summarizes the current verified state rather than duplicating every old checkpoint.
+Historical detailed checkpoints remain in Git history. This file summarizes the latest verified state.
 
 ## Git / immutable baseline
 Working branch: `wordpress/migration-2026-10-01`.
 
-Latest verified live implementation before this documentation sync:
-- security/backup deploy gate: `9a7506c09e3d96a9564afda18465f397f4ebc32e`;
-- extension cleanup workflow: `19ec731bf860c1d28241cc5b8d3aac452aafbde8`.
+Latest verified recovery/acceptance state before this documentation write:
+- recovery-safe backup/restore tooling through `a5d7cc0288074efe91ee7902fffcc83e246b5675`;
+- successful isolated recovery-drill trigger commit `0f9b6866e6da8210456d947c5c3c7831b17517e1`;
+- recovery workflow returned to manual-only at `f248071e119f6b235d1fc86d88bdc72c8dcaa791`.
 
 This documentation write advances the branch. **Always re-read live HEAD before any future write.**
 
@@ -33,7 +34,8 @@ URL: `https://staging.rollsbar.ru`
 
 Current verified runtime:
 - isolated REG.RU staging site/database;
-- HTTPS working;
+- HTTP -> HTTPS redirect works;
+- HTTPS/TLS works;
 - WordPress 7.1.3;
 - WooCommerce 11.1.2;
 - `rollsbar-theme` and `rollsbar-core` active;
@@ -46,51 +48,60 @@ Current verified runtime:
 - launch payment mode = `Оплата при получении` only;
 - online acquiring reserved/disabled and hidden;
 - courier polygon enforcement OFF;
-- Yandex Metrica code prepared but real counter ID not configured, therefore no Metrica tag loads;
+- Yandex Metrica code prepared but no real counter ID is configured, so no Metrica tag loads;
 - Telegram staging credentials absent;
 - production untouched.
 
-Do not restore the historical 5-product smoke catalog to live staging. Five products are only an isolated CI bootstrap fixture.
+Do not restore the historical five-product smoke catalog to live staging. Five products are only an isolated CI/bootstrap fixture.
 
-## Latest security / backup checkpoint — VERIFIED
-### Real staging audit
-Read-only security audit implementation: `wordpress/deploy/audit_staging_security_backup.py`.
+## Final technical acceptance — PASS WITH NON-BLOCKING WARNINGS
+The independent staging acceptance completed with:
+- **42 PASS**;
+- **4 WARN**;
+- **0 FAIL**.
 
-Latest independent audit is the rerun of workflow `37909036816`, job `113754003039`, and passed after all hardening/cleanup work.
+Verified:
+- public HTTPS routes healthy;
+- TLS valid;
+- HTTP redirects to HTTPS;
+- HSTS present;
+- `X-Content-Type-Options: nosniff`;
+- `Referrer-Policy: strict-origin-when-cross-origin`;
+- `X-Frame-Options: SAMEORIGIN`;
+- public REST endpoint HTTP 200;
+- internal WordPress REST routing healthy (~671 registered routes at the time of audit);
+- DB connectivity PASS;
+- WordPress loopback PASS;
+- WP-Cron enabled and scheduled events healthy;
+- WordPress.org connectivity/background update capability PASS;
+- uploads writable/working;
+- catalog still 118;
+- WooCommerce still 11.1.2;
+- no fresh PHP fatal/parse errors found.
 
-It proves on the real REG.RU staging host:
-- WordPress core version = 7.1.3;
-- official WordPress core checksums PASS;
+Non-blocking warnings:
+1. WordPress Site Health's admin-context REST probe received expected `401 Unauthorized` from an unauthenticated CLI context; public/internal REST were independently PASS.
+2. `Permissions-Policy` is not forced yet.
+3. CSP is intentionally not imposed without a dedicated browser regression because an aggressive CSP could break WooCommerce checkout/integrations.
+4. XML-RPC connection behavior is warning-only and not required for the current project flows.
+
+Do not rerun this entire acceptance suite solely because a chat reconnects. Rerun only if later changes materially touch the audited layers.
+
+## Security / backup — VERIFIED
+Real staging evidence proves:
+- official WordPress 7.1.3 core checksums PASS;
 - `DISALLOW_FILE_EDIT=true`;
 - `FORCE_SSL_ADMIN=true`;
-- WordPress automatic updater is not globally disabled;
-- WP-Cron is not disabled;
 - `wp-config.php` mode = `640`;
 - `.htaccess` mode = `644`;
 - no world-writable PHP/config files;
+- direct `/wp-config.php` and `/.git/config` probes return HTTP 403;
 - inactive plugins = 0;
-- inactive themes = exactly one: `twentytwentyfive` as a bundled fallback theme;
-- core updates available = 0;
-- WooCommerce is the only plugin with an available newer version, but the project remains intentionally pinned to the tested 11.1.2 until a deliberate staging upgrade cycle;
-- database size observed ≈ 5.14 MB;
-- uploads size is small and server has ample free space;
-- backup directory outside web-root is writable;
-- backup snapshot count = 5;
-- latest snapshot `20261009T091618Z` independently passed SHA-256/gzip/tar integrity checks;
-- direct HTTP probes of `/wp-config.php` and `/.git/config` return HTTP 403.
+- bundled fallback theme retained: `twentytwentyfive`;
+- old bundled themes and unused `akismet`/`hello` removed;
+- WooCommerce remains intentionally pinned to tested 11.1.2 and per-plugin auto-update is disabled.
 
-The many group-writable PHP files on this shared-hosting account are **not** treated as an automatic defect because REG.RU ownership/group semantics can require group write. We did not mass-`chmod` the tree. The sensitive `wp-config.php` was tightened to 640 and both WP-CLI and public HTTP health were proven afterward.
-
-### Core repair / hardening
-Workflow `Harden REG.RU Staging Core` run `37909323728`, job `113750376959` — SUCCESS.
-
-Before mutation it created and verified a fresh server-side backup, then:
-- re-downloaded the **same pinned WordPress 7.1.3** official package using `--skip-content --force`;
-- verified official WordPress checksums;
-- changed only `wp-config.php` from 664 to 640;
-- verified homepage HTTP 200;
-- preserved WooCommerce 11.1.2, 118 products, `blog_public=0`;
-- did not update extensions.
+Do not mass-chmod the shared-hosting WordPress tree just because many files may be group-writable. REG.RU ownership/group semantics can require group write. Sensitive config was hardened and no world-writable PHP/config files were found.
 
 ### Backup system
 Canonical files:
@@ -105,47 +116,50 @@ Snapshots live outside public web-root under `$HOME/rollsbar-backups/staging/<UT
 - `SHA256SUMS`.
 
 Safety properties:
-- DB is streamed directly into gzip; no plain SQL dump is intentionally left on disk;
-- `wp-config.php`/secrets are not copied into the backup;
-- snapshot directories are mode 700, files mode 600;
-- snapshot is published atomically only after gzip/tar/SHA-256 verification;
+- DB streams directly into gzip; plain SQL is not intentionally left on disk;
+- `wp-config.php` and secrets are not copied;
+- snapshot dirs/files have restrictive permissions;
+- snapshot publishes only after gzip/tar/SHA-256 verification;
 - retention = newest 5 complete snapshots;
-- project theme/plugin code remains canonical in Git and WordPress/WooCommerce packages are reproducible.
+- every routine live staging deploy creates/verifies a fresh backup **before mutation** and aborts if backup fails;
+- project code is canonical in Git.
 
-### Every live staging deploy is now backup-gated
-Implementation commit `9a7506c09e3d96a9564afda18465f397f4ebc32e`.
+### Recovery-safe format 3
+Backups now record the exact deployed code through a verified deployed-SHA marker outside web-root:
+- `rollsbar_backup_format=3`;
+- `project_code_commit=<verified deployed SHA>`;
+- `project_code_commit_source=verified_deployed_marker`.
 
-CI/runtime proof on that commit:
-- static gate `37909732193` — SUCCESS;
-- staging package `37909732076` — SUCCESS;
-- clean bootstrap smoke `37909731971` — SUCCESS;
-- live REG.RU deploy `37909731997` — SUCCESS.
+The marker is updated only after a successful deployment. Backups do not treat an incoming, not-yet-deployed SHA as the source version.
 
-The real deploy log proves the new order:
-1. exact deploy SHA checkout;
-2. `deploy_stage=backup_before_mutation`;
-3. fresh snapshot `20261009T091218Z` created and verified;
-4. only then preflight/bootstrap mutates staging;
-5. final core checksum gate;
-6. final `wp-config.php=640` assertion;
-7. final catalog=118 / WooCommerce=11.1.2 / DaData/runtime assertions PASS.
+## Recovery / runbook proof — VERIFIED
+Workflow: `Staging Recovery Drill`.
+Successful run: **37924804277**.
+Successful job: **113801071712**.
 
-A failed backup now aborts a routine live staging deploy before mutation.
+The drill restored the latest recovery-safe snapshot into a **separate temporary REG.RU database**, never over the live staging DB and never over production.
 
-### Unused extension cleanup
-Workflow `Cleanup REG.RU Staging Extensions` run `37910173271`, job `113753155821` — SUCCESS.
+Verified snapshot:
+- `20261009T101550Z`;
+- format `3`;
+- `project_code_commit=09fdafc81a9225383115461523566cd101470b6f`;
+- commit source = `verified_deployed_marker`;
+- snapshot SHA-256 PASS;
+- gzip/tar archive integrity PASS;
+- manifest invariants PASS;
+- SQL uncompressed bytes = 1,175,422;
+- SQL CREATE TABLE statements = 51;
+- uploads restored to temp path = 19 files;
+- DB import into isolated temp DB PASS;
+- restored table count = 51;
+- restored `blog_public=0`;
+- restored published products = 118;
+- content invariants PASS;
+- temporary DB cleanup PASS.
 
-It first created verified snapshot `20261009T091618Z` (retained snapshot count = 5), then:
-- deleted inactive `akismet`;
-- deleted inactive `hello`;
-- deleted inactive `twentytwentyfour`;
-- deleted inactive `twentytwentythree`;
-- kept `twentytwentyfive` as one standard fallback theme for diagnostics;
-- confirmed WooCommerce per-plugin auto-update was already disabled and remains disabled;
-- did not upgrade WooCommerce;
-- verified core checksums, WooCommerce 11.1.2, catalog 118, `wp-config=640`, and home HTTP 200.
+Final workflow state is **manual-only `workflow_dispatch`**. Ordinary commits must not create recovery-drill databases.
 
-The separate read-only audit afterward independently confirmed the cleanup state.
+Do not repeat the recovery drill just because a chat reconnects. Repeat intentionally only after a material backup/recovery architecture change or before a high-risk transition when fresh restore proof is desired.
 
 ## Checkout / DaData — VERIFIED
 Preferred architecture:
@@ -161,8 +175,8 @@ Preferred architecture:
 - observed mean latency ~413 ms.
 
 Real anonymous checkout browser smoke run `37775215326`, rerun job `113306962222`:
-- exact-house example returns coordinates and `allow_auto_zone=1`;
-- lower-precision example is fail-closed with `allow_auto_zone=0` and clarification warning;
+- exact-house address returns coordinates and `allow_auto_zone=1`;
+- lower-precision address is fail-closed with `allow_auto_zone=0` and clarification warning;
 - provider country labels are hidden;
 - no uncaught checkout JS errors.
 
@@ -193,11 +207,11 @@ Never invent polygons. Courier enforcement stays OFF.
 
 ## Reviews / privacy — VERIFIED
 - `/otzyvy/` exists;
-- new review submissions are pending moderation;
+- new submissions are pending moderation;
 - pending reviews are not public;
 - published reviews become public;
 - no fake reviews/fake average;
-- review privacy consent required in form + server-side;
+- review privacy consent required client-side/server-side;
 - Checkout Block privacy consent required;
 - synthetic QA data is cleaned up after tests.
 
@@ -214,10 +228,10 @@ Verified internally:
 - synthetic HTTP 500 records error + schedules retry.
 
 External pending:
-- real Telegram delivery: needs `ROLLSBAR_TELEGRAM_BOT_TOKEN` + `ROLLSBAR_TELEGRAM_CHAT_ID` in GitHub `staging` secrets;
-- real email receipt/deliverability test: needs approved real recipient/mail transport decision.
+- real Telegram delivery requires approved bot token/chat ID in GitHub `staging` secrets;
+- real email receipt/deliverability requires approved real recipient/mail transport decision.
 
-Never paste these secrets into chat or Git.
+Never paste secrets into chat or Git.
 
 ## Legal / payment readiness — VERIFIED
 Nine editable WordPress pages are published and runtime-verified:
@@ -230,8 +244,6 @@ Nine editable WordPress pages are published and runtime-verified:
 - `/soglasie-na-obrabotku-personalnyh-dannyh/`
 - `/cookies/`
 - `/bezopasnost-onlajn-oplaty/`.
-
-Woo terms/privacy settings point to canonical WordPress pages. Public acquiring copy is provider-neutral until a provider is actually connected. Historical bank references are not enough to assume the provider.
 
 Seller source facts retained:
 - ИП Гридина Надежда Викторовна;
@@ -258,53 +270,62 @@ Implemented and runtime-tested:
 - valid ID -> still waits for explicit analytics consent;
 - Webvisor off;
 - marketing tools not configured;
-- goals prepared: `add_to_cart`, `open_cart`, `begin_checkout`, `submit_order`, `purchase`, `phone_click`, plus `shipping_method_select`.
+- goals prepared: `add_to_cart`, `open_cart`, `begin_checkout`, `submit_order`, `purchase`, `phone_click`, `shipping_method_select`.
 
 Do not invent the real counter ID and do not claim actual goal reception until the client supplies the counter and hits are observed in Metrica.
 
-## Current migration status
-Completed / verified:
+## Pre-production acceptance inventory
+### Internally READY / verified on staging
 - [x] staging foundation + HTTPS;
 - [x] full catalog + Gate B;
-- [x] cart/checkout/mobile regression baseline;
+- [x] cart/checkout/mobile baseline;
 - [x] Local Pickup;
-- [x] DaData suggestions + coordinate resolution + fail-closed precision UX;
+- [x] DaData suggestions + coordinates + fail-closed precision UX;
 - [x] review moderation;
-- [x] explicit personal-data consent in checkout/reviews;
-- [x] notification internal pipeline + retry/idempotency runtime test;
-- [x] legal/payment-readiness pages + runtime validation;
+- [x] personal-data consent in checkout/reviews;
+- [x] internal notification queue/retry/idempotency;
+- [x] legal/payment-readiness pages;
 - [x] receipt-only launch payment mode;
-- [x] Yandex Metrica integration/goal wiring prepared behind ID+consent gate;
+- [x] Metrica integration/goal wiring prepared behind ID+consent gate;
 - [x] deploy self-heal ordering;
-- [x] official WordPress core integrity restored and continuously gated;
-- [x] `wp-config.php` hardened to 640;
-- [x] verified server-side staging backups outside web-root;
-- [x] every routine live staging deploy backup-gated;
-- [x] unused plugins/old bundled themes removed while retaining one fallback theme.
+- [x] WordPress core integrity + security hardening;
+- [x] backup-before-mutation gate;
+- [x] unused extension cleanup;
+- [x] public-route / HTTP / REST / loopback / cron / Site Health acceptance;
+- [x] server-side backup restore proof in isolated temporary DB;
+- [x] recovery workflow returned to manual-only mode.
 
-Externally pending / deferred:
-- [ ] real Yandex Metrica counter ID + live goal reception verification;
-- [ ] real Telegram delivery;
-- [ ] real email receipt/deliverability;
-- [ ] actual online acquiring — separate future stage;
-- [ ] final vacancy questionnaire — needs client wording/input;
-- [~] exact polygons/courier enforcement — DEFERRED, NON-BLOCKING.
+### Deferred / non-blocking for continued development
+- [~] exact delivery polygons and courier enforcement;
+- [~] online acquiring (current launch scope is payment at receipt);
+- [~] stronger CSP / Permissions-Policy, pending dedicated compatibility testing.
+
+### External input / real-world proof still pending
+- [ ] real Telegram delivery, only if Telegram is required for launch;
+- [ ] real email receipt/deliverability, if email delivery is required for launch acceptance;
+- [ ] real Yandex Metrica counter + observed goal hits, if analytics is required at launch;
+- [ ] final vacancy wording/input;
+- [ ] actual acquiring provider/contract/credentials for the later online-payment phase;
+- [ ] client-approved delivery polygons for the later courier-enforcement phase.
+
+These are **not automatically all production blockers**. The final go-live scope must distinguish required launch functionality from intentionally deferred features. Current agreed payment scope can launch without online acquiring; polygons are explicitly deferred/non-blocking; Metrica/Telegram are not to be invented or falsely marked configured.
 
 ## CURRENT NEXT ACTION
-1. Treat baseline WordPress security and backup/update readiness as **verified on staging**.
-2. Continue independent launch acceptance/regression work that does not require client secrets: current HTTP/security headers and public-route health, Site Health/cron/REST checks, recovery/runbook verification, and final pre-production acceptance inventory.
-3. Do not automatically upgrade WooCommerce beyond 11.1.2. A version bump must be a deliberate backup -> staging upgrade -> regression cycle.
-4. Do not wait on Metrica ID, Telegram/email external credentials, acquiring provider, vacancy wording or polygons; they are external-input blocks.
-5. Production remains untouched until full staging QA + explicit owner approval.
+1. Build the final **go-live decision matrix**: `required for current launch` vs `approved deferred` vs `optional integration`.
+2. Identify only the smallest external facts/credentials that are truly required by the chosen current launch scope.
+3. Do not rerun already-passed security/acceptance/recovery suites unless later code changes touch those layers.
+4. Do not automatically upgrade WooCommerce beyond 11.1.2. Any version bump requires backup -> staging upgrade -> regression.
+5. Keep production untouched until owner explicitly approves transition.
+6. When owner approves transition, prepare a production cutover checklist/backup/rollback plan before any production mutation.
 
 ## Project No Loss rules
 - approved baseline immutable;
 - migration code stays separate from `main`;
 - no secret values in chat or Git;
 - no invented polygons/product facts/client wording/payment-provider facts/analytics IDs;
-- do not restore live staging to 5-product smoke catalog;
+- do not restore live staging to five-product smoke catalog;
 - factual GitHub/CI/runtime evidence outranks stale summaries;
 - do not complete Todoist recovery task `6hf5v5J535WvjJx5` without explicit owner confirmation.
 
 ## New-chat recovery prompt
-> RollsBar: восстанови состояние по Project No Loss. Не полагайся на память чата. Сначала прочитай `wordpress/docs/CURRENT_STATE.md` и current override в `wordpress/docs/MIGRATION_PLAN.md`, затем сверяй live HEAD `wordpress/migration-2026-10-01`, `main`, последние CI/runtime результаты и Todoist task `6hf5v5J535WvjJx5`. Фактический GitHub/CI выше старых summary. Не повторяй успешно завершённые операции. Security/backup readiness уже VERIFIED: core checksum PASS, wp-config=640, 5 verified server-side snapshots, every staging deploy backup-gated, unused extensions cleaned. Полигоны DEFERRED/NON-BLOCKING. Launch payment = при получении. Внешние credentials/analytics ID не считать настроенными без фактического доказательства.
+> RollsBar: восстанови состояние по Project No Loss. Не полагайся на память чата. Сначала прочитай `wordpress/docs/CURRENT_STATE.md` и current override в `wordpress/docs/MIGRATION_PLAN.md`, затем сверяй live HEAD `wordpress/migration-2026-10-01`, `main`, последние CI/runtime результаты и Todoist task `6hf5v5J535WvjJx5`. Фактический GitHub/CI выше старых summary. Не повторяй успешно завершённые операции. Security/backup + final technical acceptance + isolated recovery proof уже VERIFIED. Полигоны DEFERRED/NON-BLOCKING. Launch payment = при получении. Production не трогать без явного одобрения владельца. Внешние credentials/analytics IDs не считать настроенными без фактического доказательства.
