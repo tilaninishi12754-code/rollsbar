@@ -23,7 +23,7 @@ PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
 DOMAIN = "staging.rollsbar.ru"
 BASE_HTTPS = f"https://{DOMAIN}"
 WP_PATH = f"$HOME/www/{DOMAIN}"
-UA = "RollsBar-Final-Acceptance/1.1"
+UA = "RollsBar-Final-Acceptance/1.2"
 
 
 @dataclass
@@ -41,7 +41,7 @@ def record(level: str, name: str, detail: str) -> None:
     print(f"{level:<4} {name}: {detail}")
 
 
-def request(url: str, *, follow_redirects: bool = True, timeout: int = 20):
+def request(url: str, *, follow_redirects: bool = True, timeout: int = 20, max_bytes: int = 512 * 1024):
     class NoRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, req, fp, code, msg, headers, newurl):
             return None
@@ -53,9 +53,9 @@ def request(url: str, *, follow_redirects: bool = True, timeout: int = 20):
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*"})
     try:
         resp = opener.open(req, timeout=timeout)
-        return resp.getcode(), dict(resp.headers.items()), resp.read(512 * 1024), resp.geturl()
+        return resp.getcode(), dict(resp.headers.items()), resp.read(max_bytes), resp.geturl()
     except urllib.error.HTTPError as exc:
-        return exc.code, dict(exc.headers.items()), exc.read(512 * 1024), exc.geturl()
+        return exc.code, dict(exc.headers.items()), exc.read(max_bytes), exc.geturl()
 
 
 def header_ci(headers: dict[str, str], name: str) -> str:
@@ -128,22 +128,26 @@ def public_checks() -> None:
         ok = code == 200 and len(body) > 100
         record("PASS" if ok else "FAIL", f"route {route}", f"HTTP {code} bytes={len(body)} final={final_url}")
 
-    code, rest_headers, body, final_url = request(BASE_HTTPS + "/wp-json/")
+    # Use a bounded public REST endpoint rather than the very large REST index.
+    # The root index is >512 KiB on this WooCommerce install and truncating it
+    # before json.loads created a false negative in the first acceptance run.
+    rest_path = "/wp-json/wp/v2/types"
+    code, rest_headers, body, final_url = request(BASE_HTTPS + rest_path, max_bytes=2 * 1024 * 1024)
     rest_ok = False
     payload = None
     try:
         payload = json.loads(body.decode("utf-8", errors="replace"))
-        rest_ok = code == 200 and isinstance(payload, dict) and bool(payload.get("namespaces"))
+        rest_ok = code == 200 and isinstance(payload, dict) and "post" in payload and "page" in payload
     except json.JSONDecodeError:
         pass
     if rest_ok:
-        record("PASS", "rest_api", f"HTTP {code} namespaces={len(payload.get('namespaces', []))}")
+        record("PASS", "rest_api", f"HTTP {code} endpoint={rest_path} types={len(payload)}")
     else:
         snippet = body[:350].decode("utf-8", errors="replace").replace("\n", " ").replace("\r", " ")
         record(
             "FAIL",
             "rest_api",
-            f"HTTP {code} final={final_url} content_type={header_ci(rest_headers, 'Content-Type') or 'none'} body_prefix={snippet!r}",
+            f"HTTP {code} endpoint={rest_path} final={final_url} content_type={header_ci(rest_headers, 'Content-Type') or 'none'} body_prefix={snippet!r}",
         )
 
     for path in ("/wp-config.php", "/.git/config", "/wp-content/plugins/", "/wp-content/themes/"):
@@ -204,11 +208,15 @@ $h = WP_Site_Health::get_instance();
 $methods = array('get_test_https_status','get_test_ssl_support','get_test_rest_availability','get_test_loopback_requests','get_test_scheduled_events','get_test_dotorg_communication','get_test_background_updates','get_test_php_default_timezone','get_test_file_uploads');
 $out = array();
 foreach ($methods as $method) {
-  if (!method_exists($h, $method)) { $out[$method] = array('status'=>'skip','label'=>'method unavailable'); continue; }
+  if (!method_exists($h, $method)) { $out[$method] = array('status'=>'skip','label'=>'method unavailable','description'=>''); continue; }
   try {
     $r = $h->$method();
-    $out[$method] = array('status'=>(string)($r['status'] ?? 'unknown'),'label'=>wp_strip_all_tags((string)($r['label'] ?? '')));
-  } catch (Throwable $e) { $out[$method] = array('status'=>'error','label'=>get_class($e).': '.$e->getMessage()); }
+    $out[$method] = array(
+      'status'=>(string)($r['status'] ?? 'unknown'),
+      'label'=>wp_strip_all_tags((string)($r['label'] ?? '')),
+      'description'=>preg_replace('/\s+/', ' ', wp_strip_all_tags((string)($r['description'] ?? '')))
+    );
+  } catch (Throwable $e) { $out[$method] = array('status'=>'error','label'=>get_class($e).': '.$e->getMessage(),'description'=>''); }
 }
 echo wp_json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 '''
@@ -224,7 +232,12 @@ echo wp_json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         for method, result in health.items():
             state = str(result.get("status", "unknown"))
             level = "PASS" if state == "good" else ("WARN" if state in {"recommended", "skip"} else "FAIL")
-            record(level, f"site_health {method}", f"status={state} {str(result.get('label', ''))[:500]}")
+            label = str(result.get("label", ""))[:500]
+            description = str(result.get("description", ""))[:900]
+            detail = f"status={state} {label}"
+            if description:
+                detail += f" | {description}"
+            record(level, f"site_health {method}", detail)
 
     rest_internal_php = r'''
 $server = rest_get_server();
@@ -298,8 +311,10 @@ fi
     fatal = -1
     for line in out.splitlines():
         if line.startswith("recent_tail_fatal_signals="):
-            try: fatal = int(line.split("=", 1)[1])
-            except ValueError: fatal = -1
+            try:
+                fatal = int(line.split("=", 1)[1])
+            except ValueError:
+                fatal = -1
     record("PASS" if status == 0 and fatal == 0 else "WARN", "debug_log", (out or err or f"exit={status}").replace("\n", " | ")[-1200:])
 
 
@@ -329,7 +344,8 @@ def main() -> int:
         message = str(exc).replace(PASSWORD, "***") if PASSWORD else str(exc)
         record("FAIL", "ssh_wordpress_audit", f"{exc.__class__.__name__}: {message}")
     finally:
-        if client is not None: client.close()
+        if client is not None:
+            client.close()
     return summarize()
 
 
