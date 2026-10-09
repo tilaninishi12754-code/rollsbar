@@ -168,6 +168,11 @@ wp_cmd theme activate rollsbar-theme
 wp_cmd plugin activate rollsbar-core
 wp_cmd rollsbar catalog validate
 
+# Migrate the approved legal/payment-readiness baseline into editable WordPress
+# pages. The provisioner creates only missing pages and never overwrites later
+# client/admin edits. Terms/privacy are wired to the canonical Woo/WP options.
+wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/provision-legal-pages.php"
+
 # Configure WooCommerce's modern Checkout Block Local Pickup, not the legacy
 # shipping-zone method. The pickup address is seeded from Rolls Bar's existing
 # editable business settings, so the deployment does not invent a second
@@ -219,7 +224,7 @@ fi
 
 # Final invariants: fail the deploy if a later change regresses staging HTTPS,
 # public QA visibility, pretty permalinks, ruble currency, native Blocks Local
-# Pickup, review moderation, or the internal order-notification pipeline.
+# Pickup, reviews, legal/payment readiness, or order-notification internals.
 # Search-engine indexing stays disabled via blog_public=0.
 [[ "$(wp_cmd option get home)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get siteurl)" == "$STAGING_URL" ]]
@@ -236,6 +241,7 @@ grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
 
 wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-reviews.php"
 wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-notifications.php"
+wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-legal-pages.php"
 
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   [[ "$(wp_cmd eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')" == "yes" ]]
@@ -258,6 +264,7 @@ echo "Currency: $(wp_cmd option get woocommerce_currency)"
 echo "Storefront QA visibility: live (search indexing off)"
 echo "Local Pickup: enabled"
 echo "Reviews moderation: verified"
+echo "Legal/payment readiness pages: verified"
 echo "Order notification pipeline: verified (external delivery not asserted)"
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   echo "DaData server-side key: configured"
