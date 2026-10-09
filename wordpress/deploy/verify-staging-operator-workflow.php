@@ -39,9 +39,38 @@ remove_action(
 	30
 );
 
-$order = null;
+/**
+ * Delete only recent orders carrying our exact smoke marker.
+ */
+$cleanup_smoke_orders = static function (): int {
+	$deleted = 0;
+	$recent  = wc_get_orders(
+		array(
+			'limit'   => 50,
+			'orderby' => 'date',
+			'order'   => 'DESC',
+			'return'  => 'objects',
+		)
+	);
+
+	foreach ( $recent as $candidate ) {
+		if ( $candidate instanceof WC_Order && 'rollsbar_operator_smoke' === $candidate->get_created_via() ) {
+			$candidate->delete( true );
+			++$deleted;
+		}
+	}
+
+	return $deleted;
+};
+
+$orphan_cleanup = $cleanup_smoke_orders();
+echo 'preexisting_smoke_orders_cleaned=' . (int) $orphan_cleanup . "\n";
+
+$order     = null;
+$exit_code = 0;
 
 try {
+	echo "smoke_stage=find_product\n";
 	$products = wc_get_products(
 		array(
 			'status' => 'publish',
@@ -54,6 +83,7 @@ try {
 		throw new RuntimeException( 'No published product available for operator smoke' );
 	}
 
+	echo "smoke_stage=create_order\n";
 	$order = wc_create_order(
 		array(
 			'status'      => 'pending',
@@ -64,6 +94,7 @@ try {
 		throw new RuntimeException( 'Temporary order creation failed' );
 	}
 
+	echo "smoke_stage=populate_order\n";
 	$order->set_billing_first_name( 'Тест' );
 	$order->set_billing_last_name( 'Оператор' );
 	$order->set_billing_phone( '+79780000000' );
@@ -77,9 +108,9 @@ try {
 	$order->update_meta_data( '_rollsbar_telegram_status', 'not_configured' );
 
 	// Official WooCommerce Additional Checkout Fields order/contact group prefix.
-	$other_prefix = class_exists( '\\Automattic\\WooCommerce\\Blocks\\Domain\\Services\\CheckoutFields' )
-		? \Automattic\WooCommerce\Blocks\Domain\Services\CheckoutFields::OTHER_FIELDS_PREFIX
-		: '_wc_other/';
+	// Keep the documented value literal here so the smoke does not depend on the
+	// visibility of an internal class constant in a particular Woo release.
+	$other_prefix = '_wc_other/';
 	$order->update_meta_data( $other_prefix . 'rollsbar/entrance', '2' );
 	$order->update_meta_data( $other_prefix . 'rollsbar/door-code', '15' );
 	$order->update_meta_data( $other_prefix . 'rollsbar/floor', '4' );
@@ -99,6 +130,7 @@ try {
 		throw new RuntimeException( 'Temporary order has no ID' );
 	}
 
+	echo "smoke_stage=reload_order\n";
 	$reloaded = wc_get_order( $order_id );
 	if ( ! $reloaded instanceof WC_Order ) {
 		throw new RuntimeException( 'Temporary order cannot be reloaded' );
@@ -110,6 +142,7 @@ try {
 		throw new RuntimeException( 'Temporary order marker missing' );
 	}
 
+	echo "smoke_stage=verify_columns\n";
 	$columns = RollsBar_Order_Details::add_order_list_columns(
 		array(
 			'cb'           => '<input type="checkbox">',
@@ -152,6 +185,7 @@ try {
 		throw new RuntimeException( 'Order time column is not HH:MM' );
 	}
 
+	echo "smoke_stage=verify_additional_fields\n";
 	$extra = RollsBar_Order_Details::additional_fields( $reloaded );
 	$expected_extra = array(
 		'Подъезд'              => '2',
@@ -165,6 +199,7 @@ try {
 		}
 	}
 
+	echo "smoke_stage=verify_detail_panel\n";
 	ob_start();
 	RollsBar_Order_Details::render_admin_delivery_details( $reloaded );
 	$detail_html = (string) ob_get_clean();
@@ -207,20 +242,40 @@ try {
 	echo "production_touched=no\n";
 } catch ( Throwable $exception ) {
 	fwrite( STDERR, 'OPERATOR WORKFLOW RUNTIME FAIL: ' . $exception->getMessage() . "\n" );
-	exit_code = 1;
+	$exit_code = 1;
 } finally {
+	echo "smoke_stage=cleanup\n";
 	if ( $order instanceof WC_Order && $order->get_id() > 0 ) {
 		$order_id = $order->get_id();
 		$order->delete( true );
 		if ( wc_get_order( $order_id ) ) {
 			fwrite( STDERR, "temporary order cleanup failed\n" );
-			exit_code = 1;
+			$exit_code = 1;
 		} else {
 			echo "temporary_order_cleanup=pass\n";
 		}
 	}
+
+	$remaining_smoke_orders = 0;
+	$recent = wc_get_orders(
+		array(
+			'limit'   => 50,
+			'orderby' => 'date',
+			'order'   => 'DESC',
+			'return'  => 'objects',
+		)
+	);
+	foreach ( $recent as $candidate ) {
+		if ( $candidate instanceof WC_Order && 'rollsbar_operator_smoke' === $candidate->get_created_via() ) {
+			++$remaining_smoke_orders;
+		}
+	}
+	echo 'remaining_smoke_orders=' . (int) $remaining_smoke_orders . "\n";
+	if ( 0 !== $remaining_smoke_orders ) {
+		$exit_code = 1;
+	}
 }
 
-if ( ! empty( $exit_code ) ) {
+if ( 0 !== $exit_code ) {
 	exit( $exit_code );
 }
