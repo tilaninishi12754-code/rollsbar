@@ -1,0 +1,54 @@
+name: Provision Staging SEO
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - wordpress/deploy/provision_staging_seo.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollsbar-provision-staging-seo
+  cancel-in-progress: false
+
+jobs:
+  provision-seo:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate staging access
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: |
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+      - name: Install SSH dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+      - name: Provision pinned SEOPress on isolated staging
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+          ROLLSBAR_CONFIRM_STAGING_SEO: YES
+        run: python3 wordpress/deploy/provision_staging_seo.py
+      - name: Audit live SEO ownership after provision
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: python3 wordpress/deploy/audit_staging_seo.py
