@@ -49,6 +49,26 @@ add_action(
 			$version
 		);
 
+		$legal_slugs = array(
+			'pravovaya-informaciya',
+			'rekvizity-prodavca',
+			'publichnaya-oferta',
+			'dostavka-i-oplata',
+			'oplata-i-vozvrat',
+			'politika-konfidencialnosti',
+			'soglasie-na-obrabotku-personalnyh-dannyh',
+			'cookies',
+			'bezopasnost-onlajn-oplaty',
+		);
+		if ( is_page( $legal_slugs ) ) {
+			wp_enqueue_style(
+				'rollsbar-legal',
+				get_template_directory_uri() . '/assets/css/legal.css',
+				array( 'rollsbar-app' ),
+				$version
+			);
+		}
+
 		// The custom front page renders WooCommerce add-to-cart buttons itself,
 		// so explicitly load Woo's native AJAX handler and fragment refresh there.
 		// WooCommerce no longer guarantees cart fragments on every page by default.
