@@ -8,8 +8,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Non-blocking order notifications.
  *
  * WooCommerce remains the owner of transactional email. Telegram is a
- * supplemental operator notification and is disabled until credentials are
- * provided outside Git.
+ * required first-launch operator notification but remains technically
+ * supplemental: a Telegram outage must never block order creation.
+ *
+ * Owner decision 2026-10-09: operator Telegram messages may include customer
+ * name, phone and delivery address. The filter remains available so privacy
+ * policy can be tightened later without rewriting the sender.
  */
 final class RollsBar_Notifications {
 
@@ -195,9 +199,15 @@ final class RollsBar_Notifications {
 
 	private static function build_telegram_message( WC_Order $order ): string {
 		$items_count = 0;
+		$item_lines  = array();
 
 		foreach ( $order->get_items() as $item ) {
-			$items_count += (int) $item->get_quantity();
+			$quantity = (int) $item->get_quantity();
+			$items_count += $quantity;
+			$name = trim( wp_strip_all_tags( $item->get_name() ) );
+			if ( '' !== $name ) {
+				$item_lines[] = '• ' . $name . ' × ' . $quantity;
+			}
 		}
 
 		$total = wp_specialchars_decode(
@@ -211,19 +221,32 @@ final class RollsBar_Notifications {
 			'Позиций: ' . $items_count,
 			'Получение: ' . RollsBar_Order_Details::fulfillment_label( $order ),
 			'Статус: ' . wc_get_order_status_name( $order->get_status() ),
-			'Открыть в админке: ' . $order->get_edit_order_url(),
 		);
+
+		$payment_title = trim( (string) $order->get_payment_method_title() );
+		if ( $payment_title ) {
+			$lines[] = 'Оплата: ' . $payment_title;
+		}
+
+		if ( $item_lines ) {
+			$lines[] = 'Состав заказа:';
+			$lines = array_merge( $lines, $item_lines );
+		}
 
 		$include_personal_data = (bool) apply_filters(
 			'rollsbar_telegram_include_personal_data',
-			false,
+			true,
 			$order
 		);
 
 		if ( $include_personal_data ) {
-			$name = trim( $order->get_formatted_billing_full_name() );
+			$name  = trim( $order->get_formatted_billing_full_name() );
 			$phone = trim( (string) $order->get_billing_phone() );
+
 			$address = trim( wp_strip_all_tags( $order->get_formatted_shipping_address() ) );
+			if ( '' === $address ) {
+				$address = trim( wp_strip_all_tags( $order->get_formatted_billing_address() ) );
+			}
 
 			if ( $name ) {
 				$lines[] = 'Клиент: ' . $name;
@@ -241,6 +264,13 @@ final class RollsBar_Notifications {
 				$lines[] = $label . ': ' . $value;
 			}
 		}
+
+		$comment = trim( (string) $order->get_customer_note() );
+		if ( $comment ) {
+			$lines[] = 'Комментарий: ' . preg_replace( '/\s+/', ' ', $comment );
+		}
+
+		$lines[] = 'Открыть в админке: ' . $order->get_edit_order_url();
 
 		return implode( "\n", $lines );
 	}
