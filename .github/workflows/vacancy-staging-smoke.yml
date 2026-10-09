@@ -1,0 +1,53 @@
+name: Vacancy Staging Public Smoke
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/vacancy-staging-smoke.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vacancy-public-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify public vacancy page is production-safe
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://staging.rollsbar.ru/rabota-v-rolls-bar/'
+          body="$(mktemp)"
+          headers="$(mktemp)"
+          trap 'rm -f "$body" "$headers"' EXIT
+
+          code="$(curl --fail-with-body --silent --show-error --location --max-time 30 --dump-header "$headers" --output "$body" --write-out '%{http_code}' "$url")"
+          [[ "$code" == '200' ]]
+          grep -Fq 'Актуальные вакансии' "$body"
+          grep -Fq 'Связаться по вакансии' "$body"
+          grep -Fq 'data-rb-career-chat' "$body"
+          grep -Fq 'tel:' "$body"
+
+          if grep -Fq 'Pending input' "$body"; then
+            echo 'Technical Pending input placeholder is publicly visible.' >&2
+            exit 1
+          fi
+          if grep -Fq 'Точная текстовка и состав полей' "$body"; then
+            echo 'Internal questionnaire placeholder copy is publicly visible.' >&2
+            exit 1
+          fi
+          if grep -Fq 'Заполнить анкету' "$body"; then
+            echo 'Dead questionnaire CTA is publicly visible before final client input.' >&2
+            exit 1
+          fi
+
+          echo 'VACANCY PUBLIC SMOKE PASS'
+          echo 'http_status=200'
+          echo 'vacancy_listing_present=yes'
+          echo 'approved_contact_actions_present=yes'
+          echo 'technical_pending_copy_exposed=no'
+          echo 'dead_questionnaire_cta_exposed=no'
