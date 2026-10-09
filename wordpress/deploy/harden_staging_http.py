@@ -3,13 +3,12 @@
 
 Changes only the staging .htaccess managed block. It preserves the WordPress
 rewrite block, verifies public behavior after the write, and restores the exact
-previous bytes if the redirect check fails.
+previous bytes if verification fails.
 """
 from __future__ import annotations
 
 import os
 import re
-import shlex
 import socket
 import sys
 import time
@@ -69,7 +68,7 @@ def no_redirect_request(url: str):
             return None
 
     opener = urllib.request.build_opener(NoRedirect())
-    req = urllib.request.Request(url, headers={"User-Agent": "RollsBar-Hardening-Verify/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "RollsBar-Hardening-Verify/1.1"})
     try:
         resp = opener.open(req, timeout=20)
         return resp.getcode(), dict(resp.headers.items())
@@ -89,7 +88,7 @@ def verify_public() -> tuple[bool, str]:
     location = get_header(headers, "Location")
     redirect_ok = code in {301, 302, 307, 308} and location.startswith(f"https://{DOMAIN}")
 
-    req = urllib.request.Request(f"https://{DOMAIN}/", headers={"User-Agent": "RollsBar-Hardening-Verify/1.0"})
+    req = urllib.request.Request(f"https://{DOMAIN}/", headers={"User-Agent": "RollsBar-Hardening-Verify/1.1"})
     with urllib.request.urlopen(req, timeout=20) as resp:
         https_code = resp.getcode()
         https_headers = dict(resp.headers.items())
@@ -104,6 +103,34 @@ def verify_public() -> tuple[bool, str]:
         f"xcto={xcto or 'none'} referrer={referrer or 'none'} xfo={xfo or 'none'}"
     )
     return redirect_ok and https_code == 200 and headers_ok, detail
+
+
+def replace_existing(sftp: paramiko.SFTPClient, tmp: str, target: str) -> None:
+    """Replace target without assuming POSIX rename-overwrite support."""
+    try:
+        sftp.posix_rename(tmp, target)
+        return
+    except (AttributeError, OSError):
+        pass
+
+    # REG.RU's SFTP server can reject rename-over-existing. Fall back to a
+    # direct target write while the exact previous bytes remain in memory for
+    # immediate rollback if public verification fails.
+    with sftp.open(tmp, "rb") as src:
+        data = src.read()
+    with sftp.open(target, "wb") as dst:
+        dst.write(data)
+    sftp.chmod(target, 0o644)
+    try:
+        sftp.remove(tmp)
+    except FileNotFoundError:
+        pass
+
+
+def write_exact(sftp: paramiko.SFTPClient, target: str, data: bytes) -> None:
+    with sftp.open(target, "wb") as fh:
+        fh.write(data)
+    sftp.chmod(target, 0o644)
 
 
 def main() -> int:
@@ -127,10 +154,7 @@ def main() -> int:
             new_text = pattern.sub(BLOCK, text, count=1)
         else:
             marker = "# BEGIN WordPress"
-            if marker in text:
-                new_text = text.replace(marker, BLOCK + "\n" + marker, 1)
-            else:
-                new_text = BLOCK + "\n" + text
+            new_text = text.replace(marker, BLOCK + "\n" + marker, 1) if marker in text else BLOCK + "\n" + text
 
         if new_text.encode("utf-8") == original:
             print("http_hardening=already_current")
@@ -139,13 +163,12 @@ def main() -> int:
             with sftp.open(tmp, "wb") as fh:
                 fh.write(new_text.encode("utf-8"))
             sftp.chmod(tmp, 0o644)
-            sftp.rename(tmp, HTACCESS)
+            replace_existing(sftp, tmp, HTACCESS)
             print("http_hardening=written")
     finally:
         sftp.close()
         client.close()
 
-    # Give Apache a moment to observe the atomic replacement.
     time.sleep(1)
     ok, detail = verify_public()
     print("verify=" + detail)
@@ -153,15 +176,10 @@ def main() -> int:
         print("STAGING HTTP HARDENING PASS")
         return 0
 
-    # Roll back exact prior bytes if verification fails.
     client = connect()
     sftp = client.open_sftp()
     try:
-        tmp = HTACCESS + ".rollsbar-rollback"
-        with sftp.open(tmp, "wb") as fh:
-            fh.write(original)
-        sftp.chmod(tmp, 0o644)
-        sftp.rename(tmp, HTACCESS)
+        write_exact(sftp, HTACCESS, original)
     finally:
         sftp.close()
         client.close()
