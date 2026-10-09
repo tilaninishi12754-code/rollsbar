@@ -3,194 +3,151 @@
 Updated: 2026-10-09
 
 ## Purpose
-Explicit recovery checkpoint for RollsBar. Never continue from chat memory alone: first re-read this file, `MIGRATION_PLAN.md`, live branch HEAD, recent CI/runtime evidence and Todoist task `6hf5v5J535WvjJx5`.
+This is the current recovery checkpoint for RollsBar. Do not continue from chat memory alone. First read this file, the current override in `wordpress/docs/MIGRATION_PLAN.md`, live branch HEAD, recent CI/runtime evidence, and Todoist task `6hf5v5J535WvjJx5`.
 
 ## Source of truth order
-1. Live GitHub branch/code + CI/runtime evidence
-2. `wordpress/docs/MIGRATION_PLAN.md` current execution override
-3. Project No Loss / Todoist task `6hf5v5J535WvjJx5`
-4. Historical chats/raw only when provenance is disputed
+1. Live GitHub branch/code + current CI/runtime evidence.
+2. `wordpress/docs/MIGRATION_PLAN.md` current execution override.
+3. This file / Todoist recovery task / Drive handoff.
+4. Historical Git/chat only when provenance is disputed.
+
+Historical detailed checkpoints remain in Git history. This file intentionally summarizes the current verified state rather than duplicating every old checkpoint.
 
 ## Git / immutable baseline
 Working branch: `wordpress/migration-2026-10-01`.
 
-Latest verified implementation deployed to real REG.RU staging before this documentation sync:
-`a438412e7e538cf8b6ec0b001af53a6078791cb7` — consent-gated Yandex Metrica preparation + runtime verification on top of the verified payment/notification/legal/DaData stack.
+Latest verified live implementation before this documentation sync:
+- security/backup deploy gate: `9a7506c09e3d96a9564afda18465f397f4ebc32e`;
+- extension cleanup workflow: `19ec731bf860c1d28241cc5b8d3aac452aafbde8`.
 
-This documentation commit itself advances the branch; ALWAYS re-read live HEAD before any write.
+This documentation write advances the branch. **Always re-read live HEAD before any future write.**
 
 Approved baseline is immutable:
 `approved/site-2026-10-01 = a5e524392abcf89ffd5ace2a18218a6b59ed3b61`.
 Never modify it.
 
-Default `main` remains infrastructure-only for address-provider comparison. Last verified HEAD:
-`af6b829c6c58a072b7bd375af5b8515272c202e7`.
+Default `main` remains infrastructure-only for the address-provider comparison launcher. Last verified HEAD: `af6b829c6c58a072b7bd375af5b8515272c202e7`.
 
 ## Live staging — VERIFIED
-`https://staging.rollsbar.ru`
+URL: `https://staging.rollsbar.ru`
 
 Current verified runtime:
 - isolated REG.RU staging site/database;
-- trusted HTTPS;
+- HTTPS working;
 - WordPress 7.1.3;
 - WooCommerce 11.1.2;
-- `rollsbar-theme` + `rollsbar-core` active;
+- `rollsbar-theme` and `rollsbar-core` active;
 - full approved catalog preserved: 118 product cards / 131 source rows;
 - RUB;
 - native WooCommerce Blocks Local Pickup enabled;
 - DaData key configured server-side only;
 - WooCommerce Coming Soon OFF for anonymous QA;
 - `blog_public=0`, search indexing OFF;
+- launch payment mode = `Оплата при получении` only;
+- online acquiring reserved/disabled and hidden;
 - courier polygon enforcement OFF;
-- launch payment mode = payment at receipt only;
-- online acquiring reserved/disabled and not visible to customers;
-- Yandex Metrica integration code prepared but live counter NOT configured, therefore analytics tag does not load;
+- Yandex Metrica code prepared but real counter ID not configured, therefore no Metrica tag loads;
 - Telegram staging credentials absent;
 - production untouched.
 
-Do NOT restore the historical 5-product smoke catalog on live staging. The 5-card state is only an isolated CI bootstrap fixture.
+Do not restore the historical 5-product smoke catalog to live staging. Five products are only an isolated CI bootstrap fixture.
 
-## Latest full CI/runtime evidence — PASS
-Implementation commit `a438412e7e538cf8b6ec0b001af53a6078791cb7`:
-- `WordPress Migration Static Gate` run `37902087037` — SUCCESS;
-- `Build WordPress Staging Package` run `37902086946` — SUCCESS;
-- `WordPress Staging Bootstrap Smoke` run `37902086984` — SUCCESS;
-- `Deploy REG.RU RollsBar Staging WordPress` run `37902086959` — SUCCESS.
+## Latest security / backup checkpoint — VERIFIED
+### Real staging audit
+Read-only security audit implementation: `wordpress/deploy/audit_staging_security_backup.py`.
 
-Real REG.RU deploy proves:
-- catalog = 118 product cards / 131 source rows;
-- `REVIEWS MODERATION RUNTIME PASS`;
-- `ORDER NOTIFICATIONS RUNTIME PASS`;
-- `LEGAL / PAYMENT READINESS RUNTIME PASS`;
-- `PAYMENT LAUNCH MODE RUNTIME PASS`;
-- payment-at-receipt gateway enabled with title `Оплата при получении`;
-- only enabled payment gateway ID = `cod`;
-- `online_payment_state=reserved_disabled`;
-- `online_card_gateway_visible=no`;
-- no provider-specific acquiring gateway assumed;
-- `ANALYTICS PREPARATION RUNTIME PASS`;
-- `live_counter_configured=no`;
-- synthetic counter loader = PASS;
-- analytics consent required before Yandex tag load;
-- Webvisor OFF;
-- marketing tools not configured;
-- prepared goals: `add_to_cart`, `open_cart`, `begin_checkout`, `submit_order`, `purchase`, `phone_click`;
-- extra prepared delivery-method goal: `shipping_method_select`;
-- `ADDRESS SUGGESTIONS RUNTIME PASS`;
-- exact `qc_geo=0 -> allow_auto_zone=yes`;
-- lower precision `qc_geo=2 -> allow_auto_zone=no`;
-- provider country labels exposed = no;
-- `blog_public=0`;
-- DaData server key = yes;
-- Telegram server credentials = no;
-- `STAGING WORDPRESS DEPLOY PASS`.
+Latest independent audit is the rerun of workflow `37909036816`, job `113754003039`, and passed after all hardening/cleanup work.
 
-## Yandex Metrica — PREPARED / COUNTER ID PENDING
-Final project requirements call for Yandex Metrica plus goals for cart/checkout/order/phone actions.
+It proves on the real REG.RU staging host:
+- WordPress core version = 7.1.3;
+- official WordPress core checksums PASS;
+- `DISALLOW_FILE_EDIT=true`;
+- `FORCE_SSL_ADMIN=true`;
+- WordPress automatic updater is not globally disabled;
+- WP-Cron is not disabled;
+- `wp-config.php` mode = `640`;
+- `.htaccess` mode = `644`;
+- no world-writable PHP/config files;
+- inactive plugins = 0;
+- inactive themes = exactly one: `twentytwentyfive` as a bundled fallback theme;
+- core updates available = 0;
+- WooCommerce is the only plugin with an available newer version, but the project remains intentionally pinned to the tested 11.1.2 until a deliberate staging upgrade cycle;
+- database size observed ≈ 5.14 MB;
+- uploads size is small and server has ample free space;
+- backup directory outside web-root is writable;
+- backup snapshot count = 5;
+- latest snapshot `20261009T091618Z` independently passed SHA-256/gzip/tar integrity checks;
+- direct HTTP probes of `/wp-config.php` and `/.git/config` return HTTP 403.
 
-Implemented on staging:
-- editable `metrika_counter_id` in Rolls Bar admin settings;
-- invalid/non-numeric counter IDs are rejected;
-- when ID is empty, no Yandex analytics JS is rendered or requested;
-- when a valid ID exists, Metrica still loads only after explicit analytics consent stored in the browser;
-- consent UI links to `/cookies/`;
-- Webvisor disabled;
-- automatic link tracking/clickmap disabled in our init configuration;
-- no advertising/marketing tools configured;
-- goal events prepared in code for add-to-cart, cart open, checkout start, order-submit click, successful order, phone click, and delivery/pickup method selection.
+The many group-writable PHP files on this shared-hosting account are **not** treated as an automatic defect because REG.RU ownership/group semantics can require group write. We did not mass-`chmod` the tree. The sensitive `wp-config.php` was tightened to 640 and both WP-CLI and public HTTP health were proven afterward.
 
-Current objective blocker for full analytics activation:
-- client/order owner has not yet provided the real Yandex Metrica counter ID.
+### Core repair / hardening
+Workflow `Harden REG.RU Staging Core` run `37909323728`, job `113750376959` — SUCCESS.
 
-Do NOT invent a counter ID and do NOT claim real Metrica collection or goal reception until the real counter is added and goal hits are verified in Yandex Metrica.
+Before mutation it created and verified a fresh server-side backup, then:
+- re-downloaded the **same pinned WordPress 7.1.3** official package using `--skip-content --force`;
+- verified official WordPress checksums;
+- changed only `wp-config.php` from 664 to 640;
+- verified homepage HTTP 200;
+- preserved WooCommerce 11.1.2, 118 products, `blog_public=0`;
+- did not update extensions.
 
-## Deployment recovery hardening — DONE
-A prior failed/intermediate auto-deploy temporarily left the active staging `rollsbar-core` copy with a syntactically broken PHP file. The next deploy initially could not recover because WP-CLI booted active plugins before replacing project code.
+### Backup system
+Canonical files:
+- `wordpress/deploy/backup-staging.sh`;
+- `wordpress/deploy/run_staging_backup.py`;
+- `.github/workflows/backup-reg-ru-staging.yml`.
 
-Bootstrap now self-heals project-owned code:
-1. fetch exact Git commit;
-2. replace `rollsbar-theme`, `rollsbar-core` and catalog files on staging;
-3. only then run WP-CLI commands that boot active plugins.
+Snapshots live outside public web-root under `$HOME/rollsbar-backups/staging/<UTC_TIMESTAMP>/` and contain:
+- `database.sql.gz`;
+- `uploads.tar.gz`;
+- `manifest.txt`;
+- `SHA256SUMS`.
 
-Verified on real REG.RU staging. Do not revert this ordering.
+Safety properties:
+- DB is streamed directly into gzip; no plain SQL dump is intentionally left on disk;
+- `wp-config.php`/secrets are not copied into the backup;
+- snapshot directories are mode 700, files mode 600;
+- snapshot is published atomically only after gzip/tar/SHA-256 verification;
+- retention = newest 5 complete snapshots;
+- project theme/plugin code remains canonical in Git and WordPress/WooCommerce packages are reproducible.
 
-## Order notifications — INTERNAL PIPELINE PASS / REAL DELIVERY PENDING
-Architecture:
-`WooCommerce order -> native WooCommerce email + async Telegram through Action Scheduler`.
+### Every live staging deploy is now backup-gated
+Implementation commit `9a7506c09e3d96a9564afda18465f397f4ebc32e`.
 
-Runtime verifier proves without contacting real users:
-- WooCommerce new-order email reaches the `wp_mail` pipeline with non-empty subject/body;
-- actionable order queues Telegram action;
-- successful synthetic Telegram response -> status `sent`, attempts=1;
-- duplicate send is idempotent;
-- personal data is hidden from Telegram message by default;
-- synthetic HTTP 500 records error and schedules retry;
-- synthetic QA orders/actions are removed after the test.
+CI/runtime proof on that commit:
+- static gate `37909732193` — SUCCESS;
+- staging package `37909732076` — SUCCESS;
+- clean bootstrap smoke `37909731971` — SUCCESS;
+- live REG.RU deploy `37909731997` — SUCCESS.
 
-Safe optional staging secrets:
-- `ROLLSBAR_TELEGRAM_BOT_TOKEN`
-- `ROLLSBAR_TELEGRAM_CHAT_ID`
+The real deploy log proves the new order:
+1. exact deploy SHA checkout;
+2. `deploy_stage=backup_before_mutation`;
+3. fresh snapshot `20261009T091218Z` created and verified;
+4. only then preflight/bootstrap mutates staging;
+5. final core checksum gate;
+6. final `wp-config.php=640` assertion;
+7. final catalog=118 / WooCommerce=11.1.2 / DaData/runtime assertions PASS.
 
-Secrets flow only through GitHub `staging` environment -> masked deploy runtime -> short-lived mode-0600 env -> server-side `wp-config.php`. Partial Telegram configuration is rejected. Never paste these values into chat or Git.
+A failed backup now aborts a routine live staging deploy before mutation.
 
-Current blocker for true Telegram delivery: both Telegram staging secrets are absent (`assert_telegram_server_credentials=no`).
+### Unused extension cleanup
+Workflow `Cleanup REG.RU Staging Extensions` run `37910173271`, job `113753155821` — SUCCESS.
 
-Real email receipt is also not yet proven; only the internal WooCommerce -> `wp_mail` pipeline is proven.
+It first created verified snapshot `20261009T091618Z` (retained snapshot count = 5), then:
+- deleted inactive `akismet`;
+- deleted inactive `hello`;
+- deleted inactive `twentytwentyfour`;
+- deleted inactive `twentytwentythree`;
+- kept `twentytwentyfive` as one standard fallback theme for diagnostics;
+- confirmed WooCommerce per-plugin auto-update was already disabled and remains disabled;
+- did not upgrade WooCommerce;
+- verified core checksums, WooCommerce 11.1.2, catalog 118, `wp-config=640`, and home HTTP 200.
 
-## Legal / payment readiness — DONE ON STAGING
-Nine editable WordPress pages are published:
-- `/pravovaya-informaciya/`
-- `/rekvizity-prodavca/`
-- `/publichnaya-oferta/`
-- `/dostavka-i-oplata/`
-- `/oplata-i-vozvrat/`
-- `/politika-konfidencialnosti/`
-- `/soglasie-na-obrabotku-personalnyh-dannyh/`
-- `/cookies/`
-- `/bezopasnost-onlajn-oplaty/`
+The separate read-only audit afterward independently confirmed the cleanup state.
 
-Verified behavior:
-- baseline comes from immutable approved lineage;
-- pages are created only when missing and routine deploys do not overwrite later admin/client edits;
-- Woo terms points to `publichnaya-oferta`;
-- WordPress privacy points to `politika-konfidencialnosti`;
-- checkout privacy consent is a required checkbox;
-- review privacy consent is required in form and server-side;
-- stale SberBank-specific wording is not published as current truth;
-- public acquiring copy stays provider-neutral until an actual provider is connected;
-- exact delivery polygon enforcement is truthfully described as deferred.
-
-Seller details verified from approved source:
-- ИП Гридина Надежда Викторовна;
-- ИНН 910504301819;
-- ОГРНИП 325911200130902.
-
-No missing bank account, email, acquiring provider or other client fact was invented.
-
-## Launch payment mode — VERIFIED
-Final project scope says online acquiring is not part of the launch unless separately agreed. Current staging therefore intentionally uses payment at receipt only.
-
-Verified on real staging:
-- WooCommerce `cod` enabled;
-- public title = `Оплата при получении`;
-- `bacs` and `cheque` disabled;
-- no other gateway enabled;
-- online-card slot remains reserved/disabled;
-- no current acquiring provider is assumed from historical bank references.
-
-Actual online acquiring requires a separate future stage after authoritative provider/contract confirmation and provider-specific sandbox testing.
-
-## Reviews — DONE ON STAGING
-- route `/otzyvy/`;
-- form: name, 1–5 rating, review text, optional photo <=5 MiB, required privacy consent;
-- public submission always `pending`;
-- pending review not public;
-- admin Publish -> public;
-- no fake reviews/fake average;
-- honeypot protection;
-- synthetic QA review removed after runtime test.
-
-## Checkout / DaData — DONE ON STAGING
+## Checkout / DaData — VERIFIED
 Preferred architecture:
 `DaData Suggestions -> qc_geo safety gate -> lat/lon -> [approved polygon later] -> delivery tier/minimum`.
 
@@ -201,26 +158,25 @@ Preferred architecture:
 - `qc_geo=0`: 17/25;
 - `qc_geo=2`: 5/25;
 - `qc_geo=3`: 3/25;
-- observed latency 233–737 ms, mean ~413 ms.
+- observed mean latency ~413 ms.
 
 Real anonymous checkout browser smoke run `37775215326`, rerun job `113306962222`:
-- real Woo cart -> Checkout Block;
-- `Симферополь Гагарина 17`: `qc_geo=0`, coordinates returned, `allow_auto_zone=1`;
-- `Дубки Раздерина 12`: `qc_geo=2`, `allow_auto_zone=0`, clarification warning shown;
-- provider country labels hidden;
+- exact-house example returns coordinates and `allow_auto_zone=1`;
+- lower-precision example is fail-closed with `allow_auto_zone=0` and clarification warning;
+- provider country labels are hidden;
 - no uncaught checkout JS errors.
 
-Fail-closed policy:
-- `qc_geo=0`: may enter automatic polygon lookup when approved polygons exist;
+Policy:
+- `qc_geo=0`: may enter automatic polygon lookup once approved polygons exist;
 - `qc_geo>=1`: no silent zone assignment.
 
-Yandex/2GIS remain fallback-only. A Yandex Maps key is NOT a current blocker.
+Yandex/2GIS are fallback-only. A Yandex Maps key is not a current blocker.
 
 ## Delivery polygons — DEFERRED / NON-BLOCKING
-Owner decided development continues without exact polygons because client cannot currently provide exact boundaries.
+Exact polygons are not currently available from the client. This does not block website development.
 
 Already ready:
-- canonical thresholds 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB;
+- thresholds 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB;
 - editable delivery data;
 - polygon storage/sanitation;
 - point-in-polygon resolver;
@@ -228,44 +184,118 @@ Already ready:
 - fail-closed precision policy.
 
 Deferred:
-- exact client-approved polygons;
+- client-approved geometry;
 - boundary QA;
 - polygon -> threshold enforcement;
 - courier zone/minimum enforcement.
 
-NEVER invent real polygons. Courier enforcement stays OFF. This block is non-critical until the owner changes that decision.
+Never invent polygons. Courier enforcement stays OFF.
+
+## Reviews / privacy — VERIFIED
+- `/otzyvy/` exists;
+- new review submissions are pending moderation;
+- pending reviews are not public;
+- published reviews become public;
+- no fake reviews/fake average;
+- review privacy consent required in form + server-side;
+- Checkout Block privacy consent required;
+- synthetic QA data is cleaned up after tests.
+
+## Order notifications — INTERNAL PASS / REAL DELIVERY PENDING
+Architecture:
+`WooCommerce order -> native WooCommerce email + async Telegram through Action Scheduler`.
+
+Verified internally:
+- Woo new-order email reaches `wp_mail`;
+- Telegram action queues;
+- synthetic success -> sent;
+- duplicate send is idempotent;
+- PII hidden from Telegram by default;
+- synthetic HTTP 500 records error + schedules retry.
+
+External pending:
+- real Telegram delivery: needs `ROLLSBAR_TELEGRAM_BOT_TOKEN` + `ROLLSBAR_TELEGRAM_CHAT_ID` in GitHub `staging` secrets;
+- real email receipt/deliverability test: needs approved real recipient/mail transport decision.
+
+Never paste these secrets into chat or Git.
+
+## Legal / payment readiness — VERIFIED
+Nine editable WordPress pages are published and runtime-verified:
+- `/pravovaya-informaciya/`
+- `/rekvizity-prodavca/`
+- `/publichnaya-oferta/`
+- `/dostavka-i-oplata/`
+- `/oplata-i-vozvrat/`
+- `/politika-konfidencialnosti/`
+- `/soglasie-na-obrabotku-personalnyh-dannyh/`
+- `/cookies/`
+- `/bezopasnost-onlajn-oplaty/`.
+
+Woo terms/privacy settings point to canonical WordPress pages. Public acquiring copy is provider-neutral until a provider is actually connected. Historical bank references are not enough to assume the provider.
+
+Seller source facts retained:
+- ИП Гридина Надежда Викторовна;
+- ИНН 910504301819;
+- ОГРНИП 325911200130902.
+
+No missing bank account, email, acquiring provider, polygon or other client fact was invented.
+
+## Launch payment mode — VERIFIED
+Current launch scope:
+- `cod` enabled;
+- title `Оплата при получении`;
+- `bacs`/`cheque` disabled;
+- no other gateway enabled;
+- online-card slot reserved/disabled;
+- no current acquiring provider assumed.
+
+Actual acquiring is a separate later stage after authoritative provider/contract confirmation and provider-specific sandbox testing.
+
+## Yandex Metrica — PREPARED / REAL ID PENDING
+Implemented and runtime-tested:
+- editable numeric `metrika_counter_id`;
+- no ID -> no Yandex tag/request;
+- valid ID -> still waits for explicit analytics consent;
+- Webvisor off;
+- marketing tools not configured;
+- goals prepared: `add_to_cart`, `open_cart`, `begin_checkout`, `submit_order`, `purchase`, `phone_click`, plus `shipping_method_select`.
+
+Do not invent the real counter ID and do not claim actual goal reception until the client supplies the counter and hits are observed in Metrica.
 
 ## Current migration status
 Completed / verified:
-- [x] staging foundation
-- [x] full catalog + Gate B
-- [x] cart/checkout/mobile regression baseline
-- [x] Local Pickup
-- [x] DaData suggestions + coordinate resolution
-- [x] fail-closed geocode precision UX
-- [x] review moderation
-- [x] required personal-data consent in checkout/reviews
-- [x] notification internal pipeline + retry/idempotency runtime test
-- [x] legal/payment-readiness WordPress pages + runtime validation
-- [x] receipt-only launch payment mode + online gateway disabled
-- [x] Yandex Metrica integration/goal wiring prepared with ID+consent gate
-- [x] deploy self-heal order
+- [x] staging foundation + HTTPS;
+- [x] full catalog + Gate B;
+- [x] cart/checkout/mobile regression baseline;
+- [x] Local Pickup;
+- [x] DaData suggestions + coordinate resolution + fail-closed precision UX;
+- [x] review moderation;
+- [x] explicit personal-data consent in checkout/reviews;
+- [x] notification internal pipeline + retry/idempotency runtime test;
+- [x] legal/payment-readiness pages + runtime validation;
+- [x] receipt-only launch payment mode;
+- [x] Yandex Metrica integration/goal wiring prepared behind ID+consent gate;
+- [x] deploy self-heal ordering;
+- [x] official WordPress core integrity restored and continuously gated;
+- [x] `wp-config.php` hardened to 640;
+- [x] verified server-side staging backups outside web-root;
+- [x] every routine live staging deploy backup-gated;
+- [x] unused plugins/old bundled themes removed while retaining one fallback theme.
 
 Externally pending / deferred:
 - [ ] real Yandex Metrica counter ID + live goal reception verification;
-- [ ] real Telegram delivery — requires actual staging bot token + chat ID in GitHub `staging` secrets;
-- [ ] real email receipt/deliverability test — requires approved recipient/mail transport decision;
-- [ ] actual online acquiring — separate future stage; provider/contract/credentials/test flow not confirmed;
-- [ ] final vacancy questionnaire — requires final client wording/input;
+- [ ] real Telegram delivery;
+- [ ] real email receipt/deliverability;
+- [ ] actual online acquiring — separate future stage;
+- [ ] final vacancy questionnaire — needs client wording/input;
 - [~] exact polygons/courier enforcement — DEFERRED, NON-BLOCKING.
 
 ## CURRENT NEXT ACTION
-1. Treat analytics implementation as prepared but inactive; obtain the real Yandex Metrica counter ID later and then verify actual goal reception. This is external input and must not block unrelated work.
-2. Continue independent launch-readiness work from the final TЗ, especially baseline WordPress security/backup/update readiness and any remaining acceptance tests that do not require client secrets.
-3. Real Telegram/email receipt tests can be completed when approved real credentials/recipients exist.
-4. Do not implement provider-specific acquiring until authoritative provider/contract status exists; launch remains payment at receipt.
-5. Exact polygons remain deferred.
-6. Production remains untouched until full staging QA + explicit owner approval.
+1. Treat baseline WordPress security and backup/update readiness as **verified on staging**.
+2. Continue independent launch acceptance/regression work that does not require client secrets: current HTTP/security headers and public-route health, Site Health/cron/REST checks, recovery/runbook verification, and final pre-production acceptance inventory.
+3. Do not automatically upgrade WooCommerce beyond 11.1.2. A version bump must be a deliberate backup -> staging upgrade -> regression cycle.
+4. Do not wait on Metrica ID, Telegram/email external credentials, acquiring provider, vacancy wording or polygons; they are external-input blocks.
+5. Production remains untouched until full staging QA + explicit owner approval.
 
 ## Project No Loss rules
 - approved baseline immutable;
@@ -277,4 +307,4 @@ Externally pending / deferred:
 - do not complete Todoist recovery task `6hf5v5J535WvjJx5` without explicit owner confirmation.
 
 ## New-chat recovery prompt
-> RollsBar: восстанови состояние по Project No Loss. Не полагайся на память чата. Сначала прочитай `wordpress/docs/CURRENT_STATE.md` и текущий override в `wordpress/docs/MIGRATION_PLAN.md`, затем сверяй live HEAD `wordpress/migration-2026-10-01`, `main`, последние CI/runtime результаты и Todoist task `6hf5v5J535WvjJx5`. Фактический GitHub/CI выше старых summary. Не повторяй успешно завершённые операции. Полигоны DEFERRED/NON-BLOCKING. Launch payment = при получении. Legal/payment readiness, notification internal pipeline, DaData, reviews и analytics preparation уже PASS; реальные внешние credentials/counter IDs не считать настроенными без доказательства.
+> RollsBar: восстанови состояние по Project No Loss. Не полагайся на память чата. Сначала прочитай `wordpress/docs/CURRENT_STATE.md` и current override в `wordpress/docs/MIGRATION_PLAN.md`, затем сверяй live HEAD `wordpress/migration-2026-10-01`, `main`, последние CI/runtime результаты и Todoist task `6hf5v5J535WvjJx5`. Фактический GitHub/CI выше старых summary. Не повторяй успешно завершённые операции. Security/backup readiness уже VERIFIED: core checksum PASS, wp-config=640, 5 verified server-side snapshots, every staging deploy backup-gated, unused extensions cleaned. Полигоны DEFERRED/NON-BLOCKING. Launch payment = при получении. Внешние credentials/analytics ID не считать настроенными без фактического доказательства.
