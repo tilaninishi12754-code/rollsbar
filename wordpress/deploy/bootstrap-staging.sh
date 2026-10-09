@@ -76,12 +76,25 @@ wp_cmd config set WP_DEBUG_LOG true --raw
 wp_cmd config set WP_DEBUG_DISPLAY false --raw
 wp_cmd config set FORCE_SSL_ADMIN true --raw
 
-# Live staging receives the DaData token from the GitHub `staging`
-# environment. Persist it only server-side; clean CI smoke environments may
-# omit the token and therefore keep the address-suggestion proxy disabled.
+# Live staging receives provider/integration secrets from the GitHub `staging`
+# environment. Persist them only server-side; clean CI smoke environments may
+# omit them. A partial Telegram configuration is rejected because it can never
+# produce a valid send and is harder to diagnose later.
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   wp_cmd config set ROLLSBAR_DADATA_API_KEY "$ROLLSBAR_DADATA_API_KEY" --type=constant
 fi
+
+telegram_token="${ROLLSBAR_TELEGRAM_BOT_TOKEN:-}"
+telegram_chat="${ROLLSBAR_TELEGRAM_CHAT_ID:-}"
+if [[ -n "$telegram_token" || -n "$telegram_chat" ]]; then
+  if [[ -z "$telegram_token" || -z "$telegram_chat" ]]; then
+    echo "Telegram staging configuration is partial: both bot token and chat ID are required."
+    exit 4
+  fi
+  wp_cmd config set ROLLSBAR_TELEGRAM_BOT_TOKEN "$telegram_token" --type=constant
+  wp_cmd config set ROLLSBAR_TELEGRAM_CHAT_ID "$telegram_chat" --type=constant
+fi
+unset telegram_token telegram_chat
 
 wp_cmd option update home "$STAGING_URL"
 wp_cmd option update siteurl "$STAGING_URL"
@@ -206,8 +219,8 @@ fi
 
 # Final invariants: fail the deploy if a later change regresses staging HTTPS,
 # public QA visibility, pretty permalinks, ruble currency, native Blocks Local
-# Pickup, or the approved review-moderation flow. Search-engine indexing stays
-# disabled via blog_public=0.
+# Pickup, review moderation, or the internal order-notification pipeline.
+# Search-engine indexing stays disabled via blog_public=0.
 [[ "$(wp_cmd option get home)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get siteurl)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get blog_public)" == "0" ]]
@@ -222,6 +235,7 @@ grep -q 'RewriteEngine On' "$WP_PATH/.htaccess"
 [[ "$(wp_cmd eval '$l=get_option("pickup_location_pickup_locations",array()); echo count(array_filter($l,static fn($x)=>!empty($x["enabled"])));')" -ge 1 ]]
 
 wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-reviews.php"
+wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-notifications.php"
 
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   [[ "$(wp_cmd eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')" == "yes" ]]
@@ -229,6 +243,10 @@ if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   # WordPress runtime. This avoids external runner routing issues while still
   # verifying live DaData responses and the fail-closed qc_geo policy.
   wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-address-suggestions.php"
+fi
+
+if [[ -n "${ROLLSBAR_TELEGRAM_BOT_TOKEN:-}" && -n "${ROLLSBAR_TELEGRAM_CHAT_ID:-}" ]]; then
+  [[ "$(wp_cmd eval 'echo RollsBar_Notifications::telegram_is_configured() ? "yes" : "no";')" == "yes" ]]
 fi
 
 echo
@@ -240,9 +258,15 @@ echo "Currency: $(wp_cmd option get woocommerce_currency)"
 echo "Storefront QA visibility: live (search indexing off)"
 echo "Local Pickup: enabled"
 echo "Reviews moderation: verified"
+echo "Order notification pipeline: verified (external delivery not asserted)"
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   echo "DaData server-side key: configured"
 fi
+if [[ -n "${ROLLSBAR_TELEGRAM_BOT_TOKEN:-}" && -n "${ROLLSBAR_TELEGRAM_CHAT_ID:-}" ]]; then
+  echo "Telegram server-side credentials: configured"
+else
+  echo "Telegram server-side credentials: not configured"
+fi
 echo
 echo "Next: bash wordpress/deploy/verify-staging.sh"
-echo "Do NOT enable live payments, real Telegram credentials, or production indexing yet."
+echo "Do NOT enable live payments or production indexing yet. Real notification delivery requires an explicitly configured recipient."
