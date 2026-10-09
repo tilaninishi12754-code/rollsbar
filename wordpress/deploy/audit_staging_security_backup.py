@@ -63,6 +63,8 @@ def run(client: paramiko.SSHClient, command: str) -> str:
 remote = r'''set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 WP_PATH="$HOME/www/staging.rollsbar.ru"
+BACKUP_ROOT="$HOME/rollsbar-backups/staging"
+SNAPSHOT_GLOB='20??????T??????Z'
 
 ok(){ printf 'PASS  %s\n' "$*"; }
 warn(){ printf 'WARN  %s\n' "$*"; }
@@ -91,15 +93,19 @@ else
 fi
 rm -f /tmp/rollsbar-core-checksums.out /tmp/rollsbar-core-checksums.err
 
-config_bool(){
-  local name="$1" expected="$2"
+config_true(){
+  local name="$1"
   local value
   value="$(wp --path="$WP_PATH" config get "$name" 2>/dev/null || true)"
   echo "config_${name}=${value:-unset}"
-  if [[ "$value" == "$expected" ]]; then ok "$name=$expected"; else warn "$name expected $expected, got ${value:-unset}"; fi
+  if [[ "$value" == "true" || "$value" == "1" ]]; then
+    ok "$name=true"
+  else
+    warn "$name expected true, got ${value:-unset}"
+  fi
 }
-config_bool DISALLOW_FILE_EDIT true
-config_bool FORCE_SSL_ADMIN true
+config_true DISALLOW_FILE_EDIT
+config_true FORCE_SSL_ADMIN
 
 # Automatic updater is healthy when it has not been globally disabled.
 auto_disabled="$(wp --path="$WP_PATH" config get AUTOMATIC_UPDATER_DISABLED 2>/dev/null || true)"
@@ -148,36 +154,69 @@ echo "group_writable_php_config_count=$group_writable_count"
 
 # Inventory only: inactive extensions expand attack surface if left installed.
 active_plugins="$(wp --path="$WP_PATH" plugin list --status=active --field=name | wc -l | tr -d ' ')"
-inactive_plugins="$(wp --path="$WP_PATH" plugin list --status=inactive --field=name | wc -l | tr -d ' ')"
-inactive_themes="$(wp --path="$WP_PATH" theme list --status=inactive --field=name | wc -l | tr -d ' ')"
+inactive_plugin_names="$(wp --path="$WP_PATH" plugin list --status=inactive --field=name | paste -sd, -)"
+inactive_theme_names="$(wp --path="$WP_PATH" theme list --status=inactive --field=name | paste -sd, -)"
+inactive_plugins=0
+inactive_themes=0
+[[ -z "$inactive_plugin_names" ]] || inactive_plugins="$(awk -F, '{print NF}' <<<"$inactive_plugin_names")"
+[[ -z "$inactive_theme_names" ]] || inactive_themes="$(awk -F, '{print NF}' <<<"$inactive_theme_names")"
 echo "active_plugins=$active_plugins"
 echo "inactive_plugins=$inactive_plugins"
+echo "inactive_plugin_names=${inactive_plugin_names:-none}"
 echo "inactive_themes=$inactive_themes"
+echo "inactive_theme_names=${inactive_theme_names:-none}"
 
 # Update visibility. No update is installed by this audit.
 core_updates="$(wp --path="$WP_PATH" core check-update --format=count 2>/dev/null || echo unknown)"
-plugin_updates="$(wp --path="$WP_PATH" plugin list --update=available --field=name 2>/dev/null | wc -l | tr -d ' ')"
-theme_updates="$(wp --path="$WP_PATH" theme list --update=available --field=name 2>/dev/null | wc -l | tr -d ' ')"
+plugin_update_names="$(wp --path="$WP_PATH" plugin list --update=available --field=name 2>/dev/null | paste -sd, -)"
+theme_update_names="$(wp --path="$WP_PATH" theme list --update=available --field=name 2>/dev/null | paste -sd, -)"
+plugin_updates=0
+theme_updates=0
+[[ -z "$plugin_update_names" ]] || plugin_updates="$(awk -F, '{print NF}' <<<"$plugin_update_names")"
+[[ -z "$theme_update_names" ]] || theme_updates="$(awk -F, '{print NF}' <<<"$theme_update_names")"
 echo "core_updates_available=$core_updates"
 echo "plugin_updates_available=$plugin_updates"
+echo "plugin_update_names=${plugin_update_names:-none}"
 echo "theme_updates_available=$theme_updates"
+echo "theme_update_names=${theme_update_names:-none}"
 
 # Recovery sizing: canonical project code is in Git, so the irreplaceable live
 # state is primarily database + uploads. We measure both before choosing a
 # retention policy. No dump is created here.
 uploads_kb="$(du -sk "$WP_PATH/wp-content/uploads" 2>/dev/null | awk '{print $1}' || echo 0)"
-db_bytes="$(wp --path="$WP_PATH" db size --format=bytes 2>/dev/null || echo unknown)"
+db_bytes="$(wp --path="$WP_PATH" db size --format=bytes 2>/dev/null | tail -n1 | tr -dc '0-9' || true)"
+if [[ -z "$db_bytes" ]]; then
+  db_bytes="$(wp --path="$WP_PATH" db query 'SELECT COALESCE(SUM(data_length + index_length),0) FROM information_schema.tables WHERE table_schema = DATABASE();' --skip-column-names 2>/dev/null | tr -dc '0-9' || true)"
+fi
 echo "uploads_kb=$uploads_kb"
-echo "database_bytes=$db_bytes"
+echo "database_bytes=${db_bytes:-unknown}"
 
 df -Pk "$HOME" | awk 'NR==2 {print "home_fs_kb_total="$2"\nhome_fs_kb_used="$3"\nhome_fs_kb_available="$4"\nhome_fs_percent_used="$5}'
 
-# Backups must live outside the public document root. Merely verify that the
-# hosting home is writable; do not create the backup directory in this audit.
 if [[ -w "$HOME" ]]; then
-  ok 'hosting home is writable for a future backup directory outside web-root'
+  ok 'hosting home is writable for backup storage outside web-root'
 else
   fail 'hosting home is not writable; server-side backup path unavailable'
+fi
+
+# Existing backup verification is read-only. It validates the newest complete
+# snapshot if present without copying customer/order data off the host.
+backup_count=0
+latest_backup=''
+if [[ -d "$BACKUP_ROOT" ]]; then
+  backup_count="$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name "$SNAPSHOT_GLOB" | wc -l | tr -d ' ')"
+  latest_backup="$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name "$SNAPSHOT_GLOB" -printf '%f\n' | sort -r | head -1)"
+fi
+echo "backup_snapshot_count=$backup_count"
+echo "latest_backup=${latest_backup:-none}"
+if [[ -n "$latest_backup" ]]; then
+  if (cd "$BACKUP_ROOT/$latest_backup" && sha256sum -c SHA256SUMS >/dev/null && gzip -t database.sql.gz && tar -tzf uploads.tar.gz >/dev/null); then
+    ok 'latest server-side backup integrity verified'
+  else
+    fail 'latest server-side backup integrity verification failed'
+  fi
+else
+  warn 'no complete server-side backup snapshot found'
 fi
 
 # Probe HTTP exposure of sensitive paths. We do not require one exact status as
