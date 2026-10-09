@@ -1,5 +1,56 @@
 # Rolls Bar — migration plan
 
+## CURRENT EXECUTION OVERRIDE — 2026-10-09
+
+This section is the current execution plan and supersedes stale "current next action" lines in the historical checkpoints below. Historical sections are intentionally preserved for Project No Loss evidence.
+
+### Current verified state
+- Phase 1–5 staging foundation/catalog work is complete.
+- Full staging catalog remains 118 product cards from 131 approved source rows.
+- WordPress 7.1.3 + WooCommerce 11.1.2 are live on isolated REG.RU staging.
+- DaData Suggestions is the current checkout address provider on staging.
+- Real checkout browser verification passed: exact-house `qc_geo=0` may proceed to future zone lookup; lower precision is fail-closed and cannot silently choose a zone.
+- Provider country labels/raw unrestricted geography are not shown to customers.
+- Native Local Pickup is working.
+- Review moderation flow is implemented and runtime-verified on live staging: `/otzyvy/`, anonymous submission -> `pending`, pending review hidden publicly, admin publish -> public visibility. Synthetic QA review is deleted after verification.
+- Production remains untouched.
+
+### Delivery polygons — DEFERRED / NON-BLOCKING
+Exact delivery polygons are not currently available from the client. This does **not** block continued website development.
+
+Already prepared:
+- 7 canonical minimum/free-delivery thresholds: 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB;
+- polygon storage and sanitation;
+- tested point-in-polygon resolver;
+- DaData address -> coordinate path;
+- fail-closed precision policy.
+
+Deferred until real geometry exists:
+- client drawing/approval of exact boundaries;
+- boundary-case QA;
+- automatic polygon -> threshold enforcement;
+- courier zone/minimum enforcement.
+
+Safety rule: NEVER invent real polygons. Courier enforcement stays OFF. We may later provide a client-safe free/open map drawing layer so the client can draw/correct geometry themselves. The historical Yandex-only editor direction below is no longer the required current path; Yandex/2GIS are fallback-only unless DaData materially fails.
+
+### Phase 6 remaining work, in execution order
+- [x] DaData address selection on staging checkout
+- [x] fail-closed `qc_geo` policy and real checkout browser verification
+- [x] reviews moderation flow + live runtime verification
+- [ ] real order-notification delivery test (WooCommerce email + Telegram) — requires actual staging recipient/Telegram credentials before claiming end-to-end delivery
+- [ ] final vacancy questionnaire — blocked only on final client wording/input
+- [ ] future integrations only when explicitly required
+- [~] exact delivery polygons / courier enforcement — DEFERRED, NON-BLOCKING
+
+### Next executable path
+1. Finish everything that can be verified without delivery polygons.
+2. Validate order notification behavior and identify the smallest external credential/input still required for a true delivery test.
+3. If notification delivery is externally blocked, continue to the next independent migration/payment-readiness work instead of stopping the project.
+4. Return to polygons later without reworking DaData/checkout architecture.
+5. Production transition remains gated by full staging QA + explicit owner approval.
+
+---
+
 ## Phase 0 — freeze baseline
 Keep the current GitHub Pages demo as the approved UX reference while WordPress is built.
 
@@ -72,12 +123,14 @@ Prepared architecture / pending staging or client input:
 - [x] order notification architecture: native WooCommerce email + async Telegram via Action Scheduler
 - [ ] staging credentials + real email/Telegram delivery test
 - [ ] final vacancy questionnaire
-- [ ] reviews moderation flow
+- [x] reviews moderation flow — implemented and verified on live staging 2026-10-09; see current override above
 - [ ] future integrations
 
 Rule: do not invent production delivery prices, minimums, polygons or required checkout fields.
 
 Polygon editor rule: do not build a standalone GIS/map-management system. During Gate B/staging, implement only the minimum client-safe Yandex Maps polygon editor needed to select a delivery tier, draw/edit its boundary, save coordinates, and test real addresses. Business users may edit zone geometry; code/layout/checkout mechanics remain protected. Exact polygons are created and corrected with the client on staging, not guessed pre-hosting.
+
+Historical note: the Yandex-specific wording above records the earlier implementation direction. Current 2026-10-09 direction is provider-independent and DaData-first; visual polygon editing may use a free/open map layer later. This historical section must not be interpreted as a current Yandex-key blocker.
 
 ## Phase 7 — payments
 Connect acquiring only after the site, legal pages, SSL, catalog and checkout are ready for bank review.
@@ -118,7 +171,7 @@ Live browser Gate B (desktop + mobile) verifies:
 - historical mobile sticky-cart overlay regression absent;
 - no uncaught page JavaScript errors.
 
-Current next action:
+Historical current next action (SUPERSEDED by 2026-10-09 override):
 connect a restricted Yandex Maps JS API 3.0 key to staging → live-test the minimal polygon editor → client draws/accepts exact boundaries → then wire address geocoding and production delivery-zone/minimum enforcement.
 
 Historical package/readiness evidence from 2026-10-02 remains valid:
@@ -206,6 +259,6 @@ Closed by observed evidence, not by declaration:
 - Yandex editor code is gated behind `ROLLSBAR_YANDEX_MAPS_API_KEY`, so absence of a key cannot alter current checkout/delivery behavior;
 - no real delivery polygons have been invented or enabled.
 
-Runtime activation blocker:
+Historical runtime activation blocker (SUPERSEDED as global blocker):
 - Yandex Maps JS API 3.0 key with HTTP Referer restriction for staging is still absent;
-- therefore live map editing and real address/polygon tests cannot be truthfully marked complete yet.
+- therefore the historical Yandex visual editor cannot be live-tested, but this no longer blocks continued website development. Exact real polygons remain deferred until client input/editor use.
