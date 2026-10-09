@@ -58,6 +58,21 @@ final class RollsBar_Checkout {
 				)
 			);
 		}
+
+		// The approved legal baseline requires personal-data consent to be a
+		// separate explicit action, not bundled into acceptance of the offer.
+		// WooCommerce's Additional Checkout Fields API enforces a required
+		// checkbox in Checkout Block / Store API as part of order validation.
+		woocommerce_register_additional_checkout_field(
+			array(
+				'id'            => self::FIELD_PREFIX . 'privacy-consent',
+				'label'         => 'Я ознакомлен(а) с Политикой обработки персональных данных и даю согласие на обработку персональных данных для оформления и исполнения заказа.',
+				'location'      => 'order',
+				'type'          => 'checkbox',
+				'required'      => true,
+				'error_message' => 'Подтвердите согласие на обработку персональных данных для оформления заказа.',
+			)
+		);
 	}
 
 	public static function enqueue_checkout_assets(): void {
