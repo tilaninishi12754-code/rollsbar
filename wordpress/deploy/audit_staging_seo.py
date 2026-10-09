@@ -221,12 +221,25 @@ def main() -> int:
         failures.append("restaurant_schema_owner_not_exactly_one")
     if int(product["product"]) < 1:
         failures.append("woocommerce_product_schema_missing")
+
+    home_robots = " ".join(str(x).lower() for x in home["robots"])  # type: ignore[index]
+    if blog_public == "0" and "noindex" not in home_robots:
+        failures.append("staging_home_noindex_missing")
+
     for label, data in (("cart", cart), ("checkout", checkout)):
         robots_values = " ".join(str(x).lower() for x in data["robots"])  # type: ignore[index]
         if "noindex" not in robots_values:
             failures.append(f"{label}_noindex_missing")
-    if robots_status != 200 or not re.search(r"(?mi)^Disallow:\s*/\s*$", robots_body):
-        failures.append("staging_robots_not_closed")
+
+    # Since WordPress 5.3, a non-public site no longer has to emit `Disallow: /`
+    # in robots.txt. Core uses page-level noindex/nofollow for blog_public=0.
+    # Keep robots.txt availability as an inventory signal, not a false blocker.
+    if robots_status != 200:
+        failures.append("robots_txt_unavailable")
+    print(
+        "staging_indexing_closed="
+        + ("yes" if blog_public == "0" and "noindex" in home_robots else "no")
+    )
 
     # Missing description/OG/canonical/sitemap features are inventoried rather
     # than treated as mutation-time failures: this audit decides whether an SEO
