@@ -306,7 +306,13 @@ printf 'manifest_project_commit=%s\n' "$commit"
 printf 'manifest_project_commit_source=%s\n' "$commit_source"
 echo 'manifest_invariants=pass'
 
-if ! tar -tzf "$SNAPSHOT/uploads.tar.gz" | awk 'BEGIN{{bad=0}} /^[/]/ || /(^|/)[.][.](/|$)/ {{bad=1}} END{{exit bad}}'; then
+unsafe_upload_path=0
+while IFS= read -r archive_path; do
+  case "$archive_path" in
+    /*|../*|*/../*|*/..) unsafe_upload_path=1; break ;;
+  esac
+done < <(tar -tzf "$SNAPSHOT/uploads.tar.gz")
+if [[ "$unsafe_upload_path" != '0' ]]; then
   echo 'unsafe_upload_archive_paths=yes' >&2
   exit 31
 fi
