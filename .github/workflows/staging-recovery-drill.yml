@@ -2,6 +2,11 @@ name: Staging Recovery Drill
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/staging-recovery-drill.yml
 
 permissions:
   contents: read
@@ -12,6 +17,7 @@ concurrency:
 
 jobs:
   recovery-drill:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[recovery-drill]')
     runs-on: ubuntu-latest
     environment:
       name: staging
