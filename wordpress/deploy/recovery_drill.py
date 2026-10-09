@@ -1,0 +1,395 @@
+#!/usr/bin/env python3
+"""Non-destructive RollsBar staging recovery drill.
+
+The drill keeps customer/staging data on the same REG.RU hosting account:
+1. validates the latest backup manifest/checksums;
+2. creates a uniquely named temporary MySQL database/user through ISPmanager;
+3. imports the compressed SQL backup into that temporary database;
+4. verifies WordPress tables, site URL, blog_public and the 118-product invariant;
+5. extracts uploads only into a temporary directory outside web-root;
+6. deletes the temporary DB user/database and all temporary files.
+
+It never writes to the live staging database/document root and never touches
+production. Secret values are neither committed nor printed.
+"""
+from __future__ import annotations
+
+import json
+import os
+import secrets
+import shlex
+import socket
+import ssl
+import string
+import sys
+import time
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+from urllib.parse import urlsplit
+
+import paramiko
+
+BASE = os.environ["ISP_MANAGER_URL"].strip().rstrip("/")
+USER = os.environ["ISP_MANAGER_USER"].strip()
+PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
+CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_RECOVERY_DRILL", "")
+ENDPOINT = BASE if BASE.endswith("/ispmgr") else BASE + "/ispmgr"
+CTX = ssl.create_default_context()
+DOMAIN = "staging.rollsbar.ru"
+BACKUP_ROOT = "rollsbar-backups/staging"
+PROJECT_ROOT = ".rollsbar-deploy"
+
+
+def mask(value: str) -> None:
+    if value:
+        print(f"::add-mask::{value}", flush=True)
+
+
+def random_password(length: int = 40) -> str:
+    alphabet = string.ascii_letters + string.digits + "-_!@%+"
+    while True:
+        value = "".join(secrets.choice(alphabet) for _ in range(length))
+        if any(c.islower() for c in value) and any(c.isupper() for c in value) and any(c.isdigit() for c in value):
+            return value
+
+
+def call(params: dict[str, str]) -> ET.Element:
+    url = ENDPOINT + "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-recovery-drill/1.0"})
+    with urllib.request.urlopen(req, context=CTX, timeout=30) as response:
+        body = response.read()
+    root = ET.fromstring(body)
+    err = root.find(".//error")
+    if err is not None:
+        safe = {
+            k: v
+            for k, v in err.attrib.items()
+            if not any(x in k.lower() for x in ("pass", "auth", "secret", "token"))
+        }
+        raise RuntimeError(f"ISPmanager error func={params.get('func')}: {safe}")
+    return root
+
+
+def auth() -> str:
+    root = call({"out": "xml", "func": "auth", "username": USER, "password": PASSWORD})
+    node = root.find(".//auth")
+    sid = node.attrib.get("id", "") if node is not None else ""
+    if not sid:
+        raise RuntimeError("ISPmanager authentication failed")
+    mask(sid)
+    return sid
+
+
+def rows(root: ET.Element) -> list[dict[str, str]]:
+    result: list[dict[str, str]] = []
+    for elem in root.findall(".//elem"):
+        row = {child.tag: (child.text or "").strip() for child in list(elem) if len(list(child)) == 0}
+        if row.get("name"):
+            result.append(row)
+    return result
+
+
+def find_by_requested_name(items: list[dict[str, str]], requested: str) -> dict[str, str] | None:
+    for row in items:
+        name = row.get("name", "")
+        if name == requested or name.endswith("_" + requested):
+            return row
+    return None
+
+
+def ssh_client() -> paramiko.SSHClient:
+    host = urlsplit(BASE).hostname or ""
+    if not host:
+        raise RuntimeError("Could not derive hosting hostname")
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(
+        hostname=host,
+        port=22,
+        username=USER,
+        password=PASSWORD,
+        timeout=15,
+        auth_timeout=15,
+        banner_timeout=15,
+        look_for_keys=False,
+        allow_agent=False,
+    )
+    return client
+
+
+def remote(client: paramiko.SSHClient, command: str, timeout: int = 600) -> tuple[int, str, str]:
+    _, stdout, stderr = client.exec_command("bash -lc " + shlex.quote(command), timeout=timeout)
+    out = stdout.read().decode("utf-8", errors="replace")
+    err = stderr.read().decode("utf-8", errors="replace")
+    status = stdout.channel.recv_exit_status()
+    return status, out.strip(), err.strip()
+
+
+def create_temp_db(sid: str, requested_db: str, requested_user: str, password: str) -> tuple[str, str, str, str]:
+    existing = rows(call({"out": "xml", "func": "db", "auth": sid}))
+    if find_by_requested_name(existing, requested_db):
+        raise RuntimeError("Unexpected recovery drill database name collision")
+
+    call(
+        {
+            "out": "xml",
+            "func": "db.edit",
+            "auth": sid,
+            "sok": "ok",
+            "name": requested_db,
+            "owner": USER,
+            "server": "MySQL8",
+            "charset": "utf8mb4",
+            "user": "*",
+            "username": requested_user,
+            "password": password,
+            "confirm": password,
+            "remote_access": "off",
+            "comment": "RollsBar temporary recovery drill",
+        }
+    )
+
+    db_items = rows(call({"out": "xml", "func": "db", "auth": sid}))
+    target = find_by_requested_name(db_items, requested_db)
+    if target is None:
+        raise RuntimeError("Temporary recovery database creation was not observable")
+
+    actual_db = target.get("name", "")
+    pair = target.get("pair", "")
+    db_key = target.get("key", "")
+    if not actual_db or not pair or not db_key:
+        raise RuntimeError("Temporary recovery database metadata is incomplete")
+
+    users = rows(call({"out": "xml", "func": "db.users", "auth": sid, "elid": pair}))
+    actual_user = ""
+    for row in users:
+        name = row.get("name", "")
+        if name == requested_user or name.endswith("_" + requested_user):
+            actual_user = name
+            break
+    if not actual_user and len(users) == 1:
+        actual_user = users[0].get("name", "")
+    if not actual_user:
+        raise RuntimeError("Temporary recovery database user was not found")
+
+    return actual_db, actual_user, pair, db_key
+
+
+def cleanup_temp_db(sid: str, actual_user: str, pair: str, db_key: str, requested_db: str) -> list[str]:
+    errors: list[str] = []
+    if actual_user:
+        try:
+            params = {"out": "xml", "func": "db.users.delete", "auth": sid, "elid": actual_user}
+            if pair:
+                params["plid"] = pair
+            call(params)
+        except Exception as exc:
+            errors.append(f"db_user_delete={exc.__class__.__name__}")
+
+    if db_key:
+        try:
+            call({"out": "xml", "func": "db.delete", "auth": sid, "elid": db_key})
+        except Exception as exc:
+            errors.append(f"db_delete={exc.__class__.__name__}")
+
+    try:
+        remaining = rows(call({"out": "xml", "func": "db", "auth": sid}))
+        if find_by_requested_name(remaining, requested_db) is not None:
+            errors.append("db_still_present=yes")
+    except Exception as exc:
+        errors.append(f"db_cleanup_verify={exc.__class__.__name__}")
+    return errors
+
+
+def write_mysql_config(client: paramiko.SSHClient, path: str, db_user: str, db_password: str) -> None:
+    content = f"[client]\nhost=localhost\nuser={db_user}\npassword={db_password}\n"
+    sftp = client.open_sftp()
+    try:
+        with sftp.open(path, "w") as fh:
+            fh.write(content.encode("utf-8"))
+        sftp.chmod(path, 0o600)
+    finally:
+        sftp.close()
+
+
+def run_restore_drill(client: paramiko.SSHClient, actual_db: str, config_path: str) -> str:
+    db_q = shlex.quote(actual_db)
+    cfg_q = shlex.quote("$HOME/" + config_path)
+    command = f'''
+set -euo pipefail
+BACKUP_ROOT="$HOME/{BACKUP_ROOT}"
+PROJECT_ROOT="$HOME/{PROJECT_ROOT}"
+LATEST="$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name '20??????T??????Z' -printf '%f\n' | sort | tail -n 1)"
+[[ -n "$LATEST" ]]
+SNAPSHOT="$BACKUP_ROOT/$LATEST"
+WORK="$HOME/.rollsbar-recovery-drill-work-$$"
+cleanup() {{ rm -rf "$WORK" {cfg_q}; }}
+trap cleanup EXIT
+umask 077
+mkdir -p "$WORK"
+
+printf 'recovery_snapshot=%s\n' "$LATEST"
+(
+  cd "$SNAPSHOT"
+  sha256sum -c SHA256SUMS >/dev/null
+)
+echo 'snapshot_checksums=pass'
+gzip -t "$SNAPSHOT/database.sql.gz"
+tar -tzf "$SNAPSHOT/uploads.tar.gz" >/dev/null
+echo 'snapshot_archives=pass'
+
+manifest_value() {{ awk -F= -v k="$1" '$1==k {{sub(/^[^=]*=/, ""); print; exit}}' "$SNAPSHOT/manifest.txt"; }}
+format="$(manifest_value rollsbar_backup_format)"
+commit="$(manifest_value project_code_commit)"
+site_url="$(manifest_value site_url)"
+wp_version="$(manifest_value wordpress_version)"
+woo_version="$(manifest_value woocommerce_version)"
+products_manifest="$(manifest_value published_products)"
+blog_public_manifest="$(manifest_value blog_public)"
+wp_config_included="$(manifest_value wp_config_included)"
+[[ "$format" == '2' ]]
+[[ "$commit" =~ ^[0-9a-f]{{40}}$ ]]
+[[ "$site_url" == 'https://{DOMAIN}' ]]
+[[ "$wp_version" == '7.1.3' ]]
+[[ "$woo_version" == '11.1.2' ]]
+[[ "$products_manifest" == '118' ]]
+[[ "$blog_public_manifest" == '0' ]]
+[[ "$wp_config_included" == 'no' ]]
+git -C "$PROJECT_ROOT" cat-file -e "$commit^{{commit}}"
+printf 'manifest_format=%s\n' "$format"
+printf 'manifest_project_commit=%s\n' "$commit"
+echo 'manifest_invariants=pass'
+
+# Reject path traversal before extraction. No backup content leaves this host.
+if tar -tzf "$SNAPSHOT/uploads.tar.gz" | awk 'BEGIN{{bad=0}} /^\// || /(^|\/)\.\.(\/|$)/ {{bad=1}} END{{exit bad}}'; then :; else
+  echo 'unsafe_upload_archive_paths=yes' >&2
+  exit 31
+fi
+
+gzip -dc "$SNAPSHOT/database.sql.gz" > "$WORK/database.sql"
+chmod 600 "$WORK/database.sql"
+sql_bytes="$(stat -c '%s' "$WORK/database.sql")"
+create_tables="$(grep -c '^CREATE TABLE' "$WORK/database.sql" || true)"
+[[ "$sql_bytes" -gt 100000 ]]
+[[ "$create_tables" -ge 10 ]]
+printf 'sql_uncompressed_bytes=%s\n' "$sql_bytes"
+printf 'sql_create_table_statements=%s\n' "$create_tables"
+
+mkdir -p "$WORK/uploads-restore"
+tar -xzf "$SNAPSHOT/uploads.tar.gz" -C "$WORK/uploads-restore"
+[[ -d "$WORK/uploads-restore/uploads" ]]
+tar_files="$(tar -tzf "$SNAPSHOT/uploads.tar.gz" | grep -vc '/$' || true)"
+restored_files="$(find "$WORK/uploads-restore/uploads" -type f | wc -l | tr -d ' ')"
+[[ "$tar_files" == "$restored_files" ]]
+printf 'uploads_restored_files=%s\n' "$restored_files"
+echo 'uploads_restore_to_temp=pass'
+
+MYSQL_BIN="$(command -v mysql || command -v mariadb || true)"
+[[ -n "$MYSQL_BIN" ]]
+"$MYSQL_BIN" --defaults-extra-file={cfg_q} {db_q} < "$WORK/database.sql"
+echo 'database_import_to_isolated_temp=pass'
+
+table_count="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE();')"
+[[ "$table_count" -ge 10 ]]
+options_table="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e 'SHOW TABLES;' | grep '_options$' | head -n 1)"
+[[ -n "$options_table" ]]
+prefix="${{options_table%options}}"
+posts_table="${{prefix}}posts"
+"$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e "SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='${{posts_table}}';" | grep -qx '1'
+blog_public="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e "SELECT option_value FROM \\`${{options_table}}\\` WHERE option_name='blog_public' LIMIT 1;")"
+home_url="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e "SELECT option_value FROM \\`${{options_table}}\\` WHERE option_name='home' LIMIT 1;")"
+products="$("$MYSQL_BIN" --defaults-extra-file={cfg_q} -N -B {db_q} -e "SELECT COUNT(*) FROM \\`${{posts_table}}\\` WHERE post_type='product' AND post_status='publish';")"
+[[ "$blog_public" == '0' ]]
+[[ "$home_url" == 'https://{DOMAIN}' ]]
+[[ "$products" == '118' ]]
+printf 'restored_table_count=%s\n' "$table_count"
+printf 'restored_blog_public=%s\n' "$blog_public"
+printf 'restored_products=%s\n' "$products"
+echo 'RESTORE CONTENT INVARIANTS PASS'
+'''
+    status, out, err = remote(client, command, timeout=600)
+    if status != 0:
+        safe_err = " | ".join(line for line in err.splitlines() if "password" not in line.lower())[-1600:]
+        raise RuntimeError(f"Recovery drill remote validation failed exit={status}: {safe_err}")
+    return out
+
+
+def main() -> int:
+    if CONFIRM != "YES":
+        print("Refusing mutation: set ROLLSBAR_CONFIRM_RECOVERY_DRILL=YES")
+        return 2
+    if not BASE.startswith("https://"):
+        print("ISP_MANAGER_URL must use https://")
+        return 2
+
+    sid = ""
+    requested_db = f"rbdrill_{int(time.time()) % 100000000:08d}"
+    requested_user = requested_db
+    temp_password = random_password()
+    mask(PASSWORD)
+    mask(temp_password)
+
+    actual_db = actual_user = pair = db_key = ""
+    client = None
+    primary_error: Exception | None = None
+    cleanup_errors: list[str] = []
+    config_path = f".rollsbar-recovery-drill-{secrets.token_hex(8)}.cnf"
+
+    try:
+        sid = auth()
+        print("stage=create_isolated_temp_database")
+        actual_db, actual_user, pair, db_key = create_temp_db(sid, requested_db, requested_user, temp_password)
+        print("temporary_database=created")
+        print("temporary_remote_access=disabled")
+
+        client = ssh_client()
+        write_mysql_config(client, config_path, actual_user, temp_password)
+        print("stage=restore_latest_snapshot")
+        output = run_restore_drill(client, actual_db, config_path)
+        print(output)
+    except Exception as exc:
+        primary_error = exc
+    finally:
+        if client is not None:
+            try:
+                sftp = client.open_sftp()
+                try:
+                    sftp.remove(config_path)
+                except FileNotFoundError:
+                    pass
+                finally:
+                    sftp.close()
+            except Exception:
+                pass
+            client.close()
+
+        if sid and (db_key or actual_user):
+            print("stage=cleanup_isolated_temp_database")
+            cleanup_errors = cleanup_temp_db(sid, actual_user, pair, db_key, requested_db)
+            if cleanup_errors:
+                print("temporary_database_cleanup=failed " + ",".join(cleanup_errors))
+            else:
+                print("temporary_database_cleanup=pass")
+
+    if primary_error is not None:
+        message = str(primary_error).replace(PASSWORD, "***").replace(temp_password, "***")
+        print(f"RECOVERY DRILL FAIL type={primary_error.__class__.__name__} detail={message}")
+        if cleanup_errors:
+            print("OBJECTIVE BLOCKER: temporary recovery resources may require manual cleanup")
+        return 1
+    if cleanup_errors:
+        print("RECOVERY DRILL FAIL: restore passed but cleanup did not fully verify")
+        return 1
+
+    print("RECOVERY DRILL PASS — latest snapshot restored into isolated temporary DB, verified, and removed")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except (paramiko.SSHException, socket.error, OSError, RuntimeError, ValueError) as exc:
+        message = str(exc).replace(PASSWORD, "***") if PASSWORD else str(exc)
+        print(f"RECOVERY DRILL FAIL type={exc.__class__.__name__} detail={message}")
+        sys.exit(1)
