@@ -1,0 +1,117 @@
+name: Admin UX Staging Smoke
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - wordpress/wp-content/plugins/rollsbar-core/rollsbar-core.php
+      - wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-settings.php
+      - wordpress/deploy/verify-staging-admin-ux.php
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  admin-ux-smoke:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate staging access
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+
+      - name: Install SSH dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+
+      - name: Wait for exact staging deploy and verify admin UX
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          EXPECTED_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          import shlex
+          import time
+          from urllib.parse import urlsplit
+
+          import paramiko
+
+          base = os.environ['ISP_MANAGER_URL'].strip()
+          user = os.environ['ISP_MANAGER_USER'].strip()
+          password = os.environ['ISP_MANAGER_PASSWORD'].strip()
+          expected = os.environ['EXPECTED_SHA'].strip()
+          host = urlsplit(base).hostname or ''
+          if not host:
+              raise SystemExit('Could not derive staging host')
+
+          client = paramiko.SSHClient()
+          client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+          client.connect(
+              hostname=host,
+              port=22,
+              username=user,
+              password=password,
+              timeout=15,
+              auth_timeout=15,
+              banner_timeout=15,
+              look_for_keys=False,
+              allow_agent=False,
+          )
+
+          def run(command):
+              _, stdout, stderr = client.exec_command('bash -lc ' + shlex.quote(command), timeout=180)
+              out = stdout.read().decode('utf-8', errors='replace').strip()
+              err = stderr.read().decode('utf-8', errors='replace').strip()
+              code = stdout.channel.recv_exit_status()
+              if code != 0:
+                  safe = ' | '.join(
+                      line for line in err.splitlines()
+                      if not any(word in line.lower() for word in ('password', 'secret', 'token'))
+                  )[-1000:]
+                  raise RuntimeError('remote command failed: ' + safe)
+              return out
+
+          try:
+              marker = ''
+              for _ in range(50):
+                  marker = run('cat "$HOME/.rollsbar-staging-deployed-sha" 2>/dev/null || true')
+                  if marker == expected:
+                      break
+                  time.sleep(12)
+              if marker != expected:
+                  raise SystemExit('Staging deployed SHA did not reach the expected commit')
+
+              out = run(
+                  'export PATH="$HOME/.local/bin:$PATH"; '
+                  'wp --path="$HOME/www/staging.rollsbar.ru" eval-file '
+                  '"$HOME/.rollsbar-deploy/wordpress/deploy/verify-staging-admin-ux.php"'
+              )
+              print(out)
+              if 'ADMIN UX RUNTIME PASS' not in out:
+                  raise SystemExit('Admin UX runtime verification did not report PASS')
+              print('ADMIN UX STAGING SMOKE PASS')
+              print('deployed_sha=' + expected)
+              print('production_touched=no')
+          finally:
+              client.close()
+          PY
