@@ -3,15 +3,15 @@
 Updated: 2026-10-09
 
 ## Purpose
-This matrix separates what must be true for the **current receipt-only launch** from features that are explicitly deferred. It must follow explicit owner decisions and the final client requirements; architecture documents may make a channel non-blocking technically without making that client requirement optional.
+This matrix separates what must be true for the **current receipt-only launch** from features that are explicitly deferred. It follows the latest explicit owner decisions over older draft/final-TЗ wording when they conflict.
 
 Before using this matrix, re-read live GitHub/CI/runtime evidence. `wordpress/docs/CURRENT_STATE.md` remains the detailed historical implementation checkpoint; this matrix is the current launch decision layer.
 
 ## Classification rules
-- **REQUIRED FOR CURRENT LAUNCH** — final client requirement or explicit owner requirement. Production approval needs proof, the required client input, or an explicit owner decision to defer/waive it.
-- **APPROVED DEFERRED** — intentionally omitted from the first launch by a later explicit owner decision; absence is not a launch blocker.
+- **REQUIRED FOR CURRENT LAUNCH** — production approval needs proof, the required client input, or an explicit later owner decision to defer/waive it.
+- **APPROVED DEFERRED / SEPARATE WORK** — intentionally omitted from the first launch by a later explicit owner decision; absence is not a launch blocker.
 - **INTERNAL PRE-CUTOVER WORK** — no client secret/input is needed; finish before asking the owner for production approval.
-- A technically supplemental integration may still be a launch deliverable. “Failure must not block checkout” does not mean “optional to deliver”.
+- A technically supplemental integration may still be a required launch deliverable. “Failure must not block checkout” does not mean “optional to deliver”.
 
 ## REQUIRED FOR CURRENT LAUNCH
 
@@ -51,43 +51,33 @@ Read-only ISPmanager/DNS audit run `37935746357` showed:
 Therefore local sendmail capability alone is **not** accepted as end-to-end launch proof.
 
 Before production approval:
-1. obtain the actual client-approved working operator mailbox;
+1. obtain the actual client-approved working operator mailbox when the client provides it;
 2. determine its existing mail/SMTP provider (do not invent a new mailbox/provider if the client already has one);
 3. configure a reliable authenticated transport where required, with secrets outside Git/chat;
 4. configure the approved recipient in WooCommerce;
 5. place one real staging test order and confirm the operator actually receives it;
-6. confirm the four Rolls Bar additional address fields appear once, not duplicated.
+6. confirm the Rolls Bar additional address fields appear once, not duplicated.
 
-### Telegram order alert — REQUIRED CLIENT DELIVERABLE, TECHNICALLY NON-BLOCKING
-The final client specification says the operator receives each order by **e-mail and Telegram** at launch. The architecture still correctly keeps Telegram supplemental technically: Telegram failure must never block checkout/order creation and WooCommerce remains the canonical order record.
+### Telegram order alert — REQUIRED FOR FIRST LAUNCH
+Owner decision on 2026-10-09: Telegram remains **mandatory for the first launch**.
+
+The architecture remains technically non-blocking: Telegram failure must never block checkout/order creation and WooCommerce remains the canonical order record.
 
 Already verified internally:
 - async Action Scheduler queue;
 - retry/idempotency logic;
 - failure does not block order;
-- status is stored in order/admin;
-- default Telegram payload excludes PII unless a separate explicit privacy/business decision enables it.
+- status is stored in order/admin.
 
-Still required for the agreed launch unless the owner explicitly defers it:
+Owner privacy/content decision on 2026-10-09:
+- Telegram order notification **may include customer name, phone number and delivery address**, matching the requested operator workflow in the TЗ;
+- this is now an approved project decision, not a pending question.
+
+Still required before launch:
 - real bot token + operator chat ID supplied outside Git/chat;
+- configure the approved PII-enabled payload in the project implementation;
 - real end-to-end staging delivery proof;
-- resolve the client-TZ-vs-privacy difference: final client wording expects name/phone/address in Telegram, while current safe implementation hides PII by default. Do not silently enable PII; obtain explicit owner/client decision first.
-
-### Yandex Metrica — REQUIRED BY FINAL TЗ, CLIENT COUNTER PENDING
-The final client specification says to connect Yandex Metrica after receiving the client's counter and configure goals.
-
-Already ready:
-- counter-ID setting;
-- no ID => no Yandex request/tag;
-- explicit analytics consent gate;
-- Webvisor OFF;
-- advertising/marketing tools OFF;
-- prepared goals: `add_to_cart`, `open_cart`, `begin_checkout`, `submit_order`, `purchase`, `phone_click`, `shipping_method_select`.
-
-Still required unless the owner explicitly defers it:
-- real client counter ID;
-- configure the corresponding goals in Metrica;
-- observe real staging/production-safe test hits before claiming analytics works.
+- confirm message contains the required order data and no unintended secrets/technical data.
 
 ### Production cutover controls — REQUIRED AT TRANSITION
 Before any production mutation:
@@ -105,8 +95,7 @@ Immediately after cutover:
 - wp-admin smoke;
 - production-like test order;
 - New order email receipt;
-- Telegram delivery if it remains in launch scope;
-- analytics validation if the counter has been supplied;
+- Telegram delivery;
 - logs/errors check;
 - deployed SHA recorded.
 
@@ -148,7 +137,20 @@ Intentionally pending content:
 
 Search Console connection/submission happens when the production domain is ready.
 
-## APPROVED DEFERRED
+## APPROVED DEFERRED / SEPARATE WORK
+
+### Yandex Metrica — DEFERRED / SEPARATE PAID WORK
+Owner decision on 2026-10-09 supersedes the older TЗ wording for the first-launch acceptance scope: Yandex Metrica was not separately agreed with the client and **does not block the first launch**. If the client wants analytics, it can be connected as separate paid work.
+
+Keep the prepared integration dormant:
+- counter-ID setting remains available;
+- no ID => no Yandex request/tag;
+- consent gate remains in place;
+- Webvisor OFF;
+- advertising/marketing tools OFF;
+- prepared goals remain in code for a later analytics task.
+
+Do not invent/create a counter on the client's behalf without a separate request and access/ownership decision.
 
 ### Exact delivery polygons / courier enforcement
 Later explicit owner decision: continue development without waiting for exact client polygons.
@@ -187,21 +189,22 @@ The questionnaire itself is deferred until the client supplies final wording and
 Optional hardening after a dedicated WooCommerce/browser compatibility regression. Do not deploy an aggressive CSP merely to satisfy a checklist.
 
 ## External inputs actually missing now
-Do not ask for payment credentials, polygons or vacancy copy merely to continue development.
+Do not ask for payment credentials, polygons, Metrica or vacancy copy merely to continue development.
 
-For the current launch contract, the still-missing external inputs/proofs are:
-1. **Working operator e-mail address + its real mail/SMTP provider/access path.** Do not paste SMTP passwords in chat; secrets must be installed through a secure secret store once provider-specific names are defined.
-2. **Telegram bot/chat access** for a real staging delivery test, unless the owner explicitly changes the client requirement. Bot token must never be pasted into chat/Git.
-3. **Yandex Metrica counter ID**, unless the owner explicitly defers analytics. The counter ID itself is not a secret.
-4. **Explicit decision on Telegram PII** because the final TЗ asks for name/phone/address but the current privacy-safe implementation intentionally hides them.
+For the current first launch, the still-missing external inputs/proofs are:
+1. **Working operator e-mail address + its real mail/SMTP provider/access path.** The owner will provide the address when the client sends it. Do not paste SMTP passwords into chat; secrets go into a secure secret store once the provider is known.
+2. **Telegram bot/chat access** for a real staging delivery test. Bot token must never be pasted into chat/Git.
+
+Telegram PII approval is resolved: name, phone and delivery address are approved for the operator notification.
+Yandex Metrica is no longer a first-launch blocker.
 
 ## Next execution order
-1. Prepare the production cutover + backup + rollback runbook without touching production.
-2. Obtain only the external inputs above that remain in launch scope.
-3. Configure and prove real email delivery on staging.
-4. Configure and prove Telegram delivery if retained in launch scope.
-5. Configure real Metrica counter/goals if retained in launch scope.
-6. Freeze exact release SHA and run only targeted regression after these changes.
+1. Keep production untouched.
+2. Prepare the Telegram PII-enabled implementation and retain the existing async/retry/fail-safe behavior.
+3. When the client supplies the operator e-mail, configure and prove real email delivery on staging.
+4. Configure and prove real Telegram delivery on staging.
+5. Run only targeted regression after these material notification changes.
+6. Freeze exact release SHA.
 7. Present final go/no-go to owner.
 8. Touch production only after explicit owner approval.
 
