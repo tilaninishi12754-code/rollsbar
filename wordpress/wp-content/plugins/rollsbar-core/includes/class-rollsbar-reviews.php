@@ -98,6 +98,31 @@ final class RollsBar_Reviews {
 			self::redirect( 'invalid' );
 		}
 
+		$review_id = self::create_pending_review( $name, $rating, $text );
+		if ( is_wp_error( $review_id ) ) {
+			self::redirect( 'error' );
+		}
+
+		self::handle_photo_upload( (int) $review_id );
+		self::redirect( 'received' );
+	}
+
+	/**
+	 * Create a review in the exact state used by public form submissions.
+	 * Kept public so staging runtime verification can prove moderation behavior
+	 * without faking a browser submission or leaving QA content behind.
+	 *
+	 * @return int|WP_Error
+	 */
+	public static function create_pending_review( string $name, int $rating, string $text ) {
+		$name = trim( sanitize_text_field( $name ) );
+		$text = trim( sanitize_textarea_field( $text ) );
+		$rating = absint( $rating );
+
+		if ( '' === $name || '' === $text || $rating < 1 || $rating > 5 ) {
+			return new WP_Error( 'rollsbar_invalid_review', 'Invalid review payload.' );
+		}
+
 		$review_id = wp_insert_post(
 			array(
 				'post_type'      => 'rb_review',
@@ -111,15 +136,14 @@ final class RollsBar_Reviews {
 		);
 
 		if ( is_wp_error( $review_id ) ) {
-			self::redirect( 'error' );
+			return $review_id;
 		}
 
 		update_post_meta( $review_id, '_rollsbar_review_rating', $rating );
 		update_post_meta( $review_id, '_rollsbar_review_source', 'site' );
 		update_post_meta( $review_id, '_rollsbar_review_submitted_at', gmdate( 'c' ) );
 
-		self::handle_photo_upload( (int) $review_id );
-		self::redirect( 'received' );
+		return (int) $review_id;
 	}
 
 	private static function handle_photo_upload( int $review_id ): void {
