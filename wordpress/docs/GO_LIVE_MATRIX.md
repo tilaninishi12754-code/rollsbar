@@ -58,26 +58,28 @@ Before production approval:
 5. place one real staging test order and confirm the operator actually receives it;
 6. confirm the Rolls Bar additional address fields appear once, not duplicated.
 
-### Telegram order alert — REQUIRED FOR FIRST LAUNCH
+### Telegram order alert — REQUIRED FOR FIRST LAUNCH / IMPLEMENTATION READY
 Owner decision on 2026-10-09: Telegram remains **mandatory for the first launch**.
 
 The architecture remains technically non-blocking: Telegram failure must never block checkout/order creation and WooCommerce remains the canonical order record.
 
-Already verified internally:
+Already implemented and verified internally:
 - async Action Scheduler queue;
 - retry/idempotency logic;
 - failure does not block order;
-- status is stored in order/admin.
+- status is stored in order/admin;
+- operator payload includes order number, total, fulfillment, payment title when present, full order item list, customer name, phone, address, extra address fields and customer comment;
+- owner-approved PII behavior is implemented;
+- intercepted staging runtime test passed without sending a real external Telegram message.
 
 Owner privacy/content decision on 2026-10-09:
 - Telegram order notification **may include customer name, phone number and delivery address**, matching the requested operator workflow in the TЗ;
-- this is now an approved project decision, not a pending question.
+- this is an approved project decision, not a pending question.
 
 Still required before launch:
-- real bot token + operator chat ID supplied outside Git/chat;
-- configure the approved PII-enabled payload in the project implementation;
+- real bot token + operator chat ID installed outside Git/chat;
 - real end-to-end staging delivery proof;
-- confirm message contains the required order data and no unintended secrets/technical data.
+- confirm the real message arrives once and contains the approved order data without unintended secrets/technical data.
 
 ### Production cutover controls — REQUIRED AT TRANSITION
 Before any production mutation:
@@ -100,6 +102,37 @@ Immediately after cutover:
 - deployed SHA recorded.
 
 ## INTERNAL PRE-CUTOVER WORK
+
+### Client admin UX — DONE / VERIFIED
+The custom Rolls Bar admin dashboard is implemented for owner/operator use.
+
+Verified on exact deployed staging SHA `2a9c0fcf0bb07bdca4834f07ec622590b979205d` by Admin UX Staging Smoke run `37948679330`:
+- dashboard is client-operational;
+- 118 published products preserved;
+- prominent daily actions: Orders / Products and prices / Reviews;
+- secondary actions: promos, vacancies, delivery, media, settings;
+- email and Telegram readiness are shown without exposing secrets;
+- Telegram copy reflects the approved PII payload;
+- Metrica is shown as non-required for current launch;
+- production untouched.
+
+Client-facing usage guide: `wordpress/docs/CLIENT_ADMIN_GUIDE.md`.
+
+### Operator order workflow — DONE / VERIFIED
+Self-cleaning staging smoke run `37950008575` passed against deployed SHA `2a9c0fcf0bb07bdca4834f07ec622590b979205d`.
+
+Verified:
+- operator columns: name, phone, address, delivery zone, time;
+- order item list exists;
+- four additional address fields are read through the WooCommerce Additional Checkout Fields storage path;
+- customer comment persists;
+- admin detail block renders fulfillment + extra address fields + Telegram state;
+- temporary test order stayed pending only;
+- no external email sent;
+- no external Telegram sent;
+- temporary order cleanup PASS;
+- remaining smoke orders = 0;
+- production untouched.
 
 ### Vacancy page fail-closed cleanup — DONE / VERIFIED
 Final questionnaire wording and application channel remain a documented pending client input and were **not invented**.
@@ -195,17 +228,19 @@ For the current first launch, the still-missing external inputs/proofs are:
 1. **Working operator e-mail address + its real mail/SMTP provider/access path.** The owner will provide the address when the client sends it. Do not paste SMTP passwords into chat; secrets go into a secure secret store once the provider is known.
 2. **Telegram bot/chat access** for a real staging delivery test. Bot token must never be pasted into chat/Git.
 
-Telegram PII approval is resolved: name, phone and delivery address are approved for the operator notification.
-Yandex Metrica is no longer a first-launch blocker.
+Telegram PII approval is resolved and already implemented: name, phone and delivery address are approved for the operator notification.
+Yandex Metrica is not a first-launch blocker.
+
+Consolidated client request/checklist: `wordpress/docs/CLIENT_INPUTS_PENDING.md`.
 
 ## Next execution order
 1. Keep production untouched.
-2. Prepare the Telegram PII-enabled implementation and retain the existing async/retry/fail-safe behavior.
-3. When the client supplies the operator e-mail, configure and prove real email delivery on staging.
+2. Wait for the client-supplied operator e-mail and Telegram access; do not invent substitutes.
+3. Configure and prove real email delivery on staging.
 4. Configure and prove real Telegram delivery on staging.
-5. Run only targeted regression after these material notification changes.
+5. Run only targeted regression after these external integrations.
 6. Freeze exact release SHA.
 7. Present final go/no-go to owner.
 8. Touch production only after explicit owner approval.
 
-Do not rerun already-passed security, backup, recovery, vacancy or SEO suites merely because a chat reconnects. Rerun only targeted checks after a material change to those layers.
+Do not rerun already-passed security, backup, recovery, vacancy, SEO, Admin UX or operator-workflow suites merely because a chat reconnects. Rerun only targeted checks after a material change to those layers.
