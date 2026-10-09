@@ -9,7 +9,12 @@ on:
       - .github/workflows/deploy-reg-ru-staging-wordpress.yml
       - wordpress/deploy/bootstrap-staging.sh
       - wordpress/deploy/deploy_staging_wordpress.py
+      - wordpress/deploy/provision-legal-pages.php
+      - wordpress/deploy/verify-staging-address-suggestions.php
+      - wordpress/deploy/verify-staging-legal-pages.php
       - wordpress/deploy/verify-staging-notifications.php
+      - wordpress/deploy/verify-staging-payment-readiness.php
+      - wordpress/deploy/verify-staging-reviews.php
       - wordpress/wp-content/themes/rollsbar-theme/**
       - wordpress/wp-content/plugins/rollsbar-core/**
       - wordpress/data/catalog.json
