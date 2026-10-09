@@ -1,0 +1,48 @@
+name: Backup REG.RU Staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - wordpress/deploy/backup-staging.sh
+      - wordpress/deploy/run_staging_backup.py
+      - .github/workflows/backup-reg-ru-staging.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollsbar-backup-reg-ru-staging
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate hosting access secrets
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: |
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+      - name: Install SSH dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+      - name: Create and verify server-side staging backup
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: python3 wordpress/deploy/run_staging_backup.py
