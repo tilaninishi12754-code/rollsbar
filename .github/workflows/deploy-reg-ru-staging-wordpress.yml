@@ -10,6 +10,7 @@ on:
       - wordpress/deploy/backup-staging.sh
       - wordpress/deploy/bootstrap-staging.sh
       - wordpress/deploy/deploy_staging_wordpress.py
+      - wordpress/deploy/provision_staging_seo.py
       - wordpress/deploy/harden_staging_http.py
       - wordpress/deploy/mark_staging_deployed_sha.py
       - wordpress/deploy/provision-legal-pages.php
@@ -75,6 +76,15 @@ jobs:
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
           ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING: YES
         run: python3 wordpress/deploy/deploy_staging_wordpress.py
+      - name: Ensure pinned staging SEO owner
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+          ROLLSBAR_CONFIRM_STAGING_SEO: YES
+          ROLLSBAR_SEO_BACKUP_ALREADY_VERIFIED: YES
+        run: python3 wordpress/deploy/provision_staging_seo.py
       - name: Enforce HTTP redirect and safe response headers
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
@@ -82,6 +92,12 @@ jobs:
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_CONFIRM_HTTP_HARDENING: YES
         run: python3 wordpress/deploy/harden_staging_http.py
+      - name: Audit live SEO ownership
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: python3 wordpress/deploy/audit_staging_seo.py
       - name: Persist verified deployed SHA marker
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
