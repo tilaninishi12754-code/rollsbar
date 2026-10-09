@@ -6,10 +6,11 @@ from the hosting user's home directory, writes a short-lived mode-0600 env file,
 runs the repository's canonical preflight/bootstrap scripts, performs local
 WP-CLI assertions, and removes the temporary env file.
 
-The DaData API token comes only from the GitHub `staging` environment. It is
-masked in Actions, transported through the short-lived runtime env file, and
-persisted server-side into wp-config.php by bootstrap-staging.sh. It is never
-written to Git or rendered into browser JavaScript.
+The DaData API token comes only from the GitHub `staging` environment. Optional
+Telegram credentials use the same secret-only transport. Values are masked in
+Actions, carried through the short-lived runtime env file, and persisted only
+server-side into wp-config.php by bootstrap-staging.sh. They are never written
+to Git or rendered into browser JavaScript.
 
 The live REG.RU staging environment has already passed Gate B and was promoted
 to the full 118-product catalog. Routine code deploys therefore preserve the
@@ -30,6 +31,8 @@ BASE = os.environ["ISP_MANAGER_URL"].strip()
 USER = os.environ["ISP_MANAGER_USER"].strip()
 PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
 DADATA_API_KEY = os.environ["ROLLSBAR_DADATA_API_KEY"].strip()
+TELEGRAM_BOT_TOKEN = os.environ.get("ROLLSBAR_TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_CHAT_ID = os.environ.get("ROLLSBAR_TELEGRAM_CHAT_ID", "").strip()
 DEPLOY_SHA = os.environ["ROLLSBAR_DEPLOY_SHA"].strip()
 CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING", "")
 SECRET_FILE = ".rollsbar-staging-secrets.json"
@@ -80,7 +83,13 @@ def read_secrets(client: paramiko.SSHClient) -> dict[str, str]:
 
 def mask_dynamic_secrets(data: dict[str, str]) -> None:
     """Register generated and runtime staging secrets with GitHub log masking."""
-    values = [data.get("db_password", ""), data.get("wp_admin_password", ""), DADATA_API_KEY]
+    values = [
+        data.get("db_password", ""),
+        data.get("wp_admin_password", ""),
+        DADATA_API_KEY,
+        TELEGRAM_BOT_TOKEN,
+        TELEGRAM_CHAT_ID,
+    ]
     for value in values:
         if value:
             print(f"::add-mask::{value}", flush=True)
@@ -98,6 +107,8 @@ def write_runtime_env(client: paramiko.SSHClient, data: dict[str, str]) -> None:
         "WP_TITLE": "Rolls Bar — Staging",
         "STAGING_URL": f"https://{DOMAIN}",
         "ROLLSBAR_DADATA_API_KEY": DADATA_API_KEY,
+        "ROLLSBAR_TELEGRAM_BOT_TOKEN": TELEGRAM_BOT_TOKEN,
+        "ROLLSBAR_TELEGRAM_CHAT_ID": TELEGRAM_CHAT_ID,
         # Gate B has already promoted the real staging DB to all 118 products.
         # Routine deploys must not overwrite client-editable catalog data.
         "ROLLSBAR_IMPORT_SMOKE": "0",
@@ -120,7 +131,14 @@ def exec_checked(client: paramiko.SSHClient, command: str) -> str:
     print(out, end="" if out.endswith("\n") or not out else "\n")
     if status != 0:
         if err:
-            safe_lines = [line for line in err.splitlines() if "password" not in line.lower() and "db_" not in line.lower() and "dadata" not in line.lower()]
+            safe_lines = [
+                line
+                for line in err.splitlines()
+                if "password" not in line.lower()
+                and "db_" not in line.lower()
+                and "dadata" not in line.lower()
+                and "telegram" not in line.lower()
+            ]
             if safe_lines:
                 print("remote_stderr=" + " | ".join(safe_lines[-8:])[:1200])
         raise RuntimeError(f"Remote bootstrap failed with exit status {status}")
@@ -133,6 +151,8 @@ if len(DEPLOY_SHA) < 7:
     raise SystemExit("ROLLSBAR_DEPLOY_SHA is missing")
 if len(DADATA_API_KEY) < 10:
     raise SystemExit("ROLLSBAR_DADATA_API_KEY is missing")
+if bool(TELEGRAM_BOT_TOKEN) != bool(TELEGRAM_CHAT_ID):
+    raise SystemExit("Telegram staging secrets are partial: token and chat ID must be configured together")
 
 client = None
 try:
@@ -182,6 +202,7 @@ core_status="$(wp --path="$WP_PATH" plugin get rollsbar-core --field=status)"
 product_count="$(wp --path="$WP_PATH" post list --post_type=product --post_status=publish --format=count)"
 blog_public="$(wp --path="$WP_PATH" option get blog_public)"
 dadata_configured="$(wp --path="$WP_PATH" eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')"
+telegram_configured="$(wp --path="$WP_PATH" eval 'echo class_exists("RollsBar_Notifications") && RollsBar_Notifications::telegram_is_configured() ? "yes" : "no";')"
 
 echo "assert_core=$core_version"
 echo "assert_woocommerce=$woo_version"
@@ -190,6 +211,7 @@ echo "assert_rollsbar_core=$core_status"
 echo "assert_products=$product_count"
 echo "assert_blog_public=$blog_public"
 echo "assert_dadata_server_key=$dadata_configured"
+echo "assert_telegram_server_credentials=$telegram_configured"
 [[ "$core_version" == "{EXPECTED_WORDPRESS_VERSION}" ]]
 [[ "$woo_version" == "{EXPECTED_WOOCOMMERCE_VERSION}" ]]
 [[ "$theme_status" == "active" ]]
@@ -197,11 +219,17 @@ echo "assert_dadata_server_key=$dadata_configured"
 [[ "$product_count" == "{EXPECTED_STAGING_PRODUCTS}" ]]
 [[ "$blog_public" == "0" ]]
 [[ "$dadata_configured" == "yes" ]]
+if [[ -n "{shell_quote(TELEGRAM_BOT_TOKEN) if TELEGRAM_BOT_TOKEN else ''}" ]]; then
+  [[ "$telegram_configured" == "yes" ]]
+fi
 echo "STAGING WORDPRESS DEPLOY PASS"
 '''
     exec_checked(client, "bash -lc " + shell_quote(remote))
 except (paramiko.SSHException, socket.error, OSError, RuntimeError, ValueError) as exc:
-    message = str(exc).replace(PASSWORD, "***").replace(DADATA_API_KEY, "***")
+    message = str(exc)
+    for secret in (PASSWORD, DADATA_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID):
+        if secret:
+            message = message.replace(secret, "***")
     print(f"staging_bootstrap=failed type={exc.__class__.__name__}")
     print(message)
     raise SystemExit(1)
