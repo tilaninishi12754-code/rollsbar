@@ -16,14 +16,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  recovery-cleanup:
-    # One-shot safety path: only an explicitly marked commit can mutate drill resources.
-    if: contains(github.event.head_commit.message, '[recovery-cleanup]')
+  recovery-drill:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[recovery-drill]')
     runs-on: ubuntu-latest
     environment:
       name: staging
       deployment: false
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Validate hosting access secrets
@@ -38,10 +37,12 @@ jobs:
           test -n "$ISP_MANAGER_PASSWORD"
           echo "::add-mask::$ISP_MANAGER_USER"
           echo "::add-mask::$ISP_MANAGER_PASSWORD"
-      - name: Remove only orphaned rbdrill databases
+      - name: Install SSH dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+      - name: Restore latest snapshot into isolated temporary database
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
-          ROLLSBAR_CONFIRM_RECOVERY_ORPHAN_CLEANUP: YES
-        run: python3 wordpress/deploy/cleanup_recovery_drill_orphans.py
+          ROLLSBAR_CONFIRM_RECOVERY_DRILL: YES
+        run: python3 wordpress/deploy/recovery_drill.py
