@@ -2,8 +2,10 @@
 """Read-only SEO/indexability audit for RollsBar staging.
 
 No WordPress settings, plugins, files, database rows, robots rules or sitemaps
-are modified. The audit inventories SEO ownership and public output before any
-SEO plugin is considered.
+are modified. After the verified SEO rollout this audit treats the selected SEO
+owner, canonical output, sitemap and schema ownership as hard invariants. Missing
+home description/social copy or image remains a content input, not an invented
+technical fix.
 """
 from __future__ import annotations
 
@@ -23,6 +25,7 @@ USER = os.environ["ISP_MANAGER_USER"].strip()
 PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
 SITE = "https://staging.rollsbar.ru"
 WP_PATH = "$HOME/www/staging.rollsbar.ru"
+EXPECTED_SEOPRESS_VERSION = "10.3"
 CTX = ssl.create_default_context()
 
 
@@ -92,7 +95,7 @@ def remote(client: paramiko.SSHClient, command: str) -> str:
 
 
 def fetch(url: str) -> tuple[int, str, str]:
-    request = urllib.request.Request(url, headers={"User-Agent": "RollsBar-SEO-Audit/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "RollsBar-SEO-Audit/2.0"})
     try:
         with urllib.request.urlopen(request, context=CTX, timeout=30) as response:
             body = response.read(3_000_000).decode("utf-8", errors="replace")
@@ -103,11 +106,11 @@ def fetch(url: str) -> tuple[int, str, str]:
 
 
 def metas(parser: HeadParser, key: str, value: str) -> list[str]:
-    result: list[str] = []
-    for meta in parser.meta:
-        if meta.get(key, "").lower() == value.lower():
-            result.append(meta.get("content", ""))
-    return result
+    return [
+        meta.get("content", "")
+        for meta in parser.meta
+        if meta.get(key, "").lower() == value.lower()
+    ]
 
 
 def jsonld_types(parser: HeadParser) -> list[str]:
@@ -157,7 +160,6 @@ def inspect_html(label: str, url: str) -> dict[str, object]:
     print(f"{label}_product_schema_count={types.count('Product')}")
     return {
         "status": status,
-        "body": body,
         "canonical_count": len(parser.canonicals),
         "description_count": len(description),
         "robots": robots,
@@ -175,24 +177,34 @@ def main() -> int:
 
     client = connect()
     try:
+        prefix = f"export PATH=\"$HOME/.local/bin:$PATH\"; wp --path=\"{WP_PATH}\""
         plugins = remote(
             client,
-            f"export PATH=\"$HOME/.local/bin:$PATH\"; wp --path=\"{WP_PATH}\" plugin list --fields=name,status,version,update,update_version,auto_update --format=csv",
+            prefix + " plugin list --fields=name,status,version,update,update_version,auto_update --format=csv",
         )
         print("plugin_inventory_begin")
         print(plugins)
         print("plugin_inventory_end")
 
-        blog_public = remote(
+        blog_public = remote(client, prefix + " option get blog_public")
+        seopress_status = remote(client, prefix + " plugin get wp-seopress --field=status")
+        seopress_version = remote(client, prefix + " plugin get wp-seopress --field=version")
+        description_state = remote(
             client,
-            f"export PATH=\"$HOME/.local/bin:$PATH\"; wp --path=\"{WP_PATH}\" option get blog_public",
+            prefix + " option get rollsbar_seo_home_description_state 2>/dev/null || echo missing",
         )
-        print(f"blog_public={blog_public}")
-
         product_url = remote(
             client,
-            f"export PATH=\"$HOME/.local/bin:$PATH\"; id=$(wp --path=\"{WP_PATH}\" post list --post_type=product --post_status=publish --posts_per_page=1 --field=ID | head -n1); test -n \"$id\"; wp --path=\"{WP_PATH}\" post url \"$id\"",
+            prefix
+            + " post list --post_type=product --post_status=publish --posts_per_page=1 --field=ID"
+            + " | head -n1 | xargs -r "
+            + prefix
+            + " post url",
         )
+        print(f"blog_public={blog_public}")
+        print(f"seopress_status={seopress_status}")
+        print(f"seopress_version={seopress_version}")
+        print(f"home_description_state={description_state}")
         print(f"sample_product_url={product_url}")
     finally:
         client.close()
@@ -207,20 +219,36 @@ def main() -> int:
     print(f"robots_content_type={robots_type}")
     print(f"robots_disallow_all={'yes' if re.search(r'(?mi)^Disallow:\s*/\s*$', robots_body) else 'no'}")
 
-    sitemap_status, sitemap_type, sitemap_body = fetch(SITE + "/wp-sitemap.xml")
-    print(f"core_sitemap_status={sitemap_status}")
-    print(f"core_sitemap_content_type={sitemap_type}")
-    print(f"core_sitemap_has_sitemapindex={'yes' if '<sitemapindex' in sitemap_body else 'no'}")
+    sitemap_status, sitemap_type, sitemap_body = fetch(SITE + "/sitemaps.xml")
+    print(f"sitemap_status={sitemap_status}")
+    print(f"sitemap_content_type={sitemap_type}")
+    print(f"sitemap_has_sitemapindex={'yes' if '<sitemapindex' in sitemap_body else 'no'}")
 
     failures: list[str] = []
+    if seopress_status != "active":
+        failures.append("seopress_not_active")
+    if seopress_version != EXPECTED_SEOPRESS_VERSION:
+        failures.append("seopress_version_drift")
     if blog_public != "0":
         failures.append("staging_blog_public_not_zero")
     if int(home["status"]) != 200 or int(product["status"]) != 200:
         failures.append("public_content_route_unhealthy")
+    if int(home["canonical_count"]) != 1:
+        failures.append("home_canonical_owner_not_exactly_one")
+    if int(product["canonical_count"]) != 1:
+        failures.append("product_canonical_owner_not_exactly_one")
+    if int(home["og_title"]) < 1:
+        failures.append("home_open_graph_title_missing")
+    if sitemap_status != 200 or "<sitemapindex" not in sitemap_body:
+        failures.append("seo_sitemap_missing")
     if int(home["restaurant"]) != 1:
         failures.append("restaurant_schema_owner_not_exactly_one")
-    if int(product["product"]) < 1:
-        failures.append("woocommerce_product_schema_missing")
+    if int(home["product"]) != 0:
+        failures.append("product_schema_leaked_to_home")
+    if int(product["product"]) != 1:
+        failures.append("woocommerce_product_schema_owner_not_exactly_one")
+    if int(product["restaurant"]) != 0:
+        failures.append("restaurant_schema_leaked_to_product")
 
     home_robots = " ".join(str(x).lower() for x in home["robots"])  # type: ignore[index]
     if blog_public == "0" and "noindex" not in home_robots:
@@ -231,9 +259,8 @@ def main() -> int:
         if "noindex" not in robots_values:
             failures.append(f"{label}_noindex_missing")
 
-    # Since WordPress 5.3, a non-public site no longer has to emit `Disallow: /`
-    # in robots.txt. Core uses page-level noindex/nofollow for blog_public=0.
-    # Keep robots.txt availability as an inventory signal, not a false blocker.
+    # Since WordPress 5.3, a non-public site no longer has to emit `Disallow: /`.
+    # Page-level noindex is the staging hard invariant; robots.txt must still load.
     if robots_status != 200:
         failures.append("robots_txt_unavailable")
     print(
@@ -241,13 +268,20 @@ def main() -> int:
         + ("yes" if blog_public == "0" and "noindex" in home_robots else "no")
     )
 
-    # Missing description/OG/canonical/sitemap features are inventoried rather
-    # than treated as mutation-time failures: this audit decides whether an SEO
-    # layer is needed. Existing schema/noindex safety is a hard invariant.
-    print(f"seo_owner_gap_meta_description={'yes' if int(home['description_count']) == 0 else 'no'}")
-    print(f"seo_owner_gap_open_graph={'yes' if int(home['og_title']) == 0 or int(home['og_description']) == 0 else 'no'}")
-    print(f"seo_owner_gap_canonical={'yes' if int(home['canonical_count']) == 0 else 'no'}")
-    print(f"seo_owner_gap_core_sitemap={'yes' if sitemap_status != 200 or '<sitemapindex' not in sitemap_body else 'no'}")
+    description_pending = int(home["description_count"]) == 0
+    og_description_pending = int(home["og_description"]) == 0
+    og_image_pending = int(home["og_image"]) == 0
+    print(f"seo_owner_canonical_ready={'yes' if int(home['canonical_count']) == 1 else 'no'}")
+    print(f"seo_owner_sitemap_ready={'yes' if sitemap_status == 200 and '<sitemapindex' in sitemap_body else 'no'}")
+    print(f"seo_owner_social_title_ready={'yes' if int(home['og_title']) >= 1 else 'no'}")
+    print(f"seo_home_description_content_pending={'yes' if description_pending else 'no'}")
+    print(f"seo_home_og_description_content_pending={'yes' if og_description_pending else 'no'}")
+    print(f"seo_home_og_image_content_pending={'yes' if og_image_pending else 'no'}")
+
+    if description_state == "uses_verified_wordpress_tagline" and description_pending:
+        failures.append("verified_home_description_not_rendered")
+    if description_state not in ("pending_content_input", "uses_verified_wordpress_tagline"):
+        failures.append("home_description_state_unknown")
 
     if failures:
         print("SEO STAGING AUDIT FAIL: " + ",".join(failures))
