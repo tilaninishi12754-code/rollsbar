@@ -102,6 +102,7 @@ $make_order = static function ( string $suffix ) use ( &$created_orders, $fail )
 	$order->set_shipping_last_name( 'Smoke-' . $suffix );
 	$order->set_shipping_address_1( 'QA Secret Address 123' );
 	$order->set_shipping_city( 'QA City' );
+	$order->set_customer_note( 'QA customer comment' );
 	$order->calculate_totals();
 	$order->save();
 	$created_orders[] = $order->get_id();
@@ -176,10 +177,27 @@ try {
 	if ( '' === $message || false === strpos( $message, 'Новый заказ Rolls Bar #' . $order->get_order_number() ) ) {
 		$fail( 'Telegram message does not identify the order.' );
 	}
-	foreach ( array( '+79990000000', 'QA Secret Address 123', 'Notification Smoke-success' ) as $private_value ) {
-		if ( false !== strpos( $message, $private_value ) ) {
-			$fail( 'Telegram message exposed personal data while the opt-in filter is disabled.' );
+
+	$first_item = current( $order->get_items() );
+	$expected_item_name = $first_item instanceof WC_Order_Item_Product ? trim( wp_strip_all_tags( $first_item->get_name() ) ) : '';
+	$required_values = array(
+		'Notification Smoke-success',
+		'+79990000000',
+		'QA Secret Address 123',
+		'QA customer comment',
+		'Состав заказа:',
+	);
+	if ( $expected_item_name ) {
+		$required_values[] = $expected_item_name;
+	}
+	foreach ( $required_values as $required_value ) {
+		if ( false === strpos( $message, $required_value ) ) {
+			$fail( 'Telegram message is missing approved operator order data: ' . $required_value );
 		}
+	}
+
+	if ( false !== strpos( $message, '123456:ROLLSBAR_QA_TOKEN' ) ) {
+		$fail( 'Telegram message exposed the bot token.' );
 	}
 
 	RollsBar_Notifications::send_async( $order_id );
@@ -220,7 +238,7 @@ try {
 	echo "telegram_action_scheduler=queued\n";
 	echo "telegram_success_status=sent attempts=1\n";
 	echo "telegram_duplicate_send=idempotent\n";
-	echo "telegram_personal_data_default=hidden\n";
+	echo "telegram_operator_payload=pii_and_order_contents_approved_pass\n";
 	echo "telegram_failure_retry=queued error=HTTP_500\n";
 } catch ( Throwable $error ) {
 	fwrite( STDERR, 'Notification runtime smoke failed: ' . $error->getMessage() . "\n" );
