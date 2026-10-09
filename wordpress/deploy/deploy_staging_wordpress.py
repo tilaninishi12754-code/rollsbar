@@ -6,6 +6,11 @@ from the hosting user's home directory, writes a short-lived mode-0600 env file,
 runs the repository's canonical preflight/bootstrap scripts, performs local
 WP-CLI assertions, and removes the temporary env file.
 
+Every routine live staging deployment is backup-gated: after the exact Git
+commit is checked out but before preflight/bootstrap mutates WordPress, the
+canonical backup script must create and verify a database+uploads snapshot
+outside the public web root. A failed backup aborts the deployment.
+
 The DaData API token comes only from the GitHub `staging` environment. Optional
 Telegram credentials use the same secret-only transport. Values are masked in
 Actions, carried through the short-lived runtime env file, and persisted only
@@ -125,7 +130,7 @@ def write_runtime_env(client: paramiko.SSHClient, data: dict[str, str]) -> None:
 
 
 def exec_checked(client: paramiko.SSHClient, command: str) -> str:
-    _, stdout, stderr = client.exec_command(command, timeout=420)
+    _, stdout, stderr = client.exec_command(command, timeout=600)
     out = stdout.read().decode("utf-8", errors="replace")
     err = stderr.read().decode("utf-8", errors="replace")
     status = stdout.channel.recv_exit_status()
@@ -192,8 +197,25 @@ export WP_PATH PROJECT_ROOT
 echo "deploy_target={DOMAIN}"
 echo "deploy_sha={DEPLOY_SHA}"
 echo "wp_path=$WP_PATH"
+
+# Critical deployment invariant: if staging already exists, create and verify a
+# fresh DB+uploads backup outside web-root before any preflight/bootstrap write.
+# The backup command is intentionally executed from the exact deployment SHA.
+if [[ -f "$WP_PATH/wp-load.php" ]]; then
+  echo "deploy_stage=backup_before_mutation"
+  export ROLLSBAR_BACKUP_ROOT="$HOME/rollsbar-backups/staging"
+  export ROLLSBAR_BACKUP_RETENTION=5
+  bash "$PROJECT_ROOT/wordpress/deploy/backup-staging.sh"
+else
+  echo "deploy_stage=backup_skipped_fresh_install"
+fi
+
 bash "$PROJECT_ROOT/wordpress/deploy/preflight.sh"
 bash "$PROJECT_ROOT/wordpress/deploy/bootstrap-staging.sh"
+
+# Deployment may rewrite wp-config.php through WP-CLI. Re-assert the hardened
+# least-privilege mode after configuration is complete and before acceptance.
+chmod 0640 "$WP_PATH/wp-config.php"
 
 wp --path="$WP_PATH" core is-installed
 core_version="$(wp --path="$WP_PATH" core version)"
@@ -204,8 +226,14 @@ product_count="$(wp --path="$WP_PATH" post list --post_type=product --post_statu
 blog_public="$(wp --path="$WP_PATH" option get blog_public)"
 dadata_configured="$(wp --path="$WP_PATH" eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')"
 telegram_configured="$(wp --path="$WP_PATH" eval 'echo class_exists("RollsBar_Notifications") && RollsBar_Notifications::telegram_is_configured() ? "yes" : "no";')"
+wp_config_mode="$(stat -c '%a' "$WP_PATH/wp-config.php")"
+
+# Same-version core integrity is a permanent deploy gate. A deployment must not
+# silently succeed if core files disappear or differ from the pinned release.
+wp --path="$WP_PATH" core verify-checksums --version="{EXPECTED_WORDPRESS_VERSION}" --locale=en_US >/dev/null
 
 echo "assert_core=$core_version"
+echo "assert_core_checksums=pass"
 echo "assert_woocommerce=$woo_version"
 echo "assert_theme=$theme_status"
 echo "assert_rollsbar_core=$core_status"
@@ -213,6 +241,7 @@ echo "assert_products=$product_count"
 echo "assert_blog_public=$blog_public"
 echo "assert_dadata_server_key=$dadata_configured"
 echo "assert_telegram_server_credentials=$telegram_configured"
+echo "assert_wp_config_mode=$wp_config_mode"
 [[ "$core_version" == "{EXPECTED_WORDPRESS_VERSION}" ]]
 [[ "$woo_version" == "{EXPECTED_WOOCOMMERCE_VERSION}" ]]
 [[ "$theme_status" == "active" ]]
@@ -220,6 +249,7 @@ echo "assert_telegram_server_credentials=$telegram_configured"
 [[ "$product_count" == "{EXPECTED_STAGING_PRODUCTS}" ]]
 [[ "$blog_public" == "0" ]]
 [[ "$dadata_configured" == "yes" ]]
+[[ "$wp_config_mode" == "640" ]]
 if [[ "{TELEGRAM_EXPECTED}" == "yes" ]]; then
   [[ "$telegram_configured" == "yes" ]]
 fi
