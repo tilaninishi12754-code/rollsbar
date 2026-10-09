@@ -5,7 +5,7 @@ Updated: 2026-10-09
 ## Purpose
 This matrix separates what must be true for the **current receipt-only launch** from features that are explicitly deferred or optional. It prevents external credentials and pending client content from becoming accidental blockers when the core site can launch safely without them.
 
-Before using this matrix, re-read live GitHub/CI/runtime evidence. `wordpress/docs/CURRENT_STATE.md` remains the factual implementation checkpoint.
+Before using this matrix, re-read live GitHub/CI/runtime evidence. `wordpress/docs/CURRENT_STATE.md` remains the detailed historical implementation checkpoint; this matrix is the current launch decision layer.
 
 ## Classification rules
 - **REQUIRED FOR CURRENT LAUNCH** — production transition must not be approved until this is verified.
@@ -36,7 +36,7 @@ Before production approval:
 3. operator must actually receive the New order message;
 4. Rolls Bar additional address fields must appear once, not duplicated.
 
-Current state: internal `wp_mail` path is verified, but real receipt/deliverability is not yet proven.
+Current state: internal `wp_mail` path is verified, but real receipt/deliverability is not yet proven. This is the smallest clearly required external operational proof still outstanding under the current launch scope.
 
 ### Production cutover controls — REQUIRED AT TRANSITION
 Before any production mutation:
@@ -58,32 +58,57 @@ Immediately after cutover:
 - deployed SHA recorded.
 
 ## INTERNAL PRE-CUTOVER WORK
-These are not waiting on client credentials and should be completed before production approval.
 
-### Vacancy page fail-closed cleanup
-Final questionnaire wording and application channel are still a documented pending client input. Do not invent them.
+### Vacancy page fail-closed cleanup — DONE / VERIFIED
+Final questionnaire wording and application channel remain a documented pending client input and were **not invented**.
 
-Current WordPress template visibly renders technical `Pending input` copy and a questionnaire CTA even though no final questionnaire exists. That is acceptable on staging but not production-facing content.
+Production-safe behavior is now verified on staging:
+- canonical page `/rabota-v-rolls-bar/` is provisioned when absent;
+- public route returns HTTP 200;
+- technical `Pending input` copy is not exposed;
+- dead questionnaire CTA is not exposed;
+- existing vacancy listing and approved contact routes remain available;
+- the real questionnaire can be enabled later when the client supplies final wording/channel.
 
-Required internal fix:
-- while questionnaire configuration is absent, do not render the pending questionnaire block or dead application CTA;
-- keep only already approved/known vacancy listing and existing contact routes;
-- once client wording arrives, enable the real form without redesigning the page.
+The questionnaire itself is still deferred; the public page no longer leaks an unfinished implementation state.
 
-### SEO / indexability readiness
-Project SEO decision still calls for one controlled SEO layer and pre-production verification.
+### SEO / indexability readiness — DONE / VERIFIED
+A single controlled SEO layer is now established on staging without enabling production indexing.
 
-Before production approval verify at minimum:
-- one canonical SEO owner; no duplicate competing SEO/schema owners;
-- editable titles/meta/canonicals;
-- intended robots behavior;
+Verified owner split:
+- **SEOPress 10.3** = titles/canonicals/Open Graph/XML sitemap owner;
+- **RollsBar Core** = one Restaurant entity + project transactional noindex rules;
+- **WooCommerce** = Product schema owner.
+
+Safety/maintenance properties:
+- SEOPress pinned to 10.3;
+- auto-update disabled;
+- every routine staging deploy now reasserts the pinned SEO owner after its already-verified backup gate;
+- routine deploy then runs a read-only SEO ownership audit before recording deployed SHA;
+- schema-overlap modules are disabled in SEOPress: Local Business, rich snippets and WooCommerce schema ownership remain off there;
+- SEOPress analytics/instant-indexing/robots ownership remain off;
+- staging stays `blog_public=0` and `noindex`.
+
+Routine deploy proof on commit `497ca86d6a59a09626af60a40b7618d48c4c6b38`, run `37933737320`:
+- pre-mutation backup verified;
+- WordPress deploy PASS;
+- SEOPress 10.3 active / auto-update disabled;
+- WooCommerce preserved at 11.1.2;
+- catalog preserved at 118;
+- `blog_public=0` preserved;
+- canonical present;
 - XML sitemap available;
-- Restaurant/LocalBusiness schema has one owner;
-- WooCommerce Product schema is not duplicated;
-- cart/checkout remain noindex as intended;
-- production indexability is intentionally enabled only at cutover.
+- Open Graph title present;
+- homepage Restaurant schema count = 1;
+- sample product Product schema count = 1;
+- cart and checkout remain noindex;
+- live SEO audit PASS;
+- deployed SHA marker persisted as `497ca86d6a59a09626af60a40b7618d48c4c6b38`.
 
-Search Console connection/submission happens when the production domain is ready and does not require blocking staging development.
+Intentionally pending content:
+- homepage meta description / OG description are not invented. The system records this as `pending_content_input` until approved copy exists.
+
+Search Console connection/submission happens when the production domain is ready and does not block staging development.
 
 ## APPROVED DEFERRED
 
@@ -118,7 +143,7 @@ Deferred until later:
 Historical bank references do not select a provider.
 
 ### Final vacancy questionnaire
-The questionnaire itself is deferred until the client supplies final wording and receiving channel. The public page must nevertheless be production-clean (see internal cleanup above).
+The questionnaire itself is deferred until the client supplies final wording and receiving channel. The public vacancy page is already production-safe while this input is absent.
 
 ### Stronger CSP / Permissions-Policy
 Optional hardening after a dedicated WooCommerce/browser compatibility regression. Do not deploy an aggressive CSP only to satisfy a checklist.
@@ -162,10 +187,10 @@ Under the current scope, the only external operational input still clearly requi
 Telegram credentials, Metrica ID, acquiring credentials, final vacancy questionnaire and delivery polygons are **not required merely to continue development or prepare the cutover** under the current agreed scope.
 
 ## Next execution order
-1. Make the vacancy page production-safe while questionnaire input is absent.
-2. Complete SEO/indexability readiness on staging without enabling production indexing.
-3. Re-run only targeted regression tests for the layers changed in steps 1–2; do not repeat security/recovery suites unnecessarily.
-4. Establish and prove the real New order email recipient/delivery path.
-5. Prepare the production cutover + backup + rollback checklist.
-6. Present final go/no-go to owner.
-7. Touch production only after explicit owner approval.
+1. Read-only audit the current WooCommerce New order recipient and actual mail-transport capability; do not send to an unapproved address.
+2. Establish the approved recipient and prove one real New order email is received end-to-end.
+3. Prepare the production cutover + backup + rollback checklist around an exact release SHA.
+4. Present final go/no-go to owner.
+5. Touch production only after explicit owner approval.
+
+Do not rerun already-passed security, backup, recovery, vacancy or SEO suites merely because a chat reconnects. Rerun only targeted checks after a material change to those layers.
