@@ -61,13 +61,21 @@ def connect() -> paramiko.SSHClient:
 
 
 def execute(client: paramiko.SSHClient) -> str:
-    remote = f'''set -euo pipefail
+    remote = r'''set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
-WP_PATH="$HOME/www/{DOMAIN}"
+DOMAIN="__DOMAIN__"
+WP_VERSION="__WP_VERSION__"
+WC_VERSION="__WC_VERSION__"
+SEO_SLUG="__SEO_SLUG__"
+SEO_VERSION="__SEO_VERSION__"
+EXPECTED_PRODUCTS="__EXPECTED_PRODUCTS__"
+DEPLOY_SHA="__DEPLOY_SHA__"
+REPO="__REPO__"
+WP_PATH="$HOME/www/$DOMAIN"
 PROJECT_ROOT="$HOME/.rollsbar-deploy"
 BACKUP_ROOT="$HOME/rollsbar-backups/staging"
 
-wp_cmd() {{ wp --path="$WP_PATH" "$@"; }}
+wp_cmd() { wp --path="$WP_PATH" "$@"; }
 
 [[ -f "$WP_PATH/wp-load.php" ]]
 command -v wp >/dev/null 2>&1
@@ -79,17 +87,17 @@ woo_version="$(wp_cmd plugin get woocommerce --field=version)"
 product_count="$(wp_cmd post list --post_type=product --post_status=publish --format=count)"
 blog_public="$(wp_cmd option get blog_public)"
 
-[[ "$home_url" == "https://{DOMAIN}" ]]
-[[ "$site_url" == "https://{DOMAIN}" ]]
-[[ "$core_version" == "{WP_VERSION}" ]]
-[[ "$woo_version" == "{WC_VERSION}" ]]
+[[ "$home_url" == "https://$DOMAIN" ]]
+[[ "$site_url" == "https://$DOMAIN" ]]
+[[ "$core_version" == "$WP_VERSION" ]]
+[[ "$woo_version" == "$WC_VERSION" ]]
 [[ "$(wp_cmd plugin get woocommerce --field=status)" == "active" ]]
 [[ "$(wp_cmd plugin get rollsbar-core --field=status)" == "active" ]]
 [[ "$(wp_cmd theme get rollsbar-theme --field=status)" == "active" ]]
-[[ "$product_count" == "{EXPECTED_PRODUCTS}" ]]
+[[ "$product_count" == "$EXPECTED_PRODUCTS" ]]
 [[ "$blog_public" == "0" ]]
 
-echo "target={DOMAIN}"
+echo "target=$DOMAIN"
 echo "pre_core=$core_version"
 echo "pre_woocommerce=$woo_version"
 echo "pre_products=$product_count"
@@ -97,11 +105,11 @@ echo "pre_blog_public=$blog_public"
 
 if [[ ! -d "$PROJECT_ROOT/.git" ]]; then
   rm -rf "$PROJECT_ROOT"
-  git clone --filter=blob:none --no-checkout {q(REPO)} "$PROJECT_ROOT"
+  git clone --filter=blob:none --no-checkout "$REPO" "$PROJECT_ROOT"
 fi
-git -C "$PROJECT_ROOT" fetch --depth=1 origin {q(DEPLOY_SHA)}
-git -C "$PROJECT_ROOT" checkout --detach --force {q(DEPLOY_SHA)}
-[[ "$(git -C "$PROJECT_ROOT" rev-parse HEAD)" == {q(DEPLOY_SHA)} ]]
+git -C "$PROJECT_ROOT" fetch --depth=1 origin "$DEPLOY_SHA"
+git -C "$PROJECT_ROOT" checkout --detach --force "$DEPLOY_SHA"
+[[ "$(git -C "$PROJECT_ROOT" rev-parse HEAD)" == "$DEPLOY_SHA" ]]
 
 echo "stage=backup_before_seo_mutation"
 export WP_PATH
@@ -110,18 +118,18 @@ export ROLLSBAR_BACKUP_RETENTION=5
 bash "$PROJECT_ROOT/wordpress/deploy/backup-staging.sh"
 
 echo "stage=install_pinned_seopress"
-if wp_cmd plugin is-installed {SEO_SLUG}; then
-  installed_version="$(wp_cmd plugin get {SEO_SLUG} --field=version)"
+if wp_cmd plugin is-installed "$SEO_SLUG"; then
+  installed_version="$(wp_cmd plugin get "$SEO_SLUG" --field=version)"
   echo "seopress_version_before=$installed_version"
-  if [[ "$installed_version" != "{SEO_VERSION}" ]]; then
-    wp_cmd plugin install {SEO_SLUG} --version="{SEO_VERSION}" --force
+  if [[ "$installed_version" != "$SEO_VERSION" ]]; then
+    wp_cmd plugin install "$SEO_SLUG" --version="$SEO_VERSION" --force
   fi
 else
   echo "seopress_version_before=not_installed"
-  wp_cmd plugin install {SEO_SLUG} --version="{SEO_VERSION}"
+  wp_cmd plugin install "$SEO_SLUG" --version="$SEO_VERSION"
 fi
-wp_cmd plugin activate {SEO_SLUG}
-wp_cmd plugin auto-updates disable {SEO_SLUG} >/dev/null || true
+wp_cmd plugin activate "$SEO_SLUG"
+wp_cmd plugin auto-updates disable "$SEO_SLUG" >/dev/null || true
 
 # Keep SEOPress as the metadata/canonical/social/sitemap owner only. Explicitly
 # disable overlapping or unused feature families so WooCommerce remains the
@@ -167,32 +175,32 @@ if ( in_array( $tagline, $stock, true ) ) {
 
 wp_cmd rewrite flush --hard >/dev/null
 
-seo_version="$(wp_cmd plugin get {SEO_SLUG} --field=version)"
-seo_status="$(wp_cmd plugin get {SEO_SLUG} --field=status)"
+seo_version="$(wp_cmd plugin get "$SEO_SLUG" --field=version)"
+seo_status="$(wp_cmd plugin get "$SEO_SLUG" --field=status)"
 woo_version_after="$(wp_cmd plugin get woocommerce --field=version)"
 product_count_after="$(wp_cmd post list --post_type=product --post_status=publish --format=count)"
 blog_public_after="$(wp_cmd option get blog_public)"
 seo_state="$(wp_cmd option get rollsbar_seo_home_description_state)"
-seo_auto="$(wp_cmd plugin auto-updates status {SEO_SLUG} --field=status 2>/dev/null || true)"
+seo_auto="$(wp_cmd plugin auto-updates status "$SEO_SLUG" --field=status 2>/dev/null || true)"
 
 toggle_state="$(wp_cmd eval '$t=get_option("seopress_toggle",array()); echo implode(",", array_map(static fn($k)=>$k."=".($t[$k]??"unset"), array("toggle-titles","toggle-xml-sitemap","toggle-social","toggle-local-business","toggle-rich-snippets","toggle-woocommerce","toggle-google-analytics","toggle-instant-indexing","toggle-robots")));')"
 sitemap_state="$(wp_cmd eval '$s=get_option("seopress_xml_sitemap_option_name",array()); echo $s["seopress_xml_sitemap_general_enable"]??"unset";')"
 social_state="$(wp_cmd eval '$s=get_option("seopress_social_option_name",array()); echo "og=".($s["seopress_social_facebook_og"]??"unset").",twitter=".($s["seopress_social_twitter_card"]??"unset");')"
 
-[[ "$seo_version" == "{SEO_VERSION}" ]]
+[[ "$seo_version" == "$SEO_VERSION" ]]
 [[ "$seo_status" == "active" ]]
-[[ "$woo_version_after" == "{WC_VERSION}" ]]
-[[ "$product_count_after" == "{EXPECTED_PRODUCTS}" ]]
+[[ "$woo_version_after" == "$WC_VERSION" ]]
+[[ "$product_count_after" == "$EXPECTED_PRODUCTS" ]]
 [[ "$blog_public_after" == "0" ]]
 [[ "$(wp_cmd plugin get rollsbar-core --field=status)" == "active" ]]
 [[ "$(wp_cmd theme get rollsbar-theme --field=status)" == "active" ]]
 [[ "$sitemap_state" == "1" ]]
 
-wp_cmd core verify-checksums --version="{WP_VERSION}" --locale=en_US >/dev/null
+wp_cmd core verify-checksums --version="$WP_VERSION" --locale=en_US >/dev/null
 
 echo "seopress_version=$seo_version"
 echo "seopress_status=$seo_status"
-echo "seopress_auto_update=${{seo_auto:-unknown}}"
+echo "seopress_auto_update=${seo_auto:-unknown}"
 echo "seopress_toggles=$toggle_state"
 echo "seopress_sitemap_enabled=$sitemap_state"
 echo "seopress_social=$social_state"
@@ -203,6 +211,19 @@ echo "post_blog_public=$blog_public_after"
 echo "assert_core_checksums=pass"
 echo "STAGING SEO PROVISION PASS"
 '''
+
+    replacements = {
+        "__DOMAIN__": DOMAIN,
+        "__WP_VERSION__": WP_VERSION,
+        "__WC_VERSION__": WC_VERSION,
+        "__SEO_SLUG__": SEO_SLUG,
+        "__SEO_VERSION__": SEO_VERSION,
+        "__EXPECTED_PRODUCTS__": EXPECTED_PRODUCTS,
+        "__DEPLOY_SHA__": DEPLOY_SHA,
+        "__REPO__": REPO,
+    }
+    for marker, value in replacements.items():
+        remote = remote.replace(marker, value)
 
     _, stdout, stderr = client.exec_command("bash -lc " + q(remote), timeout=900)
     out = stdout.read().decode("utf-8", errors="replace")
