@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Restore the latest staging snapshot into a temporary REG.RU database.
+"""Restore the latest recovery-safe staging snapshot into a temporary REG.RU DB.
 
 No live staging/production database or document-root data is modified. The
 one-off database/user and temporary extracted files are removed before success.
+Only format-3 snapshots bound to the verified deployed-SHA marker are accepted.
 """
 from __future__ import annotations
 
 import os
+import re
 import secrets
 import shlex
 import socket
@@ -28,6 +30,7 @@ CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_RECOVERY_DRILL", "")
 ENDPOINT = BASE if BASE.endswith("/ispmgr") else BASE + "/ispmgr"
 CTX = ssl.create_default_context()
 DOMAIN = "staging.rollsbar.ru"
+TEMP_DB_RE = re.compile(r"^rbdrill_[0-9]{8}$")
 
 
 def mask(value: str) -> None:
@@ -45,13 +48,14 @@ def random_password(length: int = 40) -> str:
 
 def api_call(params: dict[str, str]) -> ET.Element:
     url = ENDPOINT + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-recovery-drill/1.1"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rollsbar-recovery-drill/1.2"})
     with urllib.request.urlopen(req, context=CTX, timeout=30) as response:
         root = ET.fromstring(response.read())
     err = root.find(".//error")
     if err is not None:
         safe = {
-            k: v for k, v in err.attrib.items()
+            k: v
+            for k, v in err.attrib.items()
             if not any(x in k.lower() for x in ("pass", "auth", "secret", "token"))
         }
         raise RuntimeError(f"ISPmanager error func={params.get('func')}: {safe}")
@@ -114,6 +118,8 @@ def remote(client: paramiko.SSHClient, command: str, timeout: int = 600) -> tupl
 
 
 def create_temp_db(sid: str, requested: str, password: str) -> tuple[str, str, str, str]:
+    if not TEMP_DB_RE.fullmatch(requested):
+        raise RuntimeError("Unsafe recovery drill database name")
     if find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested):
         raise RuntimeError("Recovery drill database name collision")
 
@@ -159,8 +165,39 @@ def create_temp_db(sid: str, requested: str, password: str) -> tuple[str, str, s
     return actual_db, actual_user, pair, db_key
 
 
-def cleanup_temp_db(sid: str, actual_user: str, pair: str, db_key: str, requested: str) -> list[str]:
+def cleanup_temp_db(
+    sid: str,
+    requested: str,
+    actual_user: str = "",
+    pair: str = "",
+    db_key: str = "",
+) -> list[str]:
+    """Remove only the uniquely named rbdrill resource, rediscovering metadata if needed."""
     errors: list[str] = []
+    if not TEMP_DB_RE.fullmatch(requested):
+        return ["unsafe_requested_name=yes"]
+
+    try:
+        target = find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested)
+    except Exception as exc:
+        return [f"db_cleanup_discovery={exc.__class__.__name__}"]
+
+    if target is not None:
+        pair = pair or target.get("pair", "")
+        db_key = db_key or target.get("key", "")
+        if not actual_user and pair:
+            try:
+                db_users = rows(api_call({"out": "xml", "func": "db.users", "auth": sid, "elid": pair}))
+                for row in db_users:
+                    name = row.get("name", "")
+                    if name == requested or name.endswith("_" + requested):
+                        actual_user = name
+                        break
+                if not actual_user and len(db_users) == 1:
+                    actual_user = db_users[0].get("name", "")
+            except Exception as exc:
+                errors.append(f"db_user_discovery={exc.__class__.__name__}")
+
     if actual_user:
         try:
             params = {"out": "xml", "func": "db.users.delete", "auth": sid, "elid": actual_user}
@@ -169,11 +206,13 @@ def cleanup_temp_db(sid: str, actual_user: str, pair: str, db_key: str, requeste
             api_call(params)
         except Exception as exc:
             errors.append(f"db_user_delete={exc.__class__.__name__}")
+
     if db_key:
         try:
             api_call({"out": "xml", "func": "db.delete", "auth": sid, "elid": db_key})
         except Exception as exc:
             errors.append(f"db_delete={exc.__class__.__name__}")
+
     try:
         if find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested):
             errors.append("db_still_present=yes")
@@ -221,23 +260,27 @@ echo 'snapshot_archives=pass'
 manifest_value() {{ awk -F= -v k="$1" '$1==k {{sub(/^[^=]*=/, ""); print; exit}}' "$SNAPSHOT/manifest.txt"; }}
 format="$(manifest_value rollsbar_backup_format)"
 commit="$(manifest_value project_code_commit)"
+commit_source="$(manifest_value project_code_commit_source)"
 site_url="$(manifest_value site_url)"
 wp_version="$(manifest_value wordpress_version)"
 woo_version="$(manifest_value woocommerce_version)"
 products_manifest="$(manifest_value published_products)"
 blog_public_manifest="$(manifest_value blog_public)"
 wp_config_included="$(manifest_value wp_config_included)"
-[[ "$format" == '2' ]]
+[[ "$format" == '3' ]]
 [[ "$commit" =~ ^[0-9a-f]{{40}}$ ]]
+[[ "$commit_source" == 'verified_deployed_marker' ]]
 [[ "$site_url" == 'https://{DOMAIN}' ]]
 [[ "$wp_version" == '7.1.3' ]]
 [[ "$woo_version" == '11.1.2' ]]
 [[ "$products_manifest" == '118' ]]
 [[ "$blog_public_manifest" == '0' ]]
 [[ "$wp_config_included" == 'no' ]]
+git -C "$PROJECT_ROOT" fetch --depth=1 origin "$commit" >/dev/null 2>&1
 git -C "$PROJECT_ROOT" cat-file -e "$commit^{{commit}}"
 printf 'manifest_format=%s\n' "$format"
 printf 'manifest_project_commit=%s\n' "$commit"
+printf 'manifest_project_commit_source=%s\n' "$commit_source"
 echo 'manifest_invariants=pass'
 
 if ! tar -tzf "$SNAPSHOT/uploads.tar.gz" | awk 'BEGIN{{bad=0}} /^\// || /(^|\/)\.\.(\/|$)/ {{bad=1}} END{{exit bad}}'; then
@@ -304,6 +347,10 @@ def main() -> int:
         return 2
 
     requested = f"rbdrill_{int(time.time()) % 100000000:08d}"
+    if not TEMP_DB_RE.fullmatch(requested):
+        print("Generated recovery drill name failed safety policy")
+        return 2
+
     temp_password = random_password()
     mask(PASSWORD)
     mask(temp_password)
@@ -313,10 +360,16 @@ def main() -> int:
     config_relpath = f".rollsbar-recovery-drill-{secrets.token_hex(8)}.cnf"
     primary_error: Exception | None = None
     cleanup_errors: list[str] = []
+    create_attempted = False
 
     try:
         sid = api_auth()
+        existing = find_named(rows(api_call({"out": "xml", "func": "db", "auth": sid})), requested)
+        if existing is not None:
+            raise RuntimeError("Recovery drill database name collision before create")
+
         print("stage=create_isolated_temp_database")
+        create_attempted = True
         actual_db, actual_user, pair, db_key = create_temp_db(sid, requested, temp_password)
         print("temporary_database=created")
         print("temporary_remote_access=disabled")
@@ -340,10 +393,20 @@ def main() -> int:
             except Exception:
                 pass
             client.close()
-        if sid and (actual_user or db_key):
+
+        if sid and create_attempted:
             print("stage=cleanup_isolated_temp_database")
-            cleanup_errors = cleanup_temp_db(sid, actual_user, pair, db_key, requested)
-            print("temporary_database_cleanup=" + ("pass" if not cleanup_errors else "failed:" + ",".join(cleanup_errors)))
+            cleanup_errors = cleanup_temp_db(
+                sid,
+                requested,
+                actual_user=actual_user,
+                pair=pair,
+                db_key=db_key,
+            )
+            print(
+                "temporary_database_cleanup="
+                + ("pass" if not cleanup_errors else "failed:" + ",".join(cleanup_errors))
+            )
 
     if primary_error is not None:
         message = str(primary_error).replace(PASSWORD, "***").replace(temp_password, "***")
@@ -355,7 +418,7 @@ def main() -> int:
         print("RECOVERY DRILL FAIL: restore passed but cleanup did not fully verify")
         return 1
 
-    print("RECOVERY DRILL PASS — latest snapshot restored into isolated temporary DB, verified, and removed")
+    print("RECOVERY DRILL PASS — latest format-3 snapshot restored into isolated temporary DB, verified, and removed")
     return 0
 
 
