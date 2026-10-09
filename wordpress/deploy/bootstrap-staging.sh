@@ -251,7 +251,8 @@ fi
 # Final invariants: fail the deploy if a later change regresses staging HTTPS,
 # public QA visibility, pretty permalinks, ruble currency, approved launch
 # payment mode, native Blocks Local Pickup, reviews, legal/payment readiness,
-# or order-notification internals. Search indexing stays disabled via blog_public=0.
+# analytics preparation, or order-notification internals. Search indexing stays
+# disabled via blog_public=0.
 [[ "$(wp_cmd option get home)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get siteurl)" == "$STAGING_URL" ]]
 [[ "$(wp_cmd option get blog_public)" == "0" ]]
@@ -269,6 +270,7 @@ wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-reviews.php"
 wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-notifications.php"
 wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-legal-pages.php"
 wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-payment-readiness.php"
+wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-staging-analytics.php"
 
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   [[ "$(wp_cmd eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')" == "yes" ]]
@@ -293,6 +295,7 @@ echo "Local Pickup: enabled"
 echo "Launch payment mode: payment at receipt only; online acquiring reserved/disabled"
 echo "Reviews moderation: verified"
 echo "Legal/payment readiness pages: verified"
+echo "Analytics preparation: verified; tag remains ID+consent gated"
 echo "Order notification pipeline: verified (external delivery not asserted)"
 if [[ -n "${ROLLSBAR_DADATA_API_KEY:-}" ]]; then
   echo "DaData server-side key: configured"
