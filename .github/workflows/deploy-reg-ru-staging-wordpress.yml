@@ -9,6 +9,7 @@ on:
       - .github/workflows/deploy-reg-ru-staging-wordpress.yml
       - wordpress/deploy/bootstrap-staging.sh
       - wordpress/deploy/deploy_staging_wordpress.py
+      - wordpress/deploy/harden_staging_http.py
       - wordpress/deploy/provision-legal-pages.php
       - wordpress/deploy/verify-staging-address-suggestions.php
       - wordpress/deploy/verify-staging-legal-pages.php
@@ -72,3 +73,10 @@ jobs:
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
           ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING: YES
         run: python3 wordpress/deploy/deploy_staging_wordpress.py
+      - name: Enforce HTTP redirect and safe response headers
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_CONFIRM_HTTP_HARDENING: YES
+        run: python3 wordpress/deploy/harden_staging_http.py
