@@ -2,10 +2,10 @@
 
 ## CURRENT EXECUTION OVERRIDE — 2026-10-09
 
-This section is the current execution plan and supersedes stale "current next action" lines in historical checkpoints. Detailed evidence is in `wordpress/docs/CURRENT_STATE.md` and Git/CI history.
+This section is the current execution plan and supersedes stale next-action lines in historical checkpoints. Detailed evidence is in `wordpress/docs/CURRENT_STATE.md` and Git/CI history.
 
 ### Current verified state
-- Phase 1–5 staging foundation/catalog work is complete.
+- Phases 1–5 staging foundation/catalog work are complete.
 - Live REG.RU staging remains isolated from production.
 - WordPress 7.1.3 + WooCommerce 11.1.2.
 - Full catalog = 118 product cards / 131 approved source rows.
@@ -19,43 +19,45 @@ This section is the current execution plan and supersedes stale "current next ac
 - Yandex Metrica integration/goals are prepared, but no real counter ID is configured, therefore analytics does not load.
 - Production remains untouched; production indexing/live acquiring are OFF.
 
-### Security / backup readiness — VERIFIED
+### Security / backup / recovery — VERIFIED
 Completed on real staging:
-- [x] official WordPress 7.1.3 core checksum PASS;
+- [x] official WordPress core checksums PASS;
 - [x] `DISALLOW_FILE_EDIT=true`;
 - [x] `FORCE_SSL_ADMIN=true`;
-- [x] `wp-config.php` tightened to mode 640 and verified with WP-CLI + HTTP health;
-- [x] no world-writable PHP/config files found;
+- [x] `wp-config.php` mode 640;
+- [x] no world-writable PHP/config files;
 - [x] sensitive `/wp-config.php` and `/.git/config` HTTP probes return 403;
-- [x] canonical server-side DB + uploads backup outside web-root;
-- [x] gzip/tar/SHA-256 verification before a snapshot is considered valid;
-- [x] retention of newest 5 complete snapshots;
-- [x] every routine live staging deploy creates/verifies a fresh backup **before mutation** and aborts if backup fails;
-- [x] deploy final gate re-verifies official core checksums and `wp-config.php=640`;
-- [x] inactive plugins `akismet` and `hello` removed;
-- [x] old bundled themes `twentytwentythree` and `twentytwentyfour` removed;
-- [x] one bundled fallback theme `twentytwentyfive` retained for diagnostics;
-- [x] WooCommerce remains intentionally pinned to tested 11.1.2; per-plugin auto-update is disabled so upgrades go through backup -> staging -> regression.
+- [x] server-side DB + uploads backups outside web-root;
+- [x] gzip/tar/SHA-256 validation and newest-5 retention;
+- [x] every routine live staging deploy creates/verifies backup **before mutation**;
+- [x] backup format 3 records the exact verified deployed Git SHA;
+- [x] unused plugins/old bundled themes cleaned while one fallback theme remains;
+- [x] WooCommerce intentionally pinned to tested 11.1.2 with per-plugin auto-update disabled;
+- [x] latest format-3 snapshot actually restored into an isolated temporary REG.RU DB and verified;
+- [x] temporary recovery DB removed after proof;
+- [x] recovery workflow returned to manual-only `workflow_dispatch`.
 
-Key evidence:
-- hardening workflow `37909323728` — SUCCESS;
-- backup-gated live deploy `37909731997` — SUCCESS;
-- static gate `37909732193` — SUCCESS;
-- package build `37909732076` — SUCCESS;
-- clean bootstrap `37909731971` — SUCCESS;
-- extension cleanup `37910173271` — SUCCESS;
-- independent post-cleanup audit rerun job `113754003039` — SUCCESS.
+Recovery proof:
+- workflow run `37924804277` — SUCCESS;
+- job `113801071712` — SUCCESS;
+- snapshot `20261009T101550Z`;
+- restored tables = 51;
+- restored products = 118;
+- restored `blog_public=0`;
+- restored uploads = 19 files;
+- cleanup = PASS.
 
-Current independent audit proves:
-- inactive plugins = 0;
-- inactive themes = only `twentytwentyfive`;
-- backup snapshot count = 5;
-- latest backup integrity PASS;
-- core checksum PASS;
-- core updates available = 0;
-- only a newer WooCommerce release is offered, but current live staging remains 11.1.2 by design.
+Do not repeat security/backup/recovery work solely because a chat reconnects. Rerun only when later changes materially affect those layers or when intentionally refreshing recovery proof before a high-risk transition.
 
-Do **not** mass-chmod the shared-hosting WordPress tree solely because many files are group-writable. REG.RU shared ownership/group semantics may require group write. We hardened the sensitive config and proved there are no world-writable PHP/config files.
+### Final technical staging acceptance — PASS
+Independent acceptance result:
+- **42 PASS**;
+- **4 WARN**;
+- **0 FAIL**.
+
+Verified areas include HTTPS/TLS, HTTP->HTTPS redirect, public routes, security headers, REST, DB, loopback, WP-Cron/scheduled events, WordPress.org connectivity, uploads, 118 products, WooCommerce 11.1.2, and no fresh PHP fatal/parse errors.
+
+Non-blocking warnings remain around admin-context Site Health REST auth, optional `Permissions-Policy`, intentionally deferred CSP, and XML-RPC behavior. They are not current launch failures.
 
 ### Delivery polygons — DEFERRED / NON-BLOCKING
 Exact delivery polygons are unavailable from the client. This does **not** block continued development.
@@ -101,40 +103,46 @@ Current launch state:
 - [x] payment at receipt enabled;
 - [x] unapproved core alternatives disabled;
 - [x] online-card gateway hidden/reserved;
-- [x] no acquiring provider assumed from historical references.
-
-Readiness layer:
-- [x] HTTPS;
-- [x] catalog/prices/cart/checkout;
-- [x] seller requisites;
-- [x] public offer;
-- [x] delivery/payment page;
-- [x] payment/refund page;
-- [x] privacy policy + separate consent;
-- [x] payment-security page;
-- [x] footer legal links;
-- [x] runtime validation of canonical terms/privacy/provider-neutral copy.
+- [x] no acquiring provider assumed from historical references;
+- [x] HTTPS/catalog/cart/checkout/legal/privacy/payment-security readiness verified.
 
 Online acquiring is a separate future stage and requires:
 - [ ] authoritative provider/contract confirmation;
-- [ ] official sandbox/merchant details;
-- [ ] secret-safe credentials;
+- [ ] provider-specific credentials supplied secret-safely;
 - [ ] staging success/failure/cancel callback tests;
 - [ ] refund-flow test where applicable;
 - [ ] explicit production enablement decision.
 
 Historical references to a bank are not enough to assume the current provider.
 
+### FINAL PRE-PRODUCTION DECISION PATH
+The next work is **not another technical rebuild**. The next step is to decide the exact current go-live scope.
+
+Classify each remaining item as:
+1. **REQUIRED FOR CURRENT LAUNCH** — must be supplied/tested before production;
+2. **APPROVED DEFERRED** — intentionally absent at first launch and does not block production;
+3. **OPTIONAL INTEGRATION** — can be connected later without changing the core launch decision.
+
+Known remaining inputs/features to classify:
+- real Telegram order delivery;
+- real email receipt/deliverability;
+- real Yandex Metrica counter + observed goals;
+- vacancy final wording;
+- exact delivery polygons/courier enforcement;
+- online acquiring.
+
+Current architectural decisions already imply:
+- online acquiring is **not required** for the receipt-only launch scope;
+- exact polygons/courier enforcement are **DEFERRED / NON-BLOCKING**;
+- Metrica and Telegram must not be invented or marked configured merely to satisfy a checklist.
+
 ### Next executable path
-1. Treat baseline WordPress security + backup/update readiness as **complete and verified on staging**.
-2. Continue independent final acceptance work that needs no client secrets:
-   - public-route/HTTP health and security-header audit;
-   - WordPress Site Health / REST / loopback / cron readiness;
-   - recovery/runbook validation without destructive restore on live staging;
-   - final pre-production acceptance inventory and remaining blockers.
-3. Do not automatically upgrade WooCommerce past 11.1.2. Any version bump must be deliberate and pass a fresh staging regression cycle.
-4. Do not wait on Metrica ID, Telegram/email external credentials, acquiring provider, vacancy wording or polygons.
-5. Production transition remains gated by full staging QA + explicit owner approval.
+1. Build/confirm the current-launch go-live matrix from the remaining external items above.
+2. Request only the smallest external inputs that are truly required by that chosen launch scope.
+3. Do not repeat already-passed technical acceptance/recovery suites unless a later change touches them.
+4. Do not automatically upgrade WooCommerce past 11.1.2. Any version bump requires backup -> staging upgrade -> regression.
+5. Before any production mutation, prepare a production cutover + production backup + rollback checklist.
+6. Production transition requires explicit owner approval.
 
 ---
 
@@ -170,8 +178,7 @@ Status: COMPLETE ON STAGING.
 118 product cards / 131 source rows; repeat import preserves 118 products.
 
 ## Phase 6 — Rolls Bar behavior
-Status: IN PROGRESS ONLY FOR EXTERNAL-INPUT ITEMS.
-Core functional flows are internally verified; remaining items are listed in the current override above.
+Status: COMPLETE FOR INTERNAL IMPLEMENTATION; EXTERNAL REAL-WORLD INTEGRATIONS REMAIN TO BE CLASSIFIED FOR GO-LIVE.
 
 ## Phase 7 — payments
 Status: LAUNCH = PAYMENT AT RECEIPT; LEGAL/BANK-READINESS PASS; ONLINE ACQUIRING IS NOT CONNECTED AND IS A SEPARATE FUTURE STAGE.
@@ -179,8 +186,9 @@ Status: LAUNCH = PAYMENT AT RECEIPT; LEGAL/BANK-READINESS PASS; ONLINE ACQUIRING
 ## Phase 8 — production
 Not started.
 Required before transition:
-- current staging acceptance pass;
-- production backup/transition plan;
+- current go-live scope explicitly confirmed;
+- all items classified REQUIRED FOR CURRENT LAUNCH completed;
+- production backup/transition/rollback plan;
 - explicit owner approval;
 - then domain/runtime transition and monitoring.
 
