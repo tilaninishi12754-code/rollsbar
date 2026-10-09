@@ -2,13 +2,6 @@ name: Backup REG.RU Staging
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - wordpress/migration-2026-10-01
-    paths:
-      - wordpress/deploy/backup-staging.sh
-      - wordpress/deploy/run_staging_backup.py
-      - .github/workflows/backup-reg-ru-staging.yml
 
 permissions:
   contents: read
