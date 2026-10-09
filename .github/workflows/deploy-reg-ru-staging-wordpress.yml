@@ -11,6 +11,7 @@ on:
       - wordpress/deploy/bootstrap-staging.sh
       - wordpress/deploy/deploy_staging_wordpress.py
       - wordpress/deploy/harden_staging_http.py
+      - wordpress/deploy/mark_staging_deployed_sha.py
       - wordpress/deploy/provision-legal-pages.php
       - wordpress/deploy/verify-staging-address-suggestions.php
       - wordpress/deploy/verify-staging-legal-pages.php
@@ -81,3 +82,10 @@ jobs:
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_CONFIRM_HTTP_HARDENING: YES
         run: python3 wordpress/deploy/harden_staging_http.py
+      - name: Persist verified deployed SHA marker
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: python3 wordpress/deploy/mark_staging_deployed_sha.py
