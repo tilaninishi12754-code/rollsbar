@@ -1,0 +1,127 @@
+name: Operator Workflow Staging Smoke
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/operator-workflow-staging-smoke.yml
+      - wordpress/deploy/verify-staging-operator-workflow.php
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  operator-workflow-smoke:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate staging access
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+
+      - name: Install SSH dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+
+      - name: Verify operator order workflow and cleanup test order
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          import shlex
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          import paramiko
+
+          base = os.environ['ISP_MANAGER_URL'].strip()
+          user = os.environ['ISP_MANAGER_USER'].strip()
+          password = os.environ['ISP_MANAGER_PASSWORD'].strip()
+          host = urlsplit(base).hostname or ''
+          if not host:
+              raise SystemExit('Could not derive staging host')
+
+          local_verifier = Path('wordpress/deploy/verify-staging-operator-workflow.php')
+          remote_verifier = '.rollsbar-operator-workflow-smoke.php'
+          if not local_verifier.is_file():
+              raise SystemExit('Operator workflow verifier missing from checkout')
+
+          client = paramiko.SSHClient()
+          client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+          client.connect(
+              hostname=host,
+              port=22,
+              username=user,
+              password=password,
+              timeout=15,
+              auth_timeout=15,
+              banner_timeout=15,
+              look_for_keys=False,
+              allow_agent=False,
+          )
+
+          try:
+              sftp = client.open_sftp()
+              try:
+                  with sftp.open(remote_verifier, 'w') as fh:
+                      fh.write(local_verifier.read_bytes())
+                  sftp.chmod(remote_verifier, 0o600)
+              finally:
+                  sftp.close()
+
+              command = (
+                  'export PATH="$HOME/.local/bin:$PATH"; '
+                  'echo "deployed_sha=$(cat "$HOME/.rollsbar-staging-deployed-sha")"; '
+                  'wp --path="$HOME/www/staging.rollsbar.ru" eval-file '
+                  '"$HOME/' + remote_verifier + '"'
+              )
+              _, stdout, stderr = client.exec_command('bash -lc ' + shlex.quote(command), timeout=240)
+              out = stdout.read().decode('utf-8', errors='replace').strip()
+              err = stderr.read().decode('utf-8', errors='replace').strip()
+              code = stdout.channel.recv_exit_status()
+              if out:
+                  print(out)
+              if code != 0:
+                  safe = ' | '.join(
+                      line for line in err.splitlines()
+                      if not any(word in line.lower() for word in ('password', 'secret', 'token'))
+                  )[-1200:]
+                  if safe:
+                      print('operator_smoke_stderr=' + safe)
+                  raise SystemExit(code)
+              if 'OPERATOR WORKFLOW RUNTIME PASS' not in out or 'temporary_order_cleanup=pass' not in out:
+                  raise SystemExit('Operator workflow smoke did not prove runtime + cleanup PASS')
+              print('OPERATOR WORKFLOW STAGING SMOKE PASS')
+          finally:
+              try:
+                  sftp = client.open_sftp()
+                  try:
+                      sftp.remove(remote_verifier)
+                  except FileNotFoundError:
+                      pass
+                  finally:
+                      sftp.close()
+              except Exception:
+                  pass
+              client.close()
+          PY
