@@ -9,6 +9,7 @@ TIMESTAMP="$(date -u +'%Y%m%dT%H%M%SZ')"
 SNAPSHOT="$BACKUP_ROOT/$TIMESTAMP"
 TMP="$BACKUP_ROOT/.tmp-$TIMESTAMP-$$"
 SNAPSHOT_GLOB='20??????T??????Z'
+PROJECT_COMMIT="${ROLLSBAR_DEPLOY_SHA:-}"
 
 if ! command -v wp >/dev/null 2>&1; then
   echo "BACKUP FAIL: WP-CLI unavailable"
@@ -23,6 +24,19 @@ if ! [[ "$RETENTION" =~ ^[1-9][0-9]*$ ]]; then
   exit 2
 fi
 
+# Recovery requires an exact code revision, not merely a repository URL. During
+# routine deploy PROJECT_ROOT is checked out at the exact GitHub Actions SHA
+# before this script runs. Fall back to that checkout when an explicit SHA was
+# not exported by an older caller.
+if [[ -z "$PROJECT_COMMIT" && -n "${PROJECT_ROOT:-}" && -d "${PROJECT_ROOT}/.git" ]]; then
+  PROJECT_COMMIT="$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null || true)"
+fi
+if [[ -z "$PROJECT_COMMIT" || ! "$PROJECT_COMMIT" =~ ^[0-9a-fA-F]{40}$ ]]; then
+  echo "BACKUP FAIL: exact 40-character project code commit is unavailable"
+  exit 2
+fi
+PROJECT_COMMIT="${PROJECT_COMMIT,,}"
+
 umask 077
 mkdir -p "$BACKUP_ROOT"
 chmod 700 "$BACKUP_ROOT" || true
@@ -36,6 +50,7 @@ wp_cmd(){ wp --path="$WP_PATH" "$@"; }
 echo "backup_target=staging"
 echo "backup_timestamp=$TIMESTAMP"
 echo "backup_location=$SNAPSHOT"
+echo "backup_project_commit=$PROJECT_COMMIT"
 
 # Export directly to gzip so an uncompressed SQL file containing customer/order
 # data never remains on disk. WP-CLI reads DB credentials from wp-config.php.
@@ -58,7 +73,7 @@ fi
 tar -tzf "$TMP/uploads.tar.gz" >/dev/null
 
 {
-  echo "rollsbar_backup_format=1"
+  echo "rollsbar_backup_format=2"
   echo "created_utc=$TIMESTAMP"
   echo "site_url=$(wp_cmd option get home)"
   echo "wordpress_version=$(wp_cmd core version)"
@@ -69,6 +84,7 @@ tar -tzf "$TMP/uploads.tar.gz" >/dev/null
   echo "uploads_archive=uploads.tar.gz"
   echo "wp_config_included=no"
   echo "project_code_source=GitHub:tilaninishi12754-code/rollsbar"
+  echo "project_code_commit=$PROJECT_COMMIT"
 } >"$TMP/manifest.txt"
 
 (
