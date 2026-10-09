@@ -89,7 +89,7 @@ $vk_url        = function_exists( 'rollsbar_setting' ) ? rollsbar_setting( 'vk_u
  */
 ?>
 
-<nav class="rb-career-actions rb-career-actions--contacts-only" aria-label="Связаться по вакансии">
+<nav class="rb-career-actions rb-career-actions--contacts-only" style="width:min(150px,calc(100% - 26px));grid-template-columns:58px 58px;justify-content:center;" aria-label="Связаться по вакансии">
 	<button class="rb-career-actions__round" type="button" data-rb-career-chat aria-label="Написать">💬</button>
 	<a class="rb-career-actions__round" href="tel:<?php echo esc_attr( $phone_href ); ?>" aria-label="Позвонить">☎</a>
 </nav>
