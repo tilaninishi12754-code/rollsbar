@@ -1,24 +1,27 @@
 # Rolls Bar — current-launch go-live decision matrix
 
-Updated: 2026-10-09
+Updated: 2026-10-10
 
 ## Purpose
-This matrix separates what must be true for the **current receipt-only launch** from features that are explicitly deferred. It follows the latest explicit owner decisions over older draft/final-TЗ wording when they conflict.
+This matrix is the current launch decision layer. It follows the latest explicit owner/client decisions over older TЗ/checkpoint wording when they conflict. Historical implementation evidence remains in `wordpress/docs/CURRENT_STATE.md` and Git/CI history.
 
-Before using this matrix, re-read live GitHub/CI/runtime evidence. `wordpress/docs/CURRENT_STATE.md` remains the detailed historical implementation checkpoint; this matrix is the current launch decision layer.
+Before any consequential implementation or production change, re-read live GitHub/CI/runtime evidence.
 
-## Classification rules
-- **REQUIRED FOR CURRENT LAUNCH** — production approval needs proof, the required client input, or an explicit later owner decision to defer/waive it.
-- **APPROVED DEFERRED / SEPARATE WORK** — intentionally omitted from the first launch by a later explicit owner decision; absence is not a launch blocker.
-- **INTERNAL PRE-CUTOVER WORK** — no client secret/input is needed; finish before asking the owner for production approval.
-- A technically supplemental integration may still be a required launch deliverable. “Failure must not block checkout” does not mean “optional to deliver”.
+## Latest owner/client decisions — 2026-10-10
+- Telegram is **no longer required for launch**. The client explicitly replaced Telegram order alerts with **MAX**.
+- MAX feasibility is confirmed from the current official MAX Bot API, but the Rolls Bar MAX integration is **not implemented or end-to-end verified yet**.
+- For the first real e-mail test, use temporary staging recipient `tilaninishi12754@gmail.com`. This is a test recipient, not automatically the final production operator mailbox.
+- The client supplied a delivery-tier table with thresholds 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB. The table is useful source data but is **not exact polygon geometry**.
+- Vacancy questionnaire remains deferred; no new vacancy input is required now.
+- Yandex Metrica remains separate/deferred work. Online acquiring remains a later phase.
 
 ## REQUIRED FOR CURRENT LAUNCH
 
 ### Core order flow — READY ON STAGING
+Already verified on staging:
 - catalog = 118 product cards / 131 approved source rows;
 - cart / Checkout Block / order persistence;
-- mobile + desktop baseline;
+- mobile + desktop functional baseline;
 - Local Pickup;
 - phone and additional checkout fields;
 - privacy consent;
@@ -27,59 +30,48 @@ Before using this matrix, re-read live GitHub/CI/runtime evidence. `wordpress/do
 - WordPress order/admin lifecycle;
 - staging security, backup, technical acceptance and isolated restore proof.
 
-### Operator New order email — EXTERNAL INPUT / DELIVERY PROOF PENDING
+Visual parity with the immutable approved frontend baseline is a separate active frontend pass and must be completed/verified before final owner go-live approval.
+
+### Operator New order email — TEST RECIPIENT KNOWN / REAL DELIVERY PROOF PENDING
 WooCommerce owns the primary transactional New order email.
 
 Verified internally:
 - WooCommerce `New order` email is enabled;
-- internal Woo -> `wp_mail()` path is verified by an intercepted runtime test;
-- REG.RU PHP `mail()` is available;
-- local sendmail path/binary is available;
-- no real message was sent during audit.
+- internal Woo -> `wp_mail()` path was verified by intercepted runtime test;
+- REG.RU PHP `mail()` and local sendmail path are available;
+- previous audit did not prove real external receipt.
 
-Read-only mail audit run `37935330502` showed the current effective recipient is merely the staging default/admin mailbox (`***@staging.rollsbar.ru`), not an explicitly approved operator recipient.
+Current test decision:
+1. configure staging `New order` recipient as `tilaninishi12754@gmail.com`;
+2. do **not** request or store a Gmail password merely to receive the message;
+3. place one real staging test order;
+4. verify Inbox/Spam receipt, single delivery and expected order fields;
+5. only if delivery/reputation fails, choose and configure an authenticated outbound transport separately with secrets outside Git/chat.
 
-Read-only ISPmanager/DNS audit run `37935746357` showed:
-- ISPmanager mail domains: 0;
-- ISPmanager mailboxes: 0;
-- no `rollsbar.ru` mail domain/mailbox in this panel;
-- `rollsbar.ru` MX: absent;
-- `rollsbar.ru` SPF: absent;
-- `rollsbar.ru` DMARC: absent;
-- `staging.rollsbar.ru` MX/SPF/DMARC: absent.
+The temporary Gmail address is for staging proof only. Final production recipient can be replaced later with the client-approved operator mailbox.
 
-Therefore local sendmail capability alone is **not** accepted as end-to-end launch proof.
+### MAX order alert — REQUIRED FOR FIRST LAUNCH / INTEGRATION PENDING
+Latest client decision supersedes the previous Telegram requirement: new-order messenger alerts should go to **MAX**.
 
-Before production approval:
-1. obtain the actual client-approved working operator mailbox when the client provides it;
-2. determine its existing mail/SMTP provider (do not invent a new mailbox/provider if the client already has one);
-3. configure a reliable authenticated transport where required, with secrets outside Git/chat;
-4. configure the approved recipient in WooCommerce;
-5. place one real staging test order and confirm the operator actually receives it;
-6. confirm the Rolls Bar additional address fields appear once, not duplicated.
+Current official MAX platform facts verified on 2026-10-10:
+- MAX exposes a Bot API and `POST /messages` can send to a `user_id` or `chat_id`;
+- the bot authenticates with a bot access token, not with the user's MAX account login/password;
+- a bot requires a verified MAX partner profile for an RF organization, IP or self-employed person and passes moderation;
+- the destination `chat_id`/`user_id` is obtained from bot events such as `bot_started` / chat events;
+- token and webhook secrets must remain outside Git/chat.
 
-### Telegram order alert — REQUIRED FOR FIRST LAUNCH / IMPLEMENTATION READY
-Owner decision on 2026-10-09: Telegram remains **mandatory for the first launch**.
+Therefore **do not send or store a MAX account password** for this integration.
 
-The architecture remains technically non-blocking: Telegram failure must never block checkout/order creation and WooCommerce remains the canonical order record.
-
-Already implemented and verified internally:
-- async Action Scheduler queue;
-- retry/idempotency logic;
-- failure does not block order;
-- status is stored in order/admin;
-- operator payload includes order number, total, fulfillment, payment title when present, full order item list, customer name, phone, address, extra address fields and customer comment;
-- owner-approved PII behavior is implemented;
-- intercepted staging runtime test passed without sending a real external Telegram message.
-
-Owner privacy/content decision on 2026-10-09:
-- Telegram order notification **may include customer name, phone number and delivery address**, matching the requested operator workflow in the TЗ;
-- this is an approved project decision, not a pending question.
+Implementation target:
+`WooCommerce order -> async Action Scheduler -> MAX Bot API`, preserving the already-proven non-blocking notification properties: checkout/order creation must succeed even if MAX is temporarily unavailable; retries/idempotency/status tracking remain required.
 
 Still required before launch:
-- real bot token + operator chat ID installed outside Git/chat;
-- real end-to-end staging delivery proof;
-- confirm the real message arrives once and contains the approved order data without unintended secrets/technical data.
+1. verified MAX business/IP/self-employed profile suitable for creating the bot;
+2. created/moderated MAX bot;
+3. bot token installed in secure staging secret storage;
+4. destination operator `user_id` or `chat_id` captured without exposing credentials;
+5. real staging order -> one real MAX message;
+6. verify order number, total, fulfillment, items, name, phone, address/additional address fields and comment; no unintended secrets/technical payload; no duplicate message.
 
 ### Production cutover controls — REQUIRED AT TRANSITION
 Before any production mutation:
@@ -97,150 +89,68 @@ Immediately after cutover:
 - wp-admin smoke;
 - production-like test order;
 - New order email receipt;
-- Telegram delivery;
+- MAX delivery;
 - logs/errors check;
 - deployed SHA recorded.
 
-## INTERNAL PRE-CUTOVER WORK
+## DELIVERY RULES / CLIENT TABLE — SOURCE RECEIVED, AUTOMATION NOT YET SAFE
+The 2026-10-10 client spreadsheet supplies tier membership examples for the canonical thresholds:
+1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB.
 
-### Client admin UX — DONE / VERIFIED
-The custom Rolls Bar admin dashboard is implemented for owner/operator use.
+It contains a mix of:
+- named settlements/districts;
+- streets;
+- landmarks;
+- corridor/range phrases such as `от ... до ...`;
+- approximate area descriptions.
 
-Verified on exact deployed staging SHA `2a9c0fcf0bb07bdca4834f07ec622590b979205d` by Admin UX Staging Smoke run `37948679330`:
-- dashboard is client-operational;
-- 118 published products preserved;
-- prominent daily actions: Orders / Products and prices / Reviews;
-- secondary actions: promos, vacancies, delivery, media, settings;
-- email and Telegram readiness are shown without exposing secrets;
-- Telegram copy reflects the approved PII payload;
-- Metrica is shown as non-required for current launch;
-- production untouched.
+This is useful business source material, but it is **not a polygon boundary file** and cannot be converted blindly into exact production polygons.
 
-Client-facing usage guide: `wordpress/docs/CLIENT_ADMIN_GUIDE.md`.
+Observed normalization issues include duplicates/variants and at least one material ambiguity: `МАЗАНКА` appears under 3500 RUB while `Мазанка` also appears under 4000 RUB. Do not silently choose one tier.
 
-### Operator order workflow — DONE / VERIFIED
-Self-cleaning staging smoke run `37950008575` passed against deployed SHA `2a9c0fcf0bb07bdca4834f07ec622590b979205d`.
+Safe next approach:
+1. normalize the spreadsheet into a machine-readable delivery register;
+2. resolve unambiguous whole settlements/streets through DaData/FIAS-compatible address identifiers where possible;
+3. isolate only ambiguous corridor/landmark/boundary rows for clarification;
+4. optionally create draft map geometry for client review, but never invent approved borders;
+5. keep automatic courier minimum/zone enforcement fail-closed until the normalized rules are approved and boundary cases are tested.
 
-Verified:
-- operator columns: name, phone, address, delivery zone, time;
-- order item list exists;
-- four additional address fields are read through the WooCommerce Additional Checkout Fields storage path;
-- customer comment persists;
-- admin detail block renders fulfillment + extra address fields + Telegram state;
-- temporary test order stayed pending only;
-- no external email sent;
-- no external Telegram sent;
-- temporary order cleanup PASS;
-- remaining smoke orders = 0;
-- production untouched.
+So exact polygons are **not necessarily required for every table row**, but exact enough machine-readable boundaries/rules are still required before fully automatic address -> tier enforcement can be enabled.
 
-### Vacancy page fail-closed cleanup — DONE / VERIFIED
-Final questionnaire wording and application channel remain a documented pending client input and were **not invented**.
+## INTERNAL PRE-CUTOVER WORK ALREADY VERIFIED
+Do not rerun merely because a chat reconnects unless the touched layer changes:
+- security / hardening;
+- backup-before-mutation;
+- isolated restore proof;
+- SEO/indexability readiness;
+- vacancy fail-closed cleanup;
+- client admin UX;
+- operator order workflow;
+- catalog / checkout / DaData functional acceptance.
 
-Production-safe behavior is verified on staging:
-- canonical page `/rabota-v-rolls-bar/` is provisioned when absent;
-- public route returns HTTP 200;
-- technical `Pending input` copy is not exposed;
-- dead questionnaire CTA is not exposed;
-- existing vacancy listing and approved contact routes remain available;
-- the real questionnaire can be enabled later when the client supplies final wording/channel.
-
-### SEO / indexability readiness — DONE / VERIFIED
-A single controlled SEO layer is established on staging without enabling production indexing.
-
-Verified owner split:
-- **SEOPress 10.3** = titles/canonicals/Open Graph/XML sitemap owner;
-- **RollsBar Core** = one Restaurant entity + project transactional noindex rules;
-- **WooCommerce** = Product schema owner.
-
-Routine deploy proof on commit `497ca86d6a59a09626af60a40b7618d48c4c6b38`, run `37933737320`:
-- pre-mutation backup verified;
-- SEOPress 10.3 active / auto-update disabled;
-- WooCommerce 11.1.2 and catalog 118 preserved;
-- `blog_public=0` preserved;
-- canonical + XML sitemap + Open Graph title present;
-- homepage Restaurant schema count = 1;
-- sample product Product schema count = 1;
-- cart and checkout remain noindex;
-- live SEO audit PASS;
-- deployed SHA marker persisted.
-
-Intentionally pending content:
-- homepage meta description / OG description are not invented. They remain `pending_content_input` until approved copy exists.
-
-Search Console connection/submission happens when the production domain is ready.
+The earlier Telegram implementation remains historical code/evidence only. It is no longer the chosen launch channel and must not be presented as the client requirement.
 
 ## APPROVED DEFERRED / SEPARATE WORK
-
-### Yandex Metrica — DEFERRED / SEPARATE PAID WORK
-Owner decision on 2026-10-09 supersedes the older TЗ wording for the first-launch acceptance scope: Yandex Metrica was not separately agreed with the client and **does not block the first launch**. If the client wants analytics, it can be connected as separate paid work.
-
-Keep the prepared integration dormant:
-- counter-ID setting remains available;
-- no ID => no Yandex request/tag;
-- consent gate remains in place;
-- Webvisor OFF;
-- advertising/marketing tools OFF;
-- prepared goals remain in code for a later analytics task.
-
-Do not invent/create a counter on the client's behalf without a separate request and access/ownership decision.
-
-### Exact delivery polygons / courier enforcement
-Later explicit owner decision: continue development without waiting for exact client polygons.
-
-Already ready:
-- DaData address -> coordinates;
-- `qc_geo` fail-closed safety policy;
-- polygon storage/sanitation;
-- point-in-polygon resolver;
-- canonical thresholds 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB.
-
-Deferred:
-- client-approved real geometry;
-- boundary QA;
-- automatic polygon -> threshold enforcement;
-- courier zone/minimum enforcement.
-
-Never invent polygons. Courier enforcement remains OFF until geometry is approved.
-
-### Online acquiring
-Current launch is payment at receipt. Online card payment is deliberately reserved/disabled/hidden.
-
-Deferred until later:
-- authoritative acquiring provider/contract;
-- provider-specific credentials;
-- sandbox success/failure/cancel callbacks;
-- refund-flow test;
-- explicit production enablement.
-
-Historical bank references do not select a provider.
-
-### Final vacancy questionnaire
-The questionnaire itself is deferred until the client supplies final wording and receiving channel. The public vacancy page is already production-safe while this input is absent.
-
-### Stronger CSP / Permissions-Policy
-Optional hardening after a dedicated WooCommerce/browser compatibility regression. Do not deploy an aggressive CSP merely to satisfy a checklist.
+- Yandex Metrica: separate paid work, not first-launch blocker.
+- Online acquiring: deferred; first launch remains payment at receipt.
+- Final vacancy questionnaire: deferred until client wants/provides it.
+- Stronger CSP / Permissions-Policy: optional after dedicated compatibility regression.
+- Fully automatic polygon/courier enforcement: remains OFF until delivery-table normalization/approval produces safe machine-readable rules.
 
 ## External inputs actually missing now
-Do not ask for payment credentials, polygons, Metrica or vacancy copy merely to continue development.
-
-For the current first launch, the still-missing external inputs/proofs are:
-1. **Working operator e-mail address + its real mail/SMTP provider/access path.** The owner will provide the address when the client sends it. Do not paste SMTP passwords into chat; secrets go into a secure secret store once the provider is known.
-2. **Telegram bot/chat access** for a real staging delivery test. Bot token must never be pasted into chat/Git.
-
-Telegram PII approval is resolved and already implemented: name, phone and delivery address are approved for the operator notification.
-Yandex Metrica is not a first-launch blocker.
-
-Consolidated client request/checklist: `wordpress/docs/CLIENT_INPUTS_PENDING.md`.
+For the current first launch:
+1. **Email:** no external credential is required for the first receipt test; temporary staging recipient is known (`tilaninishi12754@gmail.com`). Authenticated outbound mail credentials are only requested if the real test proves they are needed.
+2. **MAX:** verified business/IP/self-employed MAX profile + created/moderated bot + secure bot token + destination `user_id`/`chat_id` for real staging delivery proof.
+3. **Delivery:** clarification only for the subset of spreadsheet rows that remain ambiguous after normalization; do not ask the client to redraw every zone before this analysis is done.
 
 ## Next execution order
 1. Keep production untouched.
-2. Wait for the client-supplied operator e-mail and Telegram access; do not invent substitutes.
-3. Configure and prove real email delivery on staging.
-4. Configure and prove real Telegram delivery on staging.
-5. Run only targeted regression after these external integrations.
-6. Freeze exact release SHA.
-7. Present final go/no-go to owner.
-8. Touch production only after explicit owner approval.
-
-Do not rerun already-passed security, backup, recovery, vacancy, SEO, Admin UX or operator-workflow suites merely because a chat reconnects. Rerun only targeted checks after a material change to those layers.
+2. Continue the Visual Parity Pass separately against immutable `approved/site-2026-10-01`.
+3. Configure the temporary Gmail staging recipient and prove one real WooCommerce New order receipt.
+4. Prepare MAX bot onboarding/integration; never use the user's MAX password as an application credential.
+5. Normalize the supplied delivery table and produce the smallest ambiguity list; keep courier enforcement OFF meanwhile.
+6. Implement MAX by adapting the existing async notification architecture, then run targeted end-to-end MAX QA.
+7. Run only targeted regression after the changed integrations/frontend layers.
+8. Freeze exact release SHA.
+9. Present final go/no-go to owner.
+10. Touch production only after explicit owner approval.
