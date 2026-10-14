@@ -91,6 +91,50 @@
 	});
 })();
 
+// Homepage category navigation and approved desktop "More" menu.
+(function(){
+	'use strict';
+	var nav=document.querySelector('.rollsbar-category-nav');
+	if(!nav)return;
+	var toggle=nav.querySelector('[data-rollsbar-category-more]');
+	var menu=document.getElementById('rollsbarCategoryMore');
+	function closeMore(){
+		if(!toggle||!menu)return;
+		menu.classList.remove('open');
+		menu.setAttribute('aria-hidden','true');
+		toggle.setAttribute('aria-expanded','false');
+	}
+	if(toggle&&menu){
+		toggle.addEventListener('click',function(event){
+			event.stopPropagation();
+			var opening=!menu.classList.contains('open');
+			closeMore();
+			if(opening){menu.classList.add('open');menu.setAttribute('aria-hidden','false');toggle.setAttribute('aria-expanded','true');}
+		});
+		menu.addEventListener('click',function(event){
+			var link=event.target.closest('a');
+			if(!link)return;
+			closeMore();
+			if(link.hasAttribute('data-rollsbar-category-contacts')){
+				event.preventDefault();
+				var contacts=document.querySelector('.rollsbar-footer');
+				if(contacts)contacts.scrollIntoView();
+			}
+		});
+		document.addEventListener('click',function(event){if(!menu.contains(event.target)&&!toggle.contains(event.target))closeMore();});
+		document.addEventListener('keydown',function(event){if(event.key==='Escape')closeMore();});
+	}
+	var links=Array.from(nav.querySelectorAll('a[href^="#"]'));
+	var sections=links.map(function(link){return document.getElementById(link.getAttribute('href').slice(1));}).filter(Boolean);
+	if(!('IntersectionObserver' in window))return;
+	var observer=new IntersectionObserver(function(entries){
+		var visible=entries.filter(function(entry){return entry.isIntersecting;}).sort(function(a,b){return b.intersectionRatio-a.intersectionRatio;})[0];
+		if(!visible)return;
+		links.forEach(function(link){link.classList.toggle('active',link.getAttribute('href')==='#'+visible.target.id);});
+	},{rootMargin:'-136px 0px -64% 0px',threshold:[0,.2,.55]});
+	sections.forEach(function(section){observer.observe(section);});
+})();
+
 // Careers: fixed layout, editable vacancy content.
 (function(){
 	var tabs=document.querySelector('[data-rb-vacancy-tabs]');

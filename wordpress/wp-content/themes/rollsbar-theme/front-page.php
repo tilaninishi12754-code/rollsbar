@@ -21,6 +21,23 @@ $categories = array(
 );
 ?>
 
+<nav class="rollsbar-category-nav" aria-label="Категории меню">
+	<div class="rollsbar-shell rollsbar-category-nav__scroll">
+		<?php foreach ( $categories as $slug => $label ) : ?>
+			<a<?php echo 'rolls' === $slug ? ' class="active"' : ''; ?> href="#<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></a>
+		<?php endforeach; ?>
+		<button class="rollsbar-category-more__toggle" type="button" aria-expanded="false" aria-controls="rollsbarCategoryMore" data-rollsbar-category-more>
+			Ещё
+			<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+		</button>
+	</div>
+	<div class="rollsbar-category-more-popover" id="rollsbarCategoryMore" aria-hidden="true">
+		<a href="#delivery">Доставка и оплата</a>
+		<a href="<?php echo esc_url( home_url( '/otzyvy/' ) ); ?>">Отзывы клиентов</a>
+		<a href="#contacts" data-rollsbar-category-contacts>Контакты</a>
+	</div>
+</nav>
+
 <?php
 $utility_cards = array(
 	'promo' => array(
@@ -97,14 +114,6 @@ foreach ( $promo_posts as $promo_post ) {
 		<?php endforeach; ?>
 	</div>
 </section>
-
-<nav class="rollsbar-category-nav" aria-label="Категории меню">
-	<div class="rollsbar-shell rollsbar-category-nav__scroll">
-		<?php foreach ( $categories as $slug => $label ) : ?>
-			<a href="#<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></a>
-		<?php endforeach; ?>
-	</div>
-</nav>
 
 <?php if ( ! class_exists( 'WooCommerce' ) ) : ?>
 	<section class="rollsbar-shell rollsbar-empty">

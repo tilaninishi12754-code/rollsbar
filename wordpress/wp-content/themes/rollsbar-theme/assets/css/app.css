@@ -132,7 +132,7 @@ img{max-width:100%;display:block}
 .home .rollsbar-catalog-section,.home .rollsbar-utilities__track{--rb-shell:min(1180px,calc(100% - 40px))}
 .home .rollsbar-utilities{padding:22px 0 24px}
 .home .rollsbar-catalog-section{padding-top:62px}
-.home .rollsbar-category-nav + .rollsbar-catalog-section{padding-top:30px}
+.home .rollsbar-utilities + .rollsbar-catalog-section{padding-top:30px}
 .home .rollsbar-product-grid{gap:30px 20px}
 @media(max-width:1050px){
 	.home .rollsbar-catalog-section,.home .rollsbar-utilities__track{--rb-shell:min(calc(100% - 32px),940px)}
@@ -145,7 +145,7 @@ img{max-width:100%;display:block}
 	.home .rollsbar-utilities{padding:10px 0 12px}
 	.home .rollsbar-utility{height:170px}
 	.home .rollsbar-catalog-section{padding-top:44px}
-	.home .rollsbar-category-nav + .rollsbar-catalog-section{padding-top:23px}
+	.home .rollsbar-utilities + .rollsbar-catalog-section{padding-top:23px}
 	.home .rollsbar-section-heading h2{margin-bottom:15px}
 	.home .rollsbar-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 11px}
 }
@@ -205,6 +205,27 @@ img{max-width:100%;display:block}
 	.rollsbar-header--approved .rollsbar-phone{font-size:10px}
 	.rollsbar-header--approved .rollsbar-search-toggle{width:34px;height:34px}
 	.rollsbar-header--approved .rollsbar-header__actions{gap:4px}
+}
+
+/* Homepage categories: final approved cascade; header sticky top remains 78/66. */
+.home .rollsbar-category-nav{z-index:45;background:rgba(255,255,255,.985);border-bottom:0;box-shadow:0 7px 18px rgba(18,22,26,.035)}
+.home .rollsbar-category-nav__scroll{--rb-shell:min(1180px,calc(100% - 40px));min-height:58px;align-items:center;gap:6px;padding:9px 0}
+.home .rollsbar-category-nav a{font-size:13px;font-weight:800;padding:9px 13px;border-radius:999px;color:#313236}
+.home .rollsbar-category-nav a.active,.home .rollsbar-category-nav a:hover{background:#d92525;color:#fff}
+.rollsbar-category-more__toggle{border:0;background:transparent;color:#545454;font:inherit;font-size:13px;font-weight:800;white-space:nowrap;padding:9px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.rollsbar-category-more__toggle:hover,.rollsbar-category-more__toggle[aria-expanded="true"]{background:#f3f3f3;color:#171717}
+.rollsbar-category-more__toggle svg{width:12px;height:12px;transition:transform .18s ease}
+.rollsbar-category-more__toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+.rollsbar-category-more-popover{position:absolute;right:max(20px,calc((100vw - 1240px)/2));top:calc(100% - 3px);z-index:48;width:250px;padding:9px;background:#fff;border:1px solid #ececec;border-radius:18px;box-shadow:0 18px 48px rgba(0,0,0,.14);display:none}
+.rollsbar-category-more-popover.open{display:grid}
+.rollsbar-category-more-popover a{display:block;text-decoration:none}
+@media(max-width:1050px){
+	.home .rollsbar-category-nav__scroll{--rb-shell:min(calc(100% - 32px),940px)}
+}
+@media(max-width:700px){
+	.home .rollsbar-category-nav__scroll{--rb-shell:calc(100% - 28px);min-height:50px;padding:7px 0}
+	.home .rollsbar-category-nav a{font-size:12px;padding:8px 11px}
+	.rollsbar-category-more__toggle,.rollsbar-category-more-popover{display:none!important}
 }
 
 /* Careers page */
