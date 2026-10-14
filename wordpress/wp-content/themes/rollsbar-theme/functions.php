@@ -112,10 +112,16 @@ function rollsbar_cart_badge_markup(): string {
 	);
 }
 
+/** Header presentation only: reuse Woo's existing subtotal and fragment refresh. */
+function rollsbar_header_cart_total_markup(): string {
+	return '<span class="rollsbar-header-cart-total">' . esc_html( wp_strip_all_tags( rollsbar_cart_total() ) ) . '</span>';
+}
+
 add_filter(
 	'woocommerce_add_to_cart_fragments',
 	static function ( array $fragments ): array {
 		$fragments['.rollsbar-cart-count'] = rollsbar_cart_badge_markup();
+		$fragments['.rollsbar-header-cart-total'] = rollsbar_header_cart_total_markup();
 
 		ob_start();
 		?>

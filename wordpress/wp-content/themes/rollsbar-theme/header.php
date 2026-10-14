@@ -14,6 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 <?php wp_body_open(); ?>
 <a class="screen-reader-text" href="#content">Перейти к содержимому</a>
 
+<?php if ( is_front_page() ) : ?>
+	<?php get_template_part( 'template-parts/header-home' ); ?>
+<?php else : ?>
 <header class="rollsbar-header" id="top">
 	<div class="rollsbar-shell rollsbar-header__inner">
 		<a class="rollsbar-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="Rolls Bar">
@@ -45,6 +48,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 	</div>
 </header>
+<?php endif; ?>
 
 <div class="rollsbar-search" id="rollsbarProductSearch" aria-hidden="true">
 	<button class="rollsbar-search__backdrop" type="button" data-rollsbar-search-close aria-label="Закрыть поиск"></button>

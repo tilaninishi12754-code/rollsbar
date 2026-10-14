@@ -153,6 +153,60 @@ img{max-width:100%;display:block}
 	.home .rollsbar-utility{min-width:164px;height:158px}
 }
 
+/* Homepage header: final approved demo -> client-fixes -> index cascade. */
+.rollsbar-header--approved{background:rgba(255,255,255,.985);backdrop-filter:blur(18px);border-bottom:1px solid rgba(0,0,0,.045)}
+.rollsbar-header--approved .rollsbar-header__inner{--rb-shell:min(1180px,calc(100% - 40px));min-height:78px;gap:14px;justify-content:normal}
+.rollsbar-header--approved .rollsbar-brand{gap:8px;flex:none;min-width:0}
+.rollsbar-brand__mascot{width:44px;height:56px;object-fit:contain;object-position:center;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.06);border-radius:10px;padding:3px;flex:none}
+.rollsbar-brand__logo{width:160px;height:52px;object-fit:contain;flex:none}
+.rollsbar-header--approved .rollsbar-header__actions{margin-left:auto;gap:8px;flex:none}
+.rollsbar-header--approved .rollsbar-phone{display:inline;font-size:13px;font-weight:900;white-space:nowrap}
+.rollsbar-header--approved .rollsbar-cart-link{gap:7px;border:0;border-radius:18px;padding:12px 18px;background:linear-gradient(180deg,#f45b61 0%,#d92525 100%);box-shadow:0 10px 24px rgba(180,24,29,.20),inset 0 1px 0 rgba(255,255,255,.30)}
+.rollsbar-header--approved .rollsbar-cart-link svg{width:18px;height:18px}
+.rollsbar-header--approved .rollsbar-cart-count{min-width:22px;height:22px;background:rgba(255,255,255,.18);margin-left:6px;font-size:inherit}
+.rollsbar-header-cart-total{display:inline-flex;align-items:center;margin-left:4px;padding-left:10px;border-left:1px solid rgba(255,255,255,.22);font-size:13px;font-weight:950;white-space:nowrap}
+.rollsbar-header--approved .rollsbar-search-toggle{width:42px;height:42px;border:1px solid #ececec;background:#fff;border-radius:14px;display:inline-grid;place-items:center;padding:0;color:#202020;flex:none;font:inherit}
+.rollsbar-header--approved .rollsbar-search-toggle svg{width:20px;height:20px}
+.rollsbar-menu-toggle{width:42px;height:42px;border:1px solid #ececec;background:#fff;border-radius:14px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;font:inherit;cursor:pointer}
+.rollsbar-menu-toggle span{width:18px;height:2px;background:#202020;border-radius:99px;display:block}
+.home .rollsbar-category-nav{top:78px}
+.rollsbar-site-menu{position:fixed;inset:0;z-index:120;display:none}
+.rollsbar-site-menu.open{display:block}
+.rollsbar-site-menu button{font-family:inherit;cursor:pointer}
+.rollsbar-site-menu__backdrop{position:absolute;inset:0;border:0;background:rgba(0,0,0,.38)}
+.rollsbar-site-menu__panel{position:absolute;top:0;right:0;height:100%;width:min(330px,86vw);background:#fff;padding:18px;box-shadow:-18px 0 60px rgba(0,0,0,.18);display:flex;flex-direction:column}
+.rollsbar-site-menu__head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ececec;padding-bottom:14px}
+.rollsbar-site-menu__head strong{font-size:20px}
+.rollsbar-site-menu__close{width:38px;height:38px;border:0;border-radius:50%;background:#f3f4f5;font-size:25px}
+.rollsbar-site-menu__links{display:flex;flex-direction:column;padding:12px 0}
+.rollsbar-site-menu__links a{padding:14px 2px;border-bottom:1px solid #ececec;text-decoration:none;font-weight:800}
+.rollsbar-site-menu__phone{margin-top:auto;text-decoration:none;background:var(--rb-red);color:#fff;border-radius:14px;padding:14px;text-align:center;font-weight:900}
+@media(max-width:1050px){
+	.rollsbar-header--approved .rollsbar-header__inner{--rb-shell:min(calc(100% - 32px),940px)}
+}
+@media(max-width:900px){
+	.rollsbar-header--approved .rollsbar-cart-link{display:none}
+	.rollsbar-header--approved .rollsbar-search-toggle{width:38px;height:38px;border-radius:13px}
+	.rollsbar-header--approved .rollsbar-search-toggle svg{width:19px;height:19px}
+}
+@media(max-width:700px){
+	.rollsbar-header--approved .rollsbar-header__inner{--rb-shell:calc(100% - 28px);min-height:66px;padding:5px 0}
+	.rollsbar-header--approved .rollsbar-brand{gap:5px;flex:1;overflow:hidden}
+	.rollsbar-brand__mascot{width:30px;height:40px}
+	.rollsbar-brand__logo{width:101px;height:34px}
+	.rollsbar-header--approved .rollsbar-header__actions{gap:5px}
+	.rollsbar-header--approved .rollsbar-phone{font-size:11px;letter-spacing:-.025em}
+	.rollsbar-header--approved .rollsbar-search-toggle{width:36px;height:36px;border-radius:12px}
+	.rollsbar-menu-toggle{width:35px;height:35px}
+	.rollsbar-menu-toggle span{width:16px}
+	.home .rollsbar-category-nav{top:66px}
+}
+@media(max-width:350px){
+	.rollsbar-header--approved .rollsbar-phone{font-size:10px}
+	.rollsbar-header--approved .rollsbar-search-toggle{width:34px;height:34px}
+	.rollsbar-header--approved .rollsbar-header__actions{gap:4px}
+}
+
 /* Careers page */
 .rb-career-hero{position:relative;min-height:560px;overflow:hidden;background:#111;color:#fff;border-radius:0 0 34px 34px}
 .rb-career-hero__inner{min-height:560px;padding-top:42px;display:flex;flex-direction:column}
