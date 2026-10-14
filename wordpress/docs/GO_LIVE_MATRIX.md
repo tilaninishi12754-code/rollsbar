@@ -10,8 +10,7 @@ Before any consequential implementation or production change, re-read live GitHu
 ## Latest owner/client decisions — 2026-10-14
 - Telegram is **no longer required for launch**. The client explicitly replaced Telegram order alerts with **MAX**.
 - MAX feasibility is confirmed from the current official MAX Bot API, but the Rolls Bar MAX integration is **not implemented or end-to-end verified yet**.
-- Temporary staging recipient remains `tilaninishi12754@gmail.com`, but the first real receipt test **failed end-to-end**: WordPress reported a successful local handoff, while the owner confirmed that order №275 did not appear in Gmail Inbox/Spam/search.
-- Read-only staging mail diagnostics on 2026-10-14 confirmed that WordPress currently uses native PHP `mail()` through local Exim, with no SMTP authentication and no mail-related WordPress plugin. Public DNS checks returned no MX/TXT/SPF/DMARC records for `rollsbar.ru`.
+- Staging WooCommerce `New order` e-mail is now **END-TO-END READY**: authenticated Gmail SMTP was configured and order №279 was successfully received by the owner in Gmail.
 - The client supplied a delivery-tier table with thresholds 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB. The table is useful source data but is **not exact polygon geometry**.
 - Vacancy questionnaire remains deferred; no new vacancy input is required now.
 - Yandex Metrica remains separate/deferred work. Online acquiring remains a later phase.
@@ -33,36 +32,36 @@ Already verified on staging:
 
 Visual parity with the immutable approved frontend baseline is a separate active frontend pass and must be completed/verified before final owner go-live approval.
 
-### Operator New order email — END-TO-END DELIVERY FAILED / AUTHENTICATED TRANSPORT REQUIRED
-WooCommerce owns the primary transactional New order email.
+### Operator New order email — END-TO-END READY ON STAGING
+WooCommerce owns the primary transactional `New order` email.
 
-Verified internally:
-- WooCommerce `New order` email is enabled;
-- staging recipient is `tilaninishi12754@gmail.com`;
-- order №275 triggered the WooCommerce e-mail path;
-- `wp_mail_succeeded=yes`, `wp_mail_failed=no`, and `mail_to=tilaninishi12754@gmail.com` proved only that WordPress/PHPMailer handed the message to its configured local transport without a local error;
-- the owner later confirmed that no message for order №275 appeared in Gmail Inbox/Spam/search, so external delivery is **not** proven and the test is considered failed end-to-end.
+Historical issue:
+- order №275 used the unauthenticated local Exim path;
+- WordPress reported local handoff success, but the owner did not receive that message in Gmail;
+- that unauthenticated path was therefore considered failed end-to-end.
 
-Read-only transport diagnosis on 2026-10-14:
-- no active SMTP/mail-delivery WordPress plugin;
-- PHPMailer mode = `mail`;
-- PHP sendmail path = `/usr/sbin/sendmail -t -i`;
-- `/usr/sbin/sendmail` resolves to local **Exim**;
-- SMTP auth is not configured;
-- host identity = `server108.hosting.reg.ru`;
-- staging IP = `37.140.192.67`;
-- current WordPress generic From observed during diagnostics = `wordpress@staging.rollsbar.ru`;
-- public DNS lookup returned no MX records for `rollsbar.ru`, no root TXT/SPF records and no `_dmarc.rollsbar.ru` TXT record.
+Authenticated staging transport implemented on 2026-10-14:
+- SMTP host = `smtp.gmail.com`;
+- port = `587`;
+- encryption = `TLS`;
+- SMTPAuth = enabled;
+- sender = `tilaninishi12754@gmail.com`;
+- credentials are stored outside Git/chat in protected staging secret/runtime configuration.
 
-Decision:
-1. do not repeat the same unauthenticated local-Exim test;
-2. configure a proper authenticated outbound SMTP/API transport for staging;
-3. keep credentials outside Git/chat in secure environment/server secret storage;
-4. run exactly one new staging WooCommerce `New order` test to `tilaninishi12754@gmail.com`;
-5. require actual Gmail Inbox/Spam receipt before marking e-mail READY;
-6. final production sender/recipient can be replaced later with client-approved mailboxes/domain mail.
+End-to-end proof:
+- GitHub Actions run `38550893292` completed successfully;
+- a temporary WooCommerce test order №279 triggered the real `New order` email path;
+- `smtp_configured=yes`;
+- `wp_mail_succeeded=yes`;
+- `wp_mail_failed=no`;
+- `mail_to=tilaninishi12754@gmail.com`;
+- subject = `[Rolls Bar — Staging]: Поступил новый заказ: № 279`;
+- temporary order cleanup = PASS;
+- the owner explicitly confirmed the message actually arrived in Gmail.
 
-For a temporary proof, the owner may use a Gmail account as authenticated SMTP sender if desired; use a dedicated Google App Password/OAuth-capable mailer rather than the normal Google account password. A dedicated transactional/domain sender remains preferable for production.
+Status: **READY on staging**.
+
+Before production cutover, replace sender/recipient only if the client approves different production mailboxes. If changed, run one targeted production-like receipt proof after cutover.
 
 ### MAX order alert — REQUIRED FOR FIRST LAUNCH / INTEGRATION PENDING
 Latest client decision supersedes the previous Telegram requirement: new-order messenger alerts should go to **MAX**.
@@ -140,7 +139,8 @@ Do not rerun merely because a chat reconnects unless the touched layer changes:
 - vacancy fail-closed cleanup;
 - client admin UX;
 - operator order workflow;
-- catalog / checkout / DaData functional acceptance.
+- catalog / checkout / DaData functional acceptance;
+- authenticated staging New order e-mail end-to-end receipt.
 
 The earlier Telegram implementation remains historical code/evidence only. It is no longer the chosen launch channel and must not be presented as the client requirement.
 
@@ -153,18 +153,17 @@ The earlier Telegram implementation remains historical code/evidence only. It is
 
 ## External inputs actually missing now
 For the current first launch:
-1. **Email:** authenticated outbound sender credentials/configuration are now required because the unauthenticated local Exim path failed real Gmail receipt. Do not use/store the normal Gmail password. If using the temporary Gmail account as sender for staging proof, enable the appropriate Google authentication method and store its secret outside Git/chat.
+1. **Email:** no further staging input is required; authenticated SMTP delivery to Gmail is end-to-end proven. Final production sender/recipient only needs client confirmation if it should differ from the staging address.
 2. **MAX:** verified business/IP/self-employed MAX profile + created/moderated bot + secure bot token + destination `user_id`/`chat_id` for real staging delivery proof.
 3. **Delivery:** clarification only for the subset of spreadsheet rows that remain ambiguous after normalization; do not ask the client to redraw every zone before this analysis is done.
 
 ## Next execution order
 1. Keep production untouched.
 2. Continue the Visual Parity Pass separately against immutable `approved/site-2026-10-01`.
-3. Configure authenticated staging outbound mail and prove one real Gmail receipt.
-4. Prepare MAX bot onboarding/integration; never use the user's MAX password as an application credential.
-5. Normalize the supplied delivery table and produce the smallest ambiguity list; keep courier enforcement OFF meanwhile.
-6. Implement MAX by adapting the existing async notification architecture, then run targeted end-to-end MAX QA.
-7. Run only targeted regression after the changed integrations/frontend layers.
-8. Freeze exact release SHA.
-9. Present final go/no-go to owner.
-10. Touch production only after explicit owner approval.
+3. Prepare MAX bot onboarding/integration; never use the user's MAX password as an application credential.
+4. Normalize the supplied delivery table and produce the smallest ambiguity list; keep courier enforcement OFF meanwhile.
+5. Implement MAX by adapting the existing async notification architecture, then run targeted end-to-end MAX QA.
+6. Run only targeted regression after the changed integrations/frontend layers.
+7. Freeze exact release SHA.
+8. Present final go/no-go to owner.
+9. Touch production only after explicit owner approval.
