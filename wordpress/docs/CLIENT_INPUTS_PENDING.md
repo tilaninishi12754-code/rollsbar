@@ -1,17 +1,17 @@
 # Rolls Bar — что ещё нужно получить от клиента
 
-Updated: 2026-10-10
+Updated: 2026-10-14
 
 Цель этого списка — хранить только актуальные внешние входы и не возвращаться к клиенту по уже решённым вопросам.
 
 ## Обязательно для первого запуска
 
-### 1. Проверка e-mail новых заказов
+### 1. E-mail новых заказов — нужен authenticated outbound transport
 
 Для staging используется временный адрес владельца проекта:
 - `tilaninishi12754@gmail.com`
 
-10.10.2026 серверная часть реального WooCommerce `New order` e-mail уже проверена через REG.RU staging без TinyFish:
+10.10.2026 серверная часть WooCommerce `New order` e-mail была проверена через REG.RU staging:
 - GitHub Actions run `38056514030`, rerun job `114226327337` = SUCCESS;
 - WooCommerce recipient на staging = `tilaninishi12754@gmail.com`;
 - `wp_mail_succeeded=yes`;
@@ -20,9 +20,29 @@ Updated: 2026-10-10
 - subject: `[Rolls Bar — Staging]: Поступил новый заказ: № 275`;
 - временный тестовый заказ удалён: `temporary_order_cleanup=pass`.
 
-Остаётся только человеческое end-to-end подтверждение: письмо действительно появилось в Inbox или Spam Gmail. До этого не считать внешнюю доставку полностью доказанной.
+Важно: это доказывало только локальную передачу сообщения WordPress/PHPMailer своему mail transport, а не доставку в Gmail.
 
-Для простого получения письма пароль Gmail не нужен. Если письмо не доходит или стабильно попадает в Spam, отдельно подключить нормальный SMTP/API-транспорт через защищённое хранилище. Пароли/ключи не хранить в Git или обычном чате.
+14.10.2026 владелец подтвердил: письмо заказа №275 не найдено в Gmail ни по поиску, ни в Inbox/Spam. Значит end-to-end delivery **FAILED**.
+
+Read-only диагностика staging 14.10.2026 показала:
+- активных SMTP/mail-delivery WordPress plugins нет;
+- PHPMailer использует режим `mail`;
+- PHP sendmail path = `/usr/sbin/sendmail -t -i`;
+- `/usr/sbin/sendmail` фактически ведёт в локальный Exim;
+- SMTPAuth не настроен;
+- server host = `server108.hosting.reg.ru`;
+- server/staging IP = `37.140.192.67`;
+- generic WordPress From в диагностике = `wordpress@staging.rollsbar.ru`;
+- у `rollsbar.ru` публичная проверка не нашла MX, root TXT/SPF и `_dmarc` TXT.
+
+Следующий шаг:
+1. не повторять тот же unauthenticated Exim test;
+2. настроить authenticated SMTP/API transport;
+3. credentials хранить только в защищённом secret storage, не в Git/чате;
+4. сделать ровно один новый staging `New order` test на `tilaninishi12754@gmail.com`;
+5. считать e-mail READY только после фактического появления письма в Gmail.
+
+Для временного staging proof можно использовать Gmail как authenticated SMTP sender. Не использовать обычный пароль Google-аккаунта; при таком варианте нужен отдельный App Password/поддерживаемый Google auth flow и включённая 2-Step Verification. Для production предпочтительнее отдельный рабочий/транзакционный sender.
 
 Этот Gmail — staging test recipient, а не автоматически финальная рабочая почта клиента на production.
 
@@ -108,7 +128,7 @@ Updated: 2026-10-10
 
 ## Текущий порядок действий
 
-1. Владелец проверяет Inbox/Spam Gmail и подтверждает фактическое получение staging-письма.
+1. E-mail: настроить authenticated outbound transport и доказать реальный Gmail receipt.
 2. MAX: создать/верифицировать профиль и бота, безопасно установить bot token и получить destination `user_id/chat_id`.
 3. Реальный staging-test MAX-уведомления.
 4. Реализовать no-polygon delivery rule engine: FIAS locality/street rules + aliases + точные boundary rules после минимальных уточнений.
