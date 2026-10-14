@@ -4,49 +4,38 @@ Updated: 2026-10-14
 
 Цель этого списка — хранить только актуальные внешние входы и не возвращаться к клиенту по уже решённым вопросам.
 
-## Обязательно для первого запуска
-
-### 1. E-mail новых заказов — нужен authenticated outbound transport
+## Уже закрыто — e-mail новых заказов на staging
 
 Для staging используется временный адрес владельца проекта:
 - `tilaninishi12754@gmail.com`
 
-10.10.2026 серверная часть WooCommerce `New order` e-mail была проверена через REG.RU staging:
-- GitHub Actions run `38056514030`, rerun job `114226327337` = SUCCESS;
-- WooCommerce recipient на staging = `tilaninishi12754@gmail.com`;
+Исторически первый тест заказа №275 через локальный unauthenticated Exim не дошёл до Gmail и был признан неуспешным end-to-end.
+
+14.10.2026 настроен authenticated Gmail SMTP:
+- `smtp.gmail.com:587`;
+- TLS;
+- SMTPAuth = yes;
+- sender = `tilaninishi12754@gmail.com`;
+- App Password хранится вне Git/чата в защищённом staging secret storage/runtime configuration.
+
+Реальный staging proof:
+- GitHub Actions run `38550893292` = SUCCESS;
+- временный WooCommerce заказ №279;
+- `smtp_configured=yes`;
 - `wp_mail_succeeded=yes`;
 - `wp_mail_failed=no`;
-- фактический `mail_to=tilaninishi12754@gmail.com`;
-- subject: `[Rolls Bar — Staging]: Поступил новый заказ: № 275`;
-- временный тестовый заказ удалён: `temporary_order_cleanup=pass`.
+- recipient = `tilaninishi12754@gmail.com`;
+- subject = `[Rolls Bar — Staging]: Поступил новый заказ: № 279`;
+- временный заказ после теста удалён;
+- владелец проекта подтвердил, что письмо фактически пришло в Gmail.
 
-Важно: это доказывало только локальную передачу сообщения WordPress/PHPMailer своему mail transport, а не доставку в Gmail.
+Статус: **e-mail на staging END-TO-END READY**. Дополнительный staging input по e-mail больше не нужен.
 
-14.10.2026 владелец подтвердил: письмо заказа №275 не найдено в Gmail ни по поиску, ни в Inbox/Spam. Значит end-to-end delivery **FAILED**.
+Этот Gmail остаётся staging test sender/recipient и не считается автоматически финальной production-почтой клиента. Перед production достаточно уточнить только если клиент хочет другой sender/recipient.
 
-Read-only диагностика staging 14.10.2026 показала:
-- активных SMTP/mail-delivery WordPress plugins нет;
-- PHPMailer использует режим `mail`;
-- PHP sendmail path = `/usr/sbin/sendmail -t -i`;
-- `/usr/sbin/sendmail` фактически ведёт в локальный Exim;
-- SMTPAuth не настроен;
-- server host = `server108.hosting.reg.ru`;
-- server/staging IP = `37.140.192.67`;
-- generic WordPress From в диагностике = `wordpress@staging.rollsbar.ru`;
-- у `rollsbar.ru` публичная проверка не нашла MX, root TXT/SPF и `_dmarc` TXT.
+## Обязательно для первого запуска
 
-Следующий шаг:
-1. не повторять тот же unauthenticated Exim test;
-2. настроить authenticated SMTP/API transport;
-3. credentials хранить только в защищённом secret storage, не в Git/чате;
-4. сделать ровно один новый staging `New order` test на `tilaninishi12754@gmail.com`;
-5. считать e-mail READY только после фактического появления письма в Gmail.
-
-Для временного staging proof можно использовать Gmail как authenticated SMTP sender. Не использовать обычный пароль Google-аккаунта; при таком варианте нужен отдельный App Password/поддерживаемый Google auth flow и включённая 2-Step Verification. Для production предпочтительнее отдельный рабочий/транзакционный sender.
-
-Этот Gmail — staging test recipient, а не автоматически финальная рабочая почта клиента на production.
-
-### 2. MAX для уведомлений о заказах
+### 1. MAX для уведомлений о заказах
 
 Последнее решение клиента: Telegram больше не нужен для первого запуска. Уведомления о новых заказах должны приходить в **MAX**.
 
@@ -128,10 +117,9 @@ Read-only диагностика staging 14.10.2026 показала:
 
 ## Текущий порядок действий
 
-1. E-mail: настроить authenticated outbound transport и доказать реальный Gmail receipt.
-2. MAX: создать/верифицировать профиль и бота, безопасно установить bot token и получить destination `user_id/chat_id`.
-3. Реальный staging-test MAX-уведомления.
-4. Реализовать no-polygon delivery rule engine: FIAS locality/street rules + aliases + точные boundary rules после минимальных уточнений.
-5. Параллельно завершить Visual Parity Pass по immutable `approved/site-2026-10-01`.
-6. После этого targeted regression, exact release SHA, финальный GO/NO-GO.
-7. Production — только после явного разрешения владельца.
+1. MAX: создать/верифицировать профиль и бота, безопасно установить bot token и получить destination `user_id/chat_id`.
+2. Реальный staging-test MAX-уведомления.
+3. Реализовать no-polygon delivery rule engine: FIAS locality/street rules + aliases + точные boundary rules после минимальных уточнений.
+4. Параллельно завершить Visual Parity Pass по immutable `approved/site-2026-10-01`.
+5. После этого targeted regression, exact release SHA, финальный GO/NO-GO.
+6. Production — только после явного разрешения владельца.
