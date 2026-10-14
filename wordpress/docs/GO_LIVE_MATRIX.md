@@ -1,16 +1,17 @@
 # Rolls Bar — current-launch go-live decision matrix
 
-Updated: 2026-10-10
+Updated: 2026-10-14
 
 ## Purpose
 This matrix is the current launch decision layer. It follows the latest explicit owner/client decisions over older TЗ/checkpoint wording when they conflict. Historical implementation evidence remains in `wordpress/docs/CURRENT_STATE.md` and Git/CI history.
 
 Before any consequential implementation or production change, re-read live GitHub/CI/runtime evidence.
 
-## Latest owner/client decisions — 2026-10-10
+## Latest owner/client decisions — 2026-10-14
 - Telegram is **no longer required for launch**. The client explicitly replaced Telegram order alerts with **MAX**.
 - MAX feasibility is confirmed from the current official MAX Bot API, but the Rolls Bar MAX integration is **not implemented or end-to-end verified yet**.
-- For the first real e-mail test, use temporary staging recipient `tilaninishi12754@gmail.com`. This is a test recipient, not automatically the final production operator mailbox.
+- Temporary staging recipient remains `tilaninishi12754@gmail.com`, but the first real receipt test **failed end-to-end**: WordPress reported a successful local handoff, while the owner confirmed that order №275 did not appear in Gmail Inbox/Spam/search.
+- Read-only staging mail diagnostics on 2026-10-14 confirmed that WordPress currently uses native PHP `mail()` through local Exim, with no SMTP authentication and no mail-related WordPress plugin. Public DNS checks returned no MX/TXT/SPF/DMARC records for `rollsbar.ru`.
 - The client supplied a delivery-tier table with thresholds 1200 / 1500 / 2000 / 2500 / 3000 / 3500 / 4000 RUB. The table is useful source data but is **not exact polygon geometry**.
 - Vacancy questionnaire remains deferred; no new vacancy input is required now.
 - Yandex Metrica remains separate/deferred work. Online acquiring remains a later phase.
@@ -32,23 +33,36 @@ Already verified on staging:
 
 Visual parity with the immutable approved frontend baseline is a separate active frontend pass and must be completed/verified before final owner go-live approval.
 
-### Operator New order email — TEST RECIPIENT KNOWN / REAL DELIVERY PROOF PENDING
+### Operator New order email — END-TO-END DELIVERY FAILED / AUTHENTICATED TRANSPORT REQUIRED
 WooCommerce owns the primary transactional New order email.
 
 Verified internally:
 - WooCommerce `New order` email is enabled;
-- internal Woo -> `wp_mail()` path was verified by intercepted runtime test;
-- REG.RU PHP `mail()` and local sendmail path are available;
-- previous audit did not prove real external receipt.
+- staging recipient is `tilaninishi12754@gmail.com`;
+- order №275 triggered the WooCommerce e-mail path;
+- `wp_mail_succeeded=yes`, `wp_mail_failed=no`, and `mail_to=tilaninishi12754@gmail.com` proved only that WordPress/PHPMailer handed the message to its configured local transport without a local error;
+- the owner later confirmed that no message for order №275 appeared in Gmail Inbox/Spam/search, so external delivery is **not** proven and the test is considered failed end-to-end.
 
-Current test decision:
-1. configure staging `New order` recipient as `tilaninishi12754@gmail.com`;
-2. do **not** request or store a Gmail password merely to receive the message;
-3. place one real staging test order;
-4. verify Inbox/Spam receipt, single delivery and expected order fields;
-5. only if delivery/reputation fails, choose and configure an authenticated outbound transport separately with secrets outside Git/chat.
+Read-only transport diagnosis on 2026-10-14:
+- no active SMTP/mail-delivery WordPress plugin;
+- PHPMailer mode = `mail`;
+- PHP sendmail path = `/usr/sbin/sendmail -t -i`;
+- `/usr/sbin/sendmail` resolves to local **Exim**;
+- SMTP auth is not configured;
+- host identity = `server108.hosting.reg.ru`;
+- staging IP = `37.140.192.67`;
+- current WordPress generic From observed during diagnostics = `wordpress@staging.rollsbar.ru`;
+- public DNS lookup returned no MX records for `rollsbar.ru`, no root TXT/SPF records and no `_dmarc.rollsbar.ru` TXT record.
 
-The temporary Gmail address is for staging proof only. Final production recipient can be replaced later with the client-approved operator mailbox.
+Decision:
+1. do not repeat the same unauthenticated local-Exim test;
+2. configure a proper authenticated outbound SMTP/API transport for staging;
+3. keep credentials outside Git/chat in secure environment/server secret storage;
+4. run exactly one new staging WooCommerce `New order` test to `tilaninishi12754@gmail.com`;
+5. require actual Gmail Inbox/Spam receipt before marking e-mail READY;
+6. final production sender/recipient can be replaced later with client-approved mailboxes/domain mail.
+
+For a temporary proof, the owner may use a Gmail account as authenticated SMTP sender if desired; use a dedicated Google App Password/OAuth-capable mailer rather than the normal Google account password. A dedicated transactional/domain sender remains preferable for production.
 
 ### MAX order alert — REQUIRED FOR FIRST LAUNCH / INTEGRATION PENDING
 Latest client decision supersedes the previous Telegram requirement: new-order messenger alerts should go to **MAX**.
@@ -139,14 +153,14 @@ The earlier Telegram implementation remains historical code/evidence only. It is
 
 ## External inputs actually missing now
 For the current first launch:
-1. **Email:** no external credential is required for the first receipt test; temporary staging recipient is known (`tilaninishi12754@gmail.com`). Authenticated outbound mail credentials are only requested if the real test proves they are needed.
+1. **Email:** authenticated outbound sender credentials/configuration are now required because the unauthenticated local Exim path failed real Gmail receipt. Do not use/store the normal Gmail password. If using the temporary Gmail account as sender for staging proof, enable the appropriate Google authentication method and store its secret outside Git/chat.
 2. **MAX:** verified business/IP/self-employed MAX profile + created/moderated bot + secure bot token + destination `user_id`/`chat_id` for real staging delivery proof.
 3. **Delivery:** clarification only for the subset of spreadsheet rows that remain ambiguous after normalization; do not ask the client to redraw every zone before this analysis is done.
 
 ## Next execution order
 1. Keep production untouched.
 2. Continue the Visual Parity Pass separately against immutable `approved/site-2026-10-01`.
-3. Configure the temporary Gmail staging recipient and prove one real WooCommerce New order receipt.
+3. Configure authenticated staging outbound mail and prove one real Gmail receipt.
 4. Prepare MAX bot onboarding/integration; never use the user's MAX password as an application credential.
 5. Normalize the supplied delivery table and produce the smallest ambiguity list; keep courier enforcement OFF meanwhile.
 6. Implement MAX by adapting the existing async notification architecture, then run targeted end-to-end MAX QA.
