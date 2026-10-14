@@ -1,0 +1,265 @@
+name: Gmail SMTP Staging Once
+
+on:
+  push:
+    branches:
+      - wordpress/migration-2026-10-01
+    paths:
+      - .github/workflows/email-smtp-staging-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  smtp-staging-proof:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate staging secrets
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_SMTP_APP_PASSWORD: ${{ secrets.ROLLSBAR_SMTP_APP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          test -n "$ROLLSBAR_SMTP_APP_PASSWORD"
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ROLLSBAR_SMTP_APP_PASSWORD"
+
+      - name: Configure authenticated Gmail SMTP and send one WooCommerce New order email
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_SMTP_APP_PASSWORD: ${{ secrets.ROLLSBAR_SMTP_APP_PASSWORD }}
+          TEST_RECIPIENT: tilaninishi12754@gmail.com
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check --quiet paramiko
+          python3 - <<'PY'
+          import os
+          import shlex
+          from urllib.parse import urlsplit
+          import paramiko
+
+          base = os.environ['ISP_MANAGER_URL'].strip()
+          user = os.environ['ISP_MANAGER_USER'].strip()
+          password = os.environ['ISP_MANAGER_PASSWORD'].strip()
+          app_password = os.environ['ROLLSBAR_SMTP_APP_PASSWORD'].strip()
+          recipient = os.environ['TEST_RECIPIENT'].strip()
+          host = urlsplit(base).hostname or ''
+          if not host:
+              raise SystemExit('Could not derive staging host')
+          if len(app_password.replace(' ', '')) < 16:
+              raise SystemExit('SMTP app password secret is missing or unexpectedly short')
+
+          app_password = app_password.replace(' ', '')
+          print(f'::add-mask::{app_password}')
+
+          runtime_name = '.rollsbar-smtp-runtime.env'
+          test_name = '.rollsbar-smtp-order-test.php'
+          diag_name = '.rollsbar-smtp-diag.php'
+
+          runtime = ''.join([
+              'export ROLLSBAR_SMTP_APP_PASSWORD=' + shlex.quote(app_password) + '\n',
+              'export ROLLSBAR_SMTP_USERNAME=' + shlex.quote('tilaninishi12754@gmail.com') + '\n',
+              'export ROLLSBAR_TEST_RECIPIENT=' + shlex.quote(recipient) + '\n',
+          ])
+
+          diag_php = r'''<?php
+          if ( 'staging' !== wp_get_environment_type() ) {
+              fwrite(STDERR, "not_staging\n");
+              exit(2);
+          }
+          if ( ! class_exists('RollsBar_SMTP') || ! RollsBar_SMTP::is_configured() ) {
+              fwrite(STDERR, "smtp_not_configured\n");
+              exit(3);
+          }
+          add_action('phpmailer_init', function($phpmailer) {
+              echo 'smtp_mailer=' . (string) $phpmailer->Mailer . "\n";
+              echo 'smtp_host=' . (string) $phpmailer->Host . "\n";
+              echo 'smtp_port=' . (string) $phpmailer->Port . "\n";
+              echo 'smtp_auth=' . ($phpmailer->SMTPAuth ? 'yes' : 'no') . "\n";
+              echo 'smtp_secure=' . (string) $phpmailer->SMTPSecure . "\n";
+              echo 'smtp_from=' . (string) $phpmailer->From . "\n";
+              throw new Exception('ROLLSBAR_SMTP_DIAGNOSTIC_STOP');
+          }, 9999, 1);
+          wp_mail('nobody@example.invalid', 'RollsBar SMTP diagnostic', 'No message should be sent.');
+          ?>'''
+
+          test_php = r'''<?php
+          if ( 'staging' !== wp_get_environment_type() ) {
+              fwrite(STDERR, "not_staging\n");
+              exit(2);
+          }
+          if ( ! function_exists('wc_create_order') || ! class_exists('WooCommerce') ) {
+              fwrite(STDERR, "woocommerce_missing\n");
+              exit(3);
+          }
+          if ( ! class_exists('RollsBar_SMTP') || ! RollsBar_SMTP::is_configured() ) {
+              fwrite(STDERR, "smtp_not_configured\n");
+              exit(4);
+          }
+          $recipient = getenv('ROLLSBAR_TEST_RECIPIENT');
+          if ( ! is_email($recipient) ) {
+              fwrite(STDERR, "invalid_recipient\n");
+              exit(5);
+          }
+
+          $settings = get_option('woocommerce_new_order_settings', array());
+          if ( ! is_array($settings) ) { $settings = array(); }
+          $settings['enabled'] = 'yes';
+          $settings['recipient'] = $recipient;
+          update_option('woocommerce_new_order_settings', $settings, false);
+
+          $mail_ok = false;
+          $mail_failed = false;
+          $mail_to = '';
+          $mail_subject = '';
+          add_action('wp_mail_succeeded', function($mail_data) use (&$mail_ok, &$mail_to, &$mail_subject) {
+              $mail_ok = true;
+              $mail_to = is_array($mail_data['to'] ?? null) ? implode(',', $mail_data['to']) : (string)($mail_data['to'] ?? '');
+              $mail_subject = (string)($mail_data['subject'] ?? '');
+          }, 999, 1);
+          add_action('wp_mail_failed', function($error) use (&$mail_failed) {
+              $mail_failed = true;
+              $message = is_wp_error($error) ? $error->get_error_message() : 'unknown';
+              echo 'wp_mail_error=' . preg_replace('/\s+/', ' ', $message) . "\n";
+          }, 999, 1);
+
+          $products = wc_get_products(array('status' => 'publish', 'limit' => 1, 'return' => 'objects'));
+          if ( empty($products) ) {
+              fwrite(STDERR, "no_product\n");
+              exit(6);
+          }
+
+          $order = wc_create_order();
+          if ( is_wp_error($order) ) {
+              fwrite(STDERR, "order_create_failed\n");
+              exit(7);
+          }
+          $order->add_product($products[0], 1);
+          $order->set_billing_first_name('Тест');
+          $order->set_billing_last_name('RollsBar SMTP');
+          $order->set_billing_email($recipient);
+          $order->set_billing_phone('+79786882288');
+          $order->set_payment_method('cod');
+          $order->set_customer_note('ТЕСТ STAGING SMTP — НЕ ГОТОВИТЬ');
+          $order->calculate_totals();
+          $order->save();
+          $order_id = $order->get_id();
+
+          try {
+              $emails = WC()->mailer()->get_emails();
+              if ( empty($emails['WC_Email_New_Order']) ) {
+                  throw new RuntimeException('new_order_email_missing');
+              }
+              $emails['WC_Email_New_Order']->trigger($order_id, $order);
+              echo 'recipient_configured=' . $recipient . "\n";
+              echo 'test_order_id=' . $order_id . "\n";
+              echo 'smtp_configured=' . (RollsBar_SMTP::is_configured() ? 'yes' : 'no') . "\n";
+              echo 'wp_mail_succeeded=' . ($mail_ok ? 'yes' : 'no') . "\n";
+              echo 'wp_mail_failed=' . ($mail_failed ? 'yes' : 'no') . "\n";
+              echo 'mail_to=' . $mail_to . "\n";
+              echo 'mail_subject=' . $mail_subject . "\n";
+              if ( ! $mail_ok || $mail_failed || false === stripos($mail_to, $recipient) ) {
+                  throw new RuntimeException('authenticated_smtp_send_not_proven');
+              }
+          } finally {
+              $order = wc_get_order($order_id);
+              if ( $order ) { $order->delete(true); }
+          }
+          echo 'temporary_order_cleanup=' . (wc_get_order($order_id) ? 'fail' : 'pass') . "\n";
+          echo "AUTHENTICATED SMTP STAGING SEND PASS\n";
+          ?>'''
+
+          client = paramiko.SSHClient()
+          client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+          client.connect(
+              hostname=host, port=22, username=user, password=password,
+              timeout=15, auth_timeout=15, banner_timeout=15,
+              look_for_keys=False, allow_agent=False,
+          )
+
+          try:
+              sftp = client.open_sftp()
+              try:
+                  for name, body in ((runtime_name, runtime), (diag_name, diag_php), (test_name, test_php)):
+                      with sftp.open(name, 'w') as fh:
+                          fh.write(body.encode('utf-8'))
+                      sftp.chmod(name, 0o600)
+              finally:
+                  sftp.close()
+
+              remote = f'''set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          WP_PATH="$HOME/www/staging.rollsbar.ru"
+          set -a
+          source "$HOME/{runtime_name}"
+          set +a
+
+          [[ "$(wp --path="$WP_PATH" eval 'echo wp_get_environment_type();')" == "staging" ]]
+          [[ "$(wp --path="$WP_PATH" plugin get rollsbar-core --field=status)" == "active" ]]
+
+          wp --path="$WP_PATH" config set ROLLSBAR_SMTP_ENABLED true --raw
+          wp --path="$WP_PATH" config set ROLLSBAR_SMTP_HOST smtp.gmail.com --type=constant
+          wp --path="$WP_PATH" config set ROLLSBAR_SMTP_PORT 587 --raw
+          wp --path="$WP_PATH" config set ROLLSBAR_SMTP_SECURE tls --type=constant
+          wp --path="$WP_PATH" config set ROLLSBAR_SMTP_USERNAME "$ROLLSBAR_SMTP_USERNAME" --type=constant
+          wp --path="$WP_PATH" config set ROLLSBAR_SMTP_APP_PASSWORD "$ROLLSBAR_SMTP_APP_PASSWORD" --type=constant
+          wp --path="$WP_PATH" config set ROLLSBAR_SMTP_FROM_ADDRESS "$ROLLSBAR_SMTP_USERNAME" --type=constant
+          wp --path="$WP_PATH" config set ROLLSBAR_SMTP_FROM_NAME "Rolls Bar — Staging" --type=constant
+          chmod 0640 "$WP_PATH/wp-config.php"
+
+          echo "=== SMTP CONFIGURATION ==="
+          wp --path="$WP_PATH" eval 'echo class_exists("RollsBar_SMTP") && RollsBar_SMTP::is_configured() ? "smtp_runtime_configured=yes\\n" : "smtp_runtime_configured=no\\n";'
+          wp --path="$WP_PATH" eval-file "$HOME/{diag_name}" || true
+
+          echo "=== REAL WOOCOMMERCE EMAIL TEST ==="
+          export ROLLSBAR_TEST_RECIPIENT
+          wp --path="$WP_PATH" eval-file "$HOME/{test_name}"
+          '''
+
+              _, stdout, stderr = client.exec_command('bash -lc ' + shlex.quote(remote), timeout=300)
+              out = stdout.read().decode('utf-8', errors='replace').strip()
+              err = stderr.read().decode('utf-8', errors='replace').strip()
+              code = stdout.channel.recv_exit_status()
+              if out:
+                  print(out)
+              if code != 0:
+                  safe = ' | '.join(
+                      line for line in err.splitlines()
+                      if not any(word in line.lower() for word in ('password', 'secret', 'token'))
+                  )[-2000:]
+                  if safe:
+                      print('smtp_test_stderr=' + safe)
+                  raise SystemExit(code)
+              if 'AUTHENTICATED SMTP STAGING SEND PASS' not in out or 'temporary_order_cleanup=pass' not in out:
+                  raise SystemExit('Authenticated SMTP staging proof incomplete')
+          finally:
+              try:
+                  sftp = client.open_sftp()
+                  try:
+                      for name in (runtime_name, diag_name, test_name):
+                          try:
+                              sftp.remove(name)
+                          except FileNotFoundError:
+                              pass
+                  finally:
+                      sftp.close()
+              except Exception:
+                  pass
+              client.close()
+          PY
