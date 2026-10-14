@@ -126,6 +126,33 @@ img{max-width:100%;display:block}
 }
 
 
+/* Homepage geometry: approved a5e5243, final demo.html -> client-fixes.html -> index.html cascade.
+ * Keep the shell override local to catalog/promo; other page components retain their layout.
+ */
+.home .rollsbar-catalog-section,.home .rollsbar-utilities__track{--rb-shell:min(1180px,calc(100% - 40px))}
+.home .rollsbar-utilities{padding:22px 0 24px}
+.home .rollsbar-catalog-section{padding-top:62px}
+.home .rollsbar-category-nav + .rollsbar-catalog-section{padding-top:30px}
+.home .rollsbar-product-grid{gap:30px 20px}
+@media(max-width:1050px){
+	.home .rollsbar-catalog-section,.home .rollsbar-utilities__track{--rb-shell:min(calc(100% - 32px),940px)}
+	.home .rollsbar-product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+	.home .rollsbar-utilities__track{grid-template-columns:repeat(2,minmax(0,1fr))}
+	.home .rollsbar-utility{height:184px;min-height:0}
+}
+@media(max-width:700px){
+	.home .rollsbar-catalog-section,.home .rollsbar-utilities__track{--rb-shell:calc(100% - 28px)}
+	.home .rollsbar-utilities{padding:10px 0 12px}
+	.home .rollsbar-utility{height:170px}
+	.home .rollsbar-catalog-section{padding-top:44px}
+	.home .rollsbar-category-nav + .rollsbar-catalog-section{padding-top:23px}
+	.home .rollsbar-section-heading h2{margin-bottom:15px}
+	.home .rollsbar-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 11px}
+}
+@media(max-width:350px){
+	.home .rollsbar-utility{min-width:164px;height:158px}
+}
+
 /* Careers page */
 .rb-career-hero{position:relative;min-height:560px;overflow:hidden;background:#111;color:#fff;border-radius:0 0 34px 34px}
 .rb-career-hero__inner{min-height:560px;padding-top:42px;display:flex;flex-direction:column}
