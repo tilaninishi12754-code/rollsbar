@@ -101,15 +101,25 @@ foreach ( $promo_posts as $promo_post ) {
 ?>
 
 <section class="rollsbar-utilities">
-	<div class="rollsbar-shell rollsbar-utilities__track">
+	<div class="rollsbar-shell rollsbar-utilities__track" aria-label="Полезные разделы Rolls Bar">
 		<?php foreach ( $utility_cards as $variant => $card ) : ?>
 			<a class="rollsbar-utility rollsbar-utility--<?php echo esc_attr( $variant ); ?>" href="<?php echo esc_url( $card['url'] ); ?>">
 				<?php if ( $card['image'] ) : ?>
 					<span class="rollsbar-utility__image" style="background-image:url('<?php echo esc_url( $card['image'] ); ?>')" aria-hidden="true"></span>
+				<?php elseif ( 'promo' === $variant ) : ?>
+					<span class="rollsbar-utility__art" aria-hidden="true"></span>
+				<?php elseif ( 'work' === $variant ) : ?>
+					<img class="rollsbar-utility__ninja" src="<?php echo esc_url( get_template_directory_uri() . '/assets/images/header-mascot.webp' ); ?>" alt="" aria-hidden="true">
+				<?php elseif ( 'delivery' === $variant ) : ?>
+					<span class="rollsbar-utility__pin" aria-hidden="true"></span>
+				<?php elseif ( 'reviews' === $variant ) : ?>
+					<span class="rollsbar-utility__stars" aria-hidden="true">★★★★★</span>
 				<?php endif; ?>
-				<span class="rollsbar-utility__eyebrow"><?php echo esc_html( $card['eyebrow'] ); ?></span>
-				<strong><?php echo esc_html( $card['title'] ); ?></strong>
-				<span><?php echo esc_html( $card['text'] ); ?> →</span>
+				<span class="rollsbar-utility__copy">
+					<span class="rollsbar-utility__eyebrow"><?php echo esc_html( $card['eyebrow'] ); ?></span>
+					<h3 class="rollsbar-utility__title"><?php echo esc_html( $card['title'] ); ?></h3>
+					<p class="rollsbar-utility__text"><?php echo esc_html( $card['text'] ); ?><span class="rollsbar-utility__arrow">→</span></p>
+				</span>
 			</a>
 		<?php endforeach; ?>
 	</div>
