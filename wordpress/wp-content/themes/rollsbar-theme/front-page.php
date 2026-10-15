@@ -142,6 +142,11 @@ foreach ( $promo_posts as $promo_post ) {
 		}
 	}
 	$source_order       = array_flip( array_column( $source_products, 'id' ) );
+	$accent_colors     = array(
+		'pizza-pepperoni' => 'blue',
+		'sets-hit-set'    => 'red',
+		'soups-tom-yam'   => 'warm',
+	);
 	$category_products  = array();
 	$products_by_source = array();
 	foreach ( $categories as $slug => $label ) {
@@ -202,17 +207,16 @@ foreach ( $promo_posts as $promo_post ) {
 
 					$image_url = rollsbar_product_image_url( $product );
 					$is_variable = $product->is_type( 'variable' );
+					$accent = $accent_colors[ $product->get_meta( '_rollsbar_source_id', true ) ] ?? '';
 					?>
-					<article class="rollsbar-product-card">
+					<article class="rollsbar-product-card<?php echo $accent ? ' rollsbar-product-card--accent rollsbar-product-card--' . esc_attr( $accent ) : ''; ?>">
 						<a class="rollsbar-product-card__media" href="<?php echo esc_url( $product->get_permalink() ); ?>">
 							<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $product->get_name() ); ?>" loading="lazy">
 						</a>
 
 						<div class="rollsbar-product-card__body">
 							<h3><a href="<?php echo esc_url( $product->get_permalink() ); ?>"><?php echo esc_html( $product->get_name() ); ?></a></h3>
-							<?php if ( $product->get_short_description() ) : ?>
-								<p><?php echo wp_kses_post( wp_trim_words( $product->get_short_description(), 22 ) ); ?></p>
-							<?php endif; ?>
+							<p><?php echo wp_kses_post( $product->get_short_description() ); ?></p>
 
 							<div class="rollsbar-product-card__footer">
 								<span class="rollsbar-price"><?php echo wp_kses_post( $product->get_price_html() ); ?></span>

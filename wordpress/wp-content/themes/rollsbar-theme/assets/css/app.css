@@ -169,6 +169,35 @@ img{max-width:100%;display:block}
 	.home .rollsbar-utility{min-width:164px;height:158px}
 }
 
+/* Batch 6A: final approved card surface and text; controls retain their existing footprint. */
+.home .rollsbar-section-heading h2,.home .rollsbar-product-card h3,.home .rollsbar-product-card p{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.home .rollsbar-section-heading h2{font-size:34px;line-height:1;letter-spacing:-.045em;font-weight:700}
+.home .rollsbar-product-card{--rb-card-pad:0px;--rb-body-pad:15px;--rb-card-bg:#fff;display:flex;flex-direction:column;background:var(--rb-card-bg);border:1px solid rgba(20,24,30,.045);border-radius:24px;box-shadow:0 10px 28px rgba(18,22,26,.055),0 2px 8px rgba(18,22,26,.035);padding:var(--rb-card-pad);overflow:visible;transition:transform .18s ease,box-shadow .18s ease}
+.home .rollsbar-product-card:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(18,22,26,.075),0 3px 10px rgba(18,22,26,.04)}
+.home .rollsbar-product-card__media{background:var(--rb-card-bg);padding:12px;border-radius:23px 23px 0 0}
+.home .rollsbar-product-card__body{display:flex;flex-direction:column;flex:1;padding:14px var(--rb-body-pad) 16px}
+.home .rollsbar-product-card h3{font-size:17px;font-weight:700;line-height:1.16;letter-spacing:-.025em;margin:0 0 6px}
+.home .rollsbar-product-card p{font-size:12px;font-weight:400;line-height:1.38;color:#7b7d80;min-height:34px;margin:0 0 10px}
+/* Preserve the pre-6A footer's 2px inset: 1px border + card/body padding + this margin.
+ * Do not clip or narrow the current price/actions until their dedicated batches. */
+.home .rollsbar-product-card__footer{margin-top:auto;margin-inline:calc(1px - var(--rb-card-pad) - var(--rb-body-pad))}
+.home .rollsbar-product-card--accent{--rb-card-pad:10px;--rb-body-pad:12px}
+.home .rollsbar-product-card--accent:hover{box-shadow:0 10px 28px rgba(18,22,26,.055),0 2px 8px rgba(18,22,26,.035)}
+.home .rollsbar-product-card--blue{--rb-card-bg:#eef7f1}
+.home .rollsbar-product-card--red{--rb-card-bg:#fff0ef}
+.home .rollsbar-product-card--warm{--rb-card-bg:#fff7e8}
+.home .rollsbar-product-card--accent .rollsbar-product-card__media{border-radius:18px}
+.home .rollsbar-product-card--accent .rollsbar-product-card__body{padding-bottom:12px;background:var(--rb-card-bg)}
+@media(max-width:700px){
+	.home .rollsbar-section-heading h2{font-size:29px}
+	.home .rollsbar-product-card{border-radius:19px;box-shadow:0 8px 22px rgba(18,22,26,.05),0 2px 6px rgba(18,22,26,.03)}
+	.home .rollsbar-product-card__media{padding:8px;aspect-ratio:1.12/1;border-radius:18px 18px 0 0}
+	.home .rollsbar-product-card h3{font-size:14.5px;margin-bottom:5px}
+	.home .rollsbar-product-card p{display:none}
+	.home .rollsbar-product-card__footer{margin-top:8px}
+	.home .rollsbar-product-card--accent{--rb-card-pad:7px;border-radius:18px;box-shadow:0 10px 28px rgba(18,22,26,.055),0 2px 8px rgba(18,22,26,.035)}
+}
+
 /* Promo typography: approved final cascade. */
 @media(min-width:701px) and (max-width:1050px){.rollsbar-utility h3{font-size:23px}}
 @media(max-width:350px){.rollsbar-utility h3{font-size:18px}.rollsbar-utility p{font-size:9px}}
