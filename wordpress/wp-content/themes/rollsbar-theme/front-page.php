@@ -131,9 +131,21 @@ foreach ( $promo_posts as $promo_post ) {
 		<p>WooCommerce ещё не активирован на этом окружении.</p>
 	</section>
 <?php else : ?>
-	<?php foreach ( $categories as $slug => $label ) : ?>
-		<?php
-		$products = wc_get_products(
+	<?php
+	$source_products = array();
+	if ( class_exists( 'RollsBar_Catalog_Importer' ) ) {
+		try {
+			// Read the packaged source only; never import or update Woo products.
+			$source_products = RollsBar_Catalog_Importer::load_catalog()['products'];
+		} catch ( RuntimeException $exception ) {
+			// Keep the existing catalog available if the source file is unavailable.
+		}
+	}
+	$source_order       = array_flip( array_column( $source_products, 'id' ) );
+	$category_products  = array();
+	$products_by_source = array();
+	foreach ( $categories as $slug => $label ) {
+		$category_products[ $slug ] = wc_get_products(
 			array(
 				'status'   => 'publish',
 				'limit'    => -1,
@@ -142,6 +154,35 @@ foreach ( $promo_posts as $promo_post ) {
 				'order'    => 'ASC',
 			)
 		);
+		foreach ( $category_products[ $slug ] as $product ) {
+			$source_id = (string) $product->get_meta( '_rollsbar_source_id', true );
+			$products_by_source[ $source_id ] = $product;
+		}
+		usort(
+			$category_products[ $slug ],
+			static function ( $a, $b ) use ( $source_order ) {
+				return ( $source_order[ $a->get_meta( '_rollsbar_source_id', true ) ] ?? PHP_INT_MAX )
+					<=> ( $source_order[ $b->get_meta( '_rollsbar_source_id', true ) ] ?? PHP_INT_MAX );
+			}
+		);
+	}
+	if ( $source_products ) {
+		$hit_sources = array_slice(
+			array_column( array_filter( $source_products, static fn( $row ) => ! empty( $row['hit'] ) ), 'id' ),
+			0,
+			8
+		);
+		$category_products['hits'] = array();
+		foreach ( $hit_sources as $source_id ) {
+			if ( isset( $products_by_source[ $source_id ] ) ) {
+				$category_products['hits'][] = $products_by_source[ $source_id ];
+			}
+		}
+	}
+	?>
+	<?php foreach ( $categories as $slug => $label ) : ?>
+		<?php
+		$products = $category_products[ $slug ];
 
 		if ( ! $products ) {
 			continue;
