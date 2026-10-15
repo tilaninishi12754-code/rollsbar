@@ -1,5 +1,19 @@
 (function(){
 	'use strict';
+	document.querySelectorAll('[data-rollsbar-product-image]').forEach(function(image){
+		function showFallback(){
+			var media=image.closest('.rollsbar-product-media');
+			if(!media)return;
+			image.hidden=true;
+			media.classList.add('image-missing');
+		}
+		image.addEventListener('error',showFallback,{once:true});
+		if(image.complete&&!image.naturalWidth)showFallback();
+	});
+})();
+
+(function(){
+	'use strict';
 
 	var body=document.body;
 	var search=document.getElementById('rollsbarProductSearch');

@@ -205,13 +205,12 @@ foreach ( $promo_posts as $promo_post ) {
 						continue;
 					}
 
-					$image_url = rollsbar_product_image_url( $product );
 					$is_variable = $product->is_type( 'variable' );
 					$accent = $accent_colors[ $product->get_meta( '_rollsbar_source_id', true ) ] ?? '';
 					?>
 					<article class="rollsbar-product-card<?php echo $accent ? ' rollsbar-product-card--accent rollsbar-product-card--' . esc_attr( $accent ) : ''; ?>">
-						<a class="rollsbar-product-card__media" href="<?php echo esc_url( $product->get_permalink() ); ?>">
-							<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $product->get_name() ); ?>" loading="lazy">
+						<a class="rollsbar-product-card__media rollsbar-product-media" href="<?php echo esc_url( $product->get_permalink() ); ?>">
+							<?php echo rollsbar_product_image_markup( $product ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</a>
 
 						<div class="rollsbar-product-card__body">

@@ -136,17 +136,162 @@ add_filter(
 	}
 );
 
-function rollsbar_product_image_url( WC_Product $product ): string {
-	$image_id = $product->get_image_id();
+/**
+ * Resolve the canonical presentation image without mutating product data.
+ *
+ * An explicitly configured Woo image remains the admin override. Products
+ * imported from the approved catalog retain their original source URL in
+ * _rollsbar_source_image. Products with neither use the approved branded
+ * fallback instead of WooCommerce's generic placeholder.
+ *
+ * @return array{url:string,source:string,attachment_id:int,kind:string,position:string}
+ */
+function rollsbar_resolve_product_image( WC_Product $product, string $size = 'large' ): array {
+	$image_id = (int) $product->get_image_id();
 
 	if ( $image_id ) {
-		$image = wp_get_attachment_image_url( $image_id, 'large' );
+		$image = wp_get_attachment_image_url( $image_id, $size );
 		if ( $image ) {
-			return $image;
+			return array(
+				'url'           => (string) $image,
+				'source'        => 'featured',
+				'attachment_id' => $image_id,
+				'kind'          => 'image',
+				'position'      => '',
+			);
 		}
 	}
 
-	$source = (string) $product->get_meta( '_rollsbar_source_image', true );
+	// Exact approved VK sprite slices whose source IDs survive in catalog.json.
+	$approved_sprites = array(
+		'tyahan-sea'     => '20%',
+		'tyahan-chicken' => '40%',
+	);
+	$source_id        = (string) $product->get_meta( '_rollsbar_source_id', true );
+	if ( isset( $approved_sprites[ $source_id ] ) ) {
+		return array(
+			'url'           => get_theme_file_uri( 'assets/images/vk-products-row1.webp' ),
+			'source'        => 'approved-sprite',
+			'attachment_id' => 0,
+			'kind'          => 'sprite',
+			'position'      => $approved_sprites[ $source_id ],
+		);
+	}
 
-	return $source ? esc_url_raw( $source ) : wc_placeholder_img_src( 'large' );
+	$source = esc_url_raw( trim( (string) $product->get_meta( '_rollsbar_source_image', true ) ) );
+	if ( $source ) {
+		return array(
+			'url'           => $source,
+			'source'        => 'catalog',
+			'attachment_id' => 0,
+			'kind'          => 'image',
+			'position'      => '',
+		);
+	}
+
+	return array(
+		'url'           => '',
+		'source'        => 'fallback',
+		'attachment_id' => 0,
+		'kind'          => 'fallback',
+		'position'      => '',
+	);
 }
+
+function rollsbar_product_image_url( WC_Product $product, string $size = 'large' ): string {
+	$image = rollsbar_resolve_product_image( $product, $size );
+
+	return $image['url'];
+}
+
+/** Render the shared catalog/detail image or the exact approved fallback. */
+function rollsbar_product_image_markup( WC_Product $product, array $attributes = array() ): string {
+	$image = rollsbar_resolve_product_image( $product );
+	$name  = $product->get_name();
+
+	if ( 'sprite' === $image['kind'] ) {
+		return sprintf(
+			'<span class="rollsbar-product-sprite rollsbar-product-sprite--row1" style="background-position:%1$s 50%%" role="img" aria-label="%2$s" data-rollsbar-product-image-source="%3$s"></span>',
+			esc_attr( $image['position'] ),
+			esc_attr( $name ),
+			esc_attr( $image['url'] . '#' . $image['position'] )
+		);
+	}
+
+	if ( ! $image['url'] ) {
+		return sprintf(
+			'<span class="rollsbar-product-fallback" role="img" aria-label="%s">ROLLS BAR</span>',
+			esc_attr( $name )
+		);
+	}
+
+	$attributes = array_merge(
+		array(
+			'src'                         => $image['url'],
+			'alt'                         => $name,
+			'loading'                     => 'lazy',
+			'decoding'                    => 'async',
+			'referrerpolicy'              => 'no-referrer',
+			'data-rollsbar-product-image' => '',
+		),
+		$attributes
+	);
+
+	$markup = array();
+	foreach ( $attributes as $attribute => $value ) {
+		$markup[] = sprintf( '%s="%s"', esc_attr( (string) $attribute ), esc_attr( (string) $value ) );
+	}
+
+	return '<img ' . implode( ' ', $markup ) . '>';
+}
+
+/** Use the same canonical image identity in WooCommerce's main product image. */
+add_filter(
+	'woocommerce_single_product_image_thumbnail_html',
+	static function ( string $html, int $attachment_id ): string {
+		if ( ! function_exists( 'is_product' ) || ! is_product() ) {
+			return $html;
+		}
+
+		global $product;
+		if ( ! $product instanceof WC_Product ) {
+			return $html;
+		}
+
+		$main_image_id = (int) $product->get_image_id();
+		if ( $attachment_id && $attachment_id !== $main_image_id ) {
+			return $html;
+		}
+
+		$image  = rollsbar_resolve_product_image( $product );
+		if ( 'featured' === $image['source'] ) {
+			return $html;
+		}
+
+		$markup = rollsbar_product_image_markup(
+			$product,
+			array(
+				'class'   => 'wp-post-image',
+				'loading' => 'eager',
+			)
+		);
+
+		if ( 'image' !== $image['kind'] ) {
+			return '<div class="woocommerce-product-gallery__image--placeholder rollsbar-product-media rollsbar-product-detail-media">' . $markup . '</div>';
+		}
+
+		$full_image = $image['attachment_id']
+			? wp_get_attachment_image_url( $image['attachment_id'], 'full' )
+			: $image['url'];
+		$full_image = $full_image ?: $image['url'];
+
+		return sprintf(
+			'<div data-thumb="%1$s" class="woocommerce-product-gallery__image rollsbar-product-media rollsbar-product-detail-media"><a href="%2$s">%3$s</a></div>',
+			esc_url( $image['url'] ),
+			esc_url( $full_image ),
+			$markup
+		);
+	},
+	20,
+	2
+);
