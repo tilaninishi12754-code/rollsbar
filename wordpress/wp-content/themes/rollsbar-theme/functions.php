@@ -87,6 +87,20 @@ add_action(
 	}
 );
 
+/** Compact catalog price; Woo remains the source of active, tax-adjusted prices. */
+function rollsbar_catalog_price_html( WC_Product $product ): string {
+	if ( ! $product->is_type( 'variable' ) ) {
+		return $product->get_price_html();
+	}
+
+	$minimum = $product->get_variation_price( 'min', true );
+	if ( '' === $minimum || false === $minimum ) {
+		return '';
+	}
+
+	return '<span class="rollsbar-price__from">от</span> ' . wc_price( $minimum );
+}
+
 function rollsbar_cart_count(): int {
 	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
 		return 0;

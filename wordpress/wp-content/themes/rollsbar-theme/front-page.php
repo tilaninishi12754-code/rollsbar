@@ -217,11 +217,11 @@ foreach ( $promo_posts as $promo_post ) {
 							<h3><a href="<?php echo esc_url( $product->get_permalink() ); ?>"><?php echo esc_html( $product->get_name() ); ?></a></h3>
 							<p><?php echo wp_kses_post( $product->get_short_description() ); ?></p>
 
-							<div class="rollsbar-product-card__footer">
-								<span class="rollsbar-price"><?php echo wp_kses_post( $product->get_price_html() ); ?></span>
+							<div class="rollsbar-product-card__footer<?php echo $is_variable ? ' rollsbar-product-card__footer--variable' : ''; ?>">
+								<span class="rollsbar-price"><?php echo wp_kses_post( rollsbar_catalog_price_html( $product ) ); ?></span>
 
 								<?php if ( $is_variable ) : ?>
-									<a class="rollsbar-product-action" href="<?php echo esc_url( $product->get_permalink() ); ?>">Выбрать</a>
+									<a class="rollsbar-product-action rollsbar-product-action--variable" href="<?php echo esc_url( $product->get_permalink() ); ?>" aria-label="<?php echo esc_attr( 'Выбрать вариант: ' . $product->get_name() ); ?>">Выбрать</a>
 								<?php else : ?>
 									<a
 										class="rollsbar-product-action add_to_cart_button ajax_add_to_cart"
