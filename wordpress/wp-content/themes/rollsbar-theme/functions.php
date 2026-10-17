@@ -109,6 +109,23 @@ function rollsbar_cart_count(): int {
 	return (int) WC()->cart->get_cart_contents_count();
 }
 
+/** One read-only detail record per canonical source ID, shared by catalog and Hits. */
+function rollsbar_product_detail_data( WC_Product $product ): array {
+	$is_variable = $product->is_type( 'variable' );
+	$description = trim( wp_strip_all_tags( $product->get_description() ?: $product->get_short_description() ) );
+
+	return array(
+		'name'        => $product->get_name(),
+		'description' => $description ?: 'Описание в открытом меню не указано.',
+		'media'       => rollsbar_product_image_markup( $product, array( 'loading' => 'eager' ) ),
+		'price'       => wp_kses_post( rollsbar_catalog_price_html( $product ) ),
+		'variable'    => $is_variable,
+		'action_url'  => $is_variable ? $product->get_permalink() : $product->add_to_cart_url(),
+		// Native Woo action identity only; never the key for detail lookup.
+		'woo_id'      => $product->get_id(),
+	);
+}
+
 function rollsbar_cart_total(): string {
 	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
 		return wc_price( 0 );

@@ -208,13 +208,13 @@ foreach ( $promo_posts as $promo_post ) {
 					$is_variable = $product->is_type( 'variable' );
 					$accent = $accent_colors[ $product->get_meta( '_rollsbar_source_id', true ) ] ?? '';
 					?>
-					<article class="rollsbar-product-card<?php echo $accent ? ' rollsbar-product-card--accent rollsbar-product-card--' . esc_attr( $accent ) : ''; ?>">
-						<a class="rollsbar-product-card__media rollsbar-product-media" href="<?php echo esc_url( $product->get_permalink() ); ?>">
+					<article class="rollsbar-product-card<?php echo $accent ? ' rollsbar-product-card--accent rollsbar-product-card--' . esc_attr( $accent ) : ''; ?>" data-rollsbar-source-id="<?php echo esc_attr( $product->get_meta( '_rollsbar_source_id', true ) ); ?>">
+						<a class="rollsbar-product-card__media rollsbar-product-media" href="<?php echo esc_url( $product->get_permalink() ); ?>" data-rollsbar-detail-open aria-haspopup="dialog">
 							<?php echo rollsbar_product_image_markup( $product ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</a>
 
 						<div class="rollsbar-product-card__body">
-							<h3><a href="<?php echo esc_url( $product->get_permalink() ); ?>"><?php echo esc_html( $product->get_name() ); ?></a></h3>
+							<h3><a href="<?php echo esc_url( $product->get_permalink() ); ?>" data-rollsbar-detail-open aria-haspopup="dialog"><?php echo esc_html( $product->get_name() ); ?></a></h3>
 							<p><?php echo wp_kses_post( $product->get_short_description() ); ?></p>
 
 							<div class="rollsbar-product-card__footer<?php echo $is_variable ? ' rollsbar-product-card__footer--variable' : ''; ?>">
@@ -238,6 +238,35 @@ foreach ( $promo_posts as $promo_post ) {
 			</div>
 		</section>
 	<?php endforeach; ?>
+	<?php
+	$detail_products = array();
+	foreach ( $products_by_source as $source_id => $product ) {
+		if ( '' !== $source_id && $product instanceof WC_Product ) {
+			$detail_products[ $source_id ] = rollsbar_product_detail_data( $product );
+		}
+	}
+	?>
+	<!-- rollsbar-product-details:start -->
+	<script type="application/json" id="rollsbarProductDetailsData"><?php echo wp_json_encode( $detail_products, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></script>
+	<div class="rollsbar-product-details" id="rollsbarProductDetails" hidden>
+		<button class="rollsbar-product-details__backdrop" type="button" data-rollsbar-detail-close tabindex="-1" aria-label="Закрыть описание"></button>
+		<div class="rollsbar-product-details__panel" role="dialog" aria-modal="true" aria-labelledby="rollsbarDetailTitle" tabindex="-1">
+			<div class="rollsbar-product-details__media rollsbar-product-media"></div>
+			<div class="rollsbar-product-details__content">
+				<div class="rollsbar-product-details__top">
+					<div><div class="rollsbar-product-details__label">Описание</div><h3 id="rollsbarDetailTitle"></h3></div>
+					<button class="rollsbar-product-details__close" type="button" data-rollsbar-detail-close aria-label="Закрыть">×</button>
+				</div>
+				<div class="rollsbar-product-details__price"></div>
+				<p class="rollsbar-product-details__desc"></p>
+				<a class="rollsbar-product-details__add" rel="nofollow">
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.5 9h9.8l1.7-6H7.1M10 19a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 10 19Zm8 0a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 18 19Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span></span>
+				</a>
+				<div class="rollsbar-product-details__note">Название, цена, варианты и состав синхронизированы с переданной таблицей Rolls Bar и последними прямыми правками заказчика. Неподтверждённые данные не додумываются.</div>
+			</div>
+		</div>
+	</div>
+	<!-- rollsbar-product-details:end -->
 <?php endif; ?>
 
 <?php
