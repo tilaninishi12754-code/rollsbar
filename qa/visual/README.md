@@ -244,3 +244,19 @@ This batch does not provision staging/production or contact either environment.
 Receiving-mode buttons preserve the approved indicative labels in the Woo session;
 they do not apply shipping rates, delivery rules or pickup discounts. The checkout
 CTA navigates to the native Woo checkout, where fulfillment/rates remain authoritative.
+
+## Current B6B closure
+
+B6B product-card footer/action parity is now CLOSED; earlier deferred remarks
+above describe the scope of the original batches. See `B6B_REPORT.md` and
+`B6B_GEOMETRY.json` for immutable approved evidence, the preserved 17px/23px
+ordinary/accent distinction, mobile geometry and narrow functional exceptions.
+Only card CSS changed in the application; native Woo pricing/selectors/counters
+remain canonical. Targeted runner: `node qa/visual/run.mjs test b6b`.
+
+Final normal gate: **166 passed /18 explicit skips**. All original **268** PNG
+hashes remain unchanged; **17** approved-only B6B images bring the total to **285**.
+No global screenshot tolerance or masks were added. At 320px, B13 populated-bar
+captures use the existing backing-plate technique under the exact control bounds
+to isolate unrelated page content visible through its rounded corners. Geometry
+and functionality run without that backing. pre-B16/B16 have not started.

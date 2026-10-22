@@ -1,5 +1,11 @@
 [
   {
+    "tests": ["b6b footer action contract"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "No screenshot allowance. Counter wrapping only when native price plus counter cannot fit; component capture origins rounded within half a CSS pixel; footer-width geometry allows at most 0.02px for one 1/64px grid-column layout unit",
+    "reason": "B11's functional protection is retained after restoring the approved narrower footer. At 320px the ordinary 108.5px footer cannot contain 41.56px price + 8px gap + 89px counter. Approved compresses the price box to 11.5px while its unwrapped glyphs extend underneath the counter; current grows the footer from 44px to 83px and moves the counter to y=46px, preserving the 17px bottom inset and both controls. Accent/long-price counters wrap similarly when required. Actual glyph bounds, action containment, zero clipping and native semantics are tested separately. Approved highlights only the first representation of its three accent IDs; current preserves the already accepted canonical accent styling on Catalog/Hits copies, matching each to the approved accent oracle. Mobile uses approved margin-top:8px, so taller neighboring titles add lower whitespace; no invented bottom alignment."
+  },
+  {
     "tests": ["b14 approved search states"],
     "viewports": [1440,1051,1050,1024,701,700,390,320],
     "scope": "B14 panel captures only: identical #f3f4f5 backdrop with backdrop-filter:none; no panel/content changes, masks or pixel allowances",
@@ -8,8 +14,8 @@
   {
     "tests": ["b13 approved header and mobile totals"],
     "viewports": [700,390,320],
-    "scope": "b13-empty-mobile.png only: a white 54x54 backing plate immediately behind the circular control in both sources; no mask, pixel tolerance or control-style change",
-    "reason": "The empty fixed circular button exposes underlying page rows at its rounded corners. Those rows remain outside B13 (B6B OPEN); measured unisolated differences were 0 pixels at 700, 76 at 390 and 166 at 320, confined to the surrounding background. The backing plate preserves all button, icon and badge pixels, dimensions and viewport position. Populated mobile and desktop controls retain ordinary screenshots with zero allowance."
+    "scope": "b13-empty-mobile.png: existing white 54x54 backing behind the circular control. At 320px only, populated bar captures reuse the same technique in the exact 292x64 bar rectangle, underneath the control; only background visible through rounded corners changes. No mask, tolerance or application style change",
+    "reason": "The controls expose underlying page rows at their rounded corners. Empty-control original unisolated differences were 0/76/166 pixels at 700/390/320. Restoring B6B footer height/clipping changes those rows: the protected 320px b13-one.png differed by 2 thresholded pixels at x=17/18,y=0, outside the rounded control fill. Use an identical white capture backing in both sources only at that measured width, preserving all actual control pixels, bounds, icons, labels and native totals. Remove the backing before functional/geometry assertions. All 268 original baseline hashes and existing zero screenshot allowance remain unchanged."
   },
   {
     "tests": ["details"],
@@ -52,7 +58,7 @@
     "tests": ["ordinary-media", "ordinary-title", "variable-media", "variable-title"],
     "viewports": [1440,1051,1050,1024,701,700,390,320],
     "scope": "Product footer/action outside media/title captures",
-    "reason": "B6B exact footer parity is deferred; B8 native pricing is preserved; B11 separately covers action controls and overflow"
+    "reason": "These B6A/B7 captures remain scoped to media/title. B6B now covers the footer/lower region separately; B8 native pricing and B11 functional controls are preserved."
   },
   {
     "tests": ["b11 simple actions"],

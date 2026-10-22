@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { exerciseSearch, searchGeometry, searchFallbackGeometry } from './b14-search-helpers.mjs';
 import { footerGeometry, footerOverflow } from './b15-footer-helpers.mjs';
+import { cardGeometry } from './b6b-card-helpers.mjs';
 const baseline = process.env.ROLLSBAR_BASELINE==='1';
 const exceptions = JSON.parse(readFileSync('qa/visual/accepted-exceptions.json'));
 test.beforeEach(({},info)=>{
@@ -52,6 +53,88 @@ async function capture(page,locator,name) {
   const narrowCounter=page.viewportSize().width===320&&['b11-simple-counter','b11-simple-repeat'].includes(name);
   await expect(locator).toHaveScreenshot(name+'.png',name==='details'?{maxDiffPixels:20}:name==='selector-heading'?{maxDiffPixels:1}:name==='selector-choices'?{maxDiffPixels:choiceCaps[page.viewportSize().width]}:narrowCounter?{maxDiffPixels:38}:{});
 }
+test('b6b footer action contract',async({page},info)=>{
+ test.setTimeout(90000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning'||(m.type()==='error'&&!m.text().startsWith('Failed to load resource:')))errors.push(m.text());});
+ const doc=await ready(page),width=page.viewportSize().width;
+ const card=(d,id,a=baseline)=>d.locator(a?`[data-original-add="${id}"]`:`[data-rollsbar-source-id="${id}"]`).first().locator(a?'xpath=ancestor::article':':scope');
+ const footer=(d,id,a=baseline)=>card(d,id,a).locator(a?'.product-card__footer':'.rollsbar-product-card__footer');
+ const representatives=[['simple','rolls-filadelfiya-s-krevetkoy'],['variable','snacks-naggetsy'],['accent','pizza-pepperoni'],['options','shrimp-tempura'],['hits','rolls-filadelfiya'],['long','sets-mega-set']];
+ const shot=async(id,name)=>{
+  const target=name==='hits'?doc.locator('#hits').locator(baseline?`[data-original-add="${id}"]`:`[data-rollsbar-source-id="${id}"]`).first().locator(baseline?'xpath=ancestor::article':':scope').locator(baseline?'.product-card__footer':'.rollsbar-product-card__footer'):footer(doc,id);await target.scrollIntoViewIfNeeded();
+  await target.evaluate(n=>{n.scrollIntoView({block:'center',behavior:'instant'});n.ownerDocument.activeElement?.blur();const r=n.getBoundingClientRect();n.style.position='relative';n.style.left=`${Math.round(r.x)-r.x}px`;n.style.top=`${Math.round(r.y)-r.y}px`;});
+  await page.mouse.move(0,899);await expect(target).toHaveScreenshot(`b6b-${name}.png`);
+  await target.evaluate(n=>{n.style.position='';n.style.left='';n.style.top='';});
+ };
+ const lowerShot=async(id,name)=>{
+  const c=card(doc,id),f=footer(doc,id);await f.scrollIntoViewIfNeeded();
+  await c.evaluate(n=>{n.ownerDocument.activeElement?.blur();const r=n.getBoundingClientRect();n.style.position='relative';n.style.left=`${Math.round(r.x)-r.x}px`;n.style.top=`${Math.round(r.y)-r.y}px`;});
+  const cb=await c.boundingBox(),fb=await f.boundingBox();
+  await page.mouse.move(0,899);await expect(page).toHaveScreenshot(`b6b-lower-${name}.png`,{clip:{x:cb.x,y:Math.floor(fb.y)-2,width:cb.width,height:cb.y+cb.height-Math.floor(fb.y)+2}});
+  await c.evaluate(n=>{n.style.position='';n.style.left='';n.style.top='';});
+ };
+ if([1440,320].includes(width)){
+  for(const [name,id] of representatives)await shot(id,name);
+  await lowerShot('rolls-filadelfiya-s-krevetkoy','simple');await lowerShot('pizza-pepperoni','accent');
+ }
+ const initial=await doc.locator('body').evaluate(cardGeometry);
+ if(baseline){
+  if(width===1440){await card(doc,'rolls-filadelfiya-s-krevetkoy').locator('[data-client-plus]').click();await shot('rolls-filadelfiya-s-krevetkoy','counter');}
+  return;
+ }
+ const oracle=await page.context().newPage();await oracle.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());
+ await oracle.goto('http://127.0.0.1:4178/approved/demo.html');const reference=oracle.frameLocator('#stage').frameLocator('#site');
+ await expect(reference.locator('body[data-final-demo-fixes="1"]')).toBeVisible();
+ const expected=await reference.locator('body').evaluate(cardGeometry);
+ expect(initial).toHaveLength(126);expect(new Set(initial.map(c=>c.id)).size).toBe(118);
+ expect(initial.filter(c=>c.section==='hits')).toHaveLength(8);
+ const comparisons=[];
+ for(const actual of initial){
+  // Approved applies highlight to the first representation only. Match the existing
+  // canonical accent class, including its Hits copy, to the approved accent oracle.
+  const approved=expected.find(c=>c.id===actual.id&&c.accent===actual.accent&&c.section===actual.section)||expected.find(c=>c.id===actual.id&&c.accent===actual.accent)||expected.find(c=>c.id===actual.id);
+  expect(approved,actual.id).toBeTruthy();
+  expect(actual.overflow,actual.id).toBe(0);expect(actual.overlap,actual.id).toBe(0);expect(actual.inkOverlap,actual.id).toBe(0);expect(actual.clipping,actual.id).toBe(0);
+  // 701px grid columns distribute one 1/64px layout unit differently by column.
+  expect(Math.abs(actual.footer.width-approved.footer.width),actual.id).toBeLessThanOrEqual(.02);
+  expect(actual.footer.x,actual.id).toBe(approved.footer.x);
+  expect(actual.footer.height,actual.id).toBe(44);
+  expect(actual.action.width,actual.id).toBe(width<=700?38:42);expect(actual.action.height,actual.id).toBe(width<=700?38:42);
+  expect(Math.abs(actual.action.x-approved.action.x),actual.id).toBeLessThanOrEqual(.02);
+  expect(actual.price.x,actual.id).toBe(approved.price.x);
+  expect(actual.price.y,actual.id).toBe(width<=700?3:1);
+  expect(actual.price.height,actual.id).toBe(width<=700?38:42);
+  expect(actual.action.y,actual.id).toBe(width<=700?3:1);
+  // Desktop flex footers align at the bottom. Mobile retains approved margin-top:8px,
+  // with extra whitespace when a neighboring title makes the grid row taller.
+  if(width>700)expect(actual.bottom,actual.id).toBe(actual.accent?23:17);
+  comparisons.push({actual,approved});
+ }
+ expect(initial.filter(c=>c.accent&&c.id==='pizza-pepperoni').length).toBe(2);
+ expect(await doc.locator('.rollsbar-product-card--accent .rollsbar-product-card__footer--variable').count()).toBeGreaterThan(0);
+ const id='rolls-filadelfiya-s-krevetkoy';
+ await card(doc,id,false).locator('button').click();await expect(card(doc,id,false).locator('.rollsbar-product-counter span')).toHaveText('1');
+ await card(reference,id,true).locator('[data-client-plus]').click();
+ if(width===1440)await shot(id,'counter');
+ const counters={current:await doc.locator('body').evaluate(cardGeometry),approved:await reference.locator('body').evaluate(cardGeometry)};
+ for(const row of counters.current){expect(row.overlap,row.id).toBe(0);expect(row.inkOverlap,row.id).toBe(0);expect(row.overflow,row.id).toBe(0);expect(row.clipping,row.id).toBe(0);}
+ const currentCounter=counters.current.find(c=>c.id===id),approvedCounter=counters.approved.find(c=>c.id===id);
+ expect(currentCounter.action.width).toBe(width<=700?89:100);expect(currentCounter.action.height).toBe(width<=700?37:40);
+ if(width>=390)expect(currentCounter.action).toEqual(approvedCounter.action);
+ // Actual B8 native price content remains exact, without replacing Woo HTML.
+ const data=JSON.parse(await doc.locator('#rollsbarProductDetailsData').textContent());
+ const variable=Object.entries(data).filter(([,p])=>p.selection.variations.length);
+ expect(variable).toHaveLength(13);expect(variable.reduce((n,[,p])=>n+p.selection.variations.length,0)).toBe(26);
+ for(const [source] of variable)await expect(footer(doc,source,false).locator('.rollsbar-price__from')).toHaveText('от');
+ for(const source of ['sets-mega-set','soups-tom-yam','rolls-filadelfiya']){
+  await card(doc,source,false).locator('[data-rollsbar-cart-delta="1"]').click();await expect(card(doc,source,false).locator('.rollsbar-product-counter span')).toHaveText('1');
+ }
+ const edgeCounters=await doc.locator('body').evaluate(cardGeometry);
+ for(const row of edgeCounters){expect(row.overlap,row.id).toBe(0);expect(row.inkOverlap,row.id).toBe(0);expect(row.overflow,row.id).toBe(0);expect(row.clipping,row.id).toBe(0);}
+ const overflow=await doc.locator('body').evaluate(footerOverflow);expect(overflow).toEqual({page:0,footer:0,content:0,header:0,search:0,mobile:0});
+ expect(errors).toEqual([]);await oracle.close();
+ await info.attach('b6b-geometry.json',{body:JSON.stringify({width,comparisons,counter:{current:currentCounter,approved:approvedCounter},edgeCounters:edgeCounters.filter(c=>['sets-mega-set','soups-tom-yam','rolls-filadelfiya'].includes(c.id)),overflow,errors}),contentType:'application/json'});
+});
 const targets=[
  ['header','.topbar','.rollsbar-header'],
  ['categories','.category-nav','.rollsbar-category-nav'],
@@ -379,7 +462,14 @@ test('b13 approved header and mobile totals',async({page},info)=>{
  const empty=doc.locator(baseline?'.mobile-cart':'[data-rollsbar-mobile-cart]');
  const shot=async name=>{
   await doc.locator('body').evaluate(async b=>{b.ownerDocument.activeElement?.blur();b.ownerDocument.defaultView.scrollTo(0,0);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
-  if(width<=700){await expect(bar).toBeVisible();await expect(bar).toHaveScreenshot(`b13-${name}.png`);}
+  if(width<=700){
+   await expect(bar).toBeVisible();
+   // B6B changes the rows seen through the rounded corners, not this B13 control.
+   // Reuse B13's exact-rectangle backing only at the measured 320px boundary.
+   if(width===320)await bar.evaluate(n=>{const r=n.getBoundingClientRect(),p=n.ownerDocument.createElement('div');p.id='b13-order-capture-backing';Object.assign(p.style,{position:'fixed',left:r.x+'px',top:r.y+'px',width:r.width+'px',height:r.height+'px',background:'#fff',zIndex:String(Number(getComputedStyle(n).zIndex)-1),pointerEvents:'none'});n.ownerDocument.body.append(p);});
+   await expect(bar).toHaveScreenshot(`b13-${name}.png`);
+   if(width===320)await doc.locator('#b13-order-capture-backing').evaluate(n=>n.remove());
+  }
   else if(width>900){await expect(header).toBeVisible();await expect(header).toHaveScreenshot(`b13-${name}.png`);}
  };
  await b13State(doc,0);await expect(bar).not.toBeVisible();
