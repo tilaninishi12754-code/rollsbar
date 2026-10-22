@@ -48,6 +48,7 @@ require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-address-suggestions.ph
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-content-types.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-vacancy-page.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-product-fields.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-cart-actions.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-seo.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-checkout.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-order-details.php';
@@ -61,6 +62,7 @@ RollsBar_Address_Suggestions::init();
 RollsBar_Content_Types::init();
 RollsBar_Vacancy_Page::init();
 RollsBar_Product_Fields::init();
+RollsBar_Cart_Actions::init();
 RollsBar_SEO::init();
 RollsBar_Checkout::init();
 RollsBar_Order_Details::init();

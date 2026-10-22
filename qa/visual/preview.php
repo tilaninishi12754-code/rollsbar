@@ -25,12 +25,12 @@ function bloginfo($s) { echo 'UTF-8'; }
 function body_class() { echo 'class="home"'; }
 function wp_body_open() {}
 function wp_head() { echo '<link rel="stylesheet" href="'.get_template_directory_uri().'/assets/css/app.css">'; }
-function wp_footer() { echo '<script src="'.get_template_directory_uri().'/assets/js/app.js"></script>'; }
+function wp_footer() { echo '<script>window.rollsbarCart={url:"/fixture-cart",nonce:"local-fixture"}</script><script src="'.get_template_directory_uri().'/assets/js/app.js"></script>'; }
 function get_template_part($s) { global $theme; require $theme.'/'.$s.'.php'; }
 function get_header() { global $theme; require $theme.'/header.php'; }
 function get_footer() { global $theme; require $theme.'/footer.php'; }
 function wc_get_cart_url() { return '/cart/'; }
-function WC() { return (object)['cart'=>new class { function get_cart_contents_count() { return 0; } function get_cart_subtotal() { return '0 ₽'; } }]; }
+function WC() { global $fixture_cart; return (object)['cart'=>$fixture_cart ?? new class { function get_cart_contents_count() { return 0; } function get_cart_subtotal() { return '0 ₽'; } }]; }
 function wc_price($n) { return '<span class="woocommerce-Price-amount amount"><bdi>'.number_format((float)$n,0,',',' ').'&nbsp;<span class="woocommerce-Price-currencySymbol">₽</span></bdi></span>'; }
 function wc_get_price_to_display($p) { return $p->get_price(); }
 function wc_get_formatted_variation($p,...$args) { return $p->row['label']; }
@@ -41,7 +41,8 @@ class WC_Product {
  public function __construct(public array $row, public int $id) {}
  function get_id() { return $this->id; }
  function get_meta($k,...$a) { return match($k) { '_rollsbar_source_id'=>$this->row['id'], '_rollsbar_source_image'=>$this->row['img']??'', '_rollsbar_options_json'=>isset($this->row['options'])?json_encode($this->row['options']):'', default=>'' }; }
- function is_type($s) { return $s===(isset($this->row['variants'])?'variable':'simple'); }
+ function is_type($s) { return in_array(isset($this->row['variants'])?'variable':'simple',(array)$s,true); }
+ function get_status() { return 'publish'; }
  function get_name() { return $this->row['name']; }
  function get_short_description() { return $this->row['desc']; }
  function get_description() { return $this->row['desc']; }
@@ -54,13 +55,17 @@ class WC_Product {
  function get_available_variations(...$a) { return array_map(fn($v,$i)=>new FixtureVariation($v,$this->id*100+$i),$this->row['variants'],array_keys($this->row['variants'])); }
 }
 class FixtureVariation extends WC_Product {
+ function is_type($s) { return in_array('variation',(array)$s,true); }
+ function get_parent_id() { return intdiv($this->id,100); }
+ function get_variation_attributes() { return ['attribute_fixture-choice'=>$this->row['label']]; }
  function get_attributes() { return ['fixture-choice'=>$this->row['label']]; }
  function variation_is_active() { return true; }
  function variation_is_visible() { return true; }
  function is_purchasable() { return true; }
- function is_in_stock() { return true; }
+ function is_in_stock() { return $this->row['available']??true; }
 }
 $products = array_map(fn($p,$i)=>new WC_Product($p,$i+1),$catalog['products'],array_keys($catalog['products']));
+$fixture_products = $products;
 function wc_get_products($args) { global $products; return array_values(array_filter($products,fn($p)=>$p->row['cat']===$args['category'][0])); }
 require $theme.'/functions.php';
 require $theme.'/front-page.php';

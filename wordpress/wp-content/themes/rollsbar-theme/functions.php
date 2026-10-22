@@ -84,6 +84,12 @@ add_action(
 			$version,
 			true
 		);
+		if ( class_exists( 'WC_AJAX' ) && is_front_page() ) {
+			wp_localize_script( 'rollsbar-app', 'rollsbarCart', array(
+				'url' => WC_AJAX::get_endpoint( 'rollsbar_cart' ),
+				'nonce' => wp_create_nonce( 'rollsbar_cart' ),
+			) );
+		}
 	}
 );
 

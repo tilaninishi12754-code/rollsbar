@@ -68,8 +68,10 @@ theme CSS, JS, and local assets are served directly from the working tree.
 It does not duplicate their HTML or business logic in JavaScript.
 
 The test-only WP/Woo adapter supplies catalog.json rows, canonical source IDs,
-fixed synthetic Woo/variation IDs, all variations available, zero cart contents,
-and zero subtotal. It does not verify live Woo configuration, hooks, database
+fixed synthetic Woo/variation IDs, all variations available, an initially empty cart,
+and zero header subtotal. B11's localhost cart fixture executes the actual plugin
+mutation seam against a native-cart API adapter, with a separate cookie session
+for each browser context. It does not verify live Woo configuration, hooks, database
 prices, availability, tax setup, plugins, or real cart actions. Live backend
 prices/availability remain NOT LIVE-VERIFIED.
 
@@ -88,7 +90,7 @@ and 34 pixels for selector choices (native price-label rasterization);
 see `accepted-exceptions.json`. Dimensions must match in every assertion.
 Both option labels/prices and the initial selected index are also asserted
 exactly after whitespace normalization, so the price-label allowance cannot hide
-a changed price or choice. Current selector CTA is asserted disabled.
+a changed price or choice. B11 asserts the selector CTA enabled only for valid state.
 
 The technical-cookie notice is pre-acknowledged via its source storage key
 `rollsbar_cookie_notice=1` in both contexts, so an unrelated fixed banner cannot
@@ -113,16 +115,48 @@ product media/title, product-details panel, selector heading/choices. Ordinary:
 `tyahan-chicken`. The card-shell clip spans the outer article border through the
 bottom of its media, covering the upper rounded shell and media inset without
 the deferred footer. Each approved action locates the same canonical product as the
-current `_rollsbar_source_id` and opens the same initial state. No cart CTA is
-clicked. Both desktop and mobile modal/sheet geometry are exercised.
+current `_rollsbar_source_id` and opens the same initial state. The original 96
+assertions do not click cart CTAs. Both desktop and mobile modal/sheet geometry are exercised.
+
+## Batch 11 extension
+
+The normal command also runs 48 B11 screenshot assertions (six targets at each
+of the eight widths): ordinary add icon, quantity 1, repeated-add quantity 2,
+variable choose icon, enabled selector CTA, and the choose icon after successful
+selection/add/close. Approved has no separate success toast; counters and modal
+closure are its post-add feedback. Full footer/price parity remains deferred B6B.
+
+Generate ONLY the new expected targets explicitly with
+`npm run visual-baseline -- b11` (or `node qa/visual/run.mjs baseline b11`).
+This still archives only the immutable approved SHA, disables current rendering,
+and now refuses to rewrite any already-manifested baseline hash. The original 96
+hashes are preserved. Normal mode cannot update snapshots.
+
+The only B11 pixel allowance is 38 pixels on the two 320px counter states, where
+approved's adjacent price overlaps the captured rounded corner and the corrected
+layout does not. See `accepted-exceptions.json`. No other B11 allowance or mask exists.
+
+Functional geometry checks run at all eight widths. Exhaustive browser mutation
+checks run at 1440 and 320: 13 parents/26 variations, six WOK products/18 options,
+shrimp/3 options, all eight duplicate Hits identities, zero/remove, repeat,
+keyboard/focus, detail X/backdrop/Escape, invalid selection, server rejection,
+error recovery and simultaneous activation guard. Deliberately blocked external
+resource console messages are outside local fixture coverage; application
+warnings/errors and uncaught exceptions fail. The six intermediate-width copies
+of the exhaustive mutation test are explicitly skipped; geometry is not skipped.
+
+Run the deterministic PHP mutation/item-data checks with
+`qa/.runtime/php/php.exe qa/visual/cart-contract.php <absolute repository root>`.
+This proves the production call seam and metadata contract using the same local
+catalog adapter; it is not a live Woo backend/DB verification.
 
 ## Scope exclusions and accepted differences
 
 - Product captures, all widths: footer/actions excluded; B6B exact action parity
   is deferred, B8 native pricing is preserved, and B11 owns the known 320px
   simple-action overflow. These tests cover the selected media/title contract.
-- Selector, all widths: heading and choices are separate element snapshots;
-  CTA is excluded because B10 intentionally leaves it disabled until B11.
+- Original selector snapshots, all widths: heading and choices remain separate;
+  B11 covers the CTA independently.
 - Details and selector, all widths: element snapshots compare component pixels
   independently of page position/backdrop, accommodating accepted scroll-lock
   geometry offsets and stronger inert/focus/scroll protections.
@@ -147,4 +181,4 @@ Playwright behavior reference:
 https://playwright.dev/docs/test-snapshots
 and https://playwright.dev/docs/api/class-testconfig#test-config-update-snapshots
 
-This infrastructure does not start B11 or close B6B. No deployment is performed.
+B11's added coverage does not close B6B or start B12+. No deployment is performed.

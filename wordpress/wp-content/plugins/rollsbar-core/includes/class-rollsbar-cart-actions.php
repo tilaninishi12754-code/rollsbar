@@ -1,0 +1,100 @@
+<?php
+/** Catalog actions backed exclusively by the customer's native Woo cart. */
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+
+final class RollsBar_Cart_Actions {
+
+	public static function init(): void {
+		add_action( 'wc_ajax_rollsbar_cart', array( __CLASS__, 'ajax' ) );
+		add_filter( 'woocommerce_get_item_data', array( __CLASS__, 'item_data' ), 10, 2 );
+		add_action( 'woocommerce_checkout_create_order_line_item', array( __CLASS__, 'order_item' ), 10, 4 );
+	}
+
+	public static function snapshot(): array {
+		$counts = array();
+		foreach ( WC()->cart->get_cart() as $item ) {
+			$product = wc_get_product( $item['product_id'] );
+			$id = $product ? (string) $product->get_meta( '_rollsbar_source_id', true ) : '';
+			if ( '' !== $id ) { $counts[ $id ] = ( $counts[ $id ] ?? 0 ) + (int) $item['quantity']; }
+		}
+		return array( 'counts' => (object) $counts );
+	}
+
+	/** Exact option whitelist; labels/price/availability from the browser are never trusted. */
+	public static function options( WC_Product $product, array $selected ): array {
+		$raw = (string) $product->get_meta( '_rollsbar_options_json', true );
+		$groups = '' === $raw ? array() : json_decode( $raw, true );
+		if ( ! is_array( $groups ) || ( '' !== $raw && ! $groups ) || count( $groups ) !== count( $selected ) ) {
+			throw new Exception( 'Выберите доступные опции товара.' );
+		}
+		$result = array();
+		foreach ( $groups as $index => $group ) {
+			$value = $selected[ $index ] ?? null;
+			if ( ! is_array( $group ) || ! empty( $group['pending'] ) || ! is_string( $value ) || ! is_array( $group['choices'] ?? null ) || ! in_array( $value, $group['choices'], true ) ) {
+				throw new Exception( 'Выберите доступные опции товара.' );
+			}
+			$result[] = array( 'label' => $group['label'] ?? 'Опция', 'value' => $value );
+		}
+		return $result;
+	}
+
+	/** Shared mutation seam, also exercised by deterministic local PHP QA. */
+	public static function mutate( array $request ): void {
+		$product = wc_get_product( absint( $request['product_id'] ?? 0 ) );
+		if ( ! $product || ! $product->is_type( array( 'simple', 'variable' ) ) || 'publish' !== $product->get_status() || '' === (string) $product->get_meta( '_rollsbar_source_id', true ) || $product->get_meta( '_rollsbar_source_id', true ) !== ( $request['source_id'] ?? '' ) ) {
+			throw new Exception( 'Товар недоступен.' );
+		}
+		$operation = $request['operation'] ?? '';
+		if ( ! in_array( $operation, array( 'add', 'minus' ), true ) ) { throw new Exception( 'Недопустимое действие.' ); }
+		if ( 'minus' === $operation ) {
+			// Only ordinary simple products expose card counters. Never decrement an arbitrary option line.
+			if ( ! $product->is_type( 'simple' ) || '' !== (string) $product->get_meta( '_rollsbar_options_json', true ) ) { throw new Exception( 'Выберите товар в корзине.' ); }
+			foreach ( WC()->cart->get_cart() as $key => $item ) {
+				if ( (int) $item['product_id'] === $product->get_id() && empty( $item['variation_id'] ) && empty( $item['rollsbar_options'] ) ) {
+					$quantity = max( 0, (int) $item['quantity'] - 1 );
+					if ( ! apply_filters( 'woocommerce_update_cart_validation', true, $key, $item, $quantity ) || ! WC()->cart->set_quantity( $key, $quantity ) ) { throw new Exception( 'Не удалось изменить количество.' ); }
+					return;
+				}
+			}
+			return;
+		}
+		$options = self::options( $product, is_array( $request['options'] ?? null ) ? $request['options'] : array() );
+		$variation_id = absint( $request['variation_id'] ?? 0 );
+		$attributes = array();
+		if ( $product->is_type( 'variable' ) ) {
+			$variation = wc_get_product( $variation_id );
+			if ( ! $variation || ! $variation->is_type( 'variation' ) || $variation->get_parent_id() !== $product->get_id() || ! $variation->variation_is_active() || ! $variation->variation_is_visible() || ! $variation->is_purchasable() || ! $variation->is_in_stock() ) { throw new Exception( 'Нет доступных вариантов.' ); }
+			$attributes = $variation->get_variation_attributes();
+			if ( ! $attributes || in_array( '', $attributes, true ) ) { throw new Exception( 'Выберите доступный вариант.' ); }
+		} elseif ( $variation_id ) { throw new Exception( 'Недопустимый вариант.' ); }
+		$data = $options ? array( 'rollsbar_options' => $options ) : array();
+		if ( ! apply_filters( 'woocommerce_add_to_cart_validation', true, $product->get_id(), 1, $variation_id, $attributes, $data ) || ! WC()->cart->add_to_cart( $product->get_id(), 1, $variation_id, $attributes, $data ) ) { throw new Exception( 'Не удалось добавить товар в корзину.' ); }
+		do_action( 'woocommerce_ajax_added_to_cart', $product->get_id() );
+	}
+
+	public static function ajax(): void {
+		check_ajax_referer( 'rollsbar_cart', 'nonce' );
+		if ( ! WC()->cart ) { wc_load_cart(); }
+		$request = json_decode( wp_unslash( $_POST['request'] ?? '{}' ), true );
+		try {
+			if ( ! is_array( $request ) ) { throw new Exception( 'Недопустимое действие.' ); }
+			if ( 'read' !== ( $request['operation'] ?? '' ) ) { self::mutate( $request ); }
+			WC()->cart->calculate_totals();
+			wp_send_json_success( self::snapshot() + array( 'fragments' => apply_filters( 'woocommerce_add_to_cart_fragments', array() ), 'cart_hash' => WC()->cart->get_cart_hash() ) );
+		} catch ( Exception $error ) {
+			$notices = wc_get_notices( 'error' );
+			$message = $notices ? implode( ' ', array_column( $notices, 'notice' ) ) : $error->getMessage();
+			wc_clear_notices();
+			wp_send_json_error( self::snapshot() + array( 'message' => wp_strip_all_tags( $message ) ) );
+		}
+	}
+
+	public static function item_data( array $data, array $item ): array {
+		foreach ( $item['rollsbar_options'] ?? array() as $option ) { $data[] = array( 'key' => $option['label'], 'value' => $option['value'] ); }
+		return $data;
+	}
+
+	public static function order_item( $item, $key, $values, $order ): void {
+		foreach ( $values['rollsbar_options'] ?? array() as $option ) { $item->add_meta_data( $option['label'], $option['value'] ); }
+	}
+}

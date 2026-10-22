@@ -3,6 +3,7 @@ import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve, join, extname, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 export const approvedSHA = 'a5e524392abcf89ffd5ace2a18218a6b59ed3b61';
 export function startPreview({renderCurrent=true}={}) {
   const root = process.cwd();
@@ -14,9 +15,20 @@ export function startPreview({renderCurrent=true}={}) {
     const current = renderCurrent ? execFileSync(php, ['qa/visual/preview.php', root], { encoding:'utf8', maxBuffer:8e6 }) : null;
     if (renderCurrent && (!current.startsWith('<!doctype html>') || /Fatal error|Warning:/.test(current))) throw Error('PHP fixture did not render cleanly');
     const types = {'.html':'text/html; charset=utf-8','.js':'application/javascript','.css':'text/css','.png':'image/png','.webp':'image/webp'};
-    const server = createServer((req,res) => {
+    const carts=new Map();
+    const server = createServer(async(req,res) => {
       try {
         const url = new URL(req.url,'http://localhost');
+        if(url.pathname==='/fixture-cart'&&renderCurrent){
+          const session=req.headers.cookie?.match(/rollsbar_fixture=([^;]+)/)?.[1]||randomUUID();
+          const chunks=[];for await(const chunk of req)chunks.push(chunk);
+          const form=new URLSearchParams(Buffer.concat(chunks).toString());
+          if(form.get('nonce')!=='local-fixture'){res.writeHead(403);res.end();return;}
+          const result=JSON.parse(execFileSync(php,['qa/visual/cart-fixture.php',root],{input:JSON.stringify({request:JSON.parse(form.get('request')),items:carts.get(session)||{}}),encoding:'utf8'}));
+          carts.set(session,result.items);delete result.items;
+          res.setHeader('Set-Cookie',`rollsbar_fixture=${session}; Path=/; SameSite=Strict`);
+          res.setHeader('Content-Type','application/json');res.end(JSON.stringify(result));return;
+        }
         if (url.pathname==='/health') { res.end('ready'); return; }
         const approved = url.pathname.startsWith('/approved/');
         const base = approved ? temp : root;

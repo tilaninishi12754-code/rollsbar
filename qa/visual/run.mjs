@@ -3,16 +3,23 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { startPreview, approvedSHA } from './server.mjs';
 const mode = process.argv[2];
-if (!['test','baseline'].includes(mode) || process.argv.length!==3) throw Error('Use test or baseline; CLI snapshot-update overrides are forbidden');
+const targeted=mode==='baseline'&&process.argv[3]==='b11'&&process.argv.length===4;
+if (!['test','baseline'].includes(mode) || (process.argv.length!==3&&!targeted)) throw Error('Use test, baseline or baseline b11; CLI snapshot-update overrides are forbidden');
+const protectedHashes=JSON.parse(readFileSync('qa/visual/baseline-manifest.json')).hashes;
 const preview = await startPreview({renderCurrent:mode!=='baseline'});
 try {
   const env = {...process.env, ROLLSBAR_BASELINE:mode==='baseline'?'1':'0'};
   const exit = await new Promise(resolve=>{
     const args=['qa/node_modules/@playwright/test/cli.js','test','-c','qa/visual/playwright.config.mjs'];
+    if(targeted)args.push('--grep','b11');
     const child=spawn(process.execPath,args,{env,stdio:'inherit'});
     child.on('exit',resolve);
   });
   if (mode==='baseline' && exit===0) {
+    for(const [file,hash] of Object.entries(protectedHashes)) {
+      const actual=createHash('sha256').update(readFileSync(`qa/visual/baselines/${file}`)).digest('hex');
+      if(actual!==hash)throw Error(`STOP: protected baseline changed: ${file}`);
+    }
     const hashes={};
     for (const folder of readdirSync('qa/visual/baselines')) for(const file of readdirSync(`qa/visual/baselines/${folder}`)) {
       hashes[`${folder}/${file}`]=createHash('sha256').update(readFileSync(`qa/visual/baselines/${folder}/${file}`)).digest('hex');

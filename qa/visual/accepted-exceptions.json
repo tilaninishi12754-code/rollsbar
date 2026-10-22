@@ -28,7 +28,7 @@
     "tests": ["selector"],
     "viewports": [1440,1051,1050,1024,701,700,390,320],
     "scope": "CTA excluded; heading and choices captured separately",
-    "reason": "B10 CTA remains disabled until B11"
+    "reason": "Original B10 heading/choices snapshots exclude the CTA; B11 now tests the enabled CTA separately"
   },
   {
     "tests": ["ordinary-media", "ordinary-title", "variable-media", "variable-title"],
@@ -40,6 +40,12 @@
     "tests": ["ordinary-media", "ordinary-title", "variable-media", "variable-title"],
     "viewports": [1440,1051,1050,1024,701,700,390,320],
     "scope": "Product footer/action outside media/title captures",
-    "reason": "B6B exact action parity is deferred; B8 native pricing is preserved; B11 owns the known 320px simple-action overflow"
+    "reason": "B6B exact footer parity is deferred; B8 native pricing is preserved; B11 separately covers action controls and overflow"
+  },
+  {
+    "tests": ["b11 simple actions"],
+    "viewports": [320],
+    "scope": "b11-simple-counter.png and b11-simple-repeat.png only: maxDiffPixels=38; identical dimensions; all other new B11 targets retain zero allowance",
+    "reason": "Measured 38 differing pixels at the upper-left rounded corner: the immutable approved 320px counter capture includes the neighboring price glyph where its unwrapped footer overlaps the counter. B11 fixes the real control geometry using flex-wrap, so the current counter is unobstructed. No mask, baseline rewrite, or existing tolerance change is used. Quantity text and zero/increment/decrement behavior are asserted separately."
   }
 ]

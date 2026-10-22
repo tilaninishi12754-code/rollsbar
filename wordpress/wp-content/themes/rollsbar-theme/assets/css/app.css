@@ -432,7 +432,19 @@ img{max-width:100%;display:block}
 .rollsbar-product-options__group select{width:100%;max-width:100%;padding:12px;border:1px solid #e6e6e6;border-radius:12px;background:#fff;font:inherit}
 .rollsbar-product-options__note{font-size:13px;color:#555;line-height:1.4;margin:0}
 .rollsbar-product-options__add{width:100%;border:0;border-radius:14px;background:#d92525;color:#fff;font:inherit;font-weight:900;padding:14px;margin-top:16px;opacity:.45;cursor:not-allowed}
+.rollsbar-product-options__add:not(:disabled){opacity:1;cursor:pointer}
+/* Batch 11: approved action/counter geometry. Wrap the actual controls when space is scarce. */
+.home .rollsbar-product-card__footer{flex-wrap:wrap}
+.rollsbar-product-control,.rollsbar-product-counter{margin-left:auto;flex:none}
+.rollsbar-product-counter{display:inline-grid;grid-template-columns:34px minmax(30px,auto) 34px;align-items:center;background:#fff0ef;border-radius:999px;overflow:hidden;border:1px solid #ffd7d4;box-shadow:0 9px 20px rgba(210,38,47,.12),inset 0 1px 0 rgba(255,255,255,.8);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.rollsbar-product-counter button{width:34px;height:38px;border:0;background:transparent;color:#d92525;font-family:inherit;font-size:19px;font-weight:900;padding:1px 6px;cursor:pointer}
+.rollsbar-product-counter span{font-size:12px;font-weight:900;text-align:center;color:#171717}
+[data-rollsbar-cart-delta]:disabled{cursor:wait}
+.rollsbar-cart-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;clip-path:inset(50%);white-space:nowrap}
+.rollsbar-cart-error{font-size:13px;color:#a01919;line-height:1.4;margin-top:10px;overflow-wrap:anywhere}
 @media(max-width:700px){
+	.rollsbar-product-counter{grid-template-columns:30px minmax(27px,auto) 30px}
+	.rollsbar-product-counter button{width:30px;height:35px}
 	.rollsbar-product-details.selecting{align-items:flex-end;padding:0}
 	.rollsbar-product-details.selecting .rollsbar-product-details__panel{width:100%;border-radius:25px 25px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
 }

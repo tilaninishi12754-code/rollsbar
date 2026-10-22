@@ -272,7 +272,7 @@ foreach ( $promo_posts as $promo_post ) {
 					<button class="rollsbar-product-options__close" type="button" data-rollsbar-detail-close aria-label="Закрыть">×</button>
 				</div>
 				<div class="rollsbar-product-options__groups"></div>
-				<button class="rollsbar-product-options__add" type="button" disabled title="Добавление в корзину пока недоступно">Добавить в корзину</button>
+				<button class="rollsbar-product-options__add" type="button" disabled>Добавить в корзину</button>
 			</div>
 		</div>
 	</div>
