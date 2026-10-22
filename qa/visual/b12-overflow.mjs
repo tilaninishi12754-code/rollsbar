@@ -35,7 +35,13 @@ try {
   });
   assert.deepEqual({...metrics,selector},{page:0,drawer:0,content:0,action:0,verticalScroll:true,selector:0});
   assert.deepEqual(errors,[]);
-  rows.push({width,...metrics,selector,jsErrors:errors});
+  await page.locator('.rollsbar-drawer-close').click();
+  const controls=await page.evaluate(()=>{
+   const excess=n=>n&&n.getClientRects().length?Math.max(0,n.scrollWidth-n.clientWidth,n.getBoundingClientRect().right-innerWidth,-n.getBoundingClientRect().left):0;
+   return {header:excess(document.querySelector('.rollsbar-header')),mobile:excess(document.querySelector('[data-rollsbar-orderbar]'))};
+  });
+  assert.deepEqual(controls,{header:0,mobile:0});
+  rows.push({width,...metrics,...controls,selector,jsErrors:errors});
   await context.close();
  }
  console.log(JSON.stringify({pass:true,rows},null,2));

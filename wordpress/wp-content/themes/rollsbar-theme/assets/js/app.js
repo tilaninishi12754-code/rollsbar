@@ -28,6 +28,21 @@
 	var cartConfig=window.rollsbarCart;
 	var drawer=document.getElementById('rollsbarCartDrawer');
 	var drawerState=null,drawerOpener=null,drawerBackground=[],drawerOverflow='',drawerScroll=null,drawerBehavior='',drawerFocus=null;
+	// B13 is a projection of the B12 server snapshot, never a second cart store.
+	function renderHeaderCart(data){
+		if(!data||!Array.isArray(data.lines)||typeof data.subtotal!=='string')return;
+		var count=data.lines.reduce(function(n,line){return n+line.quantity;},0);
+		var n=Math.abs(count)%100,last=n%10,word=n>10&&n<20?'товаров':last===1?'товар':last>1&&last<5?'товара':'товаров';
+		document.querySelectorAll('.rollsbar-cart-count').forEach(function(node){node.textContent=count;node.setAttribute('aria-label',count+' '+word);});
+		// Match approved ru-RU spacing without parsing or recalculating Woo money.
+		var total=data.subtotal.replace(/(\d)[ \u00a0\u202f](?=\d)/g,'$1\u00a0').replace(/\u00a0(?=₽)/g,' ');
+		document.querySelectorAll('.rollsbar-header-cart-total,[data-rollsbar-order-total]').forEach(function(node){node.textContent=total;});
+		var bar=document.querySelector('[data-rollsbar-orderbar]');
+		if(bar){bar.querySelector('[data-rollsbar-order-count]').textContent=count+' '+word;bar.hidden=count<1||!drawer.hidden;}
+		var mobile=document.querySelector('[data-rollsbar-mobile-cart]');
+		if(mobile)mobile.hidden=!drawer.hidden||(count>0&&matchMedia('(max-width:700px)').matches);
+	}
+	window.addEventListener('resize',function(){renderHeaderCart(drawerState);});
 	function restoreDrawerFocus(){
 		if(!drawerFocus||drawer.hidden)return;
 		var row=Array.from(drawer.querySelectorAll('[data-cart-key]')).find(function(node){return node.dataset.cartKey===drawerFocus.key;});
@@ -78,7 +93,9 @@
 		if(!drawer||drawer.hidden)return;
 		drawer.hidden=true;drawerFocus=null;document.body.style.overflow=drawerOverflow;
 		drawerBackground.forEach(function(item){item.element.inert=item.inert;});drawerBackground=[];
-		if(drawerOpener&&drawerOpener.isConnected)drawerOpener.focus({preventScroll:true});
+		renderHeaderCart(drawerState);
+		var returnTo=drawerOpener&&drawerOpener.isConnected&&drawerOpener.getClientRects().length?drawerOpener:Array.from(document.querySelectorAll('.rollsbar-cart-link,[data-rollsbar-mobile-cart],[data-rollsbar-orderbar]')).find(function(node){return node.getClientRects().length;});
+		if(returnTo)returnTo.focus({preventScroll:true});
 		window.scrollTo(drawerScroll.x,drawerScroll.y);document.documentElement.style.scrollBehavior=drawerBehavior;
 		drawerOpener=null;
 	}
@@ -93,6 +110,7 @@
 			if(branch.parentElement===document.body)break;
 		}
 		drawer.hidden=false;document.body.style.overflow='hidden';drawer.querySelector('.rollsbar-drawer-close').focus({preventScroll:true});
+		renderHeaderCart(drawerState);
 		drawer.querySelector('.rollsbar-drawer-error').textContent='';
 		setCartBusy(true);
 		try{await cartRequest({operation:'read'});}catch(error){drawer.querySelector('.rollsbar-drawer-error').textContent=error.message;}finally{setCartBusy(false);}
@@ -117,7 +135,7 @@
 			finally{setCartBusy(false);restoreDrawerFocus();if(button.isConnected&&!drawer.hidden&&!drawerFocus&&document.activeElement===document.body)button.focus({preventScroll:true});}
 		});
 		document.addEventListener('click',function(event){
-			var trigger=event.target.closest('.rollsbar-cart-link,[data-rollsbar-mobile-cart]');
+			var trigger=event.target.closest('.rollsbar-cart-link,[data-rollsbar-mobile-cart],[data-rollsbar-orderbar]');
 			if(!trigger||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
 			event.preventDefault();openDrawer(trigger);
 		});
@@ -160,6 +178,7 @@
 			Object.keys(data.fragments).forEach(function(key){window.jQuery(key).replaceWith(data.fragments[key]);});
 			window.jQuery(document.body).trigger('wc_fragments_refreshed');
 		}
+		renderHeaderCart(data);
 	}
 	function cartRequest(request){
 		var task=cartQueue.then(function(){return sendCartRequest(request);});
@@ -414,6 +433,8 @@
 	});
 
 	function syncMobileCart(){
+		// The homepage B12 snapshot owns its trigger visibility and totals.
+		if(document.querySelector('[data-rollsbar-orderbar]'))return;
 		var mobile=document.querySelector('[data-rollsbar-mobile-cart]');
 		var count=document.querySelector('.rollsbar-cart-count');
 		if(!mobile||!count)return;

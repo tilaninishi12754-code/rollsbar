@@ -1,5 +1,11 @@
 [
   {
+    "tests": ["b13 approved header and mobile totals"],
+    "viewports": [700,390,320],
+    "scope": "b13-empty-mobile.png only: a white 54x54 backing plate immediately behind the circular control in both sources; no mask, pixel tolerance or control-style change",
+    "reason": "The empty fixed circular button exposes underlying page rows at its rounded corners. Those rows remain outside B13 (B6B OPEN); measured unisolated differences were 0 pixels at 700, 76 at 390 and 166 at 320, confined to the surrounding background. The backing plate preserves all button, icon and badge pixels, dimensions and viewport position. Populated mobile and desktop controls retain ordinary screenshots with zero allowance."
+  },
+  {
     "tests": ["details"],
     "viewports": [1440,1051,1050,1024,701,700,390,320],
     "scope": "details.png only: maxDiffPixels=20; no dimension tolerance",

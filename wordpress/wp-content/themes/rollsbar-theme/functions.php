@@ -194,7 +194,7 @@ function rollsbar_cart_badge_markup(): string {
 
 /** Header presentation only: reuse Woo's existing subtotal and fragment refresh. */
 function rollsbar_header_cart_total_markup(): string {
-	return '<span class="rollsbar-header-cart-total">' . esc_html( wp_strip_all_tags( rollsbar_cart_total() ) ) . '</span>';
+	return '<span class="rollsbar-header-cart-total">' . esc_html( html_entity_decode( wp_strip_all_tags( rollsbar_cart_total() ), ENT_QUOTES, 'UTF-8' ) ) . '</span>';
 }
 
 add_filter(

@@ -17,7 +17,7 @@ test.beforeAll(({}, info)=>{
   for(const [file,hash] of Object.entries(manifest.hashes)) expect(createHash('sha256').update(readFileSync(`qa/visual/baselines/${file}`)).digest('hex'),file).toBe(hash);
 });
 async function ready(page) {
-  await page.addInitScript(()=>localStorage.setItem('rollsbar_cookie_notice','1'));
+  await page.addInitScript(()=>{try{localStorage.setItem('rollsbar_cookie_notice','1');}catch{/* Initial opaque iframe documents have no storage. */}});
   await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
   await page.goto(`http://127.0.0.1:4178/${baseline?'approved/demo.html':'current/'}`);
   const doc=baseline?page.frameLocator('#stage').frameLocator('#site'):page;
@@ -360,4 +360,90 @@ test('b12 canonical drawer mutations and recovery',async({page},info)=>{
  await info.attach('b12-functional.json',{body:JSON.stringify({width:page.viewportSize().width,overflow,jsErrors:errors,distinctVariations:true,distinctOptions:true,lostResponseReconciled:true,hiddenUpsells:3}),contentType:'application/json'});
  await drawerOpen(doc);await doc.locator('[data-drawer-upsell="upsell-ginger"]').click();await expect(row('upsell-ginger')).toHaveCount(1);
  await doc.locator('.rollsbar-drawer-checkout').click();await expect(page).toHaveURL('http://127.0.0.1:4178/checkout/');expect(errors).toEqual([]);
+});
+
+// B13: capture only immutable approved cart controls, using the existing B12 actions.
+async function b13State(doc,count){
+ await expect(doc.locator(baseline?'.cart-count':'.rollsbar-cart-count').first()).toHaveText(String(count));
+ if(!baseline)await expect(doc.locator('[data-rollsbar-cart-delta]').first()).toBeEnabled();
+ await doc.locator('body').evaluate(async b=>{b.ownerDocument.defaultView.scrollTo(0,0);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
+}
+test('b13 approved header and mobile totals',async({page},info)=>{
+ test.setTimeout(90000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning'||(m.type()==='error'&&!m.text().startsWith('Failed to load resource:')))errors.push(m.text());});
+ const doc=await ready(page),width=page.viewportSize().width;
+ const header=doc.locator(baseline?'.cart-button':'.rollsbar-cart-link').first();
+ const bar=doc.locator(baseline?'.client-order-bar':'[data-rollsbar-orderbar]');
+ const empty=doc.locator(baseline?'.mobile-cart':'[data-rollsbar-mobile-cart]');
+ const shot=async name=>{
+  await doc.locator('body').evaluate(async b=>{b.ownerDocument.activeElement?.blur();b.ownerDocument.defaultView.scrollTo(0,0);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
+  if(width<=700){await expect(bar).toBeVisible();await expect(bar).toHaveScreenshot(`b13-${name}.png`);}
+  else if(width>900){await expect(header).toBeVisible();await expect(header).toHaveScreenshot(`b13-${name}.png`);}
+ };
+ await b13State(doc,0);await expect(bar).not.toBeVisible();
+ await expect(header).toBeVisible({visible:width>900});
+ if(width<=700){
+  await expect(empty).toBeVisible();
+  // Isolate only the background outside the circular control from deferred page rows.
+  await empty.evaluate(n=>{const r=n.getBoundingClientRect(),p=n.ownerDocument.createElement('div');p.id='b13-capture-backing';Object.assign(p.style,{position:'fixed',left:r.x+'px',top:r.y+'px',width:r.width+'px',height:r.height+'px',background:'#fff',zIndex:String(Number(getComputedStyle(n).zIndex)-1),pointerEvents:'none'});n.ownerDocument.body.append(p);});
+  await expect(empty).toHaveScreenshot('b13-empty-mobile.png');
+  await doc.locator('#b13-capture-backing').evaluate(n=>n.remove());
+ }
+ await drawerAdd(doc,'tyahan-chicken');await b13State(doc,1);await shot('one');
+ const card=doc.locator(baseline?'[data-client-control="tyahan-chicken"]':'[data-rollsbar-source-id="tyahan-chicken"] .rollsbar-product-counter').first();
+ await card.locator('button').last().click();await b13State(doc,2);await shot('quantity');
+ await drawerAdd(doc,'pizza-pepperoni',1);await drawerAdd(doc,'wok-udon-chicken',2);await b13State(doc,4);await shot('selected');
+ await expect(bar).toBeVisible({visible:width<=700});
+ const metrics=await doc.locator('body').evaluate(b=>{
+  const d=b.ownerDocument,w=d.defaultView,h=d.querySelector('.rollsbar-header,.topbar');
+  const excess=n=>n&&n.getClientRects().length?Math.max(0,n.scrollWidth-n.clientWidth):0;
+  return {page:Math.max(0,d.documentElement.scrollWidth-w.innerWidth),header:excess(h),mobile:excess(d.querySelector('[data-rollsbar-orderbar],.client-order-bar'))};
+ });
+ expect(metrics).toEqual({page:0,header:0,mobile:0});expect(errors).toEqual([]);
+ if(!baseline){
+  const trigger=width<=700?bar:width>900?header:empty;
+  await trigger.focus();await page.keyboard.press('Enter');await expect(doc.locator('#rollsbarCartDrawer')).toBeVisible();await expect(bar).not.toBeVisible();
+  await page.keyboard.press('Escape');await expect(trigger).toBeFocused();await expect(doc.locator('[inert]')).toHaveCount(0);
+  await info.attach('b13-geometry.json',{body:JSON.stringify({width,...metrics,jsErrors:errors}),contentType:'application/json'});
+ }
+});
+
+test('b13 canonical synchronization and transitions',async({page},info)=>{
+ test.skip(baseline||![1440,320].includes(page.viewportSize().width),'Shared snapshot rendering; geometry and approved states covered at all eight widths.');
+ test.setTimeout(120000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning'||(m.type()==='error'&&!m.text().startsWith('Failed to load resource:')))errors.push(m.text());});
+ const doc=await ready(page),bar=doc.locator('[data-rollsbar-orderbar]');
+ const check=async()=>{
+  await expect(doc.locator('[data-rollsbar-cart-delta]').first()).toBeEnabled();
+  const state=await page.evaluate(async()=>{const r=await fetch('/fixture-cart',{method:'POST',body:new URLSearchParams({nonce:'local-fixture',request:JSON.stringify({operation:'read'})})});return (await r.json()).data;});
+  const count=state.lines.reduce((n,l)=>n+l.quantity,0);
+  for(const badge of await doc.locator('.rollsbar-cart-count').all())await expect(badge).toHaveText(String(count));
+  const total=state.subtotal.replace(/(\d)[ \u00a0\u202f](?=\d)/g,'$1\u00a0').replace(/\u00a0(?=₽)/g,' ');
+  await expect(doc.locator('.rollsbar-header-cart-total')).toHaveText(total);
+  await expect(doc.locator('[data-rollsbar-order-total]')).toHaveText(total);
+  return state;
+ };
+ await check();
+ const cards=doc.locator('[data-rollsbar-source-id="rolls-filadelfiya"]');
+ await cards.first().locator('[data-rollsbar-cart-delta="1"]').click();await check();
+ for(const c of await cards.all())await expect(c.locator('.rollsbar-product-counter span')).toHaveText('1');
+ for(let n=2;n<=25;n++){await cards.last().locator('[data-rollsbar-cart-delta="1"]').click();await check();const word=n>=11&&n<=19?'товаров':n%10===1?'товар':n%10>=2&&n%10<=4?'товара':'товаров';await expect(doc.locator('[data-rollsbar-order-count]')).toHaveText(`${n} ${word}`);}
+ await cards.first().locator('[data-rollsbar-cart-delta="-1"]').click();await check();
+ await drawerAdd(doc,'pizza-pepperoni',1);await check();await drawerAdd(doc,'wok-udon-chicken',2);await check();await drawerAdd(doc,'shrimp-tempura',1);await check();
+ await drawerOpen(doc);
+ for(const action of ['line_plus','line_minus']){await doc.locator(`.rollsbar-cart-item [data-drawer-action="${action}"]`).first().click();await check();}
+ await doc.locator('[data-drawer-upsell="upsell-soy-sauce"]').click();await check();
+ await doc.locator('.rollsbar-drawer-close').click();
+ for(const width of [1440,1051,1050,1024,701,700,390,320]){
+  await page.setViewportSize({width,height:900});await check();
+  await expect(bar).toBeVisible({visible:width<=700});
+  const trigger=doc.locator(width<=700?'[data-rollsbar-orderbar]':width>900?'.rollsbar-cart-link':'[data-rollsbar-mobile-cart]');
+  await trigger.click();await expect(doc.locator('#rollsbarCartDrawer')).toBeVisible();await expect(bar).not.toBeVisible();await page.keyboard.press('Escape');await expect(trigger).toBeFocused();
+ }
+ // Final removal while the opener disappears must return focus to the empty mobile control.
+ await bar.click();
+ while(await doc.locator('.rollsbar-cart-item').count()){await doc.locator('[data-drawer-action="line_remove"]').first().click();await check();}
+ await expect(doc.locator('.rollsbar-cart-empty')).toBeVisible();await page.keyboard.press('Escape');await expect(bar).not.toBeVisible();await expect(doc.locator('[data-rollsbar-mobile-cart]')).toBeFocused();
+ await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');await expect(doc.locator('[inert]')).toHaveCount(0);expect(errors).toEqual([]);
+ await info.attach('b13-functional.json',{body:JSON.stringify({pass:true,jsErrors:errors,breakpoints:8,canonicalServerComparison:true}),contentType:'application/json'});
 });
