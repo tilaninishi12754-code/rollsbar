@@ -26,7 +26,7 @@ const evidence={status:'RUNNING',node:process.version,playwright:JSON.parse(read
 evidence.diagnostic=!!(filter||process.env.ROLLSBAR_QA_WIDTHS);
 const revisions=JSON.parse(readFileSync('qa/node_modules/.pnpm/playwright-core@'+evidence.playwright+'/node_modules/playwright-core/browsers.json')).browsers;
 const save=()=>writeFileSync(output,JSON.stringify(evidence,null,2)+'\n');
-const preview=await startPreview();
+const preview=process.env.ROLLSBAR_REUSE_PREVIEW==='1'?{close:async()=>{}}:await startPreview();
 try {
  for(const [engine,type] of Object.entries(engines)){
   if(filter&&engine!==filter)continue;
@@ -172,6 +172,17 @@ try {
       const g=await body.evaluate(searchGeometry);row.metrics.search=g;for(const k of ['page','header','search','panel','results'])assert.equal(g[k],0,k);
       const result=page.locator('[data-search-product="tyahan-chicken"]');await reachable(input);await reachable(result);await result.click();await expect(modal).toHaveAttribute('data-source-id','tyahan-chicken');await expect(modal).toBeVisible();await page.keyboard.press('Escape');await unlocked();
       await open.click();await input.fill('неттакогоблюда999');await page.keyboard.press('Escape');await expect(page.locator('.product-search')).not.toBeVisible();await expect(open).toBeFocused();await unlocked();
+     });
+     await step('B16 Delivery presence bounds and populated-cart reachability',async()=>{
+      await expect(page.locator('#delivery')).toHaveCount(1);
+      const metrics=await page.locator('#delivery').evaluate(n=>{
+       const r=n.getBoundingClientRect();
+       const failures=[...n.querySelectorAll('*')].filter(n=>n.getClientRects().length).flatMap(n=>{
+        const r=n.getBoundingClientRect();return r.left<-.02||r.right>innerWidth+.02?[{tag:n.tagName,cls:n.getAttribute('class'),left:r.left,right:r.right}]:[];
+       });return {height:r.height,overflow:Math.max(0,n.scrollWidth-n.clientWidth),failures};
+      });row.metrics.delivery=metrics;assert(metrics.height>500);assert.equal(metrics.overflow,0);assert.deepEqual(metrics.failures,[]);
+      for(const link of await page.locator('#delivery a').all())await reachable(link);
+      await unlocked();
      });
      await step('footer fixed controls reachability',async()=>{
       await page.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight));await frame();

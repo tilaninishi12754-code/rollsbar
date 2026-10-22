@@ -284,3 +284,28 @@ No global screenshot tolerance or masks were added. At 320px, B13 populated-bar
 captures use the existing backing-plate technique under the exact control bounds
 to isolate unrelated page content visible through its rounded corners. Geometry
 and functionality run without that backing. pre-B16/B16 have not started.
+
+## B16 assembled-page protection
+
+The normal `node qa/visual/run.mjs test` also runs `b16-assembled.mjs` after the
+component suite succeeds. Eight viewport pairs compare immutable approved
+document coordinates for Header, Categories, Promo, every catalog heading/end,
+Delivery start/end, Contacts, Footer and document end. A maximum .02 CSS px
+rounding difference cannot absorb the former 21px or Delivery-height defects.
+First-catalog content is compared rather than its wrapper: approved owns the
+30px/23px transition padding on main, current on the first catalog section.
+
+Raw approved section coordinates are retained. The comparison oracle applies
+only the existing B6B accepted canonical accent styling to both Catalog/Hits
+copies, using approved classes/styles. This is necessary because approved applies
+the accent only to its first copy; it is not a new B16 exception or tolerance.
+All other approved content/layout remains immutable. Current Delivery copy
+preserves canonical free-delivery semantics and editable address; the schematic
+SVG is decorative and never used by checkout or delivery resolution.
+
+`node qa/visual/b16-assembled.mjs` runs the same assertions independently.
+`--measure` is diagnostic only. No screenshot expectations are produced.
+The previous blocked audit's four files are preserved in `b16-prior/`.
+The existing dense/cross-browser flow additionally checks Delivery uniqueness,
+all visible horizontal bounds and the map link's hit-tested reachability with
+a populated cart.

@@ -294,37 +294,7 @@ foreach ( $promo_posts as $promo_post ) {
 	<!-- rollsbar-product-details:end -->
 <?php endif; ?>
 
-<?php
-$delivery_rules = class_exists( 'RollsBar_Delivery_Rules' )
-	? RollsBar_Delivery_Rules::all()
-	: array();
-?>
-<section class="rollsbar-delivery rollsbar-shell" id="delivery">
-	<div class="rollsbar-delivery__copy">
-		<span class="rollsbar-kicker">Доставка</span>
-		<h2>Бесплатная доставка от суммы по району</h2>
-		<p>Минимальная сумма заказа зависит от территории. Если сумма заказа ниже порога, нужно добрать товары до указанной суммы.</p>
-	</div>
-
-	<?php if ( $delivery_rules ) : ?>
-		<div class="rollsbar-delivery-rules" aria-label="Минимальные суммы бесплатной доставки">
-			<?php foreach ( $delivery_rules as $rule ) : ?>
-				<article class="rollsbar-delivery-rule">
-					<div class="rollsbar-delivery-rule__amount">
-						<span>Бесплатно от</span>
-						<strong><?php echo esc_html( number_format_i18n( (int) $rule['min_order'], 0 ) ); ?> ₽</strong>
-					</div>
-					<p><?php echo esc_html( implode( ' · ', $rule['areas'] ) ); ?></p>
-				</article>
-			<?php endforeach; ?>
-		</div>
-	<?php endif; ?>
-
-	<div class="rollsbar-delivery__pending">
-		<strong>Автоопределение по адресу</strong>
-		<span>Подключим после утверждения точных границ зон на карте. Ручного выбора зоны клиентом не будет.</span>
-	</div>
-</section>
+<?php get_template_part( 'template-parts/delivery-home' ); ?>
 
 <?php
 get_footer();

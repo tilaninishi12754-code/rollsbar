@@ -15,6 +15,13 @@ try {
     const child=spawn(process.execPath,args,{env,stdio:'inherit'});
     child.on('exit',resolve);
   });
+  if(mode==='test'&&!targeted&&exit===0){
+    const assembledExit=await new Promise(resolve=>{
+      const child=spawn(process.execPath,['qa/visual/b16-assembled.mjs'],{env:{...env,ROLLSBAR_REUSE_PREVIEW:'1'},stdio:'inherit'});
+      child.on('exit',resolve);
+    });
+    if(assembledExit!==0)throw Error('B16 assembled-page contract failed');
+  }
   if (mode==='baseline' && exit===0) {
     for(const [file,hash] of Object.entries(protectedHashes)) {
       const actual=createHash('sha256').update(readFileSync(`qa/visual/baselines/${file}`)).digest('hex');
