@@ -1,0 +1,45 @@
+[
+  {
+    "tests": ["details"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "details.png only: maxDiffPixels=20; no dimension tolerance",
+    "reason": "Narrow allowance for subpixel glyph/rounded-control rasterization in the accepted B9 component. Measured ordinary desktop differences were 14–17 pixels; all other targets retain zero global tolerance. Long-word accessibility wrapping is avoided by choosing tyahan-chicken."
+  },
+  {
+    "tests": ["selector"],
+    "viewports": [1440,1051,1050,1024,701,700,390],
+    "maxDiffPixelsByViewport": {"1440":34,"1051":22,"1050":34,"1024":34,"701":22,"700":34,"390":34},
+    "scope": "selector-choices.png only; exact viewport caps shown above; 320px retains zero; no dimension tolerance",
+    "reason": "Measured 22–34 raster pixels around the selected native Woo price/label (including native NBSP formatting preserved from B8). Separate exact normalized assertions require both approved quantities/prices and the same initial selected index, so this allowance cannot bless an incorrect price or choice."
+  },
+  {
+    "tests": ["selector"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "selector-heading.png only: maxDiffPixels=1",
+    "reason": "One measured native close-glyph raster pixel in the accepted B10 selector heading; no geometry or content mismatch is permitted"
+  },
+  {
+    "tests": ["details", "selector"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "Page position and modal backdrop outside the captured component; solid backdrop only",
+    "reason": "Accepted B9/B10 scroll-lock geometry and stronger focus/inert/scroll protections; internal pixels use only the separately declared narrow caps"
+  },
+  {
+    "tests": ["selector"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "CTA excluded; heading and choices captured separately",
+    "reason": "B10 CTA remains disabled until B11"
+  },
+  {
+    "tests": ["ordinary-media", "ordinary-title", "variable-media", "variable-title"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "Capture target origin only: relative left/top offset at most half a CSS pixel in both sources",
+    "reason": "Component-local screenshots exclude page-row position. Aligning the origin prevents 1px clipping differences from fractional row coordinates; component size and internal layout are unchanged. No pixel allowance is added."
+  },
+  {
+    "tests": ["ordinary-media", "ordinary-title", "variable-media", "variable-title"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "Product footer/action outside media/title captures",
+    "reason": "B6B exact action parity is deferred; B8 native pricing is preserved; B11 owns the known 320px simple-action overflow"
+  }
+]

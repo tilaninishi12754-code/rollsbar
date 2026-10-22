@@ -1,0 +1,8 @@
+{
+  "name": "rollsbar-local-visual-gate",
+  "private": true,
+  "scripts": {
+    "visual-test": "node qa/visual/run.mjs test",
+    "visual-baseline": "node qa/visual/run.mjs baseline"
+  }
+}

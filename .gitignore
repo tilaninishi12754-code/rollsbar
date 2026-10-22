@@ -1,0 +1,7 @@
+.pnpm-store/
+qa/node_modules/
+qa/.runtime/
+qa/test-results/
+qa/playwright-report/
+qa/visual-results/
+debug.log
