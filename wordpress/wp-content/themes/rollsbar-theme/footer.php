@@ -43,6 +43,7 @@
 	</a>
 <?php endif; ?>
 
+<?php if ( is_front_page() && function_exists( 'wc_get_checkout_url' ) ) { get_template_part( 'template-parts/cart-drawer' ); } ?>
 <?php wp_footer(); ?>
 </body>
 </html>

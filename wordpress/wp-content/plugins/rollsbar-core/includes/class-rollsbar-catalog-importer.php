@@ -14,6 +14,58 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 final class RollsBar_Catalog_Importer {
+	/** B12 local seeds, separate from the canonical 118. Prices require client confirmation. */
+	public static function upsell_seeds(): array {
+		return array(
+			array( 'id' => 'upsell-soy-sauce', 'name' => 'Соевый соус', 'price' => '20' ),
+			array( 'id' => 'upsell-ginger', 'name' => 'Имбирь', 'price' => '20' ),
+			array( 'id' => 'upsell-wasabi', 'name' => 'Васаби', 'price' => '20' ),
+		);
+	}
+
+	/** Resolve actual Woo products; never use demo IDs or synthetic browser products. */
+	public static function upsell_products(): array {
+		$result = array();
+		foreach ( self::upsell_seeds() as $seed ) {
+			$id = self::find_product_id( self::sku_for( $seed['id'] ) );
+			$product = $id ? wc_get_product( $id ) : false;
+			if ( $product && $product->is_type( 'simple' ) && 'yes' === $product->get_meta( '_rollsbar_upsell_only', true ) && 'publish' === $product->get_status() ) { $result[] = $product; }
+		}
+		return $result;
+	}
+
+	/** Explicit local provisioning; repeat runs retain all client-editable product fields. */
+	public static function provision_upsells( bool $dry_run = false ): array {
+		if ( ! in_array( wp_get_environment_type(), array( 'local', 'development' ), true ) ) {
+			throw new RuntimeException( 'Provisional B12 upsells may only be provisioned locally. Confirm business prices before production.' );
+		}
+		$result = array( 'created' => 0, 'existing' => 0, 'dry_run' => $dry_run, 'provisional_price' => true );
+		foreach ( self::upsell_seeds() as $seed ) {
+			$sku = self::sku_for( $seed['id'] );
+			$id = self::find_product_id( $sku );
+			if ( $id ) {
+				$product = wc_get_product( $id );
+				if ( ! $product || ! $product->is_type( 'simple' ) || $product->get_meta( '_rollsbar_source_id', true ) !== $seed['id'] || 'yes' !== $product->get_meta( '_rollsbar_upsell_only', true ) ) { throw new RuntimeException( 'Upsell SKU identity conflict: ' . $sku ); }
+				++$result['existing'];
+				continue;
+			}
+			++$result['created'];
+			if ( $dry_run ) { continue; }
+			$product = new WC_Product_Simple();
+			$product->set_sku( $sku );
+			$product->set_name( $seed['name'] );
+			$product->set_status( 'publish' );
+			$product->set_catalog_visibility( 'hidden' );
+			$product->set_regular_price( $seed['price'] );
+			$product->set_stock_status( 'instock' );
+			$product->update_meta_data( '_rollsbar_source_id', $seed['id'] );
+			$product->update_meta_data( '_rollsbar_upsell_only', 'yes' );
+			$product->update_meta_data( '_rollsbar_source_image', 'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL' );
+			$product->update_meta_data( '_rollsbar_price_provenance', 'provisional-approved-demo-B12; client confirmation required before production' );
+			$product->save();
+		}
+		return $result;
+	}
 
 	private const CATEGORY_MAP = array(
 		'rolls'    => 'Роллы',
@@ -295,6 +347,18 @@ final class RollsBar_Catalog_Importer {
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	final class RollsBar_Catalog_Importer_Command {
+		/**
+		 * Provision the three hidden B12 local upsells with provisional demo prices.
+		 *
+		 * ## OPTIONS
+		 *
+		 * [--dry-run]
+		 * : Inspect identities without creating products.
+		 */
+		public function upsells( array $args, array $assoc_args ): void {
+			unset( $args );
+			WP_CLI::success( wp_json_encode( RollsBar_Catalog_Importer::provision_upsells( isset( $assoc_args['dry-run'] ) ) ) );
+		}
 
 		public function validate(): void {
 			$data = RollsBar_Catalog_Importer::load_catalog();

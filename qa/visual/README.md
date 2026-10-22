@@ -182,3 +182,65 @@ https://playwright.dev/docs/test-snapshots
 and https://playwright.dev/docs/api/class-testconfig#test-config-update-snapshots
 
 B11's added coverage does not close B6B or start B12+. No deployment is performed.
+
+## Batch 12 — Cart Drawer
+
+`node qa/visual/run.mjs baseline b12` adds only the 80 B12 expected PNGs from
+the immutable approved SHA. The original 144 hashes are protected; the combined
+contract is 224 images. Normal `npm run visual-test` still forces snapshot update
+off. `node qa/visual/run.mjs test b12` is a focused diagnostic run; final acceptance
+uses the complete normal command.
+
+Ten states run across all eight widths: empty, simple, quantity 2, selected pizza
+variation, WOK sauce, multiple option lines, pickup preview, upsell line, long cart
+at top, long cart at bottom. Panel screenshots include head, list/body and checkout
+foot. Backdrop size/color/blur, focus, empty mobile trigger and lock restoration are
+asserted separately without masks. There is no new B12 pixel tolerance.
+
+Approved shrimp's sauce selector is pending, so its confirmed canonical sauces are
+tested functionally, not assigned invented approved pixels. Approved nuggets have
+an absolutely positioned image fallback that covers the entire drawer; the visual
+variable representative is pizza instead. Current missing-image media remain
+confined to their line. No source defect is copied into the current drawer.
+
+The existing mobile cart control is made available with an empty cart below 900px
+because the header cart trigger is hidden there. This is only access to the drawer;
+no header/mobile total, badge design or B13 presentation was introduced.
+
+Run `qa/.runtime/php/php.exe qa/visual/b12-contract.php <absolute repository root>`
+for exhaustive provisioning/line-identity checks. Browser mutation/failure recovery
+runs at 1440 and 320; geometry/focus/lifecycle runs at all eight widths. B11 still
+checks all choices and all eight Hits mappings.
+`node qa/visual/b12-overflow.mjs` additionally verifies all five horizontal overflow
+metrics and internal vertical scrolling with 15 canonical lines at all eight widths.
+
+### Hidden native Woo upsells and provisional prices
+
+On an existing **local/development WordPress installation**, run:
+
+```text
+wp rollsbar catalog upsells --dry-run
+wp rollsbar catalog upsells
+```
+
+This uses `RollsBar_Catalog_Importer` and `WC_Product_Simple`, the existing SKU
+identity convention and Woo CRUD. It seeds Soy Sauce, Ginger and Wasabi as separate
+hidden, upsell-only products, outside `catalog.json`'s 118. Persistent source IDs:
+`upsell-soy-sauce`, `upsell-ginger`, `upsell-wasabi`. The demo IDs are never Woo IDs.
+Repeat provisioning retains all existing admin name, price, stock and image edits,
+and fails on SKU identity conflicts. It refuses non-local/development environments.
+No automatic provisioning runs on page requests or plugin activation.
+
+**20 ₽ is provisional, taken only from the approved demo for B12 local testing.
+Client confirmation is required before production.** Its provenance is recorded
+on each seed product. Subsequent prices, names and uploaded photos come from Woo;
+the drawer does not hardcode them. Catalog visibility is Hidden, with an additional
+upsell-only exclusion in the custom main catalog even if categories are changed.
+
+The deterministic adapter executes the actual provisioning method against its Woo
+CRUD adapter. It is not a real WordPress database or a live backend verification.
+This batch does not provision staging/production or contact either environment.
+
+Receiving-mode buttons preserve the approved indicative labels in the Woo session;
+they do not apply shipping rates, delivery rules or pickup discounts. The checkout
+CTA navigates to the native Woo checkout, where fulfillment/rates remain authoritative.

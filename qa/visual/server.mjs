@@ -24,8 +24,8 @@ export function startPreview({renderCurrent=true}={}) {
           const chunks=[];for await(const chunk of req)chunks.push(chunk);
           const form=new URLSearchParams(Buffer.concat(chunks).toString());
           if(form.get('nonce')!=='local-fixture'){res.writeHead(403);res.end();return;}
-          const result=JSON.parse(execFileSync(php,['qa/visual/cart-fixture.php',root],{input:JSON.stringify({request:JSON.parse(form.get('request')),items:carts.get(session)||{}}),encoding:'utf8'}));
-          carts.set(session,result.items);delete result.items;
+          const result=JSON.parse(execFileSync(php,['qa/visual/cart-fixture.php',root],{input:JSON.stringify({request:JSON.parse(form.get('request')),...(carts.get(session)||{})}),encoding:'utf8'}));
+          carts.set(session,{items:result.items,session:result.session});delete result.items;delete result.session;
           res.setHeader('Set-Cookie',`rollsbar_fixture=${session}; Path=/; SameSite=Strict`);
           res.setHeader('Content-Type','application/json');res.end(JSON.stringify(result));return;
         }

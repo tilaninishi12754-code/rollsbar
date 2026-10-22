@@ -12,12 +12,35 @@ final class RollsBar_Cart_Actions {
 
 	public static function snapshot(): array {
 		$counts = array();
-		foreach ( WC()->cart->get_cart() as $item ) {
+		$lines = array();
+		foreach ( WC()->cart->get_cart() as $key => $item ) {
 			$product = wc_get_product( $item['product_id'] );
 			$id = $product ? (string) $product->get_meta( '_rollsbar_source_id', true ) : '';
 			if ( '' !== $id ) { $counts[ $id ] = ( $counts[ $id ] ?? 0 ) + (int) $item['quantity']; }
+			$actual = empty( $item['variation_id'] ) ? $product : wc_get_product( $item['variation_id'] );
+			if ( ! $product || ! $actual ) { continue; }
+			$labels = array();
+			if ( $actual->is_type( 'variation' ) ) {
+				$label = has_term( 'pizza', 'product_cat', $product->get_id() ) ? 'Размер' : ( 'Наггетсы' === $product->get_name() ? 'Количество' : 'Вариант' );
+				$labels[] = $label . ': ' . wp_strip_all_tags( wc_get_formatted_variation( $actual, true, false, false ) );
+			}
+			foreach ( $item['rollsbar_options'] ?? array() as $option ) { $labels[] = $option['label'] . ': ' . $option['value']; }
+			$lines[] = array(
+				'key' => (string) $key,
+				'source_id' => $id,
+				'variation_id' => (int) ( $item['variation_id'] ?? 0 ),
+				'name' => $product->get_name() . ( $labels ? ' · ' . implode( ', ', $labels ) : '' ),
+				'quantity' => (int) $item['quantity'],
+				'unit_price' => html_entity_decode( wp_strip_all_tags( WC()->cart->get_product_price( $actual ) ), ENT_QUOTES, 'UTF-8' ),
+				'options' => $item['rollsbar_options'] ?? array(),
+				'media' => function_exists( 'rollsbar_product_image_markup' ) ? rollsbar_product_image_markup( $product ) : $product->get_image(),
+			);
 		}
-		return array( 'counts' => (object) $counts );
+		$upsells = array();
+		foreach ( RollsBar_Catalog_Importer::upsell_products() as $product ) {
+			$upsells[] = array( 'source_id' => $product->get_meta( '_rollsbar_source_id', true ), 'product_id' => $product->get_id(), 'name' => $product->get_name(), 'price' => html_entity_decode( wp_strip_all_tags( WC()->cart->get_product_price( $product ) ), ENT_QUOTES, 'UTF-8' ), 'available' => $product->is_purchasable() && $product->is_in_stock() );
+		}
+		return array( 'counts' => (object) $counts, 'lines' => $lines, 'upsells' => $upsells, 'mode' => WC()->session->get( 'rollsbar_cart_mode', 'delivery' ), 'subtotal' => html_entity_decode( wp_strip_all_tags( WC()->cart->get_cart_subtotal() ), ENT_QUOTES, 'UTF-8' ) );
 	}
 
 	/** Exact option whitelist; labels/price/availability from the browser are never trusted. */
@@ -40,6 +63,29 @@ final class RollsBar_Cart_Actions {
 
 	/** Shared mutation seam, also exercised by deterministic local PHP QA. */
 	public static function mutate( array $request ): void {
+		// Approved drawer's indicative receiving mode; native checkout still owns shipping/rates.
+		if ( 'mode' === ( $request['operation'] ?? '' ) ) {
+			if ( ! in_array( $request['mode'] ?? '', array( 'delivery', 'pickup' ), true ) ) { throw new Exception( 'Недопустимый способ получения.' ); }
+			WC()->session->set( 'rollsbar_cart_mode', $request['mode'] );
+			return;
+		}
+		if ( in_array( $request['operation'] ?? '', array( 'line_plus', 'line_minus', 'line_remove' ), true ) ) {
+			$key = is_string( $request['key'] ?? null ) ? $request['key'] : '';
+			$items = WC()->cart->get_cart();
+			if ( ! isset( $items[ $key ] ) ) { throw new Exception( 'Товар уже удалён из корзины.' ); }
+			$item = $items[ $key ];
+			$quantity = 'line_remove' === $request['operation'] ? 0 : max( 0, (int) $item['quantity'] + ( 'line_plus' === $request['operation'] ? 1 : -1 ) );
+			if ( $quantity > $item['quantity'] ) {
+				$actual = wc_get_product( $item['variation_id'] ?: $item['product_id'] );
+				if ( ! $actual || ! $actual->is_purchasable() || ! $actual->is_in_stock() ) { throw new Exception( 'Товар недоступен.' ); }
+				$quantities = WC()->cart->get_cart_item_quantities();
+				$stock_id = $actual->get_stock_managed_by_id();
+				if ( $actual->is_sold_individually() && $quantity > 1 ) { throw new Exception( 'Этот товар можно заказать только один раз.' ); }
+				if ( ! $actual->has_enough_stock( ( $quantities[ $stock_id ] ?? 0 ) + 1 ) ) { throw new Exception( 'Недостаточно товара в наличии.' ); }
+			}
+			if ( ! apply_filters( 'woocommerce_update_cart_validation', true, $key, $item, $quantity ) || ! WC()->cart->set_quantity( $key, $quantity ) ) { throw new Exception( 'Не удалось изменить количество.' ); }
+			return;
+		}
 		$product = wc_get_product( absint( $request['product_id'] ?? 0 ) );
 		if ( ! $product || ! $product->is_type( array( 'simple', 'variable' ) ) || 'publish' !== $product->get_status() || '' === (string) $product->get_meta( '_rollsbar_source_id', true ) || $product->get_meta( '_rollsbar_source_id', true ) !== ( $request['source_id'] ?? '' ) ) {
 			throw new Exception( 'Товар недоступен.' );

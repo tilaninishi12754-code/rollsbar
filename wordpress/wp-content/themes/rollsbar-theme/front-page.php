@@ -159,6 +159,7 @@ foreach ( $promo_posts as $promo_post ) {
 				'order'    => 'ASC',
 			)
 		);
+		$category_products[ $slug ] = array_values( array_filter( $category_products[ $slug ], static fn( $product ) => 'yes' !== $product->get_meta( '_rollsbar_upsell_only', true ) ) );
 		foreach ( $category_products[ $slug ] as $product ) {
 			$source_id = (string) $product->get_meta( '_rollsbar_source_id', true );
 			$products_by_source[ $source_id ] = $product;

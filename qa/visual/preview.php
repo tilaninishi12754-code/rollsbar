@@ -30,17 +30,28 @@ function get_template_part($s) { global $theme; require $theme.'/'.$s.'.php'; }
 function get_header() { global $theme; require $theme.'/header.php'; }
 function get_footer() { global $theme; require $theme.'/footer.php'; }
 function wc_get_cart_url() { return '/cart/'; }
-function WC() { global $fixture_cart; return (object)['cart'=>$fixture_cart ?? new class { function get_cart_contents_count() { return 0; } function get_cart_subtotal() { return '0 ₽'; } }]; }
+function wc_get_checkout_url() { return '/checkout/'; }
+function WC() { global $fixture_cart,$fixture_session; return (object)['session'=>$fixture_session,'cart'=>$fixture_cart ?? new class { function get_cart_contents_count() { return 0; } function get_cart_subtotal() { return '0 ₽'; } }]; }
+class FixtureSession { public array $data=[];function get($key,$default=null){return $this->data[$key]??$default;}function set($key,$value){$this->data[$key]=$value;} }
+$fixture_session=new FixtureSession();
+function wp_get_environment_type() { global $fixture_environment;return $fixture_environment??'local'; }
 function wc_price($n) { return '<span class="woocommerce-Price-amount amount"><bdi>'.number_format((float)$n,0,',',' ').'&nbsp;<span class="woocommerce-Price-currencySymbol">₽</span></bdi></span>'; }
 function wc_get_price_to_display($p) { return $p->get_price(); }
 function wc_get_formatted_variation($p,...$args) { return $p->row['label']; }
-function has_term($cat,$tax,$id) { global $products; foreach($products as $p) if($p->get_id()===$id) return $p->row['cat']===$cat; return false; }
+function has_term($cat,$tax,$id) { global $fixture_products; foreach($fixture_products as $p) if($p->get_id()===$id) return $p->row['cat']===$cat; return false; }
 class WooCommerce {}
-class RollsBar_Catalog_Importer { static function load_catalog() { global $catalog; return $catalog; } }
+define('ROLLSBAR_CORE_DIR',$root.'/wordpress/wp-content/plugins/rollsbar-core/');
+require ROLLSBAR_CORE_DIR.'includes/class-rollsbar-catalog-importer.php';
+function wc_get_product_id_by_sku($sku) { global $fixture_products;foreach($fixture_products as $p)if(($p->row['sku']??'')===$sku)return $p->id;return 0; }
+function wc_get_product($id) {
+ global $fixture_products;
+ foreach($fixture_products as $p){if($p->get_id()===$id)return $p;if($p->is_type('variable'))foreach($p->get_available_variations() as $v)if($v->get_id()===$id)return $v;}
+ return false;
+}
 class WC_Product {
  public function __construct(public array $row, public int $id) {}
  function get_id() { return $this->id; }
- function get_meta($k,...$a) { return match($k) { '_rollsbar_source_id'=>$this->row['id'], '_rollsbar_source_image'=>$this->row['img']??'', '_rollsbar_options_json'=>isset($this->row['options'])?json_encode($this->row['options']):'', default=>'' }; }
+ function get_meta($k,...$a) { return $this->row['meta'][$k]??match($k) { '_rollsbar_source_id'=>$this->row['id'], '_rollsbar_source_image'=>$this->row['img']??'', '_rollsbar_options_json'=>isset($this->row['options'])?json_encode($this->row['options']):'', default=>'' }; }
  function is_type($s) { return in_array(isset($this->row['variants'])?'variable':'simple',(array)$s,true); }
  function get_status() { return 'publish'; }
  function get_name() { return $this->row['name']; }
@@ -50,9 +61,26 @@ class WC_Product {
  function add_to_cart_url() { return '/?add-to-cart='.$this->id; }
  function get_image_id() { return 0; }
  function get_price() { return $this->row['price']; }
+ function is_purchasable() { return true; }
+ function is_in_stock() { return $this->row['available']??true; }
+ function get_stock_managed_by_id() { return $this->id; }
+ function has_enough_stock($qty) { return $qty<=($this->row['stock']??PHP_INT_MAX); }
+ function is_sold_individually() { return $this->row['sold_individually']??false; }
  function get_price_html() { return wc_price($this->get_price()); }
  function get_variation_price(...$a) { return min(array_column($this->row['variants'],'price')); }
  function get_available_variations(...$a) { return array_map(fn($v,$i)=>new FixtureVariation($v,$this->id*100+$i),$this->row['variants'],array_keys($this->row['variants'])); }
+}
+class WC_Product_Simple extends WC_Product {
+ function __construct(){parent::__construct(['id'=>'','name'=>'','price'=>0,'desc'=>'','cat'=>''],0);}
+ function set_sku($value){$this->row['sku']=$value;}
+ function set_name($value){$this->row['name']=$value;}
+ function set_status($value){$this->row['status']=$value;}
+ function set_catalog_visibility($value){$this->row['visibility']=$value;}
+ function get_catalog_visibility(){return $this->row['visibility']??'visible';}
+ function set_regular_price($value){$this->row['price']=$value;}
+ function set_stock_status($value){$this->row['available']=$value==='instock';}
+ function update_meta_data($key,$value){$this->row['meta'][$key]=$value;if($key==='_rollsbar_source_id')$this->row['id']=$value;}
+ function save(){global $fixture_products;if(!$this->id){$this->id=5000+count($fixture_products);$fixture_products[]=$this;}return $this->id;}
 }
 class FixtureVariation extends WC_Product {
  function is_type($s) { return in_array('variation',(array)$s,true); }
@@ -66,6 +94,7 @@ class FixtureVariation extends WC_Product {
 }
 $products = array_map(fn($p,$i)=>new WC_Product($p,$i+1),$catalog['products'],array_keys($catalog['products']));
 $fixture_products = $products;
-function wc_get_products($args) { global $products; return array_values(array_filter($products,fn($p)=>$p->row['cat']===$args['category'][0])); }
+RollsBar_Catalog_Importer::provision_upsells();
+function wc_get_products($args) { global $fixture_products; return array_values(array_filter($fixture_products,fn($p)=>$p->row['cat']===$args['category'][0])); }
 require $theme.'/functions.php';
 require $theme.'/front-page.php';

@@ -3,15 +3,15 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { startPreview, approvedSHA } from './server.mjs';
 const mode = process.argv[2];
-const targeted=mode==='baseline'&&process.argv[3]==='b11'&&process.argv.length===4;
-if (!['test','baseline'].includes(mode) || (process.argv.length!==3&&!targeted)) throw Error('Use test, baseline or baseline b11; CLI snapshot-update overrides are forbidden');
+const targeted=['b11','b12'].includes(process.argv[3])&&process.argv.length===4;
+if (!['test','baseline'].includes(mode) || (process.argv.length!==3&&!targeted)) throw Error('Use test or baseline, optionally followed by b11 or b12; CLI snapshot-update overrides are forbidden');
 const protectedHashes=JSON.parse(readFileSync('qa/visual/baseline-manifest.json')).hashes;
 const preview = await startPreview({renderCurrent:mode!=='baseline'});
 try {
   const env = {...process.env, ROLLSBAR_BASELINE:mode==='baseline'?'1':'0'};
   const exit = await new Promise(resolve=>{
     const args=['qa/node_modules/@playwright/test/cli.js','test','-c','qa/visual/playwright.config.mjs'];
-    if(targeted)args.push('--grep','b11');
+    if(targeted)args.push('--grep',process.argv[3]);
     const child=spawn(process.execPath,args,{env,stdio:'inherit'});
     child.on('exit',resolve);
   });

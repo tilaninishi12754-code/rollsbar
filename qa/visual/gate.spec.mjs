@@ -225,3 +225,139 @@ test('b11 exhaustive cart choices and duplicates',async({page})=>{
  await simple.locator('[data-rollsbar-cart-delta="1"]').evaluate(b=>{b.click();b.click();});await expect(simple.locator('.rollsbar-product-counter span')).toHaveText('2');
  expect(errors).toEqual([]);
 });
+
+// B12: expected pixels are captured only from the immutable approved iframe chain.
+const drawerSelectors={panel:'.rollsbar-cart-drawer__panel',line:'.rollsbar-cart-item',qty:'.rollsbar-drawer-qty',body:'.rollsbar-drawer-body'};
+async function drawerOpen(doc) {
+ await doc.locator('body').evaluate(async b=>{const w=b.ownerDocument.defaultView;b.ownerDocument.documentElement.style.scrollBehavior='auto';w.scrollTo(0,0);await new Promise(r=>w.requestAnimationFrame(()=>w.requestAnimationFrame(r)));});
+ await doc.locator(baseline?'[data-cart-open]':'.rollsbar-cart-link').first().evaluate(b=>b.click());
+ await expect(doc.locator(baseline?'#cartDrawer': '#rollsbarCartDrawer')).toBeVisible();
+ if(!baseline)await expect(doc.locator(drawerSelectors.panel)).toHaveAttribute('aria-busy','false');
+}
+async function drawerAdd(doc,id,choice=0){
+ const line=doc.locator(baseline?'.cart-item':drawerSelectors.line),before=await line.count();
+ const choose=doc.locator(baseline?`[data-client-choose="${id}"]`:`[data-rollsbar-source-id="${id}"] [data-rollsbar-selection-open]`).first();
+ if(await choose.count()){
+  await choose.click();
+  const modal=doc.locator(baseline?'.client-modal':'#rollsbarProductDetails');
+  await modal.locator('select').first().selectOption({index:choice});
+  await modal.locator(baseline?'#clientProductAdd':'.rollsbar-product-options__add').click();
+  await expect(modal).not.toBeVisible();
+ }else{
+  await doc.locator(baseline?`[data-original-add="${id}"]`:`[data-rollsbar-source-id="${id}"] [data-rollsbar-cart-delta="1"]`).first().evaluate(b=>b.click());
+ }
+ await expect(line).toHaveCount(before+1);
+}
+test('b12 drawer approved states',async({page})=>{
+ test.setTimeout(90000);
+ const doc=await ready(page),panel=doc.locator(baseline?'.cart-drawer__panel':drawerSelectors.panel);
+ const close=()=>doc.locator(baseline?'.drawer-head [data-cart-close]':'.rollsbar-drawer-close').click();
+ const shot=async name=>{await panel.evaluate(p=>p.ownerDocument.activeElement?.blur());await page.mouse.move(0,899);await expect(panel).toHaveScreenshot(`b12-${name}.png`);};
+ await drawerOpen(doc);await shot('empty');await close();
+ await drawerAdd(doc,'tyahan-chicken');await drawerOpen(doc);await shot('simple');
+ await doc.locator(baseline?'.cart-item [data-plus]':'.rollsbar-cart-item [data-drawer-action="line_plus"]').click();
+ await expect(doc.locator(baseline?'.cart-item .qty span':'.rollsbar-drawer-qty span')).toHaveText('2');
+ await shot('quantity');await close();
+ await drawerAdd(doc,'pizza-pepperoni',1);await drawerOpen(doc);await shot('variable');await close();
+ await drawerAdd(doc,'wok-udon-chicken',2);await drawerOpen(doc);await shot('wok-option');await close();
+ // Immutable approved shrimp options are pending; cover confirmed shrimp choices functionally.
+ await drawerAdd(doc,'wok-soba-chicken',1);await drawerOpen(doc);await shot('multi-options');
+ await doc.locator(baseline?'[data-mode="pickup"]':'[data-drawer-mode="pickup"]').click();
+ await expect(doc.locator(baseline?'#cartTotals':'.rollsbar-cart-totals')).toContainText('Самовывоз');
+ await shot('pickup');
+ await doc.locator(baseline?'[data-upsell="u-soy"]':'[data-drawer-upsell="upsell-soy-sauce"]').click();
+ await expect(doc.locator(baseline?'.cart-item':drawerSelectors.line)).toHaveCount(5);
+ await shot('upsell');await close();
+ for(const id of ['rolls-filadelfiya','rolls-kaliforniya-klassicheskaya','sets-filadelfiya-set','baked-zapechennye-roll-s-lososem','soups-tom-yam','tyahan-sea'])await drawerAdd(doc,id);
+ await drawerOpen(doc);const body=doc.locator(baseline?'.drawer-body':drawerSelectors.body);
+ await body.evaluate(b=>b.scrollTop=0);await shot('long-top');
+ await body.evaluate(b=>b.scrollTop=b.scrollHeight);await shot('long-bottom');
+});
+
+test('b12 geometry focus and empty lifecycle',async({page},info)=>{
+ test.skip(baseline,'Current functional QA only.');
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning'||(m.type()==='error'&&!m.text().startsWith('Failed to load resource:')))errors.push(m.text());});
+ const doc=await ready(page),drawer=doc.locator('#rollsbarCartDrawer'),panel=doc.locator(drawerSelectors.panel);
+ const trigger=doc.locator(page.viewportSize().width<=900?'[data-rollsbar-mobile-cart]':'.rollsbar-cart-link').first();
+ await expect(trigger).toBeVisible();
+ await doc.locator('body').evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,600);});
+ const y=await page.evaluate(()=>scrollY);
+ await trigger.focus();await page.keyboard.press('Enter');await expect(drawer).toBeVisible();
+ await expect(doc.locator('.rollsbar-drawer-close')).toBeFocused();
+ await expect(doc.locator('.rollsbar-cart-empty')).toHaveText('Корзина пока пустая. Добавьте блюда из меню.');
+ await expect(doc.locator('body')).toHaveCSS('overflow','hidden');
+ await expect(doc.locator('.rollsbar-drawer-checkout')).toHaveAttribute('aria-disabled','true');
+ await page.keyboard.press('Shift+Tab');await expect(doc.locator('.rollsbar-drawer-checkout')).toBeFocused();
+ await page.keyboard.press('Tab');await expect(doc.locator('.rollsbar-drawer-close')).toBeFocused();
+ const metrics=await panel.evaluate(p=>{
+  const b=p.querySelector('.rollsbar-drawer-body'),r=p.getBoundingClientRect();
+  return {page:Math.max(0,document.documentElement.scrollWidth-innerWidth),drawer:Math.max(0,p.scrollWidth-p.clientWidth),content:Math.max(0,b.scrollWidth-b.clientWidth),width:r.width,right:r.right,backdrop:getComputedStyle(document.querySelector('.rollsbar-cart-drawer__backdrop')).backgroundColor,blur:getComputedStyle(document.querySelector('.rollsbar-cart-drawer__backdrop')).backdropFilter};
+ });
+ expect(metrics).toEqual({page:0,drawer:0,content:0,width:Math.min(470,page.viewportSize().width),right:page.viewportSize().width,backdrop:'rgba(0, 0, 0, 0.46)',blur:'blur(4px)'});
+ await page.keyboard.press('Escape');await expect(drawer).not.toBeVisible();await expect(trigger).toBeFocused();
+ expect(await page.evaluate(()=>scrollY)).toBe(y);await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');
+ await trigger.click();await doc.locator('.rollsbar-drawer-close').click();await expect(trigger).toBeFocused();
+ await trigger.click();
+ if(page.viewportSize().width>470)await doc.locator('.rollsbar-cart-drawer__backdrop').click({position:{x:1,y:1}});
+ else await page.keyboard.press('Escape'); // Full-width approved mobile panel covers the backdrop.
+ await expect(drawer).not.toBeVisible();
+ expect(await doc.locator('[inert]').count()).toBe(0);expect(errors).toEqual([]);
+ await info.attach('b12-overflow.json',{body:JSON.stringify({viewport:page.viewportSize().width,...metrics,jsErrors:errors}),contentType:'application/json'});
+});
+
+test('b12 canonical drawer mutations and recovery',async({page},info)=>{
+ test.skip(baseline||![1440,320].includes(page.viewportSize().width),'Shared mutation path at desktop/narrow mobile; data exhaustive in PHP and B11.');
+ test.setTimeout(120000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning'||(m.type()==='error'&&!m.text().startsWith('Failed to load resource:')))errors.push(m.text());});
+ const doc=await ready(page),drawer=doc.locator('#rollsbarCartDrawer'),modal=doc.locator('#rollsbarProductDetails');
+ const request=async r=>page.evaluate(async request=>{const response=await fetch('/fixture-cart',{method:'POST',body:new URLSearchParams({nonce:'local-fixture',request:JSON.stringify(request)})});return response.json();},r);
+ const close=()=>doc.locator('.rollsbar-drawer-close').click();
+ const row=id=>doc.locator(`.rollsbar-cart-item[data-source-id="${id}"]`);
+ const id='rolls-filadelfiya',cards=doc.locator(`[data-rollsbar-source-id="${id}"]`);
+ await cards.first().locator('[data-rollsbar-cart-delta="1"]').click();await expect(cards.last().locator('.rollsbar-product-counter span')).toHaveText('1');
+ await drawerOpen(doc);await expect(row(id).locator('.rollsbar-drawer-qty span')).toHaveText('1');
+ await row(id).locator('[data-drawer-action="line_plus"]').focus();await page.keyboard.press('Enter');
+ await expect(row(id).locator('.rollsbar-drawer-qty span')).toHaveText('2');await expect(row(id).locator('[data-drawer-action="line_plus"]')).toBeFocused();
+ for(const card of await cards.all())await expect(card.locator('.rollsbar-product-counter span')).toHaveText('2');
+ await row(id).locator('[data-drawer-action="line_minus"]').click();await expect(row(id).locator('.rollsbar-drawer-qty span')).toHaveText('1');
+ await row(id).locator('[data-drawer-action="line_minus"]').click();await expect(row(id)).toHaveCount(0);await expect(doc.locator('.rollsbar-cart-empty')).toBeVisible();await expect(doc.locator('.rollsbar-drawer-close')).toBeFocused();
+ for(const card of await cards.all())await expect(card.locator('[data-rollsbar-cart-delta="1"]')).toBeVisible();
+ await close();
+ // Same parent with two native variations, and same product with incompatible options.
+ await drawerAdd(doc,'pizza-pepperoni',0);await drawerAdd(doc,'pizza-pepperoni',1);
+ await drawerAdd(doc,'wok-udon-chicken',0);await drawerAdd(doc,'wok-udon-chicken',2);
+ await drawerAdd(doc,'shrimp-tempura',1);await drawerAdd(doc,'snacks-naggetsy',0);
+ await drawerOpen(doc);await expect(row('pizza-pepperoni')).toHaveCount(2);await expect(row('wok-udon-chicken')).toHaveCount(2);
+ const state=(await request({operation:'read'})).data;
+ for(const item of state.lines){const line=doc.locator(`[data-cart-key="${item.key}"]`);await expect(line.locator('h4')).toHaveText(item.name);await expect(line.locator('small')).toHaveText(item.unit_price);}
+ expect(state.lines.filter(l=>l.source_id==='pizza-pepperoni').map(l=>l.variation_id)[0]).not.toBe(state.lines.filter(l=>l.source_id==='pizza-pepperoni')[1].variation_id);
+ await row('wok-udon-chicken').first().locator('[data-drawer-action="line_plus"]').click();
+ await expect(row('wok-udon-chicken').first().locator('.rollsbar-drawer-qty span')).toHaveText('2');await expect(row('wok-udon-chicken').last().locator('.rollsbar-drawer-qty span')).toHaveText('1');
+ await row('pizza-pepperoni').first().locator('[data-drawer-action="line_remove"]').click();await expect(row('pizza-pepperoni')).toHaveCount(1);
+ for(const sourceId of ['upsell-soy-sauce','upsell-ginger','upsell-wasabi']){await doc.locator(`[data-drawer-upsell="${sourceId}"]`).click();await expect(row(sourceId)).toHaveCount(1);}
+ expect(await doc.locator('.rollsbar-product-card').count()).toBe(126);
+ const subtotal=(await request({operation:'read'})).data.subtotal;for(const value of await doc.locator('[data-rollsbar-drawer-subtotal]').all())await expect(value).toHaveText(subtotal);
+ await doc.locator('[data-drawer-mode="pickup"]').click();await expect(doc.locator('[data-drawer-mode="pickup"]')).toHaveAttribute('aria-pressed','true');await close();await drawerOpen(doc);await expect(doc.locator('[data-drawer-mode="pickup"]')).toHaveAttribute('aria-pressed','true');
+ // A lost response after a successful mutation is reconciled, never retried.
+ let lost=false;await page.route('**/fixture-cart',async route=>{const r=JSON.parse(new URLSearchParams(route.request().postData()).get('request'));if(!lost&&r.operation==='line_plus'){lost=true;await route.fetch();await route.abort();}else await route.continue();});
+ const before=Number(await row('shrimp-tempura').locator('.rollsbar-drawer-qty span').textContent());
+ await row('shrimp-tempura').locator('[data-drawer-action="line_plus"]').click();await expect(doc.locator('.rollsbar-drawer-error')).not.toBeEmpty();await expect(row('shrimp-tempura').locator('.rollsbar-drawer-qty span')).toHaveText(String(before+1));await page.unroute('**/fixture-cart');
+ await row('shrimp-tempura').locator('[data-drawer-action="line_plus"]').click();await expect(row('shrimp-tempura').locator('.rollsbar-drawer-qty span')).toHaveText(String(before+2));await expect(doc.locator('.rollsbar-drawer-error')).toBeEmpty();
+ await close();
+ // Real B9 fallback stays confined, and transitioning from a selector cannot retain its lock.
+ await doc.locator('[data-rollsbar-source-id="snacks-naggetsy"] [data-rollsbar-selection-open]').first().click();await expect(modal).toBeVisible();
+ await doc.locator('.rollsbar-cart-link').first().evaluate(b=>b.click());await expect(drawer).toBeVisible();await expect(modal).not.toBeVisible();
+ const overflow=await drawer.evaluate(d=>{const p=d.querySelector('.rollsbar-cart-drawer__panel'),b=d.querySelector('.rollsbar-drawer-body');return {page:Math.max(0,document.documentElement.scrollWidth-innerWidth),drawer:Math.max(0,p.scrollWidth-p.clientWidth),content:Math.max(0,b.scrollWidth-b.clientWidth)};});expect(overflow).toEqual({page:0,drawer:0,content:0});
+ await close();
+ const data=JSON.parse(await doc.locator('#rollsbarProductDetailsData').textContent());
+ for(const p of Object.values(data).filter(p=>!p.selection.required).slice(0,12))await request({operation:'add',source_id:p.source_id||Object.keys(data).find(key=>data[key].woo_id===p.woo_id),product_id:p.woo_id});
+ await drawerOpen(doc);const body=doc.locator('.rollsbar-drawer-body');expect(await body.evaluate(b=>b.scrollHeight>b.clientHeight)).toBe(true);await body.evaluate(b=>b.scrollTop=b.scrollHeight);expect(await body.evaluate(b=>b.scrollTop)).toBeGreaterThan(0);
+ await expect(doc.locator('.rollsbar-drawer-checkout')).toHaveAttribute('href','/checkout/');
+ // Keep checkout native: intercept only the existing checkout navigation boundary.
+ await page.route('**/checkout/',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><title>Native checkout boundary</title>'}));
+ const current=(await request({operation:'read'})).data;for(const item of current.lines)await request({operation:'line_remove',key:item.key});await close();await drawerOpen(doc);await expect(doc.locator('.rollsbar-cart-empty')).toBeVisible();await expect(doc.locator('.rollsbar-cart-item')).toHaveCount(0);
+ await close();await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');expect(await doc.locator('[inert]').count()).toBe(0);expect(errors).toEqual([]);
+ await info.attach('b12-functional.json',{body:JSON.stringify({width:page.viewportSize().width,overflow,jsErrors:errors,distinctVariations:true,distinctOptions:true,lostResponseReconciled:true,hiddenUpsells:3}),contentType:'application/json'});
+ await drawerOpen(doc);await doc.locator('[data-drawer-upsell="upsell-ginger"]').click();await expect(row('upsell-ginger')).toHaveCount(1);
+ await doc.locator('.rollsbar-drawer-checkout').click();await expect(page).toHaveURL('http://127.0.0.1:4178/checkout/');expect(errors).toEqual([]);
+});

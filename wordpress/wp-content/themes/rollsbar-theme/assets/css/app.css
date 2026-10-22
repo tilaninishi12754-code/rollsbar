@@ -442,6 +442,55 @@ img{max-width:100%;display:block}
 [data-rollsbar-cart-delta]:disabled{cursor:wait}
 .rollsbar-cart-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;clip-path:inset(50%);white-space:nowrap}
 .rollsbar-cart-error{font-size:13px;color:#a01919;line-height:1.4;margin-top:10px;overflow-wrap:anywhere}
+
+/* Batch 12: approved right-hand drawer; no header/mobile totals changes (B13). */
+.rollsbar-cart-drawer{position:fixed;inset:0;z-index:1100;-webkit-font-smoothing:antialiased;--drawer-line:#ececec;--drawer-soft:#f3f4f5;--drawer-muted:#747474}
+.rollsbar-cart-drawer[hidden]{display:none}
+.rollsbar-cart-drawer :where(button){font:inherit;cursor:pointer}
+.rollsbar-cart-drawer__backdrop{position:absolute;inset:0;border:0;background:rgba(0,0,0,.46);backdrop-filter:blur(4px)}
+.rollsbar-cart-drawer__panel{position:absolute;right:0;top:0;height:100%;width:min(470px,100%);background:#fff;display:flex;flex-direction:column;box-shadow:-20px 0 70px rgba(0,0,0,.2)}
+.rollsbar-drawer-head{padding:22px 20px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--drawer-line)}
+.rollsbar-drawer-head h2{margin:0;font-size:28px;letter-spacing:-.04em}
+.rollsbar-drawer-close{border:0;background:var(--drawer-soft);width:38px;height:38px;border-radius:50%;font-size:24px}
+.rollsbar-drawer-body{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+.rollsbar-cart-empty{padding:34px 22px;text-align:center;background:var(--drawer-soft);border-radius:18px;color:var(--drawer-muted)}
+.rollsbar-cart-list{display:flex;flex-direction:column;gap:10px}
+.rollsbar-cart-item{display:grid;grid-template-columns:64px 1fr auto;gap:11px;align-items:center;border:1px solid var(--drawer-line);padding:9px;border-radius:17px}
+.rollsbar-cart-item>div{min-width:0}
+.rollsbar-cart-item h4{font-size:13px;margin:0 0 5px;line-height:1.2;overflow-wrap:anywhere}
+.rollsbar-cart-item small{color:var(--drawer-muted)}
+.rollsbar-cart-item__media{position:relative;width:68px;height:68px;border-radius:12px;overflow:hidden;display:block;flex:none;background:var(--drawer-soft)}
+.rollsbar-cart-item__media>img,.home .rollsbar-cart-item__media>.rollsbar-product-sprite{position:static;width:100%;height:100%;object-fit:cover;border-radius:0}
+.rollsbar-cart-item__media.image-missing{display:block;background:var(--drawer-soft)}
+.rollsbar-cart-item__media.image-missing::after{content:none}
+.rollsbar-drawer-qty{display:inline-flex;align-items:center;border:1px solid var(--drawer-line);border-radius:10px;overflow:hidden;margin-top:7px}
+.rollsbar-drawer-qty button{width:30px;height:30px;border:0;background:#fff}
+.rollsbar-drawer-qty span{width:30px;text-align:center;font-size:12px;font-weight:800}
+.rollsbar-drawer-remove{border:0;background:transparent;color:#a34a45;font-size:12px}
+.rollsbar-drawer-upsell h3,.rollsbar-cart-summary h3{margin:0 0 12px;font-size:16px}
+.rollsbar-upsell-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.rollsbar-upsell-card{padding:12px;border:1px solid var(--drawer-line);border-radius:15px;background:#fff}
+.rollsbar-upsell-card b{font-size:13px;display:block}
+.rollsbar-upsell-card span{font-size:12px;color:var(--drawer-muted);display:block;margin:4px 0 9px}
+.rollsbar-upsell-card button{border:0;width:100%;background:var(--drawer-soft);color:var(--rb-red);border-radius:10px;padding:9px;font-weight:900;font-size:12px}
+.rollsbar-cart-summary{padding:16px;background:var(--drawer-soft);border-radius:18px}
+.rollsbar-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.rollsbar-mode-switch button{border:1px solid var(--drawer-line);background:#fff;border-radius:12px;padding:10px;font-weight:900}
+.rollsbar-mode-switch button.active{background:var(--rb-red);border-color:var(--rb-red);color:#fff}
+.rollsbar-cart-total-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;margin-top:9px}
+.rollsbar-cart-total-row--main{font-size:17px;font-weight:900;padding-top:10px;border-top:1px solid #ddd}
+.rollsbar-drawer-foot{padding:16px;border-top:1px solid var(--drawer-line)}
+.rollsbar-drawer-checkout{display:block;text-align:center;text-decoration:none;width:100%;border:0;border-radius:14px;background:var(--rb-red);color:#fff;font-weight:900;padding:15px}
+.rollsbar-drawer-helper{font-size:11px;color:var(--drawer-muted);margin-top:9px;line-height:1.4}
+.rollsbar-drawer-error:empty{display:none}
+.rollsbar-drawer-error{font-size:13px;color:#a01919;overflow-wrap:anywhere}
+.rollsbar-cart-drawer button:disabled{cursor:wait}
+@media(max-width:470px){.rollsbar-upsell-grid{grid-template-columns:1fr}}
+/* Reuse the accepted mobile cart control as the only available drawer trigger below 900px. */
+@media(max-width:900px){
+	.home .rollsbar-mobile-cart:not([hidden]){display:block;position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:95;text-decoration:none;background:var(--rb-red);color:#fff;border-radius:18px;padding:14px 18px;font-weight:900;box-shadow:0 15px 40px rgba(180,25,35,.3)}
+	.home .rollsbar-mobile-cart__inner{display:flex;align-items:center;justify-content:space-between}
+}
 @media(max-width:700px){
 	.rollsbar-product-counter{grid-template-columns:30px minmax(27px,auto) 30px}
 	.rollsbar-product-counter button{width:30px;height:35px}
