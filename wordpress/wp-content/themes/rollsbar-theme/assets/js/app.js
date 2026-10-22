@@ -521,10 +521,10 @@
 	menu.querySelectorAll('[data-rollsbar-menu-close],.rollsbar-site-menu__links a,.rollsbar-site-menu__phone').forEach(function(link){
 		link.addEventListener('click',function(event){
 			closeMenu();
-			// Contact details already live in the footer; do not change that component.
+			// B15: the public contacts section precedes the website footer.
 			if(link.hasAttribute('data-rollsbar-menu-contacts')){
 				event.preventDefault();
-				var contacts=document.querySelector('.rollsbar-footer');
+				var contacts=document.getElementById('contacts');
 				if(contacts)contacts.scrollIntoView();
 			}
 		});
@@ -567,7 +567,7 @@
 			closeMore();
 			if(link.hasAttribute('data-rollsbar-category-contacts')){
 				event.preventDefault();
-				var contacts=document.querySelector('.rollsbar-footer');
+				var contacts=document.getElementById('contacts');
 				if(contacts)contacts.scrollIntoView();
 			}
 		});

@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { exerciseSearch, searchGeometry, searchFallbackGeometry } from './b14-search-helpers.mjs';
+import { footerGeometry, footerOverflow } from './b15-footer-helpers.mjs';
 const baseline = process.env.ROLLSBAR_BASELINE==='1';
 const exceptions = JSON.parse(readFileSync('qa/visual/accepted-exceptions.json'));
 test.beforeEach(({},info)=>{
@@ -38,7 +39,7 @@ async function capture(page,locator,name) {
   await locator.evaluate(async (node,alignOrigin)=>{
     node.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
     node.ownerDocument.activeElement?.blur();
-    if(alignOrigin) {
+ if(alignOrigin) {
       const rect=node.getBoundingClientRect();
       node.style.position='relative';
       node.style.left=`${Math.round(rect.x)-rect.x}px`;
@@ -539,4 +540,93 @@ test('b14 canonical search contract and geometry',async({page},info)=>{
  await open.click();await page.keyboard.press('Escape');await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');
  expect(errors).toEqual([]);
  await info.attach('b14-contract.json',{body:JSON.stringify({canonical:118,domCards:126,queries:queries.length,oracle:'immutable approved UI',geometry,fallbackProof,jsErrors:errors}),contentType:'application/json'});
+});
+
+test('b15 footer contacts visual and functional contract',async({page},info)=>{
+ test.setTimeout(60000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning'||(m.type()==='error'&&!m.text().startsWith('Failed to load resource:')))errors.push(m.text());});
+ const doc=await ready(page),width=page.viewportSize().width;
+ const footer=doc.locator(baseline?'.footer':'.rollsbar-footer'),contacts=doc.locator('#contacts');
+ // Only unrelated floating back-to-top controls are hidden for component captures.
+ await doc.locator('body').evaluate(b=>{const s=b.ownerDocument.createElement('style');s.id='b15CaptureOnly';s.textContent='.client-back-top,.back-to-menu-top,.mobile-actions,.rollsbar-mobile-cart{visibility:hidden!important}';b.ownerDocument.head.append(s);});
+ const logo=footer.locator(baseline?'.brand':'.rollsbar-footer__logo');
+ const b15shot=async(target,name)=>{
+  await target.scrollIntoViewIfNeeded();
+  await target.evaluate(n=>{n.scrollIntoView({block:'center',behavior:'instant'});const r=n.getBoundingClientRect();n.style.position='relative';n.style.top=`${Math.round(r.y)-r.y}px`;n.ownerDocument.activeElement?.blur();});
+  await page.mouse.move(0,899);
+  await expect(target).toHaveScreenshot(name+'.png',{mask:name==='b15-footer'?[logo]:[],maskColor:'#171717'});
+ };
+ await b15shot(footer,'b15-footer');
+ if([1440,320].includes(width))await b15shot(contacts,'b15-contacts');
+ // Remove capture-only origin adjustment before comparing actual geometry.
+ await footer.evaluate(n=>{n.style.position='';n.style.top='';});await contacts.evaluate(n=>{n.style.position='';n.style.top='';});
+ await doc.locator('#b15CaptureOnly').evaluate(n=>n.remove());
+ if(!baseline){
+  const oracle=await page.context().newPage();
+  await oracle.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());
+  await oracle.goto('http://127.0.0.1:4178/approved/demo.html');
+  const reference=oracle.frameLocator('#stage').frameLocator('#site');await expect(reference.locator('body[data-final-demo-fixes="1"]')).toBeVisible();
+  const actual=await doc.locator('body').evaluate(footerGeometry),expected=await reference.locator('body').evaluate(footerGeometry);
+  expect(actual).toEqual(expected);
+  expect(await logo.locator('img').evaluate(i=>i.complete&&i.naturalWidth>0)).toBe(true);
+  expect(await reference.locator('.footer img').evaluate(i=>i.complete&&i.naturalWidth===0)).toBe(true);
+  expect(await contacts.innerText()).toBe(await reference.locator('#contacts').innerText());
+  expect(await footer.innerText()).toBe(await reference.locator('.footer').innerText());
+  expect(await contacts.locator('a').evaluateAll(as=>as.map(a=>[a.getAttribute('href'),a.target,a.rel]))).toEqual(await reference.locator('#contacts a').evaluateAll(as=>as.map(a=>[a.getAttribute('href'),a.target,a.rel])));
+  const routes=['#top','#sets','/dostavka-i-oplata/','/rekvizity-prodavca/','/publichnaya-oferta/','/oplata-i-vozvrat/','/politika-konfidencialnosti/','/cookies/','/bezopasnost-onlajn-oplaty/','/otzyvy/','/rabota-v-rolls-bar/','/otzyvy/'];
+  expect(await footer.locator('a').evaluateAll(as=>as.map(a=>a.getAttribute('href')))).toEqual(routes);
+  expect(await footer.locator('a[target="_top"]').count()).toBe(10);
+  // Approved links use native hover behavior; no invented hover surfaces.
+  for(const [currentLink,approvedLink] of [[contacts.locator('a').first(),reference.locator('#contacts a').first()],[footer.locator('a').nth(1),reference.locator('.footer a').nth(1)]]){
+   await currentLink.hover();await approvedLink.hover();
+   const presentation=a=>{const s=getComputedStyle(a);return [s.color,s.backgroundColor,s.textDecorationLine,s.boxShadow,s.transform];};
+   expect(await currentLink.evaluate(presentation)).toEqual(await approvedLink.evaluate(presentation));
+  }
+  await page.mouse.move(0,899);await oracle.mouse.move(0,899);
+  await oracle.close();
+  await contacts.locator('a').first().focus();
+  for(const link of await contacts.locator('a').all()){
+   await expect(link).toBeFocused();expect(await link.evaluate(a=>getComputedStyle(a).outlineStyle)).not.toBe('none');await page.keyboard.press('Tab');
+  }
+  // Real keyboard traversal, including native focus outlines and a local anchor activation.
+  await footer.locator('a').first().focus();
+  for(const link of await footer.locator('a').all()){
+   await expect(link).toBeFocused();
+   expect(await link.evaluate(a=>getComputedStyle(a).outlineStyle)).not.toBe('none');
+   await page.keyboard.press('Tab');
+  }
+  await footer.locator('a').first().focus();await page.keyboard.press('Enter');await expect(doc.locator('#top')).toBeInViewport();
+  await footer.locator('a[href="#sets"]').click();await expect(doc.locator('#sets')).toBeInViewport();
+  // The existing header Contacts action must reach the new contacts section.
+  await doc.locator('[data-rollsbar-menu-open]').evaluate(b=>b.click());
+  await doc.locator('[data-rollsbar-menu-contacts]').click();await expect(contacts).toBeInViewport();
+  await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');await expect(doc.locator('[inert]')).toHaveCount(0);
+  expect(await doc.locator('body').evaluate(footerOverflow)).toEqual({page:0,footer:0,content:0,header:0,search:0,mobile:0});
+ }
+ await drawerAdd(doc,'rolls-filadelfiya-s-krevetkoy');
+ // At true page bottom, every footer link remains above the existing fixed cart control.
+ await doc.locator('body').evaluate(b=>b.ownerDocument.defaultView.scrollTo(0,b.ownerDocument.documentElement.scrollHeight));
+ const bottomFooter=await footer.boundingBox();expect(bottomFooter.y+bottomFooter.height).toBeLessThanOrEqual(900);
+ await expect(footer.locator('a').last()).toBeInViewport();
+ if(width<=700){
+  const bar=doc.locator(baseline?'.client-order-bar':'[data-rollsbar-orderbar]');await expect(bar).toBeVisible();
+  const barBox=await bar.boundingBox();
+  for(const link of await footer.locator('a').all()){const box=await link.boundingBox();expect(box.y+box.height).toBeLessThan(barBox.y);}
+ }
+ if(!baseline){
+  if(width>700&&width<=900){
+   const bar=await doc.locator('.rollsbar-mobile-cart').boundingBox();
+   for(const link of await footer.locator('a').all()){const box=await link.boundingBox();expect(box.y+box.height).toBeLessThan(bar.y);}
+  }
+  expect(await doc.locator('body').evaluate(footerOverflow)).toEqual({page:0,footer:0,content:0,header:0,search:0,mobile:0});
+  await drawerOpen(doc);await page.keyboard.press('Escape');await expect(doc.locator('[inert]')).toHaveCount(0);await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');
+  // Realistic long editable text and an unbroken value must wrap within the component.
+  await contacts.locator('p').first().evaluate(p=>p.textContent='Очень длинное название города, Очень длинная тестовая улица, дом 123, корпус 4, помещение 567. '+ 'А'.repeat(120));
+  await footer.locator('p').last().evaluate(p=>p.textContent+=' '+ 'А'.repeat(120));
+  await contacts.locator('a').first().evaluate(a=>a.textContent='+7 999 123-45-67, дополнительный телефон для связи с оператором');
+  await footer.locator('a').last().evaluate(a=>a.textContent+=' '+ 'А'.repeat(80));
+  expect(await doc.locator('body').evaluate(footerOverflow)).toEqual({page:0,footer:0,content:0,header:0,search:0,mobile:0});
+  expect(errors).toEqual([]);
+  await info.attach('b15-contract.json',{body:JSON.stringify({width,geometry:await doc.locator('body').evaluate(footerGeometry),overflow:await doc.locator('body').evaluate(footerOverflow),errors}),contentType:'application/json'});
+ }
 });

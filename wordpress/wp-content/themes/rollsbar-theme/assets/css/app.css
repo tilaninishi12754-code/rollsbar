@@ -555,3 +555,37 @@ img{max-width:100%;display:block}
 .product-search input{cursor:text}
 .product-search .search-result{font:inherit}
 .product-search .search-result__media .rollsbar-product-sprite{position:static;width:100%;height:100%;border-radius:0;inset:auto}
+/* B15: public contacts and website footer, from approved a5e5243. */
+.rollsbar-contacts,.rollsbar-footer{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.rollsbar-contacts{padding-top:62px;width:min(1180px,calc(100% - 40px))}
+.rollsbar-contacts__heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px}
+.rollsbar-contacts h2{font-size:34px;line-height:1;letter-spacing:-.045em;margin:0}
+.rollsbar-contacts__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.rollsbar-contacts article{padding:25px;border:1px solid #ececec;border-radius:30px;background:#fff;min-width:0;overflow-wrap:anywhere}
+.rollsbar-contacts h3{margin:0 0 10px;font-size:23px;letter-spacing:-.035em}
+.rollsbar-contacts p{margin:0;color:#747474;line-height:1.5}
+.rollsbar-footer{margin-top:72px;background:#171717;color:#fff;border:0;padding:34px 0 100px}
+.rollsbar-footer__grid{display:flex;align-items:flex-start;justify-content:space-between;gap:30px;width:min(1180px,calc(100% - 40px))}
+.rollsbar-footer__brand{min-width:0}
+.rollsbar-footer__logo{display:inline-flex;vertical-align:top;align-items:center;gap:10px;text-decoration:none;flex:none}
+.rollsbar-footer__logo img{display:inline;width:160px;height:52px;object-fit:contain;flex:none;background:transparent}
+.rollsbar-footer p{color:#9d9d9d;max-width:650px;font-size:12px;line-height:1.5;margin:12px 0;overflow-wrap:anywhere}
+.rollsbar-footer p.rollsbar-footer__seller{margin-top:10px;color:#b9b9bb}
+.rollsbar-footer__links{display:flex;gap:8px;flex-wrap:wrap;align-content:normal;min-width:0}
+.rollsbar-footer__links a{text-decoration:none;background:#282828;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:800;overflow-wrap:anywhere}
+.rollsbar-footer__links a:last-child{display:inline-flex;align-items:center;gap:6px}
+@media(max-width:1050px){
+ .rollsbar-contacts__grid{grid-template-columns:1fr}
+ .rollsbar-contacts{width:min(940px,calc(100% - 32px))}
+ .rollsbar-footer__grid{width:min(940px,calc(100% - 32px))}
+}
+@media(max-width:700px){
+ .rollsbar-contacts{padding-top:44px}
+ .rollsbar-contacts{width:calc(100% - 28px)}
+ .rollsbar-contacts__heading{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:15px}
+ .rollsbar-contacts h2{font-size:29px}
+ .rollsbar-footer{padding-bottom:145px}
+ .rollsbar-footer__grid{width:calc(100% - 28px);flex-direction:column}
+ .rollsbar-footer__logo{gap:5px}
+ .rollsbar-footer__logo img{width:101px;height:34px}
+}

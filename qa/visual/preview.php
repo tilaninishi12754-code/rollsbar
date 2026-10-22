@@ -6,6 +6,10 @@ $theme = $root . '/wordpress/wp-content/themes/rollsbar-theme';
 $catalog = json_decode(file_get_contents($root . '/wordpress/data/catalog.json'), true);
 function add_action(...$args) {}
 function add_filter(...$args) {}
+// Real read-only settings resolution, with optional in-memory QA overrides; no WP DB.
+function get_option($key,$fallback=[]) { return $key==='rollsbar_settings' ? ($GLOBALS['b15_settings']??[]) : $fallback; }
+function wp_parse_args($value,$defaults) { return array_merge($defaults,$value); }
+require $root.'/wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-settings.php';
 function esc_attr($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 function esc_html($s) { return esc_attr($s); }
 function esc_url($s) { return esc_attr($s); }
@@ -16,9 +20,10 @@ function wp_json_encode($s, $flags=0) { return json_encode($s, $flags | JSON_UNE
 function home_url($s='/') { return $s; }
 function get_template_directory_uri() { return '/wordpress/wp-content/themes/rollsbar-theme'; }
 function get_theme_file_uri($s) { return get_template_directory_uri().'/'.$s; }
-function get_theme_mod($s) { return 0; }
+function get_theme_mod($s) { return $GLOBALS['b15_theme_mods'][$s]??0; }
+function wp_get_attachment_image_url($id,$size) { return '/fixture-media/'.$id.'.png'; }
 function get_posts($args) { return []; }
-function is_front_page() { return true; }
+function is_front_page() { return $GLOBALS['b15_front_page']??true; }
 function has_custom_logo() { return false; }
 function language_attributes() { echo 'lang="ru"'; }
 function bloginfo($s) { echo 'UTF-8'; }

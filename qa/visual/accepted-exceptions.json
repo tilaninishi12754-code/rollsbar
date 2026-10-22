@@ -59,5 +59,22 @@
     "viewports": [320],
     "scope": "b11-simple-counter.png and b11-simple-repeat.png only: maxDiffPixels=38; identical dimensions; all other new B11 targets retain zero allowance",
     "reason": "Measured 38 differing pixels at the upper-left rounded corner: the immutable approved 320px counter capture includes the neighboring price glyph where its unwrapped footer overlaps the counter. B11 fixes the real control geometry using flex-wrap, so the current counter is unobstructed. No mask, baseline rewrite, or existing tolerance change is used. Quantity text and zero/increment/decrement behavior are asserted separately."
+  },
+  {
+    "tests": [
+      "b15 footer contacts visual and functional contract"
+    ],
+    "scope": "B15 only: footer logo and unrelated floating controls",
+    "reason": "Approved embedded footer WebP fails decoding (naturalWidth 0); retain existing client-editable custom-logo / header-logo.png source. Only the logo box is masked #171717 (160x52 desktop, 101x34 mobile); all footer geometry/text/links remain unmasked at zero tolerance. Floating .client-back-top, .back-to-menu-top, .mobile-actions and existing B13 .rollsbar-mobile-cart are outside the footer and hidden only during component captures, then restored before unmodified bottom/cart/keyboard/overflow checks. Capture origins are rounded to a whole CSS pixel in both sources to isolate preceding deferred delivery/catalog placement.",
+    "viewports": [
+      1440,
+      1051,
+      1050,
+      1024,
+      701,
+      700,
+      390,
+      320
+    ]
   }
 ]
