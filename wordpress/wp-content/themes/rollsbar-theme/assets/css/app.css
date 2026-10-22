@@ -414,3 +414,25 @@ img{max-width:100%;display:block}
 .rollsbar-product-details__close,.rollsbar-product-details__backdrop{cursor:pointer;font-family:inherit}
 .rollsbar-product-details__media .rollsbar-product-sprite{position:static;width:100%;height:100%;border-radius:0}
 .rollsbar-product-details__media.image-missing{display:flex;background:#f4f4f4}
+
+/* Batch 10: a selector state of the same B9 panel, using approved client-modal geometry. */
+.rollsbar-product-options[hidden]{display:none}
+.rollsbar-product-details.selecting{padding:16px}
+.rollsbar-product-details.selecting .rollsbar-product-details__backdrop{backdrop-filter:blur(4px);font:inherit}
+.rollsbar-product-details.selecting .rollsbar-product-details__panel{display:block;width:min(520px,100%);max-height:90vh;border-radius:26px;padding:22px;box-shadow:0 30px 100px rgba(0,0,0,.3)}
+.rollsbar-product-details.selecting .rollsbar-product-details__media,.rollsbar-product-details.selecting .rollsbar-product-details__content{display:none}
+.rollsbar-product-options__head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.rollsbar-product-options__head>div{min-width:0}
+.rollsbar-product-options__head small{color:#999;font-weight:800}
+.rollsbar-product-options__head h3{margin:0;font-size:25px;letter-spacing:-.04em;overflow-wrap:anywhere}
+.rollsbar-product-options__close{border:0;width:38px;height:38px;border-radius:50%;background:#f5f5f5;font-family:inherit;font-size:24px;flex:none;cursor:pointer}
+.rollsbar-product-options__groups{display:grid;gap:13px}
+.rollsbar-product-options__group{border:1px solid #ececec;border-radius:16px;padding:13px;min-width:0}
+.rollsbar-product-options__group label{display:block;font-size:12px;color:#777;margin-bottom:8px;font-weight:800}
+.rollsbar-product-options__group select{width:100%;max-width:100%;padding:12px;border:1px solid #e6e6e6;border-radius:12px;background:#fff;font:inherit}
+.rollsbar-product-options__note{font-size:13px;color:#555;line-height:1.4;margin:0}
+.rollsbar-product-options__add{width:100%;border:0;border-radius:14px;background:#d92525;color:#fff;font:inherit;font-weight:900;padding:14px;margin-top:16px;opacity:.45;cursor:not-allowed}
+@media(max-width:700px){
+	.rollsbar-product-details.selecting{align-items:flex-end;padding:0}
+	.rollsbar-product-details.selecting .rollsbar-product-details__panel{width:100%;border-radius:25px 25px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+}

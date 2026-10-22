@@ -206,6 +206,7 @@ foreach ( $promo_posts as $promo_post ) {
 					}
 
 					$is_variable = $product->is_type( 'variable' );
+					$has_options = '' !== (string) $product->get_meta( '_rollsbar_options_json', true );
 					$accent = $accent_colors[ $product->get_meta( '_rollsbar_source_id', true ) ] ?? '';
 					?>
 					<article class="rollsbar-product-card<?php echo $accent ? ' rollsbar-product-card--accent rollsbar-product-card--' . esc_attr( $accent ) : ''; ?>" data-rollsbar-source-id="<?php echo esc_attr( $product->get_meta( '_rollsbar_source_id', true ) ); ?>">
@@ -221,11 +222,12 @@ foreach ( $promo_posts as $promo_post ) {
 								<span class="rollsbar-price"><?php echo wp_kses_post( rollsbar_catalog_price_html( $product ) ); ?></span>
 
 								<?php if ( $is_variable ) : ?>
-									<a class="rollsbar-product-action rollsbar-product-action--variable" href="<?php echo esc_url( $product->get_permalink() ); ?>" aria-label="<?php echo esc_attr( 'Выбрать вариант: ' . $product->get_name() ); ?>">Выбрать</a>
+									<a class="rollsbar-product-action rollsbar-product-action--variable" data-rollsbar-selection-open aria-haspopup="dialog" href="<?php echo esc_url( $product->get_permalink() ); ?>" aria-label="<?php echo esc_attr( 'Выбрать вариант: ' . $product->get_name() ); ?>">Выбрать</a>
 								<?php else : ?>
 									<a
-										class="rollsbar-product-action add_to_cart_button ajax_add_to_cart"
-										href="<?php echo esc_url( $product->add_to_cart_url() ); ?>"
+										class="rollsbar-product-action<?php echo $has_options ? ' rollsbar-product-action--options' : ' add_to_cart_button ajax_add_to_cart'; ?>"
+										<?php if ( $has_options ) : ?>data-rollsbar-selection-open aria-haspopup="dialog" aria-label="<?php echo esc_attr( 'Выбрать опции: ' . $product->get_name() ); ?>"<?php endif; ?>
+										href="<?php echo esc_url( $has_options ? $product->get_permalink() : $product->add_to_cart_url() ); ?>"
 										data-product_id="<?php echo esc_attr( $product->get_id() ); ?>"
 										data-quantity="1"
 										rel="nofollow"
@@ -263,6 +265,14 @@ foreach ( $promo_posts as $promo_post ) {
 					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.5 9h9.8l1.7-6H7.1M10 19a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 10 19Zm8 0a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 18 19Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span></span>
 				</a>
 				<div class="rollsbar-product-details__note">Название, цена, варианты и состав синхронизированы с переданной таблицей Rolls Bar и последними прямыми правками заказчика. Неподтверждённые данные не додумываются.</div>
+			</div>
+			<div class="rollsbar-product-options" hidden>
+				<div class="rollsbar-product-options__head">
+					<div><small>Настройка товара</small><h3 id="rollsbarSelectionTitle"></h3></div>
+					<button class="rollsbar-product-options__close" type="button" data-rollsbar-detail-close aria-label="Закрыть">×</button>
+				</div>
+				<div class="rollsbar-product-options__groups"></div>
+				<button class="rollsbar-product-options__add" type="button" disabled title="Добавление в корзину пока недоступно">Добавить в корзину</button>
 			</div>
 		</div>
 	</div>

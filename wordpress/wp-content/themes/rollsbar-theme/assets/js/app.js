@@ -21,13 +21,83 @@
 	var media=modal.querySelector('.rollsbar-product-details__media');
 	var action=modal.querySelector('.rollsbar-product-details__add');
 	var close=modal.querySelector('.rollsbar-product-details__close');
+	var selector=modal.querySelector('.rollsbar-product-options');
+	var groups=selector.querySelector('.rollsbar-product-options__groups');
+	var selection=null;
 	var opener=null,previousOverflow='',previousScrollBehavior='',scrollPosition=null,background=[];
+
+	function publishSelection(product){
+		var contract=product.selection;
+		var select=groups.querySelector('[data-variation]');
+		var variation=select?contract.variations.find(function(row){return String(row.id)===select.value&&row.available;}):null;
+		var valid=!contract.blocked&&(!product.variable||!!variation);
+		var options=contract.options.map(function(group,index){
+			var control=groups.querySelector('[data-option="'+index+'"]');
+			var value=control?control.value:null;
+			if(group.pending||!group.choices.includes(value))valid=false;
+			return {label:group.label,value:value};
+		});
+		selection={source_id:modal.dataset.sourceId,variation_id:variation?variation.id:null,attributes:variation?variation.attributes:{},options:options,price_html:variation?variation.price_html:product.price,valid:valid};
+		modal.dataset.selection=JSON.stringify(selection);
+		modal.dispatchEvent(new CustomEvent('rollsbar:selectionchange',{bubbles:true,detail:JSON.parse(modal.dataset.selection)}));
+		var submit=selector.querySelector('.rollsbar-product-options__add');
+		// Selection is available to B11; this batch never submits or mutates a cart.
+		submit.disabled=true;
+		submit.textContent=contract.blocked||contract.options.some(function(group){return group.pending;})?'Ожидаем список вариантов':(valid?'Добавить в корзину':'Нет доступных вариантов');
+	}
+	function showSelector(product){
+		modal.classList.add('selecting');
+		selector.hidden=false;
+		panel.setAttribute('aria-labelledby','rollsbarSelectionTitle');
+		selector.querySelector('h3').textContent=product.name;
+		groups.replaceChildren();
+		function row(labelText,id){
+			var wrap=document.createElement('div');wrap.className='rollsbar-product-options__group';
+			var label=document.createElement('label');label.textContent=labelText;
+			if(id)label.htmlFor=id;
+			wrap.appendChild(label);groups.appendChild(wrap);return wrap;
+		}
+		if(product.variable){
+			var wrap=row(product.selection.label,'rollsbarVariation');
+			var select=document.createElement('select');select.id='rollsbarVariation';select.dataset.variation='';
+			product.selection.variations.forEach(function(variation){
+				var option=document.createElement('option');option.value=String(variation.id);
+				option.textContent=variation.label+' — '+variation.price_label;
+				option.disabled=!variation.available;select.appendChild(option);
+			});
+			var first=product.selection.variations.find(function(variation){return variation.available;});
+			if(first)select.value=String(first.id);
+			else{var empty=document.createElement('option');empty.value='';empty.textContent='Нет доступных вариантов';select.prepend(empty);select.value='';select.disabled=true;}
+			wrap.appendChild(select);
+		}
+		product.selection.options.forEach(function(group,index){
+			var id='rollsbarOption'+index,wrap=row(group.label,group.pending?null:id);
+			if(group.pending){
+				var note=document.createElement('div');note.className='rollsbar-product-options__note';
+				note.textContent='Выбор должен быть в этой карточке, как просил заказчик, но точный список вариантов в переданной таблице не указан. Не подставляем соусы наугад.';
+				wrap.appendChild(note);return;
+			}
+			var select=document.createElement('select');select.id=id;select.dataset.option=String(index);
+			group.choices.forEach(function(choice){var option=document.createElement('option');option.value=choice;option.textContent=choice;select.appendChild(option);});
+			wrap.appendChild(select);
+		});
+		if(product.selection.blocked){
+			var note=document.createElement('p');note.className='rollsbar-product-options__note';note.textContent='Список вариантов пока недоступен.';groups.appendChild(note);
+		}
+		publishSelection(product);
+		panel.scrollTop=0;
+		selector.querySelector('[data-rollsbar-detail-close]').focus({preventScroll:true});
+	}
+	groups.addEventListener('change',function(){if(!modal.hidden&&modal.classList.contains('selecting'))publishSelection(products[modal.dataset.sourceId]);});
 
 	function closeDetail(){
 		if(modal.hidden)return;
 		modal.hidden=true;
 		modal.classList.remove('open');
 		delete modal.dataset.sourceId;
+		delete modal.dataset.selection;
+		selection=null;
+		groups.replaceChildren();
 		document.body.style.overflow=previousOverflow;
 		background.forEach(function(item){item.element.inert=item.inert;});
 		background=[];
@@ -36,7 +106,7 @@
 		document.documentElement.style.scrollBehavior=previousScrollBehavior;
 		opener=null;
 	}
-	function openDetail(id,trigger){
+	function openDetail(id,trigger,selecting){
 		if(!Object.prototype.hasOwnProperty.call(products,id))return false;
 		var product=products[id];
 		if(modal.hidden){
@@ -56,6 +126,11 @@
 			}
 		}
 		modal.dataset.sourceId=id;
+		modal.classList.remove('selecting');
+		selector.hidden=true;
+		selection=null;
+		delete modal.dataset.selection;
+		panel.setAttribute('aria-labelledby','rollsbarDetailTitle');
 		modal.querySelector('#rollsbarDetailTitle').textContent=product.name;
 		modal.querySelector('.rollsbar-product-details__desc').textContent=product.description;
 		modal.querySelector('.rollsbar-product-details__price').innerHTML=product.price;
@@ -63,27 +138,34 @@
 		media.innerHTML=product.media;
 		bindProductImages(media);
 		action.href=product.action_url;
-		action.classList.toggle('add_to_cart_button',!product.variable);
-		action.classList.toggle('ajax_add_to_cart',!product.variable);
-		action.querySelector('span').textContent=product.variable?'Выбрать вариант':'Добавить в корзину';
+		action.classList.toggle('add_to_cart_button',!product.selection.required);
+		action.classList.toggle('ajax_add_to_cart',!product.selection.required);
+		action.querySelector('span').textContent=product.selection.required?'Выбрать и добавить':'Добавить в корзину';
 		action.removeAttribute('data-product_id');
 		action.removeAttribute('data-quantity');
-		if(!product.variable){action.dataset.product_id=product.woo_id;action.dataset.quantity='1';}
+		if(!product.selection.required){action.dataset.product_id=product.woo_id;action.dataset.quantity='1';}
 		modal.hidden=false;
 		modal.classList.add('open');
 		document.body.style.overflow='hidden';
 		panel.scrollTop=0;
 		close.focus({preventScroll:true});
+		if(selecting&&product.selection.required)showSelector(product);
 		window.scrollTo(scrollPosition.x,scrollPosition.y);
 		return true;
 	}
 	modal.querySelectorAll('[data-rollsbar-detail-close]').forEach(function(button){button.addEventListener('click',closeDetail);});
 	// Keep Woo's existing delegated add-to-cart handling and variable permalink.
-	action.addEventListener('click',closeDetail);
+	action.addEventListener('click',function(event){
+		var product=products[modal.dataset.sourceId];
+		if(product.selection.required){event.preventDefault();showSelector(product);return;}
+		closeDetail();
+	});
 	document.addEventListener('click',function(event){
 		if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
 		var card=event.target.closest('.rollsbar-product-card[data-rollsbar-source-id]');
 		if(!card)return;
+		var choose=event.target.closest('[data-rollsbar-selection-open]');
+		if(choose){if(openDetail(card.dataset.rollsbarSourceId,choose,true))event.preventDefault();return;}
 		var link=event.target.closest('[data-rollsbar-detail-open]');
 		if(!link&&event.target.closest('button,a,input,select,textarea,.qty,.client-action-wrap,.client-counter'))return;
 		var trigger=link||card.querySelector('h3 [data-rollsbar-detail-open]');
@@ -93,8 +175,10 @@
 		if(modal.hidden)return;
 		if(event.key==='Escape'){event.preventDefault();closeDetail();}
 		if(event.key==='Tab'){
-			if(event.shiftKey&&document.activeElement===close){event.preventDefault();action.focus();}
-			else if(!event.shiftKey&&document.activeElement===action){event.preventDefault();close.focus();}
+			var focusable=Array.from(panel.querySelectorAll('button:not([disabled]),a[href],select:not([disabled]),[tabindex="0"]')).filter(function(element){return element.tabIndex>=0&&element.getClientRects().length;});
+			var first=focusable[0],last=focusable[focusable.length-1];
+			if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+			else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
 		}
 	});
 })();

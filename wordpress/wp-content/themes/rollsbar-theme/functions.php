@@ -113,6 +113,7 @@ function rollsbar_cart_count(): int {
 function rollsbar_product_detail_data( WC_Product $product ): array {
 	$is_variable = $product->is_type( 'variable' );
 	$description = trim( wp_strip_all_tags( $product->get_description() ?: $product->get_short_description() ) );
+	$selection = rollsbar_product_selection_data( $product );
 
 	return array(
 		'name'        => $product->get_name(),
@@ -120,9 +121,51 @@ function rollsbar_product_detail_data( WC_Product $product ): array {
 		'media'       => rollsbar_product_image_markup( $product, array( 'loading' => 'eager' ) ),
 		'price'       => wp_kses_post( rollsbar_catalog_price_html( $product ) ),
 		'variable'    => $is_variable,
-		'action_url'  => $is_variable ? $product->get_permalink() : $product->add_to_cart_url(),
+		'selection'   => $selection,
+		'action_url'  => $selection['required'] ? $product->get_permalink() : $product->add_to_cart_url(),
 		// Native Woo action identity only; never the key for detail lookup.
 		'woo_id'      => $product->get_id(),
+	);
+}
+
+/** Read-only selector contract. Woo owns variation identity, price and availability. */
+function rollsbar_product_selection_data( WC_Product $product ): array {
+	$raw_options = (string) $product->get_meta( '_rollsbar_options_json', true );
+	$options = array();
+	$decoded = '' !== $raw_options ? json_decode( $raw_options, true ) : array();
+	$blocked = ! is_array( $decoded );
+	foreach ( is_array( $decoded ) ? $decoded : array() as $group ) {
+		if ( ! is_array( $group ) ) { $blocked = true; continue; }
+		$choices = array_values( array_filter( is_array( $group['choices'] ?? null ) ? $group['choices'] : array(), static fn( $value ) => is_string( $value ) && '' !== trim( $value ) ) );
+		$options[] = array(
+			'label'   => is_string( $group['label'] ?? null ) ? $group['label'] : 'Опция',
+			'choices' => $choices,
+			'pending' => ! empty( $group['pending'] ) || ! $choices,
+		);
+	}
+	$variations = array();
+	if ( $product->is_type( 'variable' ) ) {
+		foreach ( $product->get_available_variations( 'objects' ) as $variation ) {
+			$attributes = $variation->get_attributes();
+			// A wildcard row cannot specify a complete choice in this selector.
+			$complete = $attributes && ! in_array( '', $attributes, true );
+			$price = '' !== $variation->get_price() ? wc_price( wc_get_price_to_display( $variation ) ) : '';
+			$variations[] = array(
+				'id'         => $variation->get_id(),
+				'attributes' => $attributes,
+				'label'      => wp_strip_all_tags( wc_get_formatted_variation( $variation, true, count( $attributes ) > 1, false ) ),
+				'price_html' => wp_kses_post( $price ),
+				'price_label'=> html_entity_decode( wp_strip_all_tags( $price ), ENT_QUOTES, 'UTF-8' ),
+				'available'  => $complete && '' !== $price && $variation->variation_is_active() && $variation->variation_is_visible() && $variation->is_purchasable() && $variation->is_in_stock(),
+			);
+		}
+	}
+	return array(
+		'required'   => $product->is_type( 'variable' ) || '' !== $raw_options,
+		'label'      => has_term( 'pizza', 'product_cat', $product->get_id() ) ? 'Размер' : ( 'Наггетсы' === $product->get_name() ? 'Количество' : 'Вариант' ),
+		'variations' => $variations,
+		'options'    => $options,
+		'blocked'    => $blocked || ( '' !== $raw_options && ! $options ),
 	);
 }
 
