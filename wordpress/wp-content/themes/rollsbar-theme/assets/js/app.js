@@ -453,7 +453,10 @@
 		search.setAttribute('aria-hidden','true');
 		open.setAttribute('aria-expanded','false');
 		var active=document.querySelector('#rollsbarCartDrawer:not([hidden]),#rollsbarProductDetails:not([hidden]),.rollsbar-site-menu.open');
-		if(!active)body.style.overflow='';
+		if(!active){
+			body.style.overflow='';
+			if(search.contains(document.activeElement))open.focus({preventScroll:true});
+		}
 	}
 
 	function openSearch(){

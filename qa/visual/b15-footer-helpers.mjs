@@ -14,7 +14,9 @@ export function footerGeometry(body){
 }
 export function footerOverflow(body){
  const d=body.ownerDocument,w=d.defaultView;
- const excess=n=>n&&n.getClientRects().length?Math.max(0,n.scrollWidth-n.clientWidth,n.getBoundingClientRect().right-w.innerWidth,-n.getBoundingClientRect().left):0;
+ // Inline links have no client box. Firefox reports their text scrollWidth while
+ // clientWidth is zero; measure their painted client rects, not that subtraction.
+ const excess=n=>n&&n.getClientRects().length?Math.max(0,n.clientWidth?n.scrollWidth-n.clientWidth:0,...[...n.getClientRects()].flatMap(r=>[r.right-w.innerWidth,-r.left])):0;
  const footer=d.querySelector('.rollsbar-footer');
  const content=Math.max(0,...[...d.querySelectorAll('.rollsbar-footer a,.rollsbar-footer p,#contacts article,#contacts a')].map(excess));
  return {page:Math.max(0,d.documentElement.scrollWidth-w.innerWidth),footer:excess(footer),content,header:excess(d.querySelector('.rollsbar-header')),search:excess(d.querySelector('.product-search')),mobile:excess(d.querySelector('[data-rollsbar-orderbar]'))};

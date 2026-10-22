@@ -1,5 +1,29 @@
 # Local RollsBar Visual Gate
 
+## PRE-B16 responsive and browser gate
+
+Run `node qa/visual/pre-b16.mjs` from the repository root (or `npm run pre-b16-qa`).
+The existing normal Visual Gate must pass before and after this separate layer.
+The installed, locked Playwright version supplies Chromium, Firefox and WebKit;
+install missing engines with `node qa/node_modules/@playwright/test/cli.js install firefox webkit`.
+No dependency upgrade or external testing service is involved.
+
+The runner checks 69 Chromium widths: the inclusive 320–1440 grid at 20px steps,
+plus 390 and all specified breakpoint neighbors. Firefox/WebKit run the eight
+canonical widths. Every width uses an isolated local fixture session and the same
+catalog, interaction, geometry, focus and scroll checks. Existing B6B card,
+B14 search and B15 overflow measurement helpers are reused without changing
+accepted exceptions or screenshot tolerances. Screenshot baselines are never
+generated: the 285 protected hashes are verified before and after the run.
+
+Evidence is written incrementally to `PRE_B16_RESPONSIVE_CROSS_BROWSER.json`.
+Failures identify engine/width/state with measurements, exception and diagnostic
+PNG/JSON under ignored `qa/visual-results/pre-b16/`. A browser launch failure is
+BLOCKED. Successful runs do not take screenshots. The optional engine argument
+and `ROLLSBAR_QA_WIDTHS` comma-separated widths are diagnostic only; their status
+can never be the full PASS result. Full acceptance also requires static contracts
+and the final complete Chromium pixel-perfect gate. B16 is not started here.
+
 Run from the repository root on Windows, using the same fonts and runtime as the
 approved baselines. No staging, production, paid service, or network access is
 used during capture/comparison.
