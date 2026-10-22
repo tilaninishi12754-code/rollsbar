@@ -248,9 +248,23 @@ foreach ( $promo_posts as $promo_post ) {
 			$detail_products[ $source_id ] = rollsbar_product_detail_data( $product );
 		}
 	}
+	// Search membership and order are the public canonical catalog, never Hits or upsells.
+	// Names, composition, displayed prices and B7 media remain native Woo/detail data.
+	$search_products = array();
+	foreach ( $source_products as $row ) {
+		$id = $row['id'];
+		if ( ! isset( $products_by_source[ $id ], $detail_products[ $id ] ) ) { continue; }
+		$product = $products_by_source[ $id ];
+		$search_products[] = array(
+			'id' => $id,
+			'cat' => $row['cat'],
+			'desc' => trim( wp_strip_all_tags( $product->get_description() ?: $product->get_short_description() ) ),
+		);
+	}
 	?>
 	<!-- rollsbar-product-details:start -->
 	<script type="application/json" id="rollsbarProductDetailsData"><?php echo wp_json_encode( $detail_products, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></script>
+	<script type="application/json" id="rollsbarProductSearchData"><?php echo wp_json_encode( $search_products, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></script>
 	<div class="rollsbar-product-details" id="rollsbarProductDetails" hidden>
 		<button class="rollsbar-product-details__backdrop" type="button" data-rollsbar-detail-close tabindex="-1" aria-label="Закрыть описание"></button>
 		<div class="rollsbar-product-details__panel" role="dialog" aria-modal="true" aria-labelledby="rollsbarDetailTitle" tabindex="-1">

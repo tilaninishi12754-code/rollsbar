@@ -1,5 +1,11 @@
 [
   {
+    "tests": ["b14 approved search states"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "B14 panel captures only: identical #f3f4f5 backdrop with backdrop-filter:none; no panel/content changes, masks or pixel allowances",
+    "reason": "The rounded search panel exposes the deferred page through the blurred backdrop. Unisolated no-results differences at the eight widths were 8/1/107/107/126/0/28/151 pixels, confined to corner background. Real unmodified backdrop geometry/visibility and result geometry are compared against the approved UI separately at every width. B7's accepted image/fallback containment remains in search: approved's unpositioned missing-image fallback can cover the panel, so the representative result capture uses the two existing local Tyahan sprites; empty starters, variable/no-image results and all 118 identities are covered functionally and geometrically. All B14 expected screenshots use immutable approved source and zero differing pixels."
+  },
+  {
     "tests": ["b13 approved header and mobile totals"],
     "viewports": [700,390,320],
     "scope": "b13-empty-mobile.png only: a white 54x54 backing plate immediately behind the circular control in both sources; no mask, pixel tolerance or control-style change",

@@ -405,13 +405,55 @@
 	var body=document.body;
 	var search=document.getElementById('rollsbarProductSearch');
 	var open=document.querySelector('[data-rollsbar-search-open]');
+	var input=document.getElementById('rollsbarSearchInput');
+	var results=document.getElementById('rollsbarSearchResults');
+	var meta=document.getElementById('rollsbarSearchTitle');
+	var membership=document.getElementById('rollsbarProductSearchData');
+	var details=document.getElementById('rollsbarProductDetailsData');
+	var detailRecords=details?JSON.parse(details.textContent):{};
+	var catalog=membership?JSON.parse(membership.textContent).map(function(row){return Object.assign({},detailRecords[row.id],row);}):[];
+	var categoryNames={rolls:'Роллы',pizza:'Пицца',sets:'Сеты',baked:'Запечённые роллы',tempura:'Темпура',wok:'WOK и рис',soups:'Супы',snacks:'Закуски',combo:'Комбо',desserts:'Десерты',drinks:'Напитки'};
+	function norm(v){return String(v||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9\s]/gi,' ').replace(/\s+/g,' ').trim();}
+	function score(p,q){
+		var n=norm(p.name),d=norm(p.desc),c=norm(categoryNames[p.cat]||p.cat);
+		return n===q?100:n.indexOf(q)===0?80:n.indexOf(q)!==-1?65:c.indexOf(q)!==-1?45:d.indexOf(q)!==-1?30:-1;
+	}
+	function renderSearch(raw){
+		if(!results)return;
+		var q=norm(raw);
+		var found=q?catalog.map(function(p){return {p:p,score:score(p,q)};}).filter(function(x){return x.score>=0;}).sort(function(a,b){return b.score-a.score||a.p.name.localeCompare(b.p.name,'ru');}).slice(0,16).map(function(x){return x.p;}):catalog.slice(0,8);
+		meta.textContent=q?(found.length?'Найдено: '+found.length:'Ничего не найдено'):'Начните вводить название блюда — поиск работает уже с 1–2 букв';
+		results.replaceChildren();
+		found.forEach(function(p){
+			var b=document.createElement('button'),picture=document.createElement('span'),copy=document.createElement('span'),title=document.createElement('b'),description=document.createElement('span'),price=document.createElement('span');
+			b.type='button';b.className='search-result';b.dataset.searchProduct=p.id;
+			picture.className='search-result__media rollsbar-product-media';picture.innerHTML=p.media;
+			picture.querySelectorAll('[data-rollsbar-product-image]').forEach(function(img){
+				img.loading='lazy';
+				function fallback(){img.hidden=true;picture.classList.add('image-missing');}
+				img.addEventListener('error',fallback,{once:true});if(img.complete&&!img.naturalWidth)fallback();
+			});
+			copy.className='search-result__copy';title.textContent=p.name;description.textContent=(categoryNames[p.cat]||'Меню')+(p.desc?' · '+p.desc:'');copy.append(title,description);
+			price.className='search-result__price';price.innerHTML=p.price;
+			var prefix=price.querySelector('.rollsbar-price__from');if(prefix)prefix.remove();
+			price.textContent=price.textContent.trim().replace(/\u00a0(?=₽)/g,' ');
+			b.append(picture,copy,price);results.appendChild(b);
+			b.addEventListener('click',function(){
+				closeSearch();
+				// Delegate to the accepted canonical product link/details path, including B10/B11 selection.
+				setTimeout(function(){var card=Array.from(document.querySelectorAll('.rollsbar-product-card')).find(function(c){return c.dataset.rollsbarSourceId===p.id;});var link=card&&card.querySelector('[data-rollsbar-detail-open]');if(link)link.click();},40);
+			});
+		});
+		if(q&&!found.length){var empty=document.createElement('div');empty.className='product-search__empty';empty.textContent='Попробуйте другое название или категорию.';results.appendChild(empty);}
+	}
 
 	function closeSearch(){
 		if(!search||!open||!search.classList.contains('open'))return;
 		search.classList.remove('open');
 		search.setAttribute('aria-hidden','true');
 		open.setAttribute('aria-expanded','false');
-		body.style.overflow='';
+		var active=document.querySelector('#rollsbarCartDrawer:not([hidden]),#rollsbarProductDetails:not([hidden]),.rollsbar-site-menu.open');
+		if(!active)body.style.overflow='';
 	}
 
 	function openSearch(){
@@ -420,8 +462,13 @@
 		search.setAttribute('aria-hidden','false');
 		open.setAttribute('aria-expanded','true');
 		body.style.overflow='hidden';
-		var input=document.getElementById('rollsbarSearchInput');
-		if(input)setTimeout(function(){input.focus();},50);
+		renderSearch(input.value);
+		if(input)setTimeout(function(){if(search.classList.contains('open')){input.focus();input.select();}},40);
+	}
+	if(results){
+		input.addEventListener('input',function(){renderSearch(input.value);});
+		input.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var first=results.querySelector('[data-search-product]');if(first)first.click();}});
+		renderSearch('');
 	}
 
 	if(open)open.addEventListener('click',openSearch);

@@ -3,8 +3,8 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { startPreview, approvedSHA } from './server.mjs';
 const mode = process.argv[2];
-const targeted=['b11','b12','b13'].includes(process.argv[3])&&process.argv.length===4;
-if (!['test','baseline'].includes(mode) || (process.argv.length!==3&&!targeted)) throw Error('Use test or baseline, optionally followed by b11, b12 or b13; CLI snapshot-update overrides are forbidden');
+const targeted=['b11','b12','b13','b14'].includes(process.argv[3])&&process.argv.length===4;
+if (!['test','baseline'].includes(mode) || (process.argv.length!==3&&!targeted)) throw Error('Use test or baseline, optionally followed by b11, b12, b13 or b14; CLI snapshot-update overrides are forbidden');
 const protectedHashes=JSON.parse(readFileSync('qa/visual/baseline-manifest.json')).hashes;
 const preview = await startPreview({renderCurrent:mode!=='baseline'});
 try {

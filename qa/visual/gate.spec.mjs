@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { exerciseSearch, searchGeometry, searchFallbackGeometry } from './b14-search-helpers.mjs';
 const baseline = process.env.ROLLSBAR_BASELINE==='1';
 const exceptions = JSON.parse(readFileSync('qa/visual/accepted-exceptions.json'));
 test.beforeEach(({},info)=>{
@@ -446,4 +447,96 @@ test('b13 canonical synchronization and transitions',async({page},info)=>{
  await expect(doc.locator('.rollsbar-cart-empty')).toBeVisible();await page.keyboard.press('Escape');await expect(bar).not.toBeVisible();await expect(doc.locator('[data-rollsbar-mobile-cart]')).toBeFocused();
  await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');await expect(doc.locator('[inert]')).toHaveCount(0);expect(errors).toEqual([]);
  await info.attach('b13-functional.json',{body:JSON.stringify({pass:true,jsErrors:errors,breakpoints:8,canonicalServerComparison:true}),contentType:'application/json'});
+});
+
+// B14: approved live search, with one shared implementation on both sides of 700px.
+test('b14 approved search states',async({page},info)=>{
+ const doc=await ready(page),input=doc.locator('.product-search__input'),panel=doc.locator('.product-search__panel');
+ await doc.locator('body').evaluate(b=>{const s=b.ownerDocument.createElement('style');s.textContent='.product-search__backdrop{background:#f3f4f5!important;backdrop-filter:none!important}';b.ownerDocument.head.appendChild(s);});
+ await doc.locator(baseline?'[data-search-open]':'[data-rollsbar-search-open]').click();
+ await expect(input).toBeFocused();
+ await expect(doc.locator('[data-search-product]')).toHaveCount(8);
+ await input.fill('неттакогоблюда999');
+ await expect(doc.locator('.product-search__meta')).toHaveText('Ничего не найдено');
+ await capture(page,panel,'b14-no-results');
+ if([1440,320].includes(info.project.use.viewport.width)){
+  await input.fill('тяхан');
+  await expect(doc.locator('[data-search-product]')).toHaveCount(2);
+  await capture(page,panel,'b14-multiple-results');
+ }
+});
+
+test('b14 canonical search contract and geometry',async({page},info)=>{
+ test.skip(baseline,'Functional assertions use the approved UI as an independent runtime oracle.');
+ test.setTimeout(90000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='warning'||(m.type()==='error'&&!m.text().startsWith('Failed to load resource:')))errors.push(m.text());});
+ const doc=await ready(page),input=doc.locator('.product-search__input'),open=doc.locator('[data-rollsbar-search-open]');
+ const membership=JSON.parse(await doc.locator('#rollsbarProductSearchData').textContent());
+ const details=JSON.parse(await doc.locator('#rollsbarProductDetailsData').textContent());
+ const source=JSON.parse(readFileSync('wordpress/data/catalog.json')).products;
+ expect(membership.map(p=>p.id)).toEqual(source.map(p=>p.id));expect(membership).toHaveLength(118);
+ expect(new Set(membership.map(p=>p.id)).size).toBe(118);
+ const cards=await doc.locator('.rollsbar-product-card').evaluateAll(cs=>cs.map(c=>c.dataset.rollsbarSourceId));
+ expect(cards).toHaveLength(126);expect(new Set(cards)).toEqual(new Set(membership.map(p=>p.id)));
+ expect(membership.some(p=>p.id.startsWith('upsell-'))).toBe(false);
+ const queries=['',' ','Филадельфия','фИлАдЕлЬфИя','фил','пицца','сыр','Запечённые роллы','ЗАПЕЧЕННЫЕ РОЛЛЫ','WOK','!!!','неттакогоблюда999','Соевый соус','Имбирь','Васаби',...source.map(p=>p.name)];
+ const oraclePage=await page.context().newPage();
+ await oraclePage.addInitScript(()=>localStorage.setItem('rollsbar_cookie_notice','1'));
+ await oraclePage.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
+ await oraclePage.goto('http://127.0.0.1:4178/approved/demo.html');
+ const approved=oraclePage.frameLocator('#stage').frameLocator('#site');
+ await expect(approved.locator('body[data-final-demo-fixes="1"]')).toBeVisible();
+ await approved.locator('[data-search-open]').click();
+ const expected=await approved.locator('body').evaluate(exerciseSearch,queries);
+ await open.click();await expect(input).toBeFocused();
+ const actual=await doc.locator('body').evaluate(exerciseSearch,queries);
+ expect(actual).toEqual(expected);
+ for(const p of source){const row=actual.find(r=>r.query===p.name);expect(row.results.some(r=>r.id===p.id),p.id).toBe(true);}
+ for(const row of actual){expect(new Set(row.results.map(p=>p.id)).size).toBe(row.results.length);expect(row.results.some(p=>p.id.startsWith('upsell-'))).toBe(false);}
+ const geometry=[];
+ for(const query of ['', 'пицца','наггетсы','неттакогоблюда999']){
+  await input.fill(query);await approved.locator('.product-search__input').fill(query);
+  const current=await doc.locator('body').evaluate(searchGeometry),reference=await approved.locator('body').evaluate(searchGeometry);
+  expect(current).toEqual(reference);
+  expect({page:current.page,header:current.header,search:current.search,panel:current.panel,results:current.results}).toEqual({page:0,header:0,search:0,panel:0,results:0});
+  geometry.push({query,...current});
+ }
+ await input.fill('наггетсы');await approved.locator('.product-search__input').fill('наггетсы');
+ const fallbackProof={current:await doc.locator('body').evaluate(searchFallbackGeometry),approved:await approved.locator('body').evaluate(searchFallbackGeometry)};
+ expect(fallbackProof.current.fallback).toEqual(fallbackProof.current.media);
+ // Native search Escape clears its value in Chromium before closing, on both sources.
+ await approved.locator('.product-search__input').fill('Филадельфия');await oraclePage.keyboard.press('Escape');
+ await input.fill('Филадельфия');await page.keyboard.press('Escape');
+ expect(await input.inputValue()).toBe(await approved.locator('.product-search__input').inputValue());
+ await expect(doc.locator('.product-search')).not.toBeVisible();await open.click();
+ await oraclePage.close();
+ // Clear via the native search input event, preserve query across repeated open/close.
+ await input.fill('Филадельфия');await doc.locator('.product-search__close').click();await expect(open).toHaveAttribute('aria-expanded','false');
+ await expect(doc.locator('.product-search')).not.toBeVisible();await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');
+ await open.click();await expect(input).toBeFocused();await expect(input).toHaveValue('Филадельфия');
+ expect(await input.evaluate(i=>[i.selectionStart,i.selectionEnd])).toEqual([0,'Филадельфия'.length]);
+ await input.fill('');await expect(doc.locator('[data-search-product]')).toHaveCount(8);
+ await input.fill('Филадельфия');await input.press('ControlOrMeta+A');await input.press('Backspace');
+ await expect(input).toHaveValue('');await expect(doc.locator('[data-search-product]')).toHaveCount(8);
+ await doc.locator('.product-search__close').click();
+ await open.click();await doc.locator('.product-search__backdrop').click({position:{x:1,y:1},force:true});await expect(doc.locator('.product-search')).not.toBeVisible();
+ // Every main product is reachable; ordinary, variable and Hits keep accepted detail/selector/cart paths.
+ for(const id of ['rolls-filadelfiya-s-krevetkoy','snacks-naggetsy','pizza-pepperoni']){
+  await open.click();await expect(input).toBeFocused();await input.fill(details[id].name);
+  if(id==='rolls-filadelfiya-s-krevetkoy')await page.keyboard.press('Enter');
+  else if(id==='snacks-naggetsy'){await page.keyboard.press('Tab');await expect(doc.locator('.product-search__close')).toBeFocused();await page.keyboard.press('Tab');await expect(doc.locator(`[data-search-product="${id}"]`)).toBeFocused();await page.keyboard.press('Enter');}
+  else await doc.locator(`[data-search-product="${id}"]`).click();
+  const modal=doc.locator('#rollsbarProductDetails');await expect(modal).toBeVisible();await expect(modal).toHaveAttribute('data-source-id',id);
+  await expect(doc.locator('.product-search')).not.toBeVisible();
+  await modal.locator('.rollsbar-product-details__add').click();
+  if(details[id].selection.required){await expect(modal.locator('.rollsbar-product-options')).toBeVisible();await modal.locator('.rollsbar-product-options__add').click();}
+  await expect(modal).not.toBeVisible();await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');await expect(doc.locator('[inert]')).toHaveCount(0);
+ }
+ await drawerOpen(doc);await expect(doc.locator('#rollsbarCartDrawer')).toBeVisible();await page.keyboard.press('Escape');
+ await open.click();await input.fill('неттакогоблюда999');await page.keyboard.press('Enter');await expect(doc.locator('.product-search')).toBeVisible();await page.keyboard.press('Escape');
+ await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');await expect(doc.locator('[inert]')).toHaveCount(0);
+ await doc.locator('.rollsbar-category-nav a[href="#pizza"]').click();await expect(doc.locator('#pizza')).toBeInViewport();
+ await open.click();await page.keyboard.press('Escape');await expect(doc.locator('body')).not.toHaveCSS('overflow','hidden');
+ expect(errors).toEqual([]);
+ await info.attach('b14-contract.json',{body:JSON.stringify({canonical:118,domCards:126,queries:queries.length,oracle:'immutable approved UI',geometry,fallbackProof,jsErrors:errors}),contentType:'application/json'});
 });
