@@ -82,8 +82,13 @@ jobs:
           grep -q "class RollsBar_Delivery_Rules" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-delivery-rules.php
           grep -q "'min_order' => 1200" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-delivery-rules.php
           grep -q "'min_order' => 4000" wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-delivery-rules.php
-          grep -q "Бесплатная доставка от суммы по району" wordpress/wp-content/themes/rollsbar-theme/front-page.php
-          grep -q "Ручного выбора зоны клиентом не будет" wordpress/wp-content/themes/rollsbar-theme/front-page.php
+          # B16 owns the homepage presentation in a reachable template partial.
+          # Preserve free delivery at the district minimum and address-derived zones.
+          grep -Fq "get_template_part( 'template-parts/delivery-home' )" wordpress/wp-content/themes/rollsbar-theme/front-page.php
+          grep -Fq 'id="delivery"' wordpress/wp-content/themes/rollsbar-theme/template-parts/delivery-home.php
+          grep -Fq "Бесплатно от суммы по району. Ниже порога нужно добавить товары в заказ." wordpress/wp-content/themes/rollsbar-theme/template-parts/delivery-home.php
+          grep -Fq "Зона будет определяться по адресу после утверждения точных границ." wordpress/wp-content/themes/rollsbar-theme/template-parts/delivery-home.php
+          grep -Fq "Схематичные границы" wordpress/wp-content/themes/rollsbar-theme/template-parts/delivery-home.php
           echo "Delivery rules architecture PASS"
 
       - name: Deployment shell syntax

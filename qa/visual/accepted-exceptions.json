@@ -1,0 +1,86 @@
+[
+  {
+    "tests": ["b6b footer action contract"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "No screenshot allowance. Counter wrapping only when native price plus counter cannot fit; component capture origins rounded within half a CSS pixel; footer-width geometry allows at most 0.02px for one 1/64px grid-column layout unit",
+    "reason": "B11's functional protection is retained after restoring the approved narrower footer. At 320px the ordinary 108.5px footer cannot contain 41.56px price + 8px gap + 89px counter. Approved compresses the price box to 11.5px while its unwrapped glyphs extend underneath the counter; current grows the footer from 44px to 83px and moves the counter to y=46px, preserving the 17px bottom inset and both controls. Accent/long-price counters wrap similarly when required. Actual glyph bounds, action containment, zero clipping and native semantics are tested separately. Approved highlights only the first representation of its three accent IDs; current preserves the already accepted canonical accent styling on Catalog/Hits copies, matching each to the approved accent oracle. Mobile uses approved margin-top:8px, so taller neighboring titles add lower whitespace; no invented bottom alignment."
+  },
+  {
+    "tests": ["b14 approved search states"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "B14 panel captures only: identical #f3f4f5 backdrop with backdrop-filter:none; no panel/content changes, masks or pixel allowances",
+    "reason": "The rounded search panel exposes the deferred page through the blurred backdrop. Unisolated no-results differences at the eight widths were 8/1/107/107/126/0/28/151 pixels, confined to corner background. Real unmodified backdrop geometry/visibility and result geometry are compared against the approved UI separately at every width. B7's accepted image/fallback containment remains in search: approved's unpositioned missing-image fallback can cover the panel, so the representative result capture uses the two existing local Tyahan sprites; empty starters, variable/no-image results and all 118 identities are covered functionally and geometrically. All B14 expected screenshots use immutable approved source and zero differing pixels."
+  },
+  {
+    "tests": ["b13 approved header and mobile totals"],
+    "viewports": [700,390,320],
+    "scope": "b13-empty-mobile.png: existing white 54x54 backing behind the circular control. At 320px only, populated bar captures reuse the same technique in the exact 292x64 bar rectangle, underneath the control; only background visible through rounded corners changes. No mask, tolerance or application style change",
+    "reason": "The controls expose underlying page rows at their rounded corners. Empty-control original unisolated differences were 0/76/166 pixels at 700/390/320. Restoring B6B footer height/clipping changes those rows: the protected 320px b13-one.png differed by 2 thresholded pixels at x=17/18,y=0, outside the rounded control fill. Use an identical white capture backing in both sources only at that measured width, preserving all actual control pixels, bounds, icons, labels and native totals. Remove the backing before functional/geometry assertions. All 268 original baseline hashes and existing zero screenshot allowance remain unchanged."
+  },
+  {
+    "tests": ["details"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "details.png only: maxDiffPixels=20; no dimension tolerance",
+    "reason": "Narrow allowance for subpixel glyph/rounded-control rasterization in the accepted B9 component. Measured ordinary desktop differences were 14–17 pixels; all other targets retain zero global tolerance. Long-word accessibility wrapping is avoided by choosing tyahan-chicken."
+  },
+  {
+    "tests": ["selector"],
+    "viewports": [1440,1051,1050,1024,701,700,390],
+    "maxDiffPixelsByViewport": {"1440":34,"1051":22,"1050":34,"1024":34,"701":22,"700":34,"390":34},
+    "scope": "selector-choices.png only; exact viewport caps shown above; 320px retains zero; no dimension tolerance",
+    "reason": "Measured 22–34 raster pixels around the selected native Woo price/label (including native NBSP formatting preserved from B8). Separate exact normalized assertions require both approved quantities/prices and the same initial selected index, so this allowance cannot bless an incorrect price or choice."
+  },
+  {
+    "tests": ["selector"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "selector-heading.png only: maxDiffPixels=1",
+    "reason": "One measured native close-glyph raster pixel in the accepted B10 selector heading; no geometry or content mismatch is permitted"
+  },
+  {
+    "tests": ["details", "selector"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "Page position and modal backdrop outside the captured component; solid backdrop only",
+    "reason": "Accepted B9/B10 scroll-lock geometry and stronger focus/inert/scroll protections; internal pixels use only the separately declared narrow caps"
+  },
+  {
+    "tests": ["selector"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "CTA excluded; heading and choices captured separately",
+    "reason": "Original B10 heading/choices snapshots exclude the CTA; B11 now tests the enabled CTA separately"
+  },
+  {
+    "tests": ["ordinary-media", "ordinary-title", "variable-media", "variable-title"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "Capture target origin only: relative left/top offset at most half a CSS pixel in both sources",
+    "reason": "Component-local screenshots exclude page-row position. Aligning the origin prevents 1px clipping differences from fractional row coordinates; component size and internal layout are unchanged. No pixel allowance is added."
+  },
+  {
+    "tests": ["ordinary-media", "ordinary-title", "variable-media", "variable-title"],
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "scope": "Product footer/action outside media/title captures",
+    "reason": "These B6A/B7 captures remain scoped to media/title. B6B now covers the footer/lower region separately; B8 native pricing and B11 functional controls are preserved."
+  },
+  {
+    "tests": ["b11 simple actions"],
+    "viewports": [320],
+    "scope": "b11-simple-counter.png and b11-simple-repeat.png only: maxDiffPixels=38; identical dimensions; all other new B11 targets retain zero allowance",
+    "reason": "Measured 38 differing pixels at the upper-left rounded corner: the immutable approved 320px counter capture includes the neighboring price glyph where its unwrapped footer overlaps the counter. B11 fixes the real control geometry using flex-wrap, so the current counter is unobstructed. No mask, baseline rewrite, or existing tolerance change is used. Quantity text and zero/increment/decrement behavior are asserted separately."
+  },
+  {
+    "tests": [
+      "b15 footer contacts visual and functional contract"
+    ],
+    "scope": "B15 only: footer logo and unrelated floating controls",
+    "reason": "Approved embedded footer WebP fails decoding (naturalWidth 0); retain existing client-editable custom-logo / header-logo.png source. Only the logo box is masked #171717 (160x52 desktop, 101x34 mobile); all footer geometry/text/links remain unmasked at zero tolerance. Floating .client-back-top, .back-to-menu-top, .mobile-actions and existing B13 .rollsbar-mobile-cart are outside the footer and hidden only during component captures, then restored before unmodified bottom/cart/keyboard/overflow checks. Capture origins are rounded to a whole CSS pixel in both sources to isolate preceding deferred delivery/catalog placement.",
+    "viewports": [
+      1440,
+      1051,
+      1050,
+      1024,
+      701,
+      700,
+      390,
+      320
+    ]
+  }
+]

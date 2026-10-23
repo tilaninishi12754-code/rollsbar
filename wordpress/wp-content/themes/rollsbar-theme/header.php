@@ -14,6 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 <?php wp_body_open(); ?>
 <a class="screen-reader-text" href="#content">Перейти к содержимому</a>
 
+<?php if ( is_front_page() ) : ?>
+	<?php get_template_part( 'template-parts/header-home' ); ?>
+<?php else : ?>
 <header class="rollsbar-header" id="top">
 	<div class="rollsbar-shell rollsbar-header__inner">
 		<a class="rollsbar-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="Rolls Bar">
@@ -45,7 +48,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 	</div>
 </header>
+<?php endif; ?>
 
+<?php if ( is_front_page() ) : ?>
+<div class="product-search" id="rollsbarProductSearch" aria-hidden="true">
+	<button class="product-search__backdrop" type="button" aria-label="Закрыть поиск" data-rollsbar-search-close></button>
+	<section class="product-search__panel" role="dialog" aria-modal="true" aria-labelledby="rollsbarSearchTitle">
+		<div class="product-search__head">
+			<div class="product-search__input-wrap">
+				<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+				<input class="product-search__input" id="rollsbarSearchInput" type="search" autocomplete="off" placeholder="Например: Филадельфия, пицца, Том Ям" aria-label="Поиск блюда">
+			</div>
+			<button class="product-search__close" type="button" aria-label="Закрыть поиск" data-rollsbar-search-close>×</button>
+		</div>
+		<div class="product-search__meta" id="rollsbarSearchTitle">Поиск по названию, категории и составу</div>
+		<div class="product-search__results" id="rollsbarSearchResults"></div>
+	</section>
+</div>
+<?php else : ?>
 <div class="rollsbar-search" id="rollsbarProductSearch" aria-hidden="true">
 	<button class="rollsbar-search__backdrop" type="button" data-rollsbar-search-close aria-label="Закрыть поиск"></button>
 	<div class="rollsbar-search__panel">
@@ -58,5 +78,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<button class="rollsbar-search__close" type="button" data-rollsbar-search-close aria-label="Закрыть">×</button>
 	</div>
 </div>
+<?php endif; ?>
 
 <main id="content" class="rollsbar-main">

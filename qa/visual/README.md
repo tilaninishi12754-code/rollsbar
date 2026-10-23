@@ -1,0 +1,350 @@
+# Local RollsBar Visual Gate
+
+## PRE-B16 responsive and browser gate
+
+Run `node qa/visual/pre-b16.mjs` from the repository root (or `npm run pre-b16-qa`).
+The existing normal Visual Gate must pass before and after this separate layer.
+The installed, locked Playwright version supplies Chromium, Firefox and WebKit;
+install missing engines with `node qa/node_modules/@playwright/test/cli.js install firefox webkit`.
+No dependency upgrade or external testing service is involved.
+
+The runner checks 69 Chromium widths: the inclusive 320–1440 grid at 20px steps,
+plus 390 and all specified breakpoint neighbors. Firefox/WebKit run the eight
+canonical widths. Every width uses an isolated local fixture session and the same
+catalog, interaction, geometry, focus and scroll checks. Existing B6B card,
+B14 search and B15 overflow measurement helpers are reused without changing
+accepted exceptions or screenshot tolerances. Screenshot baselines are never
+generated: the 285 protected hashes are verified before and after the run.
+
+Evidence is written incrementally to `PRE_B16_RESPONSIVE_CROSS_BROWSER.json`.
+Failures identify engine/width/state with measurements, exception and diagnostic
+PNG/JSON under ignored `qa/visual-results/pre-b16/`. A browser launch failure is
+BLOCKED. Successful runs do not take screenshots. The optional engine argument
+and `ROLLSBAR_QA_WIDTHS` comma-separated widths are diagnostic only; their status
+can never be the full PASS result. Full acceptance also requires static contracts
+and the final complete Chromium pixel-perfect gate. B16 is not started here.
+
+Run from the repository root on Windows, using the same fonts and runtime as the
+approved baselines. No staging, production, paid service, or network access is
+used during capture/comparison.
+
+```text
+npm run visual-test
+```
+
+Equivalent without npm on PATH: `node qa/visual/run.mjs test`.
+Exit 0 means every assertion passed. A non-zero exit is a real gate failure;
+do not fix the website or refresh approved screenshots merely to obtain PASS.
+
+### Canonical protected Windows execution profile (I1-E)
+
+Run that same command from the repository root through **Codex Windows sandbox,
+`exec_command` with `sandbox_permissions: use_default`**. I1-D proved that this
+existing execution context selects Segoe UI; an escalated/host-user invocation
+on this machine selects locally installed Inter. No shell environment variable
+can certify font selection. Do not escalate a failed protected gate to try to
+make it pass. A terminal outside this profile is supported only if its actual
+platform fonts pass the same guard; it is never silently treated as compatible.
+
+The normal command does not create an OS user, alter font registration, replace
+CSS, or attempt to enter a privileged context. In an incompatible context it
+fails before test workers or screenshot comparisons start. There is no font-guard
+opt-out in test mode. Playwright global setup also guards direct CLI execution.
+Explicit baseline generation remains separate and is not an environment repair.
+
+Startup prints Playwright/Chromium/revision, all viewport widths ×900/DPR1, and
+the actual platform fonts selected for normal footer text (400) and price text
+(700). Chromium CDP `CSS.getPlatformFontsForNode` inspects rendered glyphs;
+computed CSS stacks and `document.fonts.check()` alone are not proof. Empty font
+results, missing sample elements, incompatible fonts or runtime drift fail closed.
+Details are saved to ignored `qa/visual-results/environment/latest.json`.
+For a short environment-only diagnosis use `node qa/visual/run.mjs preflight`;
+this does not invoke the screenshot suite or generate baselines.
+
+Expected locked runtime: Playwright 1.64.1, Chromium 156.0.8078.4/revision 1248,
+headless, DPR1. I1-D/I1-E use the existing Node 24.22.1 executable; no dependency,
+browser or font installation/upgrade is needed. If Node is absent from PATH,
+use the existing runtime's Node executable with the same script and arguments.
+
+**Separate Inter robustness consideration:** I1-D reproduced B6B390 wrapping
+on both accepted Visual HEAD and Integration under host-user Inter: counter y=46
+relative to the footer, versus y=3.5 under Segoe UI. Inter price+gap+counter needs
+144.578125px within 143.5px, triggering the existing populated-footer wrap rule.
+This is pre-existing environment-triggered wrapping, not an I1 integration
+regression or a stale assertion. It remains frontend follow-up work; I1-E neither
+changes application presentation nor treats it as an additional launch blocker.
+Protected baselines, exceptions, masks and tolerances remain unchanged.
+
+## One-time setup
+
+Existing dependencies remain in `qa/package.json`; `qa/pnpm-lock.yaml` locks the
+resolved dependencies (Playwright 1.64.1). Use pnpm with its frozen lockfile:
+
+```text
+pnpm --dir qa install --frozen-lockfile
+node qa/node_modules/@playwright/test/cli.js install chromium
+```
+
+The activation environment uses Node 24.19.0, Windows, Chromium
+156.0.8078.4 (Playwright revision 1248), headless, and PHP 8.5.12 NTS x64.
+Put portable PHP at `qa/.runtime/php/php.exe`, or set `ROLLSBAR_PHP` to a PHP CLI
+executable. PHP is only a template interpreter here: no WordPress installation,
+database, import, cart operation, or live backend is needed.
+
+Official PHP archive used during activation:
+https://downloads.php.net/~windows/releases/archives/php-8.5.12-nts-Win32-vs17-x64.zip
+
+SHA256: `2ab242af38d76bdf417cde5ec048b1bcd76a5a40f39a3d15d5f046f38571c477`.
+Downloaded tools and test reports are ignored, not committed.
+
+## Baseline authority and explicit generation
+
+```text
+npm run visual-baseline
+```
+
+This is an intentional baseline-generation action, never normal verification.
+It renders ONLY immutable approved SHA
+`a5e524392abcf89ffd5ace2a18218a6b59ed3b61`, entrypoint
+`demo.html → #stage/client-fixes.html → #site/index.html`.
+The original outer demo layer supplies the final card shells and header cart
+styling; neither inner HTML file alone is the approved page.
+
+`git archive <literal SHA>` extracts into a newly allocated OS temporary folder.
+No checkout, index operation, ref update, or tracked-file extraction occurs.
+The folder is removed after the run, including ordinary test failures.
+Interrupted processes can leave `rollsbar-approved-*` OS temp folders; they
+contain only disposable approved-source copies.
+
+PNG baselines and SHA256 provenance are tracked in `baselines/` and
+`baseline-manifest.json`. Test mode forces `updateSnapshots: none`, rejects
+snapshot-update overrides, and verifies every baseline hash and runtime/platform.
+Missing expected images fail; they are never generated by the normal command.
+Only baseline mode uses approved pages for screenshot generation.
+
+## Current local preview and fidelity limits
+
+`server.mjs` serves only localhost `127.0.0.1:4178`.
+`preview.php` executes the actual current `functions.php`, `header.php`,
+`template-parts/header-home.php`, `front-page.php`, and `footer.php`; current
+theme CSS, JS, and local assets are served directly from the working tree.
+It does not duplicate their HTML or business logic in JavaScript.
+
+The test-only WP/Woo adapter supplies catalog.json rows, canonical source IDs,
+fixed synthetic Woo/variation IDs, all variations available, an initially empty cart,
+and zero header subtotal. B11's localhost cart fixture executes the actual plugin
+mutation seam against a native-cart API adapter, with a separate cookie session
+for each browser context. It does not verify live Woo configuration, hooks, database
+prices, availability, tax setup, plugins, or real cart actions. Live backend
+prices/availability remain NOT LIVE-VERIFIED.
+
+## Capture contract
+
+All targets run at widths 1440, 1051, 1050, 1024, 701, 700, 390, 320;
+height 900, device scale 1, ru-RU, Europe/Moscow, light scheme, reduced motion.
+Chromium/runtime are identical for both sources. Animations, transitions and
+smooth scrolling are disabled on both test pages. Capture waits for loaded
+fixture state, document fonts, eager image decode, two layout frames and native
+Playwright screenshot stability. Mouse is parked outside the tested component;
+accidental focus is blurred. Native screenshot assertions have a zero global
+pixel allowance, with Playwright's default per-pixel color threshold. The only
+test-specific caps are 20 pixels for details, 1 pixel for selector heading,
+and 34 pixels for selector choices (native price-label rasterization);
+see `accepted-exceptions.json`. Dimensions must match in every assertion.
+Both option labels/prices and the initial selected index are also asserted
+exactly after whitespace normalization, so the price-label allowance cannot hide
+a changed price or choice. B11 asserts the selector CTA enabled only for valid state.
+
+The technical-cookie notice is pre-acknowledged via its source storage key
+`rollsbar_cookie_notice=1` in both contexts, so an unrelated fixed banner cannot
+occlude a product snapshot. Elements are scrolled to the center before capture,
+avoiding unrelated fixed controls near the viewport edges. Their layout and
+transforms are preserved. Media/title capture origins are aligned using a
+test-only relative offset of at most half a CSS pixel, avoiding inconsistent
+integer clipping at fractional row positions; width, height and internal layout
+remain unchanged. Modal backdrops alone are made solid #f3f4f5
+without blur: pixels outside rounded panel corners then cannot sample unrelated
+page content at a different locked scroll offset. Backdrop parity is excluded.
+
+External requests are aborted in both pages: embedded live maps and remote
+catalog images are outside this activation's target set. Chosen product targets
+have either a source-declared empty image (branded fallback) or a packaged sprite;
+the header/promo use embedded or packaged assets. No tested media is replaced,
+masked, or downloaded at runtime. No broad screenshot mask/tolerance is used.
+
+Targets: header, categories, promo, catalog heading, upper card shell, ordinary and variable
+product media/title, product-details panel, selector heading/choices. Ordinary:
+`rolls-filadelfiya-s-krevetkoy`; variable/selector: `snacks-naggetsy`; details:
+`tyahan-chicken`. The card-shell clip spans the outer article border through the
+bottom of its media, covering the upper rounded shell and media inset without
+the deferred footer. Each approved action locates the same canonical product as the
+current `_rollsbar_source_id` and opens the same initial state. The original 96
+assertions do not click cart CTAs. Both desktop and mobile modal/sheet geometry are exercised.
+
+## Batch 11 extension
+
+The normal command also runs 48 B11 screenshot assertions (six targets at each
+of the eight widths): ordinary add icon, quantity 1, repeated-add quantity 2,
+variable choose icon, enabled selector CTA, and the choose icon after successful
+selection/add/close. Approved has no separate success toast; counters and modal
+closure are its post-add feedback. Full footer/price parity remains deferred B6B.
+
+Generate ONLY the new expected targets explicitly with
+`npm run visual-baseline -- b11` (or `node qa/visual/run.mjs baseline b11`).
+This still archives only the immutable approved SHA, disables current rendering,
+and now refuses to rewrite any already-manifested baseline hash. The original 96
+hashes are preserved. Normal mode cannot update snapshots.
+
+The only B11 pixel allowance is 38 pixels on the two 320px counter states, where
+approved's adjacent price overlaps the captured rounded corner and the corrected
+layout does not. See `accepted-exceptions.json`. No other B11 allowance or mask exists.
+
+Functional geometry checks run at all eight widths. Exhaustive browser mutation
+checks run at 1440 and 320: 13 parents/26 variations, six WOK products/18 options,
+shrimp/3 options, all eight duplicate Hits identities, zero/remove, repeat,
+keyboard/focus, detail X/backdrop/Escape, invalid selection, server rejection,
+error recovery and simultaneous activation guard. Deliberately blocked external
+resource console messages are outside local fixture coverage; application
+warnings/errors and uncaught exceptions fail. The six intermediate-width copies
+of the exhaustive mutation test are explicitly skipped; geometry is not skipped.
+
+Run the deterministic PHP mutation/item-data checks with
+`qa/.runtime/php/php.exe qa/visual/cart-contract.php <absolute repository root>`.
+This proves the production call seam and metadata contract using the same local
+catalog adapter; it is not a live Woo backend/DB verification.
+
+## Scope exclusions and accepted differences
+
+- Product captures, all widths: footer/actions excluded; B6B exact action parity
+  is deferred, B8 native pricing is preserved, and B11 owns the known 320px
+  simple-action overflow. These tests cover the selected media/title contract.
+- Original selector snapshots, all widths: heading and choices remain separate;
+  B11 covers the CTA independently.
+- Details and selector, all widths: element snapshots compare component pixels
+  independently of page position/backdrop, accommodating accepted scroll-lock
+  geometry offsets and stronger inert/focus/scroll protections.
+- B7 media exceptions (Hits/pizza-pepperoni, Sets/sets-hit-set,
+  Soups/soups-tom-yam) are outside the selected product target set.
+- B9 broken-image confinement and long-title wrapping at 320px are not subjected
+  to an assertion requiring their approved defects. The details representative
+  uses the same local sprite in both sources.
+
+An excluded region is untested, not evidence of parity. Broader section/full-page
+captures and functional accessibility/cart checks remain future coverage.
+
+## Evidence
+
+Normal results: `qa/visual-results/normal/results.json`, `report/index.html`,
+and `results/<test>-<viewport>/`. Native Playwright failures include expected,
+actual, diff PNGs and a trace. Successful tests require no model image review.
+Reports are disposable and overwritten by the next normal run. Keep important
+proof reports separately before another run.
+
+Playwright behavior reference:
+https://playwright.dev/docs/test-snapshots
+and https://playwright.dev/docs/api/class-testconfig#test-config-update-snapshots
+
+B11's added coverage does not close B6B or start B12+. No deployment is performed.
+
+## Batch 12 — Cart Drawer
+
+`node qa/visual/run.mjs baseline b12` adds only the 80 B12 expected PNGs from
+the immutable approved SHA. The original 144 hashes are protected; the combined
+contract is 224 images. Normal `npm run visual-test` still forces snapshot update
+off. `node qa/visual/run.mjs test b12` is a focused diagnostic run; final acceptance
+uses the complete normal command.
+
+Ten states run across all eight widths: empty, simple, quantity 2, selected pizza
+variation, WOK sauce, multiple option lines, pickup preview, upsell line, long cart
+at top, long cart at bottom. Panel screenshots include head, list/body and checkout
+foot. Backdrop size/color/blur, focus, empty mobile trigger and lock restoration are
+asserted separately without masks. There is no new B12 pixel tolerance.
+
+Approved shrimp's sauce selector is pending, so its confirmed canonical sauces are
+tested functionally, not assigned invented approved pixels. Approved nuggets have
+an absolutely positioned image fallback that covers the entire drawer; the visual
+variable representative is pizza instead. Current missing-image media remain
+confined to their line. No source defect is copied into the current drawer.
+
+The existing mobile cart control is made available with an empty cart below 900px
+because the header cart trigger is hidden there. This is only access to the drawer;
+no header/mobile total, badge design or B13 presentation was introduced.
+
+Run `qa/.runtime/php/php.exe qa/visual/b12-contract.php <absolute repository root>`
+for exhaustive provisioning/line-identity checks. Browser mutation/failure recovery
+runs at 1440 and 320; geometry/focus/lifecycle runs at all eight widths. B11 still
+checks all choices and all eight Hits mappings.
+`node qa/visual/b12-overflow.mjs` additionally verifies all five horizontal overflow
+metrics and internal vertical scrolling with 15 canonical lines at all eight widths.
+
+### Hidden native Woo upsells and provisional prices
+
+On an existing **local/development WordPress installation**, run:
+
+```text
+wp rollsbar catalog upsells --dry-run
+wp rollsbar catalog upsells
+```
+
+This uses `RollsBar_Catalog_Importer` and `WC_Product_Simple`, the existing SKU
+identity convention and Woo CRUD. It seeds Soy Sauce, Ginger and Wasabi as separate
+hidden, upsell-only products, outside `catalog.json`'s 118. Persistent source IDs:
+`upsell-soy-sauce`, `upsell-ginger`, `upsell-wasabi`. The demo IDs are never Woo IDs.
+Repeat provisioning retains all existing admin name, price, stock and image edits,
+and fails on SKU identity conflicts. It refuses non-local/development environments.
+No automatic provisioning runs on page requests or plugin activation.
+
+**20 ₽ is provisional, taken only from the approved demo for B12 local testing.
+Client confirmation is required before production.** Its provenance is recorded
+on each seed product. Subsequent prices, names and uploaded photos come from Woo;
+the drawer does not hardcode them. Catalog visibility is Hidden, with an additional
+upsell-only exclusion in the custom main catalog even if categories are changed.
+
+The deterministic adapter executes the actual provisioning method against its Woo
+CRUD adapter. It is not a real WordPress database or a live backend verification.
+This batch does not provision staging/production or contact either environment.
+
+Receiving-mode buttons preserve the approved indicative labels in the Woo session;
+they do not apply shipping rates, delivery rules or pickup discounts. The checkout
+CTA navigates to the native Woo checkout, where fulfillment/rates remain authoritative.
+
+## Current B6B closure
+
+B6B product-card footer/action parity is now CLOSED; earlier deferred remarks
+above describe the scope of the original batches. See `B6B_REPORT.md` and
+`B6B_GEOMETRY.json` for immutable approved evidence, the preserved 17px/23px
+ordinary/accent distinction, mobile geometry and narrow functional exceptions.
+Only card CSS changed in the application; native Woo pricing/selectors/counters
+remain canonical. Targeted runner: `node qa/visual/run.mjs test b6b`.
+
+Final normal gate: **166 passed /18 explicit skips**. All original **268** PNG
+hashes remain unchanged; **17** approved-only B6B images bring the total to **285**.
+No global screenshot tolerance or masks were added. At 320px, B13 populated-bar
+captures use the existing backing-plate technique under the exact control bounds
+to isolate unrelated page content visible through its rounded corners. Geometry
+and functionality run without that backing. pre-B16/B16 have not started.
+
+## B16 assembled-page protection
+
+The normal `node qa/visual/run.mjs test` also runs `b16-assembled.mjs` after the
+component suite succeeds. Eight viewport pairs compare immutable approved
+document coordinates for Header, Categories, Promo, every catalog heading/end,
+Delivery start/end, Contacts, Footer and document end. A maximum .02 CSS px
+rounding difference cannot absorb the former 21px or Delivery-height defects.
+First-catalog content is compared rather than its wrapper: approved owns the
+30px/23px transition padding on main, current on the first catalog section.
+
+Raw approved section coordinates are retained. The comparison oracle applies
+only the existing B6B accepted canonical accent styling to both Catalog/Hits
+copies, using approved classes/styles. This is necessary because approved applies
+the accent only to its first copy; it is not a new B16 exception or tolerance.
+All other approved content/layout remains immutable. Current Delivery copy
+preserves canonical free-delivery semantics and editable address; the schematic
+SVG is decorative and never used by checkout or delivery resolution.
+
+`node qa/visual/b16-assembled.mjs` runs the same assertions independently.
+`--measure` is diagnostic only. No screenshot expectations are produced.
+The previous blocked audit's four files are preserved in `b16-prior/`.
+The existing dense/cross-browser flow additionally checks Delivery uniqueness,
+all visible horizontal bounds and the map link's hit-tested reachability with
+a populated cart.

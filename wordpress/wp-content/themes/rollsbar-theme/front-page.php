@@ -21,6 +21,23 @@ $categories = array(
 );
 ?>
 
+<nav class="rollsbar-category-nav" aria-label="Категории меню">
+	<div class="rollsbar-shell rollsbar-category-nav__scroll">
+		<?php foreach ( $categories as $slug => $label ) : ?>
+			<a<?php echo 'rolls' === $slug ? ' class="active"' : ''; ?> href="#<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></a>
+		<?php endforeach; ?>
+		<button class="rollsbar-category-more__toggle" type="button" aria-expanded="false" aria-controls="rollsbarCategoryMore" data-rollsbar-category-more>
+			Ещё
+			<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+		</button>
+	</div>
+	<div class="rollsbar-category-more-popover" id="rollsbarCategoryMore" aria-hidden="true">
+		<a href="#delivery">Доставка и оплата</a>
+		<a href="<?php echo esc_url( home_url( '/otzyvy/' ) ); ?>">Отзывы клиентов</a>
+		<a href="#contacts" data-rollsbar-category-contacts>Контакты</a>
+	</div>
+</nav>
+
 <?php
 $utility_cards = array(
 	'promo' => array(
@@ -84,27 +101,29 @@ foreach ( $promo_posts as $promo_post ) {
 ?>
 
 <section class="rollsbar-utilities">
-	<div class="rollsbar-shell rollsbar-utilities__track">
+	<div class="rollsbar-shell rollsbar-utilities__track" aria-label="Полезные разделы Rolls Bar">
 		<?php foreach ( $utility_cards as $variant => $card ) : ?>
 			<a class="rollsbar-utility rollsbar-utility--<?php echo esc_attr( $variant ); ?>" href="<?php echo esc_url( $card['url'] ); ?>">
 				<?php if ( $card['image'] ) : ?>
 					<span class="rollsbar-utility__image" style="background-image:url('<?php echo esc_url( $card['image'] ); ?>')" aria-hidden="true"></span>
+				<?php elseif ( 'promo' === $variant ) : ?>
+					<span class="rollsbar-utility__art" aria-hidden="true"></span>
+				<?php elseif ( 'work' === $variant ) : ?>
+					<img class="rollsbar-utility__ninja" src="<?php echo esc_url( get_template_directory_uri() . '/assets/images/header-mascot.webp' ); ?>" alt="" aria-hidden="true">
+				<?php elseif ( 'delivery' === $variant ) : ?>
+					<span class="rollsbar-utility__pin" aria-hidden="true"></span>
+				<?php elseif ( 'reviews' === $variant ) : ?>
+					<span class="rollsbar-utility__stars" aria-hidden="true">★★★★★</span>
 				<?php endif; ?>
-				<span class="rollsbar-utility__eyebrow"><?php echo esc_html( $card['eyebrow'] ); ?></span>
-				<strong><?php echo esc_html( $card['title'] ); ?></strong>
-				<span><?php echo esc_html( $card['text'] ); ?> →</span>
+				<span class="rollsbar-utility__copy">
+					<span class="rollsbar-utility__eyebrow"><?php echo esc_html( $card['eyebrow'] ); ?></span>
+					<h3 class="rollsbar-utility__title"><?php echo esc_html( $card['title'] ); ?></h3>
+					<p class="rollsbar-utility__text"><?php echo esc_html( $card['text'] ); ?><span class="rollsbar-utility__arrow">→</span></p>
+				</span>
 			</a>
 		<?php endforeach; ?>
 	</div>
 </section>
-
-<nav class="rollsbar-category-nav" aria-label="Категории меню">
-	<div class="rollsbar-shell rollsbar-category-nav__scroll">
-		<?php foreach ( $categories as $slug => $label ) : ?>
-			<a href="#<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></a>
-		<?php endforeach; ?>
-	</div>
-</nav>
 
 <?php if ( ! class_exists( 'WooCommerce' ) ) : ?>
 	<section class="rollsbar-shell rollsbar-empty">
@@ -112,9 +131,26 @@ foreach ( $promo_posts as $promo_post ) {
 		<p>WooCommerce ещё не активирован на этом окружении.</p>
 	</section>
 <?php else : ?>
-	<?php foreach ( $categories as $slug => $label ) : ?>
-		<?php
-		$products = wc_get_products(
+	<?php
+	$source_products = array();
+	if ( class_exists( 'RollsBar_Catalog_Importer' ) ) {
+		try {
+			// Read the packaged source only; never import or update Woo products.
+			$source_products = RollsBar_Catalog_Importer::load_catalog()['products'];
+		} catch ( RuntimeException $exception ) {
+			// Keep the existing catalog available if the source file is unavailable.
+		}
+	}
+	$source_order       = array_flip( array_column( $source_products, 'id' ) );
+	$accent_colors     = array(
+		'pizza-pepperoni' => 'blue',
+		'sets-hit-set'    => 'red',
+		'soups-tom-yam'   => 'warm',
+	);
+	$category_products  = array();
+	$products_by_source = array();
+	foreach ( $categories as $slug => $label ) {
+		$category_products[ $slug ] = wc_get_products(
 			array(
 				'status'   => 'publish',
 				'limit'    => -1,
@@ -123,6 +159,36 @@ foreach ( $promo_posts as $promo_post ) {
 				'order'    => 'ASC',
 			)
 		);
+		$category_products[ $slug ] = array_values( array_filter( $category_products[ $slug ], static fn( $product ) => 'yes' !== $product->get_meta( '_rollsbar_upsell_only', true ) ) );
+		foreach ( $category_products[ $slug ] as $product ) {
+			$source_id = (string) $product->get_meta( '_rollsbar_source_id', true );
+			$products_by_source[ $source_id ] = $product;
+		}
+		usort(
+			$category_products[ $slug ],
+			static function ( $a, $b ) use ( $source_order ) {
+				return ( $source_order[ $a->get_meta( '_rollsbar_source_id', true ) ] ?? PHP_INT_MAX )
+					<=> ( $source_order[ $b->get_meta( '_rollsbar_source_id', true ) ] ?? PHP_INT_MAX );
+			}
+		);
+	}
+	if ( $source_products ) {
+		$hit_sources = array_slice(
+			array_column( array_filter( $source_products, static fn( $row ) => ! empty( $row['hit'] ) ), 'id' ),
+			0,
+			8
+		);
+		$category_products['hits'] = array();
+		foreach ( $hit_sources as $source_id ) {
+			if ( isset( $products_by_source[ $source_id ] ) ) {
+				$category_products['hits'][] = $products_by_source[ $source_id ];
+			}
+		}
+	}
+	?>
+	<?php foreach ( $categories as $slug => $label ) : ?>
+		<?php
+		$products = $category_products[ $slug ];
 
 		if ( ! $products ) {
 			continue;
@@ -140,29 +206,29 @@ foreach ( $promo_posts as $promo_post ) {
 						continue;
 					}
 
-					$image_url = rollsbar_product_image_url( $product );
 					$is_variable = $product->is_type( 'variable' );
+					$has_options = '' !== (string) $product->get_meta( '_rollsbar_options_json', true );
+					$accent = $accent_colors[ $product->get_meta( '_rollsbar_source_id', true ) ] ?? '';
 					?>
-					<article class="rollsbar-product-card">
-						<a class="rollsbar-product-card__media" href="<?php echo esc_url( $product->get_permalink() ); ?>">
-							<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $product->get_name() ); ?>" loading="lazy">
+					<article class="rollsbar-product-card<?php echo $accent ? ' rollsbar-product-card--accent rollsbar-product-card--' . esc_attr( $accent ) : ''; ?>" data-rollsbar-source-id="<?php echo esc_attr( $product->get_meta( '_rollsbar_source_id', true ) ); ?>">
+						<a class="rollsbar-product-card__media rollsbar-product-media" href="<?php echo esc_url( $product->get_permalink() ); ?>" data-rollsbar-detail-open aria-haspopup="dialog">
+							<?php echo rollsbar_product_image_markup( $product ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</a>
 
 						<div class="rollsbar-product-card__body">
-							<h3><a href="<?php echo esc_url( $product->get_permalink() ); ?>"><?php echo esc_html( $product->get_name() ); ?></a></h3>
-							<?php if ( $product->get_short_description() ) : ?>
-								<p><?php echo wp_kses_post( wp_trim_words( $product->get_short_description(), 22 ) ); ?></p>
-							<?php endif; ?>
+							<h3><a href="<?php echo esc_url( $product->get_permalink() ); ?>" data-rollsbar-detail-open aria-haspopup="dialog"><?php echo esc_html( $product->get_name() ); ?></a></h3>
+							<p><?php echo wp_kses_post( $product->get_short_description() ); ?></p>
 
-							<div class="rollsbar-product-card__footer">
-								<span class="rollsbar-price"><?php echo wp_kses_post( $product->get_price_html() ); ?></span>
+							<div class="rollsbar-product-card__footer<?php echo $is_variable ? ' rollsbar-product-card__footer--variable' : ''; ?>">
+								<span class="rollsbar-price"><?php echo wp_kses_post( rollsbar_catalog_price_html( $product ) ); ?></span>
 
 								<?php if ( $is_variable ) : ?>
-									<a class="rollsbar-product-action" href="<?php echo esc_url( $product->get_permalink() ); ?>">Выбрать</a>
+									<a class="rollsbar-product-action rollsbar-product-action--variable" data-rollsbar-selection-open aria-haspopup="dialog" href="<?php echo esc_url( $product->get_permalink() ); ?>" aria-label="<?php echo esc_attr( 'Выбрать вариант: ' . $product->get_name() ); ?>">Выбрать</a>
 								<?php else : ?>
 									<a
-										class="rollsbar-product-action add_to_cart_button ajax_add_to_cart"
-										href="<?php echo esc_url( $product->add_to_cart_url() ); ?>"
+										class="rollsbar-product-action<?php echo $has_options ? ' rollsbar-product-action--options' : ' add_to_cart_button ajax_add_to_cart'; ?>"
+										<?php if ( $has_options ) : ?>data-rollsbar-selection-open aria-haspopup="dialog" aria-label="<?php echo esc_attr( 'Выбрать опции: ' . $product->get_name() ); ?>"<?php endif; ?>
+										href="<?php echo esc_url( $has_options ? $product->get_permalink() : $product->add_to_cart_url() ); ?>"
 										data-product_id="<?php echo esc_attr( $product->get_id() ); ?>"
 										data-quantity="1"
 										rel="nofollow"
@@ -175,39 +241,60 @@ foreach ( $promo_posts as $promo_post ) {
 			</div>
 		</section>
 	<?php endforeach; ?>
+	<?php
+	$detail_products = array();
+	foreach ( $products_by_source as $source_id => $product ) {
+		if ( '' !== $source_id && $product instanceof WC_Product ) {
+			$detail_products[ $source_id ] = rollsbar_product_detail_data( $product );
+		}
+	}
+	// Search membership and order are the public canonical catalog, never Hits or upsells.
+	// Names, composition, displayed prices and B7 media remain native Woo/detail data.
+	$search_products = array();
+	foreach ( $source_products as $row ) {
+		$id = $row['id'];
+		if ( ! isset( $products_by_source[ $id ], $detail_products[ $id ] ) ) { continue; }
+		$product = $products_by_source[ $id ];
+		$search_products[] = array(
+			'id' => $id,
+			'cat' => $row['cat'],
+			'desc' => trim( wp_strip_all_tags( $product->get_description() ?: $product->get_short_description() ) ),
+		);
+	}
+	?>
+	<!-- rollsbar-product-details:start -->
+	<script type="application/json" id="rollsbarProductDetailsData"><?php echo wp_json_encode( $detail_products, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></script>
+	<script type="application/json" id="rollsbarProductSearchData"><?php echo wp_json_encode( $search_products, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></script>
+	<div class="rollsbar-product-details" id="rollsbarProductDetails" hidden>
+		<button class="rollsbar-product-details__backdrop" type="button" data-rollsbar-detail-close tabindex="-1" aria-label="Закрыть описание"></button>
+		<div class="rollsbar-product-details__panel" role="dialog" aria-modal="true" aria-labelledby="rollsbarDetailTitle" tabindex="-1">
+			<div class="rollsbar-product-details__media rollsbar-product-media"></div>
+			<div class="rollsbar-product-details__content">
+				<div class="rollsbar-product-details__top">
+					<div><div class="rollsbar-product-details__label">Описание</div><h3 id="rollsbarDetailTitle"></h3></div>
+					<button class="rollsbar-product-details__close" type="button" data-rollsbar-detail-close aria-label="Закрыть">×</button>
+				</div>
+				<div class="rollsbar-product-details__price"></div>
+				<p class="rollsbar-product-details__desc"></p>
+				<a class="rollsbar-product-details__add" rel="nofollow">
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.5 9h9.8l1.7-6H7.1M10 19a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 10 19Zm8 0a1.2 1.2 0 1 1-2.4 0A1.2 1.2 0 0 1 18 19Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span></span>
+				</a>
+				<div class="rollsbar-product-details__note">Название, цена, варианты и состав синхронизированы с переданной таблицей Rolls Bar и последними прямыми правками заказчика. Неподтверждённые данные не додумываются.</div>
+			</div>
+			<div class="rollsbar-product-options" hidden>
+				<div class="rollsbar-product-options__head">
+					<div><small>Настройка товара</small><h3 id="rollsbarSelectionTitle"></h3></div>
+					<button class="rollsbar-product-options__close" type="button" data-rollsbar-detail-close aria-label="Закрыть">×</button>
+				</div>
+				<div class="rollsbar-product-options__groups"></div>
+				<button class="rollsbar-product-options__add" type="button" disabled>Добавить в корзину</button>
+			</div>
+		</div>
+	</div>
+	<!-- rollsbar-product-details:end -->
 <?php endif; ?>
 
-<?php
-$delivery_rules = class_exists( 'RollsBar_Delivery_Rules' )
-	? RollsBar_Delivery_Rules::all()
-	: array();
-?>
-<section class="rollsbar-delivery rollsbar-shell" id="delivery">
-	<div class="rollsbar-delivery__copy">
-		<span class="rollsbar-kicker">Доставка</span>
-		<h2>Бесплатная доставка от суммы по району</h2>
-		<p>Минимальная сумма заказа зависит от территории. Если сумма заказа ниже порога, нужно добрать товары до указанной суммы.</p>
-	</div>
-
-	<?php if ( $delivery_rules ) : ?>
-		<div class="rollsbar-delivery-rules" aria-label="Минимальные суммы бесплатной доставки">
-			<?php foreach ( $delivery_rules as $rule ) : ?>
-				<article class="rollsbar-delivery-rule">
-					<div class="rollsbar-delivery-rule__amount">
-						<span>Бесплатно от</span>
-						<strong><?php echo esc_html( number_format_i18n( (int) $rule['min_order'], 0 ) ); ?> ₽</strong>
-					</div>
-					<p><?php echo esc_html( implode( ' · ', $rule['areas'] ) ); ?></p>
-				</article>
-			<?php endforeach; ?>
-		</div>
-	<?php endif; ?>
-
-	<div class="rollsbar-delivery__pending">
-		<strong>Автоопределение по адресу</strong>
-		<span>Подключим после утверждения точных границ зон на карте. Ручного выбора зоны клиентом не будет.</span>
-	</div>
-</section>
+<?php get_template_part( 'template-parts/delivery-home' ); ?>
 
 <?php
 get_footer();

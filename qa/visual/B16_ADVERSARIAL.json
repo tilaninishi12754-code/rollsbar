@@ -1,0 +1,66 @@
+[
+  {
+    "width": 1440,
+    "status": "PASS",
+    "seeded": 15,
+    "sequence": "long cart → footer → search/details → drawer → no-results Escape → footer",
+    "errors": [],
+    "duplicates": []
+  },
+  {
+    "width": 1051,
+    "status": "PASS",
+    "seeded": 15,
+    "sequence": "long cart → footer → search/details → drawer → no-results Escape → footer",
+    "errors": [],
+    "duplicates": []
+  },
+  {
+    "width": 1050,
+    "status": "PASS",
+    "seeded": 15,
+    "sequence": "long cart → footer → search/details → drawer → no-results Escape → footer",
+    "errors": [],
+    "duplicates": []
+  },
+  {
+    "width": 1024,
+    "status": "PASS",
+    "seeded": 15,
+    "sequence": "long cart → footer → search/details → drawer → no-results Escape → footer",
+    "errors": [],
+    "duplicates": []
+  },
+  {
+    "width": 701,
+    "status": "PASS",
+    "seeded": 15,
+    "sequence": "long cart → footer → search/details → drawer → no-results Escape → footer",
+    "errors": [],
+    "duplicates": []
+  },
+  {
+    "width": 700,
+    "status": "PASS",
+    "seeded": 15,
+    "sequence": "long cart → footer → search/details → drawer → no-results Escape → footer",
+    "errors": [],
+    "duplicates": []
+  },
+  {
+    "width": 390,
+    "status": "PASS",
+    "seeded": 15,
+    "sequence": "long cart → footer → search/details → drawer → no-results Escape → footer",
+    "errors": [],
+    "duplicates": []
+  },
+  {
+    "width": 320,
+    "status": "PASS",
+    "seeded": 15,
+    "sequence": "long cart → footer → search/details → drawer → no-results Escape → footer",
+    "errors": [],
+    "duplicates": []
+  }
+]

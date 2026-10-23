@@ -1,0 +1,3498 @@
+[
+  {
+    "width": 1440,
+    "approved": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 423,
+          "height": 3237.390625,
+          "left": 130,
+          "width": 1180,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 423,
+            "height": 34,
+            "left": 130,
+            "width": 101.734375
+          },
+          "paddingTop": "0px"
+        },
+        {
+          "id": "pizza",
+          "top": 3660.390625,
+          "height": 1496.984375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 3722.390625,
+            "height": 34,
+            "left": 130,
+            "width": 102.296875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 5157.375,
+          "height": 1055.8125,
+          "left": 130,
+          "width": 1180,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 5219.375,
+            "height": 34,
+            "left": 130,
+            "width": 156.234375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 6213.1875,
+          "height": 541.71875,
+          "left": 130,
+          "width": 1180,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 6275.1875,
+            "height": 34,
+            "left": 130,
+            "width": 102.78125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 6754.90625,
+          "height": 1595.359375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 6816.90625,
+            "height": 34,
+            "left": 130,
+            "width": 76.65625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 8350.265625,
+          "height": 2415.75,
+          "left": 130,
+          "width": 1180,
+          "heading": "Запечённые роллы",
+          "headingRect": {
+            "top": 8412.265625,
+            "height": 34,
+            "left": 130,
+            "width": 298.5
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 10766.015625,
+          "height": 1480.4375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 10828.015625,
+            "height": 34,
+            "left": 130,
+            "width": 129.375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 12246.453125,
+          "height": 995.4375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 12308.453125,
+            "height": 34,
+            "left": 130,
+            "width": 132.515625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 13241.890625,
+          "height": 1449.15625,
+          "left": 130,
+          "width": 1180,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 13303.890625,
+            "height": 34,
+            "left": 130,
+            "width": 131.578125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 14691.046875,
+          "height": 1449.15625,
+          "left": 130,
+          "width": 1180,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 14753.046875,
+            "height": 34,
+            "left": 130,
+            "width": 120.421875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 16140.203125,
+          "height": 1501.0625,
+          "left": 130,
+          "width": 1180,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 16202.203125,
+            "height": 34,
+            "left": 130,
+            "width": 167.078125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 17641.265625,
+          "height": 557.359375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 17703.265625,
+            "height": 34,
+            "left": 130,
+            "width": 81.90625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 18198.625,
+          "height": 750,
+          "left": 130,
+          "width": 1180,
+          "heading": "Карта доставки",
+          "headingRect": {
+            "top": 18293.625,
+            "height": 46,
+            "left": 159,
+            "width": 581.09375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "contacts",
+          "top": 18948.625,
+          "height": 259,
+          "left": 130,
+          "width": 1180,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 19010.625,
+            "height": 34,
+            "left": 130,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 19574,
+      "overflow": 0
+    },
+    "current": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 414,
+          "height": 3267.390625,
+          "left": 130,
+          "width": 1180,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 444,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "30px"
+        },
+        {
+          "id": "pizza",
+          "top": 3681.390625,
+          "height": 1496.984375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 3743.390625,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 5178.375,
+          "height": 1055.8125,
+          "left": 130,
+          "width": 1180,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 5240.375,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 6234.1875,
+          "height": 541.71875,
+          "left": 130,
+          "width": 1180,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 6296.1875,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 6775.90625,
+          "height": 1595.359375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 6837.90625,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 8371.265625,
+          "height": 2415.75,
+          "left": 130,
+          "width": 1180,
+          "heading": "Запечённые",
+          "headingRect": {
+            "top": 8433.265625,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 10787.015625,
+          "height": 1480.4375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 10849.015625,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 12267.453125,
+          "height": 995.4375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 12329.453125,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 13262.890625,
+          "height": 1449.15625,
+          "left": 130,
+          "width": 1180,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 13324.890625,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 14712.046875,
+          "height": 1449.15625,
+          "left": 130,
+          "width": 1180,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 14774.046875,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 16161.203125,
+          "height": 1501.0625,
+          "left": 130,
+          "width": 1180,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 16223.203125,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 17662.265625,
+          "height": 553.359375,
+          "left": 130,
+          "width": 1180,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 17724.265625,
+            "height": 34,
+            "left": 130,
+            "width": 1180
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 18287.625,
+          "height": 200.59375,
+          "left": 80,
+          "width": 1280,
+          "heading": "Бесплатная доставка от суммы по району",
+          "headingRect": {
+            "top": 18350.625,
+            "height": 46,
+            "left": 112,
+            "width": 717.59375
+          },
+          "paddingTop": "32px"
+        },
+        {
+          "id": "contacts",
+          "top": 18560.21875,
+          "height": 259,
+          "left": 130,
+          "width": 1180,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 18622.21875,
+            "height": 34,
+            "left": 130,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 19185,
+      "overflow": 0
+    }
+  },
+  {
+    "width": 1051,
+    "approved": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 423,
+          "height": 2996.71875,
+          "left": 20,
+          "width": 1011,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 423,
+            "height": 34,
+            "left": 20,
+            "width": 101.734375
+          },
+          "paddingTop": "0px"
+        },
+        {
+          "id": "pizza",
+          "top": 3419.71875,
+          "height": 1418.96875,
+          "left": 20,
+          "width": 1011,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 3481.71875,
+            "height": 34,
+            "left": 20,
+            "width": 102.296875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 4838.6875,
+          "height": 1020.953125,
+          "left": 20,
+          "width": 1011,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 4900.6875,
+            "height": 34,
+            "left": 20,
+            "width": 156.234375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 5859.640625,
+          "height": 499.46875,
+          "left": 20,
+          "width": 1011,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 5921.640625,
+            "height": 34,
+            "left": 20,
+            "width": 102.78125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 6359.109375,
+          "height": 1518.25,
+          "left": 20,
+          "width": 1011,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 6421.109375,
+            "height": 34,
+            "left": 20,
+            "width": 76.65625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 7877.359375,
+          "height": 2243.9375,
+          "left": 20,
+          "width": 1011,
+          "heading": "Запечённые роллы",
+          "headingRect": {
+            "top": 7939.359375,
+            "height": 34,
+            "left": 20,
+            "width": 298.5
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 10121.296875,
+          "height": 1429.390625,
+          "left": 20,
+          "width": 1011,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 10183.296875,
+            "height": 34,
+            "left": 20,
+            "width": 129.375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 11550.6875,
+          "height": 930.65625,
+          "left": 20,
+          "width": 1011,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 11612.6875,
+            "height": 34,
+            "left": 20,
+            "width": 132.515625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 12481.34375,
+          "height": 1322.40625,
+          "left": 20,
+          "width": 1011,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 12543.34375,
+            "height": 34,
+            "left": 20,
+            "width": 131.578125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 13803.75,
+          "height": 1357.765625,
+          "left": 20,
+          "width": 1011,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 13865.75,
+            "height": 34,
+            "left": 20,
+            "width": 120.421875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 15161.515625,
+          "height": 1442.765625,
+          "left": 20,
+          "width": 1011,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 15223.515625,
+            "height": 34,
+            "left": 20,
+            "width": 167.078125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 16604.28125,
+          "height": 515.109375,
+          "left": 20,
+          "width": 1011,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 16666.28125,
+            "height": 34,
+            "left": 20,
+            "width": 81.90625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 17119.390625,
+          "height": 790,
+          "left": 20,
+          "width": 1011,
+          "heading": "Карта доставки",
+          "headingRect": {
+            "top": 17214.390625,
+            "height": 46,
+            "left": 49,
+            "width": 488.140625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "contacts",
+          "top": 17909.390625,
+          "height": 259,
+          "left": 20,
+          "width": 1011,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 17971.390625,
+            "height": 34,
+            "left": 20,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 18552,
+      "overflow": 0
+    },
+    "current": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 414,
+          "height": 3026.71875,
+          "left": 20,
+          "width": 1011,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 444,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "30px"
+        },
+        {
+          "id": "pizza",
+          "top": 3440.71875,
+          "height": 1418.96875,
+          "left": 20,
+          "width": 1011,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 3502.71875,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 4859.6875,
+          "height": 1020.953125,
+          "left": 20,
+          "width": 1011,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 4921.6875,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 5880.640625,
+          "height": 499.46875,
+          "left": 20,
+          "width": 1011,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 5942.640625,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 6380.109375,
+          "height": 1518.25,
+          "left": 20,
+          "width": 1011,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 6442.109375,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 7898.359375,
+          "height": 2243.9375,
+          "left": 20,
+          "width": 1011,
+          "heading": "Запечённые",
+          "headingRect": {
+            "top": 7960.359375,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 10142.296875,
+          "height": 1429.390625,
+          "left": 20,
+          "width": 1011,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 10204.296875,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 11571.6875,
+          "height": 930.65625,
+          "left": 20,
+          "width": 1011,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 11633.6875,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 12502.34375,
+          "height": 1322.40625,
+          "left": 20,
+          "width": 1011,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 12564.34375,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 13824.75,
+          "height": 1357.765625,
+          "left": 20,
+          "width": 1011,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 13886.75,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 15182.515625,
+          "height": 1442.765625,
+          "left": 20,
+          "width": 1011,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 15244.515625,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 16625.28125,
+          "height": 527.65625,
+          "left": 20,
+          "width": 1011,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 16687.28125,
+            "height": 34,
+            "left": 20,
+            "width": 1011
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 17224.9375,
+          "height": 246.59375,
+          "left": 20,
+          "width": 1011,
+          "heading": "Бесплатная доставка от суммы по району",
+          "headingRect": {
+            "top": 17287.9375,
+            "height": 92,
+            "left": 52,
+            "width": 556.1875
+          },
+          "paddingTop": "32px"
+        },
+        {
+          "id": "contacts",
+          "top": 17543.53125,
+          "height": 259,
+          "left": 20,
+          "width": 1011,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 17605.53125,
+            "height": 34,
+            "left": 20,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 18187,
+      "overflow": 0
+    }
+  },
+  {
+    "width": 1050,
+    "approved": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 595,
+          "height": 4782.90625,
+          "left": 55,
+          "width": 940,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 595,
+            "height": 34,
+            "left": 55,
+            "width": 101.734375
+          },
+          "paddingTop": "0px"
+        },
+        {
+          "id": "pizza",
+          "top": 5377.90625,
+          "height": 2046.34375,
+          "left": 55,
+          "width": 940,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 5439.90625,
+            "height": 34,
+            "left": 55,
+            "width": 102.296875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 7424.25,
+          "height": 1556.984375,
+          "left": 55,
+          "width": 940,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 7486.25,
+            "height": 34,
+            "left": 55,
+            "width": 156.234375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 8981.234375,
+          "height": 561.71875,
+          "left": 55,
+          "width": 940,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 9043.234375,
+            "height": 34,
+            "left": 55,
+            "width": 102.78125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 9542.953125,
+          "height": 2161.265625,
+          "left": 55,
+          "width": 940,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 9604.953125,
+            "height": 34,
+            "left": 55,
+            "width": 76.65625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 11704.21875,
+          "height": 3443.46875,
+          "left": 55,
+          "width": 940,
+          "heading": "Запечённые роллы",
+          "headingRect": {
+            "top": 11766.21875,
+            "height": 34,
+            "left": 55,
+            "width": 298.5
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 15147.6875,
+          "height": 1524.796875,
+          "left": 55,
+          "width": 940,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 15209.6875,
+            "height": 34,
+            "left": 55,
+            "width": 129.375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 16672.484375,
+          "height": 1509.15625,
+          "left": 55,
+          "width": 940,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 16734.484375,
+            "height": 34,
+            "left": 55,
+            "width": 132.515625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 18181.640625,
+          "height": 1509.15625,
+          "left": 55,
+          "width": 940,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 18243.640625,
+            "height": 34,
+            "left": 55,
+            "width": 131.578125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 19690.796875,
+          "height": 1509.15625,
+          "left": 55,
+          "width": 940,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 19752.796875,
+            "height": 34,
+            "left": 55,
+            "width": 120.421875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 21199.953125,
+          "height": 2033.875,
+          "left": 55,
+          "width": 940,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 21261.953125,
+            "height": 34,
+            "left": 55,
+            "width": 167.078125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 23233.828125,
+          "height": 577.359375,
+          "left": 55,
+          "width": 940,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 23295.828125,
+            "height": 34,
+            "left": 55,
+            "width": 81.90625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 23811.1875,
+          "height": 1164.84375,
+          "left": 55,
+          "width": 940,
+          "heading": "Карта доставки",
+          "headingRect": {
+            "top": 23906.1875,
+            "height": 46,
+            "left": 84,
+            "width": 882
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "contacts",
+          "top": 24976.03125,
+          "height": 553,
+          "left": 55,
+          "width": 940,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 25038.03125,
+            "height": 34,
+            "left": 55,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 25931,
+      "overflow": 0
+    },
+    "current": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 586,
+          "height": 4812.90625,
+          "left": 55,
+          "width": 940,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 616,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "30px"
+        },
+        {
+          "id": "pizza",
+          "top": 5398.90625,
+          "height": 2046.34375,
+          "left": 55,
+          "width": 940,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 5460.90625,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 7445.25,
+          "height": 1556.984375,
+          "left": 55,
+          "width": 940,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 7507.25,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 9002.234375,
+          "height": 561.71875,
+          "left": 55,
+          "width": 940,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 9064.234375,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 9563.953125,
+          "height": 2157.265625,
+          "left": 55,
+          "width": 940,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 9625.953125,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 11721.21875,
+          "height": 3443.46875,
+          "left": 55,
+          "width": 940,
+          "heading": "Запечённые",
+          "headingRect": {
+            "top": 11783.21875,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 15164.6875,
+          "height": 1524.796875,
+          "left": 55,
+          "width": 940,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 15226.6875,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 16689.484375,
+          "height": 1509.15625,
+          "left": 55,
+          "width": 940,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 16751.484375,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 18198.640625,
+          "height": 1509.15625,
+          "left": 55,
+          "width": 940,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 18260.640625,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 19707.796875,
+          "height": 1509.15625,
+          "left": 55,
+          "width": 940,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 19769.796875,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 21216.953125,
+          "height": 2033.875,
+          "left": 55,
+          "width": 940,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 21278.953125,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 23250.828125,
+          "height": 573.359375,
+          "left": 55,
+          "width": 940,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 23312.828125,
+            "height": 34,
+            "left": 55,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 23896.1875,
+          "height": 246.59375,
+          "left": 20,
+          "width": 1010,
+          "heading": "Бесплатная доставка от суммы по району",
+          "headingRect": {
+            "top": 23959.1875,
+            "height": 92,
+            "left": 52,
+            "width": 555.59375
+          },
+          "paddingTop": "32px"
+        },
+        {
+          "id": "contacts",
+          "top": 24214.78125,
+          "height": 553,
+          "left": 55,
+          "width": 940,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 24276.78125,
+            "height": 34,
+            "left": 55,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 25170,
+      "overflow": 0
+    }
+  },
+  {
+    "width": 1024,
+    "approved": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 595,
+          "height": 4782.90625,
+          "left": 42,
+          "width": 940,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 595,
+            "height": 34,
+            "left": 42,
+            "width": 101.734375
+          },
+          "paddingTop": "0px"
+        },
+        {
+          "id": "pizza",
+          "top": 5377.90625,
+          "height": 2046.34375,
+          "left": 42,
+          "width": 940,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 5439.90625,
+            "height": 34,
+            "left": 42,
+            "width": 102.296875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 7424.25,
+          "height": 1556.984375,
+          "left": 42,
+          "width": 940,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 7486.25,
+            "height": 34,
+            "left": 42,
+            "width": 156.234375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 8981.234375,
+          "height": 561.71875,
+          "left": 42,
+          "width": 940,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 9043.234375,
+            "height": 34,
+            "left": 42,
+            "width": 102.78125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 9542.953125,
+          "height": 2161.265625,
+          "left": 42,
+          "width": 940,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 9604.953125,
+            "height": 34,
+            "left": 42,
+            "width": 76.65625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 11704.21875,
+          "height": 3443.46875,
+          "left": 42,
+          "width": 940,
+          "heading": "Запечённые роллы",
+          "headingRect": {
+            "top": 11766.21875,
+            "height": 34,
+            "left": 42,
+            "width": 298.5
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 15147.6875,
+          "height": 1524.796875,
+          "left": 42,
+          "width": 940,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 15209.6875,
+            "height": 34,
+            "left": 42,
+            "width": 129.375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 16672.484375,
+          "height": 1509.15625,
+          "left": 42,
+          "width": 940,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 16734.484375,
+            "height": 34,
+            "left": 42,
+            "width": 132.515625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 18181.640625,
+          "height": 1509.15625,
+          "left": 42,
+          "width": 940,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 18243.640625,
+            "height": 34,
+            "left": 42,
+            "width": 131.578125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 19690.796875,
+          "height": 1509.15625,
+          "left": 42,
+          "width": 940,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 19752.796875,
+            "height": 34,
+            "left": 42,
+            "width": 120.421875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 21199.953125,
+          "height": 2033.875,
+          "left": 42,
+          "width": 940,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 21261.953125,
+            "height": 34,
+            "left": 42,
+            "width": 167.078125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 23233.828125,
+          "height": 577.359375,
+          "left": 42,
+          "width": 940,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 23295.828125,
+            "height": 34,
+            "left": 42,
+            "width": 81.90625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 23811.1875,
+          "height": 1164.84375,
+          "left": 42,
+          "width": 940,
+          "heading": "Карта доставки",
+          "headingRect": {
+            "top": 23906.1875,
+            "height": 46,
+            "left": 71,
+            "width": 882
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "contacts",
+          "top": 24976.03125,
+          "height": 553,
+          "left": 42,
+          "width": 940,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 25038.03125,
+            "height": 34,
+            "left": 42,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 25931,
+      "overflow": 0
+    },
+    "current": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 586,
+          "height": 4812.90625,
+          "left": 42,
+          "width": 940,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 616,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "30px"
+        },
+        {
+          "id": "pizza",
+          "top": 5398.90625,
+          "height": 2046.34375,
+          "left": 42,
+          "width": 940,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 5460.90625,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 7445.25,
+          "height": 1556.984375,
+          "left": 42,
+          "width": 940,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 7507.25,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 9002.234375,
+          "height": 561.71875,
+          "left": 42,
+          "width": 940,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 9064.234375,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 9563.953125,
+          "height": 2157.265625,
+          "left": 42,
+          "width": 940,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 9625.953125,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 11721.21875,
+          "height": 3443.46875,
+          "left": 42,
+          "width": 940,
+          "heading": "Запечённые",
+          "headingRect": {
+            "top": 11783.21875,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 15164.6875,
+          "height": 1524.796875,
+          "left": 42,
+          "width": 940,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 15226.6875,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 16689.484375,
+          "height": 1509.15625,
+          "left": 42,
+          "width": 940,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 16751.484375,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 18198.640625,
+          "height": 1509.15625,
+          "left": 42,
+          "width": 940,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 18260.640625,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 19707.796875,
+          "height": 1509.15625,
+          "left": 42,
+          "width": 940,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 19769.796875,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 21216.953125,
+          "height": 2033.875,
+          "left": 42,
+          "width": 940,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 21278.953125,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 23250.828125,
+          "height": 573.359375,
+          "left": 42,
+          "width": 940,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 23312.828125,
+            "height": 34,
+            "left": 42,
+            "width": 940
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 23896.1875,
+          "height": 246.59375,
+          "left": 20,
+          "width": 984,
+          "heading": "Бесплатная доставка от суммы по району",
+          "headingRect": {
+            "top": 23959.1875,
+            "height": 92,
+            "left": 52,
+            "width": 540
+          },
+          "paddingTop": "32px"
+        },
+        {
+          "id": "contacts",
+          "top": 24214.78125,
+          "height": 553,
+          "left": 42,
+          "width": 940,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 24276.78125,
+            "height": 34,
+            "left": 42,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 25170,
+      "overflow": 0
+    }
+  },
+  {
+    "width": 701,
+    "approved": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 595,
+          "height": 4040.734375,
+          "left": 16,
+          "width": 669,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 595,
+            "height": 34,
+            "left": 16,
+            "width": 101.734375
+          },
+          "paddingTop": "0px"
+        },
+        {
+          "id": "pizza",
+          "top": 4635.734375,
+          "height": 1766.84375,
+          "left": 16,
+          "width": 669,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 4697.734375,
+            "height": 34,
+            "left": 16,
+            "width": 102.296875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 6402.578125,
+          "height": 1355.328125,
+          "left": 16,
+          "width": 669,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 6464.578125,
+            "height": 34,
+            "left": 16,
+            "width": 156.234375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 7757.90625,
+          "height": 487.03125,
+          "left": 16,
+          "width": 669,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 7819.90625,
+            "height": 34,
+            "left": 16,
+            "width": 102.78125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 8244.9375,
+          "height": 1948.859375,
+          "left": 16,
+          "width": 669,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 8306.9375,
+            "height": 34,
+            "left": 16,
+            "width": 76.65625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 10193.796875,
+          "height": 2960.765625,
+          "left": 16,
+          "width": 669,
+          "heading": "Запечённые роллы",
+          "headingRect": {
+            "top": 10255.796875,
+            "height": 34,
+            "left": 16,
+            "width": 298.5
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 13154.5625,
+          "height": 1346.0625,
+          "left": 16,
+          "width": 669,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 13216.5625,
+            "height": 34,
+            "left": 16,
+            "width": 129.375
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 14500.625,
+          "height": 1277.609375,
+          "left": 16,
+          "width": 669,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 14562.625,
+            "height": 34,
+            "left": 16,
+            "width": 132.515625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 15778.234375,
+          "height": 1257.890625,
+          "left": 16,
+          "width": 669,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 15840.234375,
+            "height": 34,
+            "left": 16,
+            "width": 131.578125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 17036.125,
+          "height": 1308.890625,
+          "left": 16,
+          "width": 669,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 17098.125,
+            "height": 34,
+            "left": 16,
+            "width": 120.421875
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 18345.015625,
+          "height": 1817.59375,
+          "left": 16,
+          "width": 669,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 18407.015625,
+            "height": 34,
+            "left": 16,
+            "width": 167.078125
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 20162.609375,
+          "height": 503.5625,
+          "left": 16,
+          "width": 669,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 20224.609375,
+            "height": 34,
+            "left": 16,
+            "width": 81.90625
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 20666.171875,
+          "height": 1241.6875,
+          "left": 16,
+          "width": 669,
+          "heading": "Карта доставки",
+          "headingRect": {
+            "top": 20761.171875,
+            "height": 46,
+            "left": 45,
+            "width": 611
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "contacts",
+          "top": 21907.859375,
+          "height": 553,
+          "left": 16,
+          "width": 669,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 21969.859375,
+            "height": 34,
+            "left": 16,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 22881,
+      "overflow": 0
+    },
+    "current": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 586,
+          "height": 4070.734375,
+          "left": 16,
+          "width": 669,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 616,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "30px"
+        },
+        {
+          "id": "pizza",
+          "top": 4656.734375,
+          "height": 1766.84375,
+          "left": 16,
+          "width": 669,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 4718.734375,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "hits",
+          "top": 6423.578125,
+          "height": 1355.328125,
+          "left": 16,
+          "width": 669,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 6485.578125,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "combo",
+          "top": 7778.90625,
+          "height": 487.03125,
+          "left": 16,
+          "width": 669,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 7840.90625,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "sets",
+          "top": 8265.9375,
+          "height": 1944.859375,
+          "left": 16,
+          "width": 669,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 8327.9375,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "baked",
+          "top": 10210.796875,
+          "height": 2960.765625,
+          "left": 16,
+          "width": 669,
+          "heading": "Запечённые",
+          "headingRect": {
+            "top": 10272.796875,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "tempura",
+          "top": 13171.5625,
+          "height": 1346.0625,
+          "left": 16,
+          "width": 669,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 13233.5625,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "desserts",
+          "top": 14517.625,
+          "height": 1277.609375,
+          "left": 16,
+          "width": 669,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 14579.625,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "drinks",
+          "top": 15795.234375,
+          "height": 1257.890625,
+          "left": 16,
+          "width": 669,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 15857.234375,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "snacks",
+          "top": 17053.125,
+          "height": 1308.890625,
+          "left": 16,
+          "width": 669,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 17115.125,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "wok",
+          "top": 18362.015625,
+          "height": 1817.59375,
+          "left": 16,
+          "width": 669,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 18424.015625,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "soups",
+          "top": 20179.609375,
+          "height": 499.5625,
+          "left": 16,
+          "width": 669,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 20241.609375,
+            "height": 34,
+            "left": 16,
+            "width": 669
+          },
+          "paddingTop": "62px"
+        },
+        {
+          "id": "delivery",
+          "top": 20751.171875,
+          "height": 271.390625,
+          "left": 20,
+          "width": 661,
+          "heading": "Бесплатная доставка от суммы по району",
+          "headingRect": {
+            "top": 20814.171875,
+            "height": 92,
+            "left": 52,
+            "width": 346.1875
+          },
+          "paddingTop": "32px"
+        },
+        {
+          "id": "contacts",
+          "top": 21094.5625,
+          "height": 553,
+          "left": 16,
+          "width": 669,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 21156.5625,
+            "height": 34,
+            "left": 16,
+            "width": 147.015625
+          },
+          "paddingTop": "62px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 22068,
+      "overflow": 0
+    }
+  },
+  {
+    "width": 700,
+    "approved": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 334,
+          "height": 5943.53125,
+          "left": 14,
+          "width": 672,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 334,
+            "height": 29,
+            "left": 14,
+            "width": 86.765625
+          },
+          "paddingTop": "0px"
+        },
+        {
+          "id": "pizza",
+          "top": 6277.53125,
+          "height": 2602.65625,
+          "left": 14,
+          "width": 672,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 6321.53125,
+            "height": 29,
+            "left": 14,
+            "width": 87.25
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "hits",
+          "top": 8880.1875,
+          "height": 1756.4375,
+          "left": 14,
+          "width": 672,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 8924.1875,
+            "height": 29,
+            "left": 14,
+            "width": 133.265625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "combo",
+          "top": 10636.625,
+          "height": 487.109375,
+          "left": 14,
+          "width": 672,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 10680.625,
+            "height": 29,
+            "left": 14,
+            "width": 87.65625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "sets",
+          "top": 11123.734375,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 11167.734375,
+            "height": 29,
+            "left": 14,
+            "width": 65.390625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "baked",
+          "top": 13303.28125,
+          "height": 4295.09375,
+          "left": 14,
+          "width": 672,
+          "heading": "Запечённые роллы",
+          "headingRect": {
+            "top": 13347.28125,
+            "height": 29,
+            "left": 14,
+            "width": 254.59375
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "tempura",
+          "top": 17598.375,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 17642.375,
+            "height": 29,
+            "left": 14,
+            "width": 110.359375
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "desserts",
+          "top": 19777.921875,
+          "height": 1756.4375,
+          "left": 14,
+          "width": 672,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 19821.921875,
+            "height": 29,
+            "left": 14,
+            "width": 113.03125
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "drinks",
+          "top": 21534.359375,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 21578.359375,
+            "height": 29,
+            "left": 14,
+            "width": 112.21875
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "snacks",
+          "top": 23713.90625,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 23757.90625,
+            "height": 29,
+            "left": 14,
+            "width": 102.703125
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "wok",
+          "top": 25893.453125,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 25937.453125,
+            "height": 29,
+            "left": 14,
+            "width": 142.515625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "soups",
+          "top": 28073,
+          "height": 487.109375,
+          "left": 14,
+          "width": 672,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 28117,
+            "height": 29,
+            "left": 14,
+            "width": 69.859375
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "delivery",
+          "top": 28560.109375,
+          "height": 1127.6875,
+          "left": 14,
+          "width": 672,
+          "heading": "Карта доставки",
+          "headingRect": {
+            "top": 28637.109375,
+            "height": 46,
+            "left": 43,
+            "width": 614
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "contacts",
+          "top": 29687.796875,
+          "height": 523,
+          "left": 14,
+          "width": 672,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 29731.796875,
+            "height": 29,
+            "left": 14,
+            "width": 125.390625
+          },
+          "paddingTop": "44px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 30826,
+      "overflow": 0
+    },
+    "current": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 332,
+          "height": 5966.53125,
+          "left": 14,
+          "width": 672,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 355,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "23px"
+        },
+        {
+          "id": "pizza",
+          "top": 6298.53125,
+          "height": 2602.65625,
+          "left": 14,
+          "width": 672,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 6342.53125,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "hits",
+          "top": 8901.1875,
+          "height": 1756.4375,
+          "left": 14,
+          "width": 672,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 8945.1875,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "combo",
+          "top": 10657.625,
+          "height": 487.109375,
+          "left": 14,
+          "width": 672,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 10701.625,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "sets",
+          "top": 11144.734375,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 11188.734375,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "baked",
+          "top": 13324.28125,
+          "height": 4295.09375,
+          "left": 14,
+          "width": 672,
+          "heading": "Запечённые",
+          "headingRect": {
+            "top": 13368.28125,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "tempura",
+          "top": 17619.375,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 17663.375,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "desserts",
+          "top": 19798.921875,
+          "height": 1756.4375,
+          "left": 14,
+          "width": 672,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 19842.921875,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "drinks",
+          "top": 21555.359375,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 21599.359375,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "snacks",
+          "top": 23734.90625,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 23778.90625,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "wok",
+          "top": 25914.453125,
+          "height": 2179.546875,
+          "left": 14,
+          "width": 672,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 25958.453125,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "soups",
+          "top": 28094,
+          "height": 484.609375,
+          "left": 14,
+          "width": 672,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 28138,
+            "height": 29,
+            "left": 14,
+            "width": 672
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "delivery",
+          "top": 28626.609375,
+          "height": 279.984375,
+          "left": 14,
+          "width": 672,
+          "heading": "Бесплатная доставка от суммы по району",
+          "headingRect": {
+            "top": 28679.609375,
+            "height": 37,
+            "left": 36,
+            "width": 628
+          },
+          "paddingTop": "22px"
+        },
+        {
+          "id": "contacts",
+          "top": 28954.59375,
+          "height": 523,
+          "left": 14,
+          "width": 672,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 28998.59375,
+            "height": 29,
+            "left": 14,
+            "width": 125.390625
+          },
+          "paddingTop": "44px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 30093,
+      "overflow": 0
+    }
+  },
+  {
+    "width": 390,
+    "approved": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 334,
+          "height": 4140.5625,
+          "left": 14,
+          "width": 362,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 334,
+            "height": 29,
+            "left": 14,
+            "width": 86.765625
+          },
+          "paddingTop": "0px"
+        },
+        {
+          "id": "pizza",
+          "top": 4474.5625,
+          "height": 1772.3125,
+          "left": 14,
+          "width": 362,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 4518.5625,
+            "height": 29,
+            "left": 14,
+            "width": 87.25
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "hits",
+          "top": 6246.875,
+          "height": 1236.5,
+          "left": 14,
+          "width": 362,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 6290.875,
+            "height": 29,
+            "left": 14,
+            "width": 133.265625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "combo",
+          "top": 7483.375,
+          "height": 348.71875,
+          "left": 14,
+          "width": 362,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 7527.375,
+            "height": 29,
+            "left": 14,
+            "width": 87.65625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "sets",
+          "top": 7832.09375,
+          "height": 1487.59375,
+          "left": 14,
+          "width": 362,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 7876.09375,
+            "height": 29,
+            "left": 14,
+            "width": 65.390625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "baked",
+          "top": 9319.6875,
+          "height": 3112.9375,
+          "left": 14,
+          "width": 362,
+          "heading": "Запечённые роллы",
+          "headingRect": {
+            "top": 9363.6875,
+            "height": 29,
+            "left": 14,
+            "width": 254.59375
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "tempura",
+          "top": 12432.625,
+          "height": 1571.65625,
+          "left": 14,
+          "width": 362,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 12476.625,
+            "height": 29,
+            "left": 14,
+            "width": 110.359375
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "desserts",
+          "top": 14004.28125,
+          "height": 1236.5,
+          "left": 14,
+          "width": 362,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 14048.28125,
+            "height": 29,
+            "left": 14,
+            "width": 113.03125
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "drinks",
+          "top": 15240.78125,
+          "height": 1504.40625,
+          "left": 14,
+          "width": 362,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 15284.78125,
+            "height": 29,
+            "left": 14,
+            "width": 112.21875
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "snacks",
+          "top": 16745.1875,
+          "height": 1538.03125,
+          "left": 14,
+          "width": 362,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 16789.1875,
+            "height": 29,
+            "left": 14,
+            "width": 102.703125
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "wok",
+          "top": 18283.21875,
+          "height": 1588.46875,
+          "left": 14,
+          "width": 362,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 18327.21875,
+            "height": 29,
+            "left": 14,
+            "width": 142.515625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "soups",
+          "top": 19871.6875,
+          "height": 348.71875,
+          "left": 14,
+          "width": 362,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 19915.6875,
+            "height": 29,
+            "left": 14,
+            "width": 69.859375
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "delivery",
+          "top": 20220.40625,
+          "height": 1372.53125,
+          "left": 14,
+          "width": 362,
+          "heading": "Карта доставки",
+          "headingRect": {
+            "top": 20297.40625,
+            "height": 46,
+            "left": 43,
+            "width": 304
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "contacts",
+          "top": 21592.9375,
+          "height": 523,
+          "left": 14,
+          "width": 362,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 21636.9375,
+            "height": 29,
+            "left": 14,
+            "width": 125.390625
+          },
+          "paddingTop": "44px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 22837,
+      "overflow": 0
+    },
+    "current": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 332,
+          "height": 4163.5625,
+          "left": 14,
+          "width": 362,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 355,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "23px"
+        },
+        {
+          "id": "pizza",
+          "top": 4495.5625,
+          "height": 1772.3125,
+          "left": 14,
+          "width": 362,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 4539.5625,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "hits",
+          "top": 6267.875,
+          "height": 1236.5,
+          "left": 14,
+          "width": 362,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 6311.875,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "combo",
+          "top": 7504.375,
+          "height": 348.71875,
+          "left": 14,
+          "width": 362,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 7548.375,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "sets",
+          "top": 7853.09375,
+          "height": 1487.59375,
+          "left": 14,
+          "width": 362,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 7897.09375,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "baked",
+          "top": 9340.6875,
+          "height": 3112.9375,
+          "left": 14,
+          "width": 362,
+          "heading": "Запечённые",
+          "headingRect": {
+            "top": 9384.6875,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "tempura",
+          "top": 12453.625,
+          "height": 1571.65625,
+          "left": 14,
+          "width": 362,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 12497.625,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "desserts",
+          "top": 14025.28125,
+          "height": 1236.5,
+          "left": 14,
+          "width": 362,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 14069.28125,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "drinks",
+          "top": 15261.78125,
+          "height": 1504.40625,
+          "left": 14,
+          "width": 362,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 15305.78125,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "snacks",
+          "top": 16766.1875,
+          "height": 1538.03125,
+          "left": 14,
+          "width": 362,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 16810.1875,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "wok",
+          "top": 18304.21875,
+          "height": 1588.46875,
+          "left": 14,
+          "width": 362,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 18348.21875,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "soups",
+          "top": 19892.6875,
+          "height": 346.21875,
+          "left": 14,
+          "width": 362,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 19936.6875,
+            "height": 29,
+            "left": 14,
+            "width": 362
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "delivery",
+          "top": 20286.90625,
+          "height": 401.359375,
+          "left": 14,
+          "width": 362,
+          "heading": "Бесплатная доставка от суммы по району",
+          "headingRect": {
+            "top": 20339.90625,
+            "height": 74,
+            "left": 36,
+            "width": 318
+          },
+          "paddingTop": "22px"
+        },
+        {
+          "id": "contacts",
+          "top": 20736.265625,
+          "height": 523,
+          "left": 14,
+          "width": 362,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 20780.265625,
+            "height": 29,
+            "left": 14,
+            "width": 125.390625
+          },
+          "paddingTop": "44px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 21980,
+      "overflow": 0
+    }
+  },
+  {
+    "width": 320,
+    "approved": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 322,
+          "height": 3770.3125,
+          "left": 14,
+          "width": 292,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 322,
+            "height": 29,
+            "left": 14,
+            "width": 86.765625
+          },
+          "paddingTop": "0px"
+        },
+        {
+          "id": "pizza",
+          "top": 4092.3125,
+          "height": 1584.8125,
+          "left": 14,
+          "width": 292,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 4136.3125,
+            "height": 29,
+            "left": 14,
+            "width": 87.25
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "hits",
+          "top": 5677.125,
+          "height": 1145.125,
+          "left": 14,
+          "width": 292,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 5721.125,
+            "height": 29,
+            "left": 14,
+            "width": 133.265625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "combo",
+          "top": 6822.25,
+          "height": 317.46875,
+          "left": 14,
+          "width": 292,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 6866.25,
+            "height": 29,
+            "left": 14,
+            "width": 87.65625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "sets",
+          "top": 7139.71875,
+          "height": 1364.96875,
+          "left": 14,
+          "width": 292,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 7183.71875,
+            "height": 29,
+            "left": 14,
+            "width": 65.390625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "baked",
+          "top": 8504.6875,
+          "height": 2901.3125,
+          "left": 14,
+          "width": 292,
+          "heading": "Запечённые роллы",
+          "headingRect": {
+            "top": 8548.6875,
+            "height": 29,
+            "left": 14,
+            "width": 254.59375
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "tempura",
+          "top": 11406,
+          "height": 1449.03125,
+          "left": 14,
+          "width": 292,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 11450,
+            "height": 29,
+            "left": 14,
+            "width": 110.359375
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "desserts",
+          "top": 12855.03125,
+          "height": 1128.3125,
+          "left": 14,
+          "width": 292,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 12899.03125,
+            "height": 29,
+            "left": 14,
+            "width": 113.03125
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "drinks",
+          "top": 13983.34375,
+          "height": 1415.40625,
+          "left": 14,
+          "width": 292,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 14027.34375,
+            "height": 29,
+            "left": 14,
+            "width": 112.21875
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "snacks",
+          "top": 15398.75,
+          "height": 1415.40625,
+          "left": 14,
+          "width": 292,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 15442.75,
+            "height": 29,
+            "left": 14,
+            "width": 102.703125
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "wok",
+          "top": 16814.15625,
+          "height": 1449.03125,
+          "left": 14,
+          "width": 292,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 16858.15625,
+            "height": 29,
+            "left": 14,
+            "width": 142.515625
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "soups",
+          "top": 18263.1875,
+          "height": 317.46875,
+          "left": 14,
+          "width": 292,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 18307.1875,
+            "height": 29,
+            "left": 14,
+            "width": 69.859375
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "delivery",
+          "top": 18580.65625,
+          "height": 1578.21875,
+          "left": 14,
+          "width": 292,
+          "heading": "Карта доставки",
+          "headingRect": {
+            "top": 18657.65625,
+            "height": 92,
+            "left": 43,
+            "width": 234
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "contacts",
+          "top": 20158.875,
+          "height": 547,
+          "left": 14,
+          "width": 292,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 20202.875,
+            "height": 29,
+            "left": 14,
+            "width": 125.390625
+          },
+          "paddingTop": "44px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 21507,
+      "overflow": 0
+    },
+    "current": {
+      "sections": [
+        {
+          "id": "rolls",
+          "top": 320,
+          "height": 3793.3125,
+          "left": 14,
+          "width": 292,
+          "heading": "Роллы",
+          "headingRect": {
+            "top": 343,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "23px"
+        },
+        {
+          "id": "pizza",
+          "top": 4113.3125,
+          "height": 1584.8125,
+          "left": 14,
+          "width": 292,
+          "heading": "Пицца",
+          "headingRect": {
+            "top": 4157.3125,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "hits",
+          "top": 5698.125,
+          "height": 1145.125,
+          "left": 14,
+          "width": 292,
+          "heading": "Хит-меню",
+          "headingRect": {
+            "top": 5742.125,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "combo",
+          "top": 6843.25,
+          "height": 317.46875,
+          "left": 14,
+          "width": 292,
+          "heading": "Комбо",
+          "headingRect": {
+            "top": 6887.25,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "sets",
+          "top": 7160.71875,
+          "height": 1364.96875,
+          "left": 14,
+          "width": 292,
+          "heading": "Сеты",
+          "headingRect": {
+            "top": 7204.71875,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "baked",
+          "top": 8525.6875,
+          "height": 2901.3125,
+          "left": 14,
+          "width": 292,
+          "heading": "Запечённые",
+          "headingRect": {
+            "top": 8569.6875,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "tempura",
+          "top": 11427,
+          "height": 1449.03125,
+          "left": 14,
+          "width": 292,
+          "heading": "Темпура",
+          "headingRect": {
+            "top": 11471,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "desserts",
+          "top": 12876.03125,
+          "height": 1128.3125,
+          "left": 14,
+          "width": 292,
+          "heading": "Десерты",
+          "headingRect": {
+            "top": 12920.03125,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "drinks",
+          "top": 14004.34375,
+          "height": 1415.40625,
+          "left": 14,
+          "width": 292,
+          "heading": "Напитки",
+          "headingRect": {
+            "top": 14048.34375,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "snacks",
+          "top": 15419.75,
+          "height": 1415.40625,
+          "left": 14,
+          "width": 292,
+          "heading": "Закуски",
+          "headingRect": {
+            "top": 15463.75,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "wok",
+          "top": 16835.15625,
+          "height": 1449.03125,
+          "left": 14,
+          "width": 292,
+          "heading": "WOK и рис",
+          "headingRect": {
+            "top": 16879.15625,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "soups",
+          "top": 18284.1875,
+          "height": 314.96875,
+          "left": 14,
+          "width": 292,
+          "heading": "Супы",
+          "headingRect": {
+            "top": 18328.1875,
+            "height": 29,
+            "left": 14,
+            "width": 292
+          },
+          "paddingTop": "44px"
+        },
+        {
+          "id": "delivery",
+          "top": 18647.15625,
+          "height": 487.15625,
+          "left": 14,
+          "width": 292,
+          "heading": "Бесплатная доставка от суммы по району",
+          "headingRect": {
+            "top": 18700.15625,
+            "height": 111,
+            "left": 36,
+            "width": 248
+          },
+          "paddingTop": "22px"
+        },
+        {
+          "id": "contacts",
+          "top": 19182.3125,
+          "height": 547,
+          "left": 14,
+          "width": 292,
+          "heading": "Контакты",
+          "headingRect": {
+            "top": 19226.3125,
+            "height": 29,
+            "left": 14,
+            "width": 125.390625
+          },
+          "paddingTop": "44px"
+        }
+      ],
+      "duplicates": [],
+      "pageHeight": 20530,
+      "overflow": 0
+    }
+  }
+]
