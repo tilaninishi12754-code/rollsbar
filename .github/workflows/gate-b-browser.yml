@@ -1,13 +1,7 @@
 name: RollsBar Live Browser Gate B
 
-# Rerun after native WooCommerce Blocks Local Pickup configuration.
+# Dispatch only after the exact release's verified deployed marker is observed.
 on:
-  push:
-    branches:
-      - wordpress/migration-2026-10-01
-    paths:
-      - .github/workflows/gate-b-browser.yml
-      - wordpress/deploy/gate_b_browser.py
   workflow_dispatch:
 
 permissions:

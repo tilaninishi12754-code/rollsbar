@@ -10,6 +10,23 @@ TIMESTAMP="$(date -u +'%Y%m%dT%H%M%SZ')"
 SNAPSHOT="$BACKUP_ROOT/$TIMESTAMP"
 TMP="$BACKUP_ROOT/.tmp-$TIMESTAMP-$$"
 SNAPSHOT_GLOB='20??????T??????Z'
+PRESERVE_SNAPSHOT="${ROLLSBAR_PRESERVE_BACKUP_SNAPSHOT:-}"
+if ! [[ "$RETENTION" =~ ^[1-9][0-9]*$ ]]; then
+  echo "BACKUP FAIL: retention must be a positive integer"
+  exit 2
+fi
+
+# An explicitly protected recovery point must survive the next retention pass.
+# Refuse before creating a new backup, and recheck immediately before eviction.
+if [[ -n "$PRESERVE_SNAPSHOT" ]]; then
+  [[ "$PRESERVE_SNAPSHOT" =~ ^20[0-9]{6}T[0-9]{6}Z$ ]] || exit 2
+  [[ -d "$BACKUP_ROOT/$PRESERVE_SNAPSHOT" ]] || { echo 'BACKUP FAIL: protected snapshot missing'; exit 2; }
+  newer="$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name "$SNAPSHOT_GLOB" -printf '%f\n' | awk -v protected="$PRESERVE_SNAPSHOT" '$0 > protected {n++} END {print n+0}')"
+  if (( newer + 1 >= RETENTION )); then
+    echo 'BACKUP FAIL: next retention would evict protected snapshot'
+    exit 2
+  fi
+fi
 
 if ! command -v wp >/dev/null 2>&1; then
   echo "BACKUP FAIL: WP-CLI unavailable"
@@ -121,6 +138,12 @@ trap - EXIT
 # Keep newest N complete snapshots. Never delete dot-prefixed temporary dirs
 # here; a future audit can diagnose them separately if a process was killed.
 mapfile -t old_snapshots < <(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name "$SNAPSHOT_GLOB" -printf '%f\n' | sort -r | tail -n +$((RETENTION + 1)))
+for old in "${old_snapshots[@]:-}"; do
+  if [[ -n "$PRESERVE_SNAPSHOT" && "$old" == "$PRESERVE_SNAPSHOT" ]]; then
+    echo 'BACKUP FAIL: concurrent retention risk for protected snapshot; no eviction performed'
+    exit 4
+  fi
+done
 for old in "${old_snapshots[@]:-}"; do
   [[ -n "$old" ]] || continue
   rm -rf -- "$BACKUP_ROOT/$old"

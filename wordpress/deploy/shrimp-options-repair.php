@@ -56,6 +56,16 @@ final class RollsBar_Shrimp_Options_Repair {
 		return $snapshot;
 	}
 
+	private function catalog_snapshot( int $id ): array {
+		// Include variations and hidden support products. Keep locks until the
+		// options-only transaction commits, so unexpected global deltas roll back.
+		$posts = $this->rows( $this->db->prepare( "SELECT * FROM {$this->db->posts} WHERE post_type IN (%s, %s) ORDER BY ID FOR UPDATE", 'product', 'product_variation' ) );
+		$meta = $this->rows( $this->db->prepare( "SELECT m.* FROM {$this->db->postmeta} m INNER JOIN {$this->db->posts} p ON p.ID = m.post_id WHERE p.post_type IN (%s, %s) ORDER BY m.meta_id FOR UPDATE", 'product', 'product_variation' ) );
+		$terms = $this->rows( $this->db->prepare( "SELECT t.* FROM {$this->db->term_relationships} t INNER JOIN {$this->db->posts} p ON p.ID = t.object_id WHERE p.post_type IN (%s, %s) ORDER BY t.object_id, t.term_taxonomy_id FOR UPDATE", 'product', 'product_variation' ) );
+		$meta = array_values( array_filter( $meta, static fn( $row ) => ! ( $id === (int) $row['post_id'] && self::KEY === $row['meta_key'] ) ) );
+		return array( 'posts' => $posts, 'meta' => $meta, 'terms' => $terms );
+	}
+
 	public function run( bool $apply, array $context ): array {
 		self::guard( $context, $apply );
 		if ( ! is_callable( array( 'WC_Data', 'generate_meta_cache_key' ) ) ) {
@@ -85,6 +95,7 @@ final class RollsBar_Shrimp_Options_Repair {
 			if ( 1 !== count( $identities ) ) { throw new RuntimeException( 'REFUSE: missing or duplicate shrimp source identity.' ); }
 			$id = (int) $identities[0]['post_id'];
 			$before = $this->snapshot( $id );
+			$catalog_before = $this->catalog_snapshot( $id );
 			if ( 1 !== count( $before['post'] ) || 'product' !== $before['post'][0]['post_type'] || 'trash' === $before['post'][0]['post_status'] ) {
 				throw new RuntimeException( 'REFUSE: source identity is not an active product.' );
 			}
@@ -98,6 +109,9 @@ final class RollsBar_Shrimp_Options_Repair {
 			$state = ! $options ? 'missing' : ( '' === $raw ? 'empty' : ( $decoded === $canonical ? 'canonical' : ( $decoded === $pending ? 'pending' : 'conflict' ) ) );
 			if ( 'conflict' === $state ) { throw new RuntimeException( 'REFUSE: custom/noncanonical options; reconcile client edits. value_sha256=' . hash( 'sha256', $raw ) ); }
 			$report = array( 'source_id' => self::SOURCE, 'product_id' => $id, 'key' => self::KEY, 'before_state' => $state, 'before_sha256' => hash( 'sha256', $raw ), 'after_options' => $canonical, 'writes' => 0 );
+			$report['protected_catalog_before_sha256'] = hash( 'sha256', serialize( $catalog_before ) );
+			$report['protected_product_before_sha256'] = hash( 'sha256', serialize( self::protected_snapshot( $before ) ) );
+			$report['product_and_variation_rows'] = count( $catalog_before['posts'] );
 			if ( 'canonical' === $state || ! $apply ) {
 				$this->command( 'ROLLBACK' );
 				return $report + array( 'status' => 'canonical' === $state ? 'ALREADY CORRECT' : 'DRY RUN: would set canonical options' );
@@ -112,8 +126,9 @@ final class RollsBar_Shrimp_Options_Repair {
 			}
 			if ( 1 !== $changed ) { throw new RuntimeException( 'REFUSE: expected exactly one metadata row change.' ); }
 			$after = $this->snapshot( $id );
+			$catalog_after = $this->catalog_snapshot( $id );
 			$after_options = array_values( array_filter( $after['meta'], static fn( $row ) => self::KEY === $row['meta_key'] ) );
-			if ( self::protected_snapshot( $before ) !== self::protected_snapshot( $after ) || 1 !== count( $after_options ) || $json !== $after_options[0]['meta_value'] ) {
+			if ( $catalog_before !== $catalog_after || self::protected_snapshot( $before ) !== self::protected_snapshot( $after ) || 1 !== count( $after_options ) || $json !== $after_options[0]['meta_value'] ) {
 				throw new RuntimeException( 'REFUSE: unexpected product delta; transaction rolled back.' );
 			}
 			$this->command( 'COMMIT' );
@@ -126,6 +141,8 @@ final class RollsBar_Shrimp_Options_Repair {
 		wp_cache_delete( $id, 'post_meta' );
 		wp_cache_delete( WC_Data::generate_meta_cache_key( $id, 'products' ), 'products' );
 		$report['writes'] = 1;
+		$report['protected_catalog_after_sha256'] = hash( 'sha256', serialize( $catalog_after ) );
+		$report['protected_product_after_sha256'] = hash( 'sha256', serialize( self::protected_snapshot( $after ) ) );
 		return $report + array( 'status' => 'REPAIRED', 'after_sha256' => hash( 'sha256', $json ), 'protected_snapshot' => 'UNCHANGED' );
 	}
 }

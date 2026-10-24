@@ -153,7 +153,7 @@ def exec_checked(client: paramiko.SSHClient, command: str) -> str:
 
 if CONFIRM != "YES":
     raise SystemExit("Refusing mutation: set ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING=YES")
-if len(DEPLOY_SHA) < 7:
+if len(DEPLOY_SHA) != 40 or any(c not in "0123456789abcdef" for c in DEPLOY_SHA):
     raise SystemExit("ROLLSBAR_DEPLOY_SHA is missing")
 if len(DADATA_API_KEY) < 10:
     raise SystemExit("ROLLSBAR_DADATA_API_KEY is missing")
@@ -202,16 +202,15 @@ echo "wp_path=$WP_PATH"
 # fresh DB+uploads backup outside web-root before any preflight/bootstrap write.
 # The backup command is intentionally executed from the exact deployment SHA.
 if [[ -f "$WP_PATH/wp-load.php" ]]; then
-  echo "deploy_stage=backup_before_mutation"
-  export ROLLSBAR_BACKUP_ROOT="$HOME/rollsbar-backups/staging"
-  export ROLLSBAR_BACKUP_RETENTION=5
-  bash "$PROJECT_ROOT/wordpress/deploy/backup-staging.sh"
+  source "$PROJECT_ROOT/wordpress/deploy/prepare-s1-r2-backup.sh"
 else
-  echo "deploy_stage=backup_skipped_fresh_install"
+  echo "S1-R2 REFUSE: existing staging and historical recovery snapshot required"
+  exit 1
 fi
 
 bash "$PROJECT_ROOT/wordpress/deploy/preflight.sh"
 bash "$PROJECT_ROOT/wordpress/deploy/bootstrap-staging.sh"
+bash "$PROJECT_ROOT/wordpress/deploy/repair-s1-r2.sh"
 
 # Deployment may rewrite wp-config.php through WP-CLI. Re-assert the hardened
 # least-privilege mode after configuration is complete and before acceptance.

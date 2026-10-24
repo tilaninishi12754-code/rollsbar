@@ -43,6 +43,9 @@ final class RepairDatabase {
 	public function get_results( $token, $format ) {
 		[ $sql, $args ] = $this->prepared[$token];
 		$this->statements[] = $sql;
+		if ( 'SELECT * FROM wp_posts WHERE post_type IN (%s, %s) ORDER BY ID FOR UPDATE' === $sql ) { return array_merge( array_values( $this->store['posts'] ), $this->store['children'], array_values( $this->store['hidden_upsells'] ) ); }
+		if ( str_starts_with( $sql, 'SELECT m.* FROM wp_postmeta m INNER JOIN wp_posts' ) ) { return $this->store['meta']; }
+		if ( str_starts_with( $sql, 'SELECT t.* FROM wp_term_relationships t INNER JOIN wp_posts' ) ) { return array_merge( ...array_values( $this->store['terms'] ) ); }
 		if ( str_starts_with( $sql, 'SELECT TABLE_NAME, ENGINE FROM information_schema.TABLES' ) ) {
 			expect_repair( $args === array( $this->posts, $this->postmeta, $this->term_relationships ), 'Engine table scope' );
 			return array_map( fn( $name ) => array( 'TABLE_NAME' => $name, 'ENGINE' => 'engine' === $this->fault ? 'MyISAM' : 'InnoDB' ), $args );
@@ -76,6 +79,8 @@ final class RepairDatabase {
 		} else { throw new RuntimeException( 'Unknown mutation SQL: ' . $sql ); }
 		$this->writes += $n;
 		if ( 'unexpected-delta' === $this->fault ) { $this->store['posts'][1]['post_title'] = 'corrupted'; }
+		if ( 'other-product-delta' === $this->fault ) { $this->store['posts'][2]['post_title'] = 'corrupted'; }
+		if ( 'variation-delta' === $this->fault ) { $this->store['children'][0]['client_meta']['_price'] = '1'; }
 		return $n;
 	}
 }
@@ -109,7 +114,7 @@ foreach ( array( 'custom', 'malformed', 'almost-pending', 'duplicate', 'missing-
 	foreach ( array( false, true ) as $apply ) { $db = new RepairDatabase( $state ); refuses_repair( $db, context_repair(), $apply ); expect_repair( 0 === $db->writes, 'Refusal before write' ); }
 	$cases[$state] = 'REFUSE';
 }
-foreach ( array( 'engine', 'cas', 'write-failure', 'unexpected-delta', 'commit' ) as $fault ) { $db = new RepairDatabase( 'pending' ); $db->fault = $fault; refuses_repair( $db, context_repair() ); }
+foreach ( array( 'engine', 'cas', 'write-failure', 'unexpected-delta', 'other-product-delta', 'variation-delta', 'commit' ) as $fault ) { $db = new RepairDatabase( 'pending' ); $db->fault = $fault; refuses_repair( $db, context_repair() ); }
 foreach ( array( array( 'environment', 'production' ), array( 'home', 'https://rollsbar.ru' ), array( 'siteurl', 'https://rollsbar.ru' ), array( 'blog_public', '1' ), array( 'confirmation', '' ), array( 'backup_verified', '' ), array( 'backup_snapshot', '20261023T215945Z' ), array( 'backup_snapshot', gmdate( 'Ymd\THis\Z', time() - 7201 ) ), array( 'backup_snapshot', gmdate( 'Ymd\THis\Z', time() + 60 ) ) ) as [ $key, $bad ] ) {
 	$db = new RepairDatabase( 'pending' ); $context = context_repair(); $context[$key] = $bad; refuses_repair( $db, $context ); expect_repair( ! $db->statements, 'Guard before DB access' );
 }

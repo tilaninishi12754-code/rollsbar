@@ -9,6 +9,10 @@ cart-overlay bug.
 from __future__ import annotations
 
 import re
+import json
+from pathlib import Path
+from urllib.parse import parse_qs
+from catalog_browser_contract import verify_catalog
 import sys
 from dataclasses import dataclass
 from typing import Iterable
@@ -60,81 +64,82 @@ def store_cart_state(page: Page) -> dict:
     )
 
 
+def assert_catalog(page: Page) -> None:
+    rows = page.locator('.rollsbar-product-card').evaluate_all("els => els.map(e => ({id:e.dataset.rollsbarSourceId, hit:!!e.closest('#hits')}))")
+    canonical = [p['id'] for p in json.loads((Path(__file__).resolve().parents[1] / 'data/catalog.json').read_text(encoding='utf-8'))['products']]
+    verify_catalog([r['id'] for r in rows if not r['hit']], [r['id'] for r in rows if r['hit']], [r['id'] for r in rows], canonical)
+    search = json.loads(page.locator('#rollsbarProductSearchData').text_content())
+    require(len(search) == 118 and {r['id'] for r in search} == set(canonical), 'search exposes exactly 118 public identities; hidden upsells excluded')
+    print('PASS  live catalog: 118 main / 126 representations / 8 Hits / 118 unique identities')
+
+
+def assert_layout(page: Page) -> None:
+    for selector in ('header', '.rollsbar-category-nav', '.rollsbar-utilities', '.rollsbar-catalog-section', '#delivery', '#contacts', 'footer.rollsbar-footer'):
+        require(page.locator(selector).first.is_visible(), 'homepage section rendered: ' + selector)
+    overflow = page.evaluate('Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth')
+    require(overflow <= 1, f'no horizontal overflow ({overflow}px)')
+
+
 def add_first_simple_product(page: Page) -> str:
-    cards = page.locator(".rollsbar-product-card")
-    require(cards.count() == 5, f"homepage has exactly 5 smoke product cards (got {cards.count()})")
-
-    add_buttons = page.locator("a.add_to_cart_button.ajax_add_to_cart")
-    require(add_buttons.count() > 0, "at least one smoke product is directly addable")
-    button = add_buttons.first
+    assert_catalog(page)
+    button = page.locator('.rollsbar-product-card [data-rollsbar-cart-delta="1"]').first
+    button.wait_for(state='visible')
     card = button.locator("xpath=ancestor::article[contains(@class,'rollsbar-product-card')]")
-    product_name = norm(card.locator("h3").inner_text())
-    require(bool(product_name), "selected smoke product has a visible name")
-
-    href = button.get_attribute("href") or ""
-    product_id = button.get_attribute("data-product_id") or ""
-    print(f"INFO  add button href={href} product_id={product_id}")
-
-    observed: list[tuple[int, str]] = []
-
-    def capture(response) -> None:
-        url = response.url
-        if "wc-ajax=add_to_cart" in url or "add-to-cart=" in url:
-            observed.append((response.status, url))
-
-    page.on("response", capture)
-
-    before_badge = ""
-    badge = page.locator(".rollsbar-cart-count").first
-    if badge.count():
-        before_badge = norm(badge.inner_text())
-
-    button.click()
-    page.wait_for_timeout(2500)
-
-    after_badge = ""
-    if badge.count():
-        after_badge = norm(badge.inner_text())
-    cookie_names = sorted(
-        {
-            c.get("name", "")
-            for c in page.context.cookies()
-            if "woocommerce" in c.get("name", "") or "wp_woocommerce" in c.get("name", "")
-        }
-    )
-    button_classes = button.get_attribute("class") or ""
-    print(f"INFO  add responses={observed}")
-    print(f"INFO  cart badge before={before_badge!r} after={after_badge!r}")
-    print(f"INFO  add button classes after click={button_classes}")
-    print(f"INFO  Woo cookie names={cookie_names}")
-    print(f"INFO  browser URL after click={page.url}")
-
-    if any("wc-ajax=add_to_cart" in url and 200 <= status < 300 for status, url in observed):
-        require(
-            "added" in button_classes or (after_badge and after_badge != before_badge),
-            "Woo AJAX add-to-cart emitted a browser success signal",
-        )
-    else:
-        require(
-            "add-to-cart=" in page.url
-            or any("add-to-cart=" in url and 200 <= status < 400 for status, url in observed),
-            "add-to-cart produced either AJAX or fallback navigation",
-        )
-
+    name = norm(card.locator('h3').inner_text())
+    with page.expect_response(lambda r: 'wc-ajax=rollsbar_cart' in r.url and r.request.method == 'POST') as response:
+        button.click()
+    require(response.value.ok and response.value.json().get('success'), 'real native Woo cart add succeeds')
     state = store_cart_state(page)
-    require(state.get("status") == 200, "Store API cart is reachable after add-to-cart")
-    require(product_name in state.get("names", []), f"Store API contains added product: {product_name}")
-    print(f"INFO  added product: {product_name}")
-    return product_name
+    require(state.get('status') == 200 and name in state.get('names', []), 'Store API contains simple product added through current UI')
+    return name
 
 
 def assert_delivery_table(page: Page) -> None:
-    rules = page.locator(".rollsbar-delivery-rule")
-    require(rules.count() == 7, f"delivery table has 7 tiers (got {rules.count()})")
-    text = norm(page.locator("#delivery").inner_text())
-    for fragment in ("Бесплатная доставка от суммы по району", "М. Жукова", "Мазанка", "1 200 ₽", "4 000 ₽"):
-        require(fragment in text, f"delivery table contains: {fragment}")
-    require("Ручного выбора зоны клиентом не будет" in text, "delivery copy preserves no-manual-zone rule")
+    # Accepted B15 renders a schematic map and conditions, not the legacy tier list.
+    text = norm(page.locator('#delivery').inner_text())
+    for fragment in ('Доставка и оплата', 'Самовывоз', 'после утверждения точных границ', 'при получении'):
+        require(fragment in text, 'current delivery disclosure: ' + fragment)
+
+
+def assert_shrimp(page: Page) -> None:
+    page.locator('[data-rollsbar-source-id="shrimp-tempura"] [data-rollsbar-selection-open]').first.click()
+    modal = page.locator('#rollsbarProductDetails')
+    control = modal.locator('select')
+    require(control.count() == 1, 'shrimp has exactly one option group')
+    require(control.locator('option').all_text_contents() == ['чесночный', 'сырный', 'томатный'], 'shrimp UI exposes exactly the three approved choices')
+    control.select_option('сырный')
+    with page.expect_response(lambda r: 'wc-ajax=rollsbar_cart' in r.url and r.request.method == 'POST') as response:
+        modal.locator('.rollsbar-product-options__add').click()
+    r = response.value
+    payload = json.loads(parse_qs(r.request.post_data)['request'][0])
+    require(payload.get('source_id') == 'shrimp-tempura' and payload.get('options') == ['сырный'], 'real add request preserves selected shrimp sauce')
+    result = r.json()
+    require(r.ok and result.get('success'), 'shrimp add-to-cart succeeds')
+    lines = [line for line in result['data']['lines'] if line['source_id'] == 'shrimp-tempura']
+    require(len(lines) == 1 and lines[0]['options'] == [{'label':'Соус','value':'сырный'}], 'native Woo cart response preserves shrimp metadata')
+    modal.wait_for(state='hidden')
+    items = page.evaluate("async () => (await (await fetch('/wp-json/wc/store/v1/cart', {credentials:'same-origin'})).json()).items")
+    require(any(any(d.get('key') == 'Соус' and d.get('value') == 'сырный' for d in i.get('item_data', [])) for i in items), 'Store API independently exposes selected shrimp option metadata')
+
+
+def clean_test_cart(page: Page) -> None:
+    result = page.evaluate("""async () => {
+      const r = await fetch('/wp-json/wc/store/v1/cart', {credentials:'same-origin'});
+      const nonce = r.headers.get('Nonce');
+      if (!nonce) throw Error('Missing cart nonce for test-session cleanup');
+      const deleted = await fetch('/wp-json/wc/store/v1/cart/items', {method:'DELETE',credentials:'same-origin',headers:{Nonce:nonce}});
+      return {status:deleted.status, cart:await deleted.json()};
+    }""")
+    require(result['status'] == 200 and result['cart']['items_count'] == 0, 'only isolated browser test cart cleaned')
+
+
+def assert_public_routes(page: Page) -> None:
+    routes = {'/otzyvy/':'.rb-reviews-page', '/rabota-v-rolls-bar/':'.rb-career-hero'}
+    for slug in ('dostavka-i-oplata','rekvizity-prodavca','publichnaya-oferta','oplata-i-vozvrat','politika-konfidencialnosti','cookies','bezopasnost-onlajn-oplaty','pravovaya-informaciya'):
+        routes['/' + slug + '/'] = '.rollsbar-legal-page'
+    for route, selector in routes.items():
+        response_ok(page.goto(BASE + route, wait_until='domcontentloaded'), route)
+        require(page.locator(selector).is_visible(), route + ': intended page template, no generic fallback')
 
 
 def assert_cart(page: Page, product_name: str) -> None:
@@ -269,6 +274,7 @@ class RunResult:
 
 def run_desktop(browser: Browser) -> RunResult:
     ctx = browser.new_context(viewport={"width": 1440, "height": 1000}, locale="ru-RU")
+    ctx.route('**/*', lambda route: route.abort() if route.request.method == 'POST' and ('/wc/store/v1/checkout' in route.request.url or 'wc-ajax=checkout' in route.request.url) else route.continue_())
     page = ctx.new_page()
     page_errors: list[str] = []
     page.on("pageerror", lambda exc: page_errors.append(str(exc)))
@@ -277,9 +283,13 @@ def run_desktop(browser: Browser) -> RunResult:
     response_ok(response, "desktop home")
     page.wait_for_timeout(1000)
     assert_delivery_table(page)
+    assert_layout(page)
     product_name = add_first_simple_product(page)
+    assert_shrimp(page)
     assert_cart(page, product_name)
     assert_checkout(page)
+    clean_test_cart(page)
+    assert_public_routes(page)
     require(not page_errors, f"desktop has no uncaught page JS errors (got {page_errors})")
     ctx.close()
     return RunResult(page_errors)
@@ -293,6 +303,7 @@ def run_mobile(browser: Browser) -> RunResult:
         device_scale_factor=3,
         locale="ru-RU",
     )
+    ctx.route('**/*', lambda route: route.abort() if route.request.method == 'POST' and ('/wc/store/v1/checkout' in route.request.url or 'wc-ajax=checkout' in route.request.url) else route.continue_())
     page = ctx.new_page()
     page_errors: list[str] = []
     page.on("pageerror", lambda exc: page_errors.append(str(exc)))
@@ -300,11 +311,15 @@ def run_mobile(browser: Browser) -> RunResult:
     response = page.goto(BASE + "/", wait_until="domcontentloaded")
     response_ok(response, "mobile home")
     page.wait_for_timeout(1000)
-    require(page.locator(".rollsbar-product-card").count() == 5, "mobile home renders 5 smoke products")
+    assert_layout(page)
+    assert_delivery_table(page)
     product_name = add_first_simple_product(page)
+    assert_shrimp(page)
     assert_cart(page, product_name)
     assert_no_mobile_overlay(page)
     assert_checkout(page)
+    clean_test_cart(page)
+    assert_public_routes(page)
     require(not page_errors, f"mobile has no uncaught page JS errors (got {page_errors})")
     ctx.close()
     return RunResult(page_errors)

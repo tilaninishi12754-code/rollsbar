@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import tempfile
+import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 PHP = Path(os.environ.get("ROLLSBAR_PHP", ROOT / "qa/.runtime/php/php.exe"))
@@ -116,6 +117,15 @@ def main():
     changed = subprocess.check_output(["git", "diff", "--name-only", "22ad41e3d03ec1a9efae0bde2560a4895d6e2708"], cwd=ROOT, text=True).splitlines()
     changed += subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT, text=True).splitlines()
     allowed = {"wordpress/deploy/verify-staging-legal-pages.php", "wordpress/deploy/legal-footer-contract.php", "wordpress/deploy/shrimp-options-repair.php", "wordpress/deploy/repair-staging-shrimp-options.php", "wordpress/docs/S1_R1_REPORT.md"}
+    if '--s1-r2' in sys.argv:
+        # Explicit follow-on scope; the original S1-R1-only mode stays strict.
+        allowed.update({
+            'wordpress/deploy/backup-staging.sh', 'wordpress/deploy/deploy_staging_wordpress.py',
+            'wordpress/deploy/prepare-s1-r2-backup.sh', 'wordpress/deploy/repair-s1-r2.sh',
+            'wordpress/deploy/verify-staging-s1-r2.php', 'wordpress/deploy/gate_b_browser.py',
+            'wordpress/deploy/catalog_browser_contract.py', '.github/workflows/gate-b-browser.yml',
+            '.github/workflows/address-checkout-browser-smoke.yml', 'wordpress/docs/S1_R2_REPORT.md',
+        })
     assert all(p in allowed or p.startswith("qa/repair/") for p in changed), changed
     results.append(dict(case="scope-preserved", pass_=True))
     print(f"S1-R1 LOCAL PASS: {len(results)} checks; no live DB/network")

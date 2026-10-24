@@ -1,11 +1,6 @@
 name: RollsBar Staging Address Checkout Browser Smoke
 
 on:
-  push:
-    branches:
-      - wordpress/migration-2026-10-01
-    paths:
-      - .github/workflows/address-checkout-browser-smoke.yml
   workflow_dispatch:
 
 permissions:
@@ -28,6 +23,8 @@ jobs:
           import json
           import re
           import sys
+          sys.path.insert(0, 'wordpress/deploy')
+          from gate_b_browser import add_first_simple_product, clean_test_cart
           from playwright.sync_api import sync_playwright
 
           BASE = "https://staging.rollsbar.ru"
@@ -101,6 +98,7 @@ jobs:
               with sync_playwright() as pw:
                   browser = pw.chromium.launch(headless=True)
                   ctx = browser.new_context(viewport={"width": 1440, "height": 1000}, locale="ru-RU")
+                  ctx.route('**/*', lambda route: route.abort() if route.request.method == 'POST' and ('/wc/store/v1/checkout' in route.request.url or 'wc-ajax=checkout' in route.request.url) else route.continue_())
                   page = ctx.new_page()
                   page_errors = []
                   console_errors = []
@@ -109,10 +107,7 @@ jobs:
 
                   response = page.goto(BASE + "/", wait_until="domcontentloaded")
                   require(response is not None and 200 <= response.status < 400, "staging home is reachable")
-                  add = page.locator("a.add_to_cart_button.ajax_add_to_cart").first
-                  add.wait_for(state="visible", timeout=10000)
-                  add.click()
-                  page.wait_for_timeout(2500)
+                  add_first_simple_product(page)
 
                   cart = page.evaluate("""async () => {
                     const r = await fetch('/wp-json/wc/store/v1/cart', {credentials:'same-origin'});
@@ -172,6 +167,7 @@ jobs:
                   print(f"low_precision_qc_geo={low['qc']} allow_auto_zone={low['auto']}")
                   print("country_labels_exposed=no")
                   print("production_touched=no")
+                  clean_test_cart(page)
                   ctx.close()
                   browser.close()
           except Exception as exc:
