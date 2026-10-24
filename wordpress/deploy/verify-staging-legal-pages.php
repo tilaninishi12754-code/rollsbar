@@ -33,7 +33,7 @@ foreach ( $expected_pages as $slug ) {
 	if ( 'publish' !== $page->post_status ) {
 		$fail( "Legal page is not published: {$slug}" );
 	}
-	if ( '' === trim( (string) $page->post_content ) ) {
+	if ( '' === trim( wp_strip_all_tags( (string) $page->post_content ) ) ) {
 		$fail( "Legal page has empty content: {$slug}" );
 	}
 	$page_ids[ $slug ] = (int) $page->ID;
@@ -42,7 +42,7 @@ foreach ( $expected_pages as $slug ) {
 	if ( preg_match( '/href=["\'][^"\']+\.html(?:[?#][^"\']*)?["\']/i', $content ) ) {
 		$fail( "Static .html link leaked into WordPress legal page: {$slug}" );
 	}
-	if ( false !== stripos( $content, 'Сбербанк' ) || false !== stripos( $content, 'СберБанк' ) ) {
+	if ( preg_match( '/сбербанк|sberbank/ui', $content ) ) {
 		$fail( "Unverified acquiring provider leaked into legal page: {$slug}" );
 	}
 }
@@ -108,11 +108,22 @@ if ( false === strpos( $review_template_source, 'name="privacy_consent"' ) || fa
 	$fail( 'Review form does not render the explicit privacy-consent checkbox.' );
 }
 
-$footer_source = (string) file_get_contents( get_template_directory() . '/footer.php' );
-foreach ( array( '/publichnaya-oferta/', '/oplata-i-vozvrat/', '/politika-konfidencialnosti/', '/rekvizity-prodavca/', '/pravovaya-informaciya/' ) as $footer_link ) {
-	if ( false === strpos( $footer_source, $footer_link ) ) {
-		$fail( "Footer is missing legal link: {$footer_link}" );
+// B15 renders URLs from slug data. Inspect actual anchors in the rendered footer,
+// not PHP literals or links elsewhere on the page. The approved seven-link
+// contract is independent of the template; pravovaya-informaciya remains one of
+// the nine required published pages above, not an invented extra footer pill.
+require_once __DIR__ . '/legal-footer-contract.php';
+try {
+	ob_start();
+	try {
+		require get_template_directory() . '/footer.php';
+		$footer_html = (string) ob_get_contents();
+	} finally {
+		ob_end_clean();
 	}
+	rollsbar_verify_legal_footer( $footer_html );
+} catch ( Throwable $error ) {
+	$fail( $error->getMessage() );
 }
 
 echo "LEGAL / PAYMENT READINESS RUNTIME PASS\n";
