@@ -14,6 +14,8 @@ from pathlib import Path
 from urllib.parse import parse_qs
 from catalog_browser_contract import verify_catalog
 import sys
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -48,19 +50,20 @@ def first_visible(page: Page, selectors: Iterable[str]):
     return None
 
 
-def store_cart_state(page: Page) -> dict:
+def store_cart_state(page: Page, timeout_ms: int = 5000) -> dict:
     return page.evaluate(
-        """async () => {
-          const r = await fetch('/wp-json/wc/store/v1/cart', {credentials:'same-origin'});
+        """async timeout => {
+          const r = await fetch('/wp-json/wc/store/v1/cart', {credentials:'same-origin', signal:AbortSignal.timeout(timeout)});
           const j = await r.json();
           return {
             status: r.status,
+            items: (j.items || []).map(i => ({id:i.id, key:i.key, name:i.name})),
             names: (j.items || []).map(i => i.name),
             itemsCount: j.items_count || 0,
             currencyCode: j.totals ? j.totals.currency_code : '',
             currencySymbol: j.totals ? j.totals.currency_symbol : ''
           };
-        }"""
+        }""", timeout_ms
     )
 
 
@@ -80,18 +83,63 @@ def assert_layout(page: Page) -> None:
     require(overflow <= 1, f'no horizontal overflow ({overflow}px)')
 
 
+def is_cart_add_response(response, source_id: str, product_id: int) -> bool:
+    if 'wc-ajax=rollsbar_cart' not in response.url or response.request.method != 'POST':
+        return False
+    try:
+        request = json.loads(parse_qs(response.request.post_data or '')['request'][0])
+    except (KeyError, ValueError, IndexError):
+        return False
+    return (request.get('operation') == 'add' and request.get('source_id') == source_id
+            and request.get('product_id') == product_id)
+
+
 def add_first_simple_product(page: Page) -> str:
     assert_catalog(page)
     button = page.locator('.rollsbar-product-card [data-rollsbar-cart-delta="1"]').first
     button.wait_for(state='visible')
     card = button.locator("xpath=ancestor::article[contains(@class,'rollsbar-product-card')]")
     name = norm(card.locator('h3').inner_text())
-    with page.expect_response(lambda r: 'wc-ajax=rollsbar_cart' in r.url and r.request.method == 'POST') as response:
+    source_id = card.get_attribute('data-rollsbar-source-id')
+    product_id = json.loads(page.locator('#rollsbarProductDetailsData').text_content())[source_id]['woo_id']
+    with page.expect_response(lambda r: is_cart_add_response(r, source_id, product_id)) as response:
         button.click()
-    require(response.value.ok and response.value.json().get('success'), 'real native Woo cart add succeeds')
-    state = store_cart_state(page)
-    require(state.get('status') == 200 and name in state.get('names', []), 'Store API contains simple product added through current UI')
+    r = response.value
+    result = r.json()
+    request = json.loads(parse_qs(r.request.post_data)['request'][0])
+    lines = [line for line in result.get('data', {}).get('lines', []) if line.get('source_id') == source_id]
+    diagnostic = {'ajax_status': r.status, 'ajax_success': result.get('success'), 'operation': request.get('operation'),
+                  'source_id': source_id, 'product_id': request.get('product_id'), 'name': name,
+                  'lines': [{k: line.get(k) for k in ('key', 'source_id', 'name', 'quantity')} for line in lines],
+                  'url': page.url, 'origin': page.evaluate('location.origin'),
+                  'cookie_names': sorted({c['name'] for c in page.context.cookies(BASE)})}
+    print('INFO add=' + json.dumps(diagnostic, ensure_ascii=False))
+    require(r.ok and result.get('success'), 'real native Woo cart add succeeds')
+    require(request.get('source_id') == source_id and len(lines) == 1, 'AJAX cart line matches intended canonical source')
+    wait_for_store_item(page, request['product_id'], lines[0]['key'])
     return name
+
+
+def wait_for_store_item(page: Page, product_id: int, key: str, *, timeout=5.0, interval=0.25,
+                        clock=time.monotonic) -> dict:
+    """Observe the exact AJAX line in the same browser session, never any item."""
+    started = clock()
+    deadline = started + timeout
+    attempt = 0
+    while True:
+        attempt += 1
+        state = store_cart_state(page, timeout_ms=max(1, int((deadline - clock()) * 1000)))
+        print('INFO store_observation=' + json.dumps({**state, 'attempt': attempt,
+              'elapsed_ms': round((clock() - started) * 1000)}, ensure_ascii=False))
+        require(state.get('status') == 200, 'Store API observation HTTP 200')
+        if any(i.get('id') == product_id and i.get('key') == key for i in state.get('items', [])):
+            require(clock() <= deadline, 'exact cart item observed within bounded deadline')
+            print('PASS  Store API contains exact simple product and AJAX cart line added through current UI')
+            return state
+        remaining = deadline - clock()
+        if remaining <= 0:
+            raise AssertionError(f'Exact Store API item absent after {attempt} attempts: product_id={product_id}; key={key}; state={state}')
+        page.wait_for_timeout(min(interval, remaining) * 1000)
 
 
 def assert_delivery_table(page: Page) -> None:
@@ -123,14 +171,62 @@ def assert_shrimp(page: Page) -> None:
 
 
 def clean_test_cart(page: Page) -> None:
+    require(not page.is_closed() and page.url.startswith(BASE + '/'), 'cleanup stays in isolated staging browser page')
     result = page.evaluate("""async () => {
-      const r = await fetch('/wp-json/wc/store/v1/cart', {credentials:'same-origin'});
-      const nonce = r.headers.get('Nonce');
-      if (!nonce) throw Error('Missing cart nonce for test-session cleanup');
-      const deleted = await fetch('/wp-json/wc/store/v1/cart/items', {method:'DELETE',credentials:'same-origin',headers:{Nonce:nonce}});
-      return {status:deleted.status, cart:await deleted.json()};
+      const read = async () => {
+        const r = await fetch('/wp-json/wc/store/v1/cart', {credentials:'same-origin'});
+        if (r.status !== 200) throw Error('Cleanup cart GET HTTP ' + r.status);
+        const cart = await r.json();
+        if (!Array.isArray(cart.items)) throw Error('Invalid cleanup cart shape');
+        return {cart, nonce:r.headers.get('Nonce')};
+      };
+      let current = await read();
+      const keys = current.cart.items.map(i => i.key);
+      for (const key of keys) {
+        if (!key || !current.nonce) throw Error('Missing item key/nonce for isolated cleanup');
+        const removed = await fetch('/wp-json/wc/store/v1/cart/remove-item', {
+          method:'POST', credentials:'same-origin',
+          headers:{Nonce:current.nonce, 'Content-Type':'application/json'}, body:JSON.stringify({key})
+        });
+        if (removed.status !== 200) throw Error('Cleanup remove-item HTTP ' + removed.status);
+        current = await read();
+      }
+      const final = await read();
+      return {status:200, removed:keys.length, cart:final.cart};
     }""")
-    require(result['status'] == 200 and result['cart']['items_count'] == 0, 'only isolated browser test cart cleaned')
+    cart = result['cart']
+    require(result['status'] == 200 and cart['items_count'] == 0 and cart['items'] == [],
+            f"only isolated browser test cart cleaned; fresh GET HTTP 200, items_count=0, items=[]; removed={result['removed']}")
+
+
+@contextmanager
+def isolated_browser_page(browser: Browser, **options):
+    """Own a new anonymous context; report cleanup failures without masking assertions."""
+    ctx = browser.new_context(**options)
+    try:
+        ctx.route('**/*', lambda route: route.abort() if route.request.method == 'POST' and ('/wc/store/v1/checkout' in route.request.url or 'wc-ajax=checkout' in route.request.url) else route.continue_())
+        page = ctx.new_page()
+        pending = set()
+        page.on('request', lambda request: pending.add(request) if 'wc-ajax=rollsbar_cart' in request.url else None)
+        page.on('requestfinished', lambda request: pending.discard(request))
+        page.on('requestfailed', lambda request: pending.discard(request))
+        try:
+            yield page
+        finally:
+            primary = sys.exc_info()[1]
+            try:
+                deadline = time.monotonic() + 10
+                while pending and not page.is_closed() and time.monotonic() < deadline:
+                    page.wait_for_timeout(100)
+                require(not pending, 'isolated cart AJAX requests settled before cleanup')
+                clean_test_cart(page)
+            except Exception as cleanup:
+                print(f'FAIL  isolated cart cleanup: {type(cleanup).__name__}: {cleanup}', file=sys.stderr)
+                if primary is None:
+                    raise
+                primary.add_note(f'Cleanup also failed: {cleanup}')
+    finally:
+        ctx.close()
 
 
 def assert_public_routes(page: Page) -> None:
@@ -227,6 +323,11 @@ def assert_checkout(page: Page) -> None:
 
     pickup_present = "Самовывоз" in body or "Local pickup" in body or "Pickup" in body
     require(pickup_present, "native Local Pickup is visible in checkout")
+    pickup_controls = page.locator('input[type="radio"]').evaluate_all("""els => els.map(el => ({
+      name:el.name, value:el.value, checked:el.checked,
+      label:(el.closest('label') || document.querySelector('label[for="'+CSS.escape(el.id)+'"]'))?.textContent?.trim() || ''
+    }))""")
+    print('INFO checkout_radio_options=' + json.dumps(pickup_controls, ensure_ascii=False))
 
 
 def assert_no_mobile_overlay(page: Page) -> None:
@@ -240,6 +341,9 @@ def assert_no_mobile_overlay(page: Page) -> None:
         ),
     )
     require(proceed is not None, "mobile cart has visible checkout control")
+    proceed.scroll_into_view_if_needed()
+    proceed.click(trial=True)
+    print('PASS  mobile checkout control receives pointer events without submitting')
     pbox = proceed.bounding_box()
     require(pbox is not None, "mobile checkout control has a rendered bounding box")
 
@@ -273,56 +377,42 @@ class RunResult:
 
 
 def run_desktop(browser: Browser) -> RunResult:
-    ctx = browser.new_context(viewport={"width": 1440, "height": 1000}, locale="ru-RU")
-    ctx.route('**/*', lambda route: route.abort() if route.request.method == 'POST' and ('/wc/store/v1/checkout' in route.request.url or 'wc-ajax=checkout' in route.request.url) else route.continue_())
-    page = ctx.new_page()
-    page_errors: list[str] = []
-    page.on("pageerror", lambda exc: page_errors.append(str(exc)))
+    with isolated_browser_page(browser, viewport={"width": 1440, "height": 1000}, locale="ru-RU") as page:
+        page_errors: list[str] = []
+        page.on("pageerror", lambda exc: page_errors.append(str(exc)))
 
-    response = page.goto(BASE + "/", wait_until="domcontentloaded")
-    response_ok(response, "desktop home")
-    page.wait_for_timeout(1000)
-    assert_delivery_table(page)
-    assert_layout(page)
-    product_name = add_first_simple_product(page)
-    assert_shrimp(page)
-    assert_cart(page, product_name)
-    assert_checkout(page)
-    clean_test_cart(page)
-    assert_public_routes(page)
-    require(not page_errors, f"desktop has no uncaught page JS errors (got {page_errors})")
-    ctx.close()
-    return RunResult(page_errors)
+        response = page.goto(BASE + "/", wait_until="domcontentloaded")
+        response_ok(response, "desktop home")
+        page.wait_for_timeout(1000)
+        assert_delivery_table(page)
+        assert_layout(page)
+        product_name = add_first_simple_product(page)
+        assert_shrimp(page)
+        assert_cart(page, product_name)
+        assert_checkout(page)
+        assert_public_routes(page)
+        require(not page_errors, f"desktop has no uncaught page JS errors (got {page_errors})")
+        return RunResult(page_errors)
 
 
 def run_mobile(browser: Browser) -> RunResult:
-    ctx = browser.new_context(
-        viewport={"width": 390, "height": 844},
-        is_mobile=True,
-        has_touch=True,
-        device_scale_factor=3,
-        locale="ru-RU",
-    )
-    ctx.route('**/*', lambda route: route.abort() if route.request.method == 'POST' and ('/wc/store/v1/checkout' in route.request.url or 'wc-ajax=checkout' in route.request.url) else route.continue_())
-    page = ctx.new_page()
-    page_errors: list[str] = []
-    page.on("pageerror", lambda exc: page_errors.append(str(exc)))
+    with isolated_browser_page(browser, viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=3, locale="ru-RU") as page:
+        page_errors: list[str] = []
+        page.on("pageerror", lambda exc: page_errors.append(str(exc)))
 
-    response = page.goto(BASE + "/", wait_until="domcontentloaded")
-    response_ok(response, "mobile home")
-    page.wait_for_timeout(1000)
-    assert_layout(page)
-    assert_delivery_table(page)
-    product_name = add_first_simple_product(page)
-    assert_shrimp(page)
-    assert_cart(page, product_name)
-    assert_no_mobile_overlay(page)
-    assert_checkout(page)
-    clean_test_cart(page)
-    assert_public_routes(page)
-    require(not page_errors, f"mobile has no uncaught page JS errors (got {page_errors})")
-    ctx.close()
-    return RunResult(page_errors)
+        response = page.goto(BASE + "/", wait_until="domcontentloaded")
+        response_ok(response, "mobile home")
+        page.wait_for_timeout(1000)
+        assert_layout(page)
+        assert_delivery_table(page)
+        product_name = add_first_simple_product(page)
+        assert_shrimp(page)
+        assert_cart(page, product_name)
+        assert_no_mobile_overlay(page)
+        assert_checkout(page)
+        assert_public_routes(page)
+        require(not page_errors, f"mobile has no uncaught page JS errors (got {page_errors})")
+        return RunResult(page_errors)
 
 
 def main() -> int:

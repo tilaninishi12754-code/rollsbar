@@ -14,12 +14,29 @@ concurrency:
 jobs:
   browser-gate:
     runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - name: Install Playwright
         run: |
-          python3 -m pip install --disable-pip-version-check --quiet playwright
+          python3 -m pip install --disable-pip-version-check --quiet playwright paramiko
           python3 -m playwright install --with-deps chromium
+      - name: Read deployed application marker before browser acceptance
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_QA_VERIFY_HISTORICAL: '1'
+        run: python3 qa/repair/s1_r3q_release_read.py
       - name: Run live desktop + mobile Gate B
         run: python3 wordpress/deploy/gate_b_browser.py
+      - name: Read deployed application marker after browser acceptance
+        if: always()
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: python3 qa/repair/s1_r3q_release_read.py
