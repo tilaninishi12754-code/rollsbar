@@ -3,6 +3,8 @@
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) { exit( 1 ); }
 require_once __DIR__ . '/shrimp-options-repair.php';
 try {
+	global $wpdb;
+	if ( ! is_object( $wpdb ) || ! is_callable( array( $wpdb, 'prepare' ) ) || ! is_callable( array( $wpdb, 'get_col' ) ) ) { throw new RuntimeException( 'REFUSE: usable WordPress database handle required.' ); }
 	RollsBar_Shrimp_Options_Repair::guard( array( 'environment' => wp_get_environment_type(), 'home' => get_option( 'home' ), 'siteurl' => get_option( 'siteurl' ), 'blog_public' => get_option( 'blog_public' ) ), false );
 	$check = static function ( $ok, $message ) { if ( ! $ok ) { throw new RuntimeException( $message ); } };
 	$source = json_decode( file_get_contents( __DIR__ . '/../data/catalog.json' ), true, 512, JSON_THROW_ON_ERROR )['products'];

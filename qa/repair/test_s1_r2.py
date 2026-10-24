@@ -169,6 +169,7 @@ echo ACCEPTANCE_READY
             assert 'verify-staging-s1-r2.php' not in calls
         print('PASS actual repair sequencing ' + case)
 
+must(run([sys.executable, '-X', 'utf8', 'qa/repair/test_eval_file_scope.py']), 'both eval-file entrypoints under function scope')
 must(run([sys.executable, '-X', 'utf8', 'qa/repair/test_s1_r1.py', '--s1-r2']), 'S1-R1 suite including extended shrimp rollback states')
 must(run(['git', 'diff', '--check']), 'diff check')
 print('S1-R2 LOCAL PRE-PUSH PASS')

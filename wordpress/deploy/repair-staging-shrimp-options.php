@@ -3,6 +3,8 @@
 if ( ! defined( 'ABSPATH' ) || ! defined( 'WP_CLI' ) || ! WP_CLI ) { exit( 1 ); }
 require_once __DIR__ . '/shrimp-options-repair.php';
 try {
+	global $wpdb;
+	if ( ! is_object( $wpdb ) || ! is_callable( array( $wpdb, 'prepare' ) ) || ! is_callable( array( $wpdb, 'get_results' ) ) || ! is_callable( array( $wpdb, 'query' ) ) ) { throw new RuntimeException( 'REFUSE: usable WordPress database handle required.' ); }
 	$mode = (string) getenv( 'ROLLSBAR_SHRIMP_REPAIR_MODE' );
 	if ( ! in_array( $mode, array( '', 'dry-run', 'apply' ), true ) ) { throw new RuntimeException( 'REFUSE: mode must be dry-run or apply.' ); }
 	$result = ( new RollsBar_Shrimp_Options_Repair( $wpdb ) )->run( 'apply' === $mode, array(

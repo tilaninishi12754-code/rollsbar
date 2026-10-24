@@ -95,6 +95,8 @@ function refuses_repair( RepairDatabase $db, array $context, bool $apply = true,
 	catch ( RuntimeException $e ) { expect_repair( str_contains( $e->getMessage(), $reason ), 'Expected refusal reason: ' . $e->getMessage() ); expect_repair( $before === $db->store, 'Refusal must preserve full store' ); return; }
 	throw new RuntimeException( 'Unsafe case accepted' );
 }
+// Reuse the strict SQL adapter without running apply cases in scope-only tests.
+if ( defined( 'ROLLSBAR_SCOPE_FIXTURE' ) ) { return; }
 $cases = array();
 foreach ( array( 'missing', 'empty', 'pending', 'canonical' ) as $state ) {
 	$db = new RepairDatabase( $state ); $before = $db->store;
