@@ -11,6 +11,7 @@
 	var activeInput=null;
 	var activeRequest=null;
 	var debounceTimer=null;
+	var resolveRequests=new WeakMap();
 
 	function looksLikePhone(input){
 		if(!input||input.tagName!=='INPUT')return false;
@@ -78,9 +79,60 @@
 	function positionPanel(){
 		if(!panel||panel.hidden||!activeInput)return;
 		var rect=activeInput.getBoundingClientRect();
-		panel.style.left=(window.scrollX+rect.left)+'px';
+		var width=Math.min(Math.max(rect.width,260),document.documentElement.clientWidth-24);
+		var left=Math.max(12,Math.min(rect.left,document.documentElement.clientWidth-width-12));
+		panel.style.left=(window.scrollX+left)+'px';
 		panel.style.top=(window.scrollY+rect.bottom+4)+'px';
-		panel.style.width=Math.max(rect.width,260)+'px';
+		panel.style.width=width+'px';
+	}
+
+	// Display only: Woo owns the inputs; DaData alone supplies an exact point.
+	// This decoration never updates the cart, rates, native fields or order state.
+	function addressMap(input,result){
+		var step=input.closest('.wc-block-components-checkout-step__content');
+		if(!step)return;
+		var card=step.querySelector('.rollsbar-checkout-map');
+		if(!card){
+			card=document.createElement('section');
+			card.className='rollsbar-checkout-map';
+			card.setAttribute('aria-label','Карта адреса');
+			var frame=document.createElement('iframe');
+			frame.title='Карта Rolls Bar';
+			frame.loading='lazy';
+			frame.referrerPolicy='no-referrer';
+			card.appendChild(frame);
+			var note=document.createElement('p');
+			note.className='rollsbar-checkout-map__note';
+			note.setAttribute('aria-live','polite');
+			card.appendChild(note);
+			step.appendChild(card);
+		}
+		var exact=result&&(result.qc_geo===0||result.qc_geo==='0')&&result.precision&&result.precision.allow_auto_zone===true;
+		var lat=result&&result.lat,lon=result&&result.lon;
+		exact=exact&&(typeof lat==='number'||typeof lat==='string')&&(typeof lon==='number'||typeof lon==='string')&&String(lat).trim()!==''&&String(lon).trim()!==''&&Number.isFinite(Number(lat))&&Number.isFinite(Number(lon))&&Math.abs(Number(lat))<=90&&Math.abs(Number(lon))<=180;
+		// Initial/approximate state shows the existing public business listing,
+		// never an invented customer coordinate or delivery polygon.
+		var src='https://yandex.ru/map-widget/v1/?mode=search&oid=229692973623&ol=biz&z=13&lang=ru_RU';
+		if(exact){
+			var point=Number(lon)+','+Number(lat);
+			src='https://yandex.ru/map-widget/v1/?ll='+encodeURIComponent(point)+'&pt='+encodeURIComponent(point+',pm2rdm')+'&z=17&lang=ru_RU';
+		}
+		var iframe=card.querySelector('iframe');
+		if(iframe.getAttribute('src')!==src)iframe.src=src;
+		iframe.title=exact?'Карта точно определённого адреса':'Карта Rolls Bar';
+		card.dataset.exact=exact?'1':'0';
+		card.querySelector('p').textContent=exact?'Адрес определён точно. Карта показывает адрес, условия получения подтверждает оператор.':result?'Уточните адрес до дома. На карте — Rolls Bar, точка вашего адреса пока не определена.':'На карте — Rolls Bar. Выберите адрес из подсказок, чтобы увидеть его точку. Условия получения подтверждает оператор.';
+	}
+
+	function decorateCheckout(){
+		var checkout=document.querySelector('.wp-block-woocommerce-checkout');
+		if(!checkout)return;
+		if(!document.querySelector('.rollsbar-checkout-title')){
+			var title=document.createElement('h1');
+			title.className='rollsbar-checkout-title';
+			title.textContent='Оформление заказа';
+			checkout.before(title);
+		}
 	}
 
 	function hidePanel(){
@@ -114,12 +166,14 @@
 
 	function clearResolvedState(input){
 		if(!input)return;
+		resolveRequests.delete(input);
 		delete input.dataset.rollsbarAddressResolved;
 		delete input.dataset.rollsbarAddressQcGeo;
 		delete input.dataset.rollsbarAddressLat;
 		delete input.dataset.rollsbarAddressLon;
 		delete input.dataset.rollsbarAddressAutoZone;
 		setAddressStatus(input,'','');
+		addressMap(input,null);
 	}
 
 	function providerFooter(container){
@@ -193,6 +247,7 @@
 		}).then(function(payload){
 			activeRequest=null;
 			if(activeInput&&activeInput!==input)return;
+			if(String(input.value||'').trim()!==query)return;
 			renderSuggestions(input,payload&&payload.suggestions?payload.suggestions:[]);
 		}).catch(function(error){
 			if(error&&error.name==='AbortError')return;
@@ -204,6 +259,8 @@
 
 	function resolveSuggestion(input,item){
 		hidePanel();
+		var requestIdentity={};
+		resolveRequests.set(input,requestIdentity);
 		setAddressStatus(input,'Проверяем адрес…','loading');
 
 		fetch(addressConfig.resolveUrl,{
@@ -218,6 +275,7 @@
 			if(!response.ok)throw new Error('resolve '+response.status);
 			return response.json();
 		}).then(function(result){
+			if(resolveRequests.get(input)!==requestIdentity||!input.isConnected)return;
 			if(!result||typeof result.display!=='string')throw new Error('invalid resolve payload');
 
 			input.dataset.rollsbarAddressProgrammatic='1';
@@ -231,6 +289,7 @@
 			input.dataset.rollsbarAddressLat=result.lat===null||typeof result.lat==='undefined'?'':String(result.lat);
 			input.dataset.rollsbarAddressLon=result.lon===null||typeof result.lon==='undefined'?'':String(result.lon);
 			input.dataset.rollsbarAddressAutoZone=allowAuto?'1':'0';
+			addressMap(input,result);
 
 			if(allowAuto){
 				setAddressStatus(input,'Адрес определён точно.','success');
@@ -245,6 +304,7 @@
 				detail:result
 			}));
 		}).catch(function(){
+			if(resolveRequests.get(input)!==requestIdentity||!input.isConnected)return;
 			setAddressStatus(input,'Не удалось уточнить адрес. Введите его вручную или попробуйте другой вариант.','error');
 		});
 	}
@@ -259,6 +319,7 @@
 		if(input.dataset.rollsbarAddressPrepared==='1')return;
 		input.dataset.rollsbarAddressPrepared='1';
 		input.setAttribute('autocomplete','off');
+		addressMap(input,null);
 
 		input.addEventListener('focus',function(){
 			activeInput=input;
@@ -270,6 +331,7 @@
 		input.addEventListener('input',function(){
 			if(input.dataset.rollsbarAddressProgrammatic==='1')return;
 			activeInput=input;
+			hidePanel();
 			clearResolvedState(input);
 			scheduleSuggestions(input);
 		});
@@ -280,6 +342,7 @@
 	}
 
 	function scan(){
+		decorateCheckout();
 		document.querySelectorAll('input').forEach(function(input){
 			preparePhone(input);
 			prepareAddress(input);

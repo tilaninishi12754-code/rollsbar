@@ -1,0 +1,189 @@
+"""Candidate-only preview on real staging; never deploys or submits an order.
+
+Uses the accepted S1-R3Q isolated context, exact-item polling and final cleanup.
+Browser response override replaces only checkout.js; CSS is injected locally.
+This is not a baseline generator or proof of deployed candidate code.
+"""
+import json
+from pathlib import Path
+import sys
+from urllib.parse import parse_qs, urlsplit
+
+sys.dont_write_bytecode = True
+sys.stdout.reconfigure(encoding='utf-8')
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'wordpress/deploy'))
+from gate_b_browser import (BASE, sync_playwright, isolated_browser_page,
+                            add_first_simple_product, require, store_cart_state)
+
+OUT = ROOT / 'qa/visual-results/checkout-parity'
+ASSETS = ROOT / 'wordpress/wp-content/plugins/rollsbar-core/assets'
+
+
+def snapshot(page):
+    return page.locator('.wc-block-checkout__form input, .wc-block-checkout__form select').evaluate_all(r"""els => els.map(e => ({
+      id:e.id.replace(/^checkbox-control-\d+$/, 'native-generated-checkbox'), type:e.type, required:e.required, visible:!!e.getClientRects().length
+    }))""")
+
+
+def measure(page):
+    return page.evaluate("""() => {
+      const selectors={surface:'.rollsbar-legal-page > .rollsbar-shell', form:'.wc-block-checkout__main',
+        summary:'.wp-block-woocommerce-checkout-order-summary-block', map:'.rollsbar-checkout-map', suggestions:'.rollsbar-address-suggestions:not([hidden])'};
+      const m={page:Math.max(0,document.documentElement.scrollWidth-innerWidth)};
+      for(const [name,selector] of Object.entries(selectors)){
+        const e=[...document.querySelectorAll(selector)].find(e=>e.getClientRects().length);
+        if(!e){m[name]=null;continue;}
+        const r=e.getBoundingClientRect();
+        m[name]=Math.max(0,e.scrollWidth-e.clientWidth,Math.ceil(r.right-innerWidth),Math.ceil(-r.left));
+      }
+      return m;
+    }""")
+
+
+def capture(page, name, metrics):
+    page.locator('.rollsbar-checkout-map').scroll_into_view_if_needed()
+    page.wait_for_timeout(650)
+    # OOPIF compositing in full-page screenshots may omit offscreen map tiles.
+    # Capture the actual visible map separately, before the structural overview.
+    page.locator('.rollsbar-checkout-map').screenshot(path=str(OUT/(name+'-map.png')))
+    page.evaluate('window.scrollTo(0,0)')
+    page.wait_for_timeout(150)
+    values=measure(page)
+    if any(v and v>0 for v in values.values()):
+        page.screenshot(path=str(OUT/(name+'-overflow.png')),full_page=True)
+        print('OVERFLOW '+json.dumps(page.locator('.wc-block-checkout__main *').evaluate_all("""els=>els.filter(e=>e.scrollWidth>e.clientWidth+1).map(e=>({tag:e.tagName,cls:e.className,sw:e.scrollWidth,cw:e.clientWidth,box:e.getBoundingClientRect().toJSON()}))"""),ensure_ascii=False))
+    require(all(v == 0 for v in values.values() if v is not None), name+': horizontal overflow '+str(values))
+    metrics[name]=values
+    page.screenshot(path=str(OUT/(name+'.png')), full_page=True)
+    page.screenshot(path=str(OUT/(name+'-top.png')))
+
+
+def choose(page, query, exact):
+    address=page.locator('#billing-address_1')
+    with page.expect_response(lambda r:'/address-suggestions' in r.url and parse_qs(urlsplit(r.url).query).get('query')==[query]) as response:
+        address.fill(query)
+    payload=response.value.json()
+    require(response.value.status==200 and bool(payload.get('suggestions')),'fresh suggestions match current query')
+    items=page.locator('.rollsbar-address-suggestions__item')
+    items.first.wait_for(state='visible')
+    page.wait_for_function('(display)=>document.querySelector(".rollsbar-address-suggestions__item")?.textContent===display',arg=payload['suggestions'][0]['display'])
+    display=items.first.inner_text()
+    require('Россия' not in display and 'Укра' not in display,'DaData display excludes country labels')
+    items.first.click()
+    page.wait_for_function("""exact => {
+      const e=document.querySelector('#billing-address_1');
+      return e.dataset.rollsbarAddressResolved==='1' && e.dataset.rollsbarAddressAutoZone===(exact?'1':'0');
+    }""",arg=exact)
+    card=page.locator('.rollsbar-checkout-map')
+    require(card.get_attribute('data-exact')==('1' if exact else '0'),'map precision follows DaData')
+    src=card.locator('iframe').get_attribute('src')
+    if exact:
+        require('&pt=' in src,'exact DaData result visualized as point')
+        require(address.get_attribute('data-rollsbar-address-qc-geo')=='0','exact qc_geo=0')
+        require(parse_qs(urlsplit(src).query)['ll']==[address.get_attribute('data-rollsbar-address-lon')+','+address.get_attribute('data-rollsbar-address-lat')],'map coordinates equal DaData result, without inference')
+    else:
+        require('&pt=' not in src,'low precision has no customer point')
+        require(page.locator('.rollsbar-address-status.is-warning').is_visible(),'low precision clarification visible')
+    return {'display':display,'qc_geo':address.get_attribute('data-rollsbar-address-qc-geo'),'map_src':src}
+
+
+def main():
+    OUT.mkdir(parents=True,exist_ok=True)
+    report={'kind':'CANDIDATE SHADOW PREVIEW — NOT DEPLOYED','metrics':{},'page_errors':[], 'order_submission_requests':[]}
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(channel='chrome',headless=True)
+            try:
+                with isolated_browser_page(browser,viewport={'width':1440,'height':1000},locale='ru-RU') as page:
+                    page.on('pageerror',lambda e:report['page_errors'].append(str(e)))
+                    page.on('request',lambda r:report['order_submission_requests'].append(r.url) if r.method=='POST' and ('/wc/store/v1/checkout' in r.url or 'wc-ajax=checkout' in r.url) else None)
+                    page.goto(BASE+'/',wait_until='domcontentloaded')
+                    product=add_first_simple_product(page)
+                    page.goto(BASE+'/checkout/',wait_until='domcontentloaded')
+                    page.locator('#billing-phone').wait_for()
+                    page.wait_for_timeout(1800)
+                    before=snapshot(page)
+                    report['native_fields']=before
+                    # Reload with one candidate script, avoiding two copies of the event listeners.
+                    page.route('**/rollsbar-core/assets/js/checkout.js*',lambda route:route.fulfill(
+                        status=200,content_type='application/javascript',body=(ASSETS/'js/checkout.js').read_text(encoding='utf-8')))
+                    page.route('**/rollsbar-core/assets/css/checkout.css*',lambda route:route.fulfill(
+                        status=200,content_type='text/css',body=(ASSETS/'css/checkout.css').read_text(encoding='utf-8')))
+                    page.reload(wait_until='domcontentloaded')
+                    page.locator('.rollsbar-checkout-map').wait_for()
+                    page.wait_for_timeout(2000)
+                    after=snapshot(page)
+                    report['candidate_fields']=after
+                    require(after==before,'candidate preserves all 18 native inputs/selects and required/visible status (generated checkbox serial normalized)')
+                    report['cart']=store_cart_state(page)
+                    require(product in page.locator('.wc-block-checkout__sidebar').inner_text(),'native summary contains exact product')
+                    phone=page.locator('#billing-phone')
+                    phone.focus()
+                    require(phone.input_value().strip()=='+7','initial +7 preserved')
+                    phone.fill('89781234567');phone.blur()
+                    require(phone.input_value().startswith('+7 '),'leading 8 normalizes to +7')
+                    require(page.locator('#order-rollsbar-privacy-consent').get_attribute('required') is not None,'privacy remains required')
+                    require(page.locator('input[value="pickup_location:0"]').is_checked(),'native pickup selected')
+                    require(page.locator('input[value="cod"]').is_checked(),'payment at receipt selected')
+                    require(page.locator('input[name*=delivery_zone],select[name*=delivery_zone]').count()==0,'no manual zone selector')
+                    capture(page,'candidate-1440-initial',report['metrics'])
+                    report['map_geometry']=page.locator('.rollsbar-checkout-map, .rollsbar-checkout-map iframe').evaluate_all("els=>els.map(e=>({tag:e.tagName,rect:e.getBoundingClientRect().toJSON(),display:getComputedStyle(e).display,width:getComputedStyle(e).width,height:getComputedStyle(e).height}))")
+                    frame=page.locator('.rollsbar-checkout-map iframe').element_handle().content_frame()
+                    report['map_document']=frame.evaluate("({width:innerWidth,height:innerHeight,bodyWidth:document.body.scrollWidth})")
+                    print('MAP_GEOMETRY '+json.dumps({'outer':report['map_geometry'],'inner':report['map_document']}))
+                    address=page.locator('#billing-address_1')
+                    address.fill('Симферополь Гагарина 17')
+                    page.locator('.rollsbar-address-suggestions__item').first.wait_for()
+                    capture(page,'candidate-1440-suggestions',report['metrics'])
+                    report['exact']=choose(page,'Симферополь Гагарина 17',True)
+                    page.locator('.rollsbar-checkout-map').scroll_into_view_if_needed()
+                    page.wait_for_timeout(2000)
+                    capture(page,'candidate-1440-exact',report['metrics'])
+                    if '--map-only' in sys.argv:
+                        frame=page.locator('.rollsbar-checkout-map iframe').element_handle().content_frame()
+                        print('MAP_DETAILS '+json.dumps(frame.evaluate("""()=>({width:innerWidth,height:innerHeight,htmlStyle:document.documentElement.getAttribute('style'),text:document.body.innerText.slice(0,500),els:[...document.querySelectorAll('div')].map(e=>({c:e.className,r:e.getBoundingClientRect().toJSON(),d:getComputedStyle(e).display})).filter(x=>x.r.height>=100&&x.r.width>=80).slice(0,20)})"""),ensure_ascii=False))
+                        page.locator('.rollsbar-checkout-map').screenshot(path=str(OUT/'map-detail.png'))
+                        return
+                    report['low']=choose(page,'Дубки Раздерина 12',False)
+                    capture(page,'candidate-1440-low',report['metrics'])
+                    report['cta']={}
+                    report['layout']={}
+                    for width in [1440,1024,701,700,390,320]:
+                        page.set_viewport_size({'width':width,'height':1000 if width>700 else 844})
+                        page.wait_for_timeout(500)
+                        # Native mobile summary may collapse; expand via its own control.
+                        title=page.locator('.wc-block-components-checkout-order-summary__title')
+                        if title.get_attribute('role')=='button' and title.get_attribute('aria-expanded')=='false': title.click()
+                        require(page.locator('.wp-block-woocommerce-checkout-order-summary-block:visible').count()==1,f'{width}: exactly one responsive native summary visible')
+                        require(all(e['visible'] for e in snapshot(page) if e['required']),f'{width}: all native required inputs remain visible')
+                        report['layout'][str(width)]=page.locator('.wc-block-components-sidebar-layout').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')
+                        capture(page,f'candidate-{width}-checkout',report['metrics'])
+                        cta=page.locator('.wc-block-components-checkout-place-order-button')
+                        cta.scroll_into_view_if_needed()
+                        cta.click(trial=True)
+                        info=cta.evaluate("""e=>{const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;
+                          return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,unobscured:e.contains(document.elementFromPoint(x,y))};}""")
+                        require(info['left']>=0 and info['right']<=width and info['top']>=0 and info['bottom']<=page.viewport_size['height'] and info['unobscured'],f'{width}: native CTA reachable, unclipped, unobscured')
+                        report['cta'][str(width)]=info
+                        page.screenshot(path=str(OUT/f'candidate-{width}-cta.png'))
+                        if width in (700,390,320):
+                            address.fill('Симферополь Гагарина 17')
+                            page.locator('.rollsbar-address-suggestions__item').first.wait_for()
+                            capture(page,f'candidate-{width}-suggestions',report['metrics'])
+                            report[f'exact_{width}']=choose(page,'Симферополь Гагарина 17',True)
+                            capture(page,f'candidate-{width}-exact',report['metrics'])
+                    require(not report['page_errors'],'no uncaught application JS errors')
+                    require(not report['order_submission_requests'],'zero checkout submission requests')
+            finally:
+                browser.close()
+        report['cleanup']='PASS: accepted finally helper verified fresh GET items_count=0/items=[]'
+        report['result']='PASS'
+    except Exception as e:
+        report['result']='FAIL';report['error']=str(e)
+        raise
+    finally:
+        (OUT/('map-only-evidence.json' if '--map-only' in sys.argv else 'evidence.json')).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+
+
+if __name__=='__main__':main()
