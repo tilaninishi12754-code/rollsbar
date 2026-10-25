@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import staging_ssh as ssh
 import inspect_staging_release as recovery
+from test_staging_forensics import fixture_report
 with patch.dict(sys.modules, {'paramiko': SimpleNamespace(SSHException=type('SSHException', (Exception,), {}))}):
     deploy = importlib.import_module('deploy_staging_wordpress')
 
@@ -163,7 +164,7 @@ class TransportContracts(unittest.TestCase):
         self.assertIn('trap cleanup EXIT',script)
         self.assertIn('a'*40,script)
         self.assertLess(script.index('prepare-s1-r2-backup.sh'),script.index('bootstrap-staging.sh'))
-        scripts=[script,recovery.IDENTITY,recovery.ASSETS,recovery.BACKUPS,recovery.PREFIX+'wp --path="$WP_PATH" eval '+__import__('shlex').quote(recovery.AUDIT_PHP)]
+        scripts=[script]+[recovery.PREFIX+cmd for _,cmd in recovery.base_probes()]+[recovery.snapshot_verify(recovery.PROTECTED)]
         for body in scripts:
             bash='C:/programm/Git/bin/bash.exe' if os.name=='nt' else 'bash'
             result=subprocess.run([bash,'-n'],input=body,text=True,encoding='utf-8',capture_output=True)
@@ -178,19 +179,23 @@ class TransportContracts(unittest.TestCase):
 
     def test_inspection_exec_uses_stdin_and_no_sftp(self):
         client=Client('inspect',self.files,self.events)
-        self.assertEqual(recovery.execute('read-only fixture',lambda:client),'{}')
-        self.assertIn(('exec','inspect','bash -s'),self.events)
+        self.assertEqual(recovery.execute('fixture','read-only fixture',lambda:client)['stdout'],'{}')
+        self.assertTrue(next(e for e in self.events if e[0]=='exec')[2].startswith('bash -lc '))
         self.assertNotIn(('sftp','inspect'),self.events)
 
-    def test_probe_failure_prevents_inspection_and_cleanup(self):
-        with patch.dict(os.environ,{'GITHUB_REF_NAME':recovery.BRANCH}), patch.object(recovery,'probe',side_effect=EOFError('PRIVATE')), patch.object(recovery,'execute') as execute, patch.object(recovery,'cleanup_files') as cleanup, redirect_stdout(io.StringIO()) as buf:
-            self.assertEqual(recovery.main(),1)
-        execute.assert_not_called();cleanup.assert_not_called()
-        self.assertIn('stage=exec_probe type=EOFError',buf.getvalue())
-        self.assertNotIn('PRIVATE',buf.getvalue())
+    def test_first_probe_failure_does_not_suppress_later_forensics(self):
+        called=[]
+        def runner(name,command):
+            called.append(name)
+            return {'name':name,'status':'FAIL','exit_code':None,'stdout':'','stderr':'','exception_type':'EOFError'}
+        with redirect_stdout(io.StringIO()):
+            report=recovery.collect(runner,cleanup=lambda:[{'name':ssh.RUNTIME_FILE,'after':{'exists':False}}])
+        self.assertIn('catalog_audit',called)
+        self.assertEqual(report['probes'][0]['name'],'ssh_exec')
+        self.assertEqual(report['probes'][0]['exception_type'],'EOFError')
 
     def test_inspection_is_nonmutating_and_runtime_only_cleanup(self):
-        scripts=recovery.IDENTITY+recovery.ASSETS+recovery.BACKUPS
+        scripts='\n'.join(command for _,command in recovery.base_probes())
         self.assertNotRegex(scripts,r'\b(?:rm|mv|cp|chmod|chown|mkdir|touch)\b')
         self.assertNotRegex(scripts,r'git[^\n]*(?:fetch|checkout|reset)')
         self.assertNotRegex(scripts,r'wp[^\n]*(?:update|import|repair|delete)')
@@ -227,36 +232,22 @@ class TransportContracts(unittest.TestCase):
                 self.assertEqual(enabled,job=='release-inspect' and branch==recovery.BRANCH)
 
 
-    def forensic(self, head=None, marker=None, asset=None, fresh=False, partial=''):
-        head=head or recovery.OLD
-        marker=marker or recovery.OLD
-        identity='marker='+marker+'\nrepo_head='+head+'\nrepo_status_begin\nrepo_status_end\n'
-        identity+='home=https://staging.rollsbar.ru\nsiteurl=https://staging.rollsbar.ru\nenvironment=staging\nwordpress=7.1.3\nwoocommerce=11.1.2\ntheme=active\nplugin=active\nblog_public=0\n'
-        expected={recovery.OLD:{'css/checkout.css':'a'*64,'js/checkout.js':'b'*64},recovery.INCOMING:{'css/checkout.css':'c'*64,'js/checkout.js':'d'*64}}
-        assets=''.join('asset='+a+' sha256='+h+'\n' for a,h in expected[asset or recovery.OLD].items())
-        stamp='20261025T200050Z'
-        backups='backup_names_begin\n'+recovery.PROTECTED+'\n20261025T151212Z\n'+(stamp+'\n' if fresh else '')+'backup_names_end\nbackup_partial_names_begin\n'+partial+'backup_partial_names_end\n'
-        backups+='snapshot_verified='+recovery.PROTECTED+'\n'
-        if fresh:backups+='snapshot_begin='+stamp+'\nproject_code_commit='+recovery.OLD+'\nsnapshot_verified='+stamp+'\nsnapshot_end='+stamp+'\n'
-        return {'identity':identity,'assets':assets,'backups':backups,'expected_hashes':expected}
-
     def test_classification_uses_marker_repo_assets_and_backup_together(self):
-        self.assertEqual(recovery.classify(self.forensic()),'EXEC_NOT_OBSERVED')
-        self.assertEqual(recovery.classify(self.forensic(head=recovery.INCOMING)),'PRE_BACKUP_PARTIAL')
-        self.assertEqual(recovery.classify(self.forensic(head=recovery.INCOMING,fresh=True)),'BACKUP_COMPLETED_PRE_BOOTSTRAP')
-        self.assertEqual(recovery.classify(self.forensic(marker=recovery.INCOMING,asset=recovery.INCOMING)),'UNKNOWN_PARTIAL_STATE')
-        self.assertEqual(recovery.classify(self.forensic(asset=recovery.INCOMING)),'UNKNOWN_PARTIAL_STATE')
-        self.assertEqual(recovery.classify(self.forensic(head='f'*40)),'UNKNOWN_PARTIAL_STATE')
+        for kwargs,expected in [({},'EXEC_NOT_OBSERVED'),({'head':recovery.INCOMING},'PRE_BACKUP_PARTIAL'),({'head':recovery.INCOMING,'fresh':True},'BACKUP_COMPLETED_PRE_BOOTSTRAP')]:
+            self.assertEqual(recovery.normalize_validate_classify(fixture_report(**kwargs))['classification'],expected)
+        report=recovery.normalize_validate_classify(fixture_report(marker=recovery.INCOMING,asset=recovery.INCOMING))
+        self.assertEqual(report['classification'],'FULL_DEPLOY_MARKED')
+        self.assertEqual(report['SAFE_FOR_NEW_DEPLOY_RETRY'],'NO')
+        self.assertEqual(recovery.normalize_validate_classify(fixture_report(asset=recovery.INCOMING))['classification'],'POST_BOOTSTRAP_PARTIAL')
+        self.assertEqual(recovery.normalize_validate_classify(fixture_report(head='f'*40))['classification'],'UNKNOWN_PARTIAL_STATE')
 
     def test_lock_temp_corrupt_backup_and_wrong_identity_block(self):
         for partial in ['.backup-staging.lock\n','.tmp-20261025T200050Z-12\n']:
-            with self.assertRaises(ValueError):recovery.classify(self.forensic(partial=partial))
-        row=self.forensic();row['backups']=row['backups'].replace('snapshot_verified=','missing=')
-        with self.assertRaises(ValueError):recovery.classify(row)
-        row=self.forensic();row['identity']=row['identity'].replace('environment=staging','environment=production')
-        with self.assertRaises(ValueError):recovery.classify(row)
-        row=self.forensic();row['assets']=row['assets'].replace('a'*64,'e'*64)
-        self.assertEqual(recovery.classify(row),'UNKNOWN_PARTIAL_STATE')
+            self.assertEqual(recovery.normalize_validate_classify(fixture_report(partial=partial))['SAFE_FOR_NEW_DEPLOY_RETRY'],'NO')
+        for name in ['protected_snapshot','environment','checkout_css']:
+            report=fixture_report()
+            next(r for r in report['probes'] if r['name']==name)['status']='FAIL'
+            self.assertEqual(recovery.normalize_validate_classify(report)['SAFE_FOR_NEW_DEPLOY_RETRY'],'NO')
 
     def test_remote_stdout_eof_reports_remote_execution_no_retry(self):
         original=Client.exec_command
