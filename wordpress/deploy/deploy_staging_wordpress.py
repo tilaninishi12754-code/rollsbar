@@ -32,6 +32,8 @@ from urllib.parse import urlsplit
 
 import paramiko
 
+from staging_catalog_audit import AUDIT_PHP, parse_audit, validate_catalog_audit
+
 BASE = os.environ["ISP_MANAGER_URL"].strip()
 USER = os.environ["ISP_MANAGER_USER"].strip()
 PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
@@ -45,7 +47,6 @@ SECRET_FILE = ".rollsbar-staging-secrets.json"
 RUNTIME_FILE = ".rollsbar-staging-runtime.env"
 DOMAIN = "staging.rollsbar.ru"
 REPO = "https://github.com/tilaninishi12754-code/rollsbar.git"
-EXPECTED_STAGING_PRODUCTS = 118
 EXPECTED_WORDPRESS_VERSION = "7.1.3"
 EXPECTED_WOOCOMMERCE_VERSION = "11.1.2"
 
@@ -221,7 +222,6 @@ core_version="$(wp --path="$WP_PATH" core version)"
 woo_version="$(wp --path="$WP_PATH" plugin get woocommerce --field=version)"
 theme_status="$(wp --path="$WP_PATH" theme get rollsbar-theme --field=status)"
 core_status="$(wp --path="$WP_PATH" plugin get rollsbar-core --field=status)"
-product_count="$(wp --path="$WP_PATH" post list --post_type=product --post_status=publish --format=count)"
 blog_public="$(wp --path="$WP_PATH" option get blog_public)"
 dadata_configured="$(wp --path="$WP_PATH" eval 'echo defined("ROLLSBAR_DADATA_API_KEY") && strlen((string) ROLLSBAR_DADATA_API_KEY) >= 10 ? "yes" : "no";')"
 telegram_configured="$(wp --path="$WP_PATH" eval 'echo class_exists("RollsBar_Notifications") && RollsBar_Notifications::telegram_is_configured() ? "yes" : "no";')"
@@ -236,7 +236,6 @@ echo "assert_core_checksums=pass"
 echo "assert_woocommerce=$woo_version"
 echo "assert_theme=$theme_status"
 echo "assert_rollsbar_core=$core_status"
-echo "assert_products=$product_count"
 echo "assert_blog_public=$blog_public"
 echo "assert_dadata_server_key=$dadata_configured"
 echo "assert_telegram_server_credentials=$telegram_configured"
@@ -245,16 +244,19 @@ echo "assert_wp_config_mode=$wp_config_mode"
 [[ "$woo_version" == "{EXPECTED_WOOCOMMERCE_VERSION}" ]]
 [[ "$theme_status" == "active" ]]
 [[ "$core_status" == "active" ]]
-[[ "$product_count" == "{EXPECTED_STAGING_PRODUCTS}" ]]
 [[ "$blog_public" == "0" ]]
 [[ "$dadata_configured" == "yes" ]]
 [[ "$wp_config_mode" == "640" ]]
 if [[ "{TELEGRAM_EXPECTED}" == "yes" ]]; then
   [[ "$telegram_configured" == "yes" ]]
 fi
-echo "STAGING WORDPRESS DEPLOY PASS"
+# Read-only identity audit: the verified old marker remains until all workflow
+# acceptance stages succeed. Do not require the incoming SHA here.
+wp --path="$WP_PATH" eval {shell_quote(AUDIT_PHP)}
 '''
-    exec_checked(client, "bash -lc " + shell_quote(remote))
+    audit = parse_audit(exec_checked(client, "bash -lc " + shell_quote(remote)))
+    validate_catalog_audit(audit)
+    print("STAGING WORDPRESS DEPLOY PASS")
 except (paramiko.SSHException, socket.error, OSError, RuntimeError, ValueError) as exc:
     message = str(exc)
     for secret in (PASSWORD, DADATA_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID):

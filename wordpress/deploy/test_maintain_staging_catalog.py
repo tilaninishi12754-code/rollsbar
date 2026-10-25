@@ -6,6 +6,7 @@ import importlib.util
 import inspect
 import re
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -15,6 +16,7 @@ RUNNER = ROOT / "wordpress/deploy/maintain_staging_catalog.py"
 WORKFLOW = ROOT / ".github/workflows/deploy-reg-ru-staging-wordpress.yml"
 BACKUP_WRAPPER = ROOT / "wordpress/deploy/prepare-s1-r2-backup.sh"
 CONTINUATION_BASELINE = "cbb387aea067e9a312691376788015e436610ee8"
+sys.path.insert(0, str(RUNNER.parent))
 SPEC = importlib.util.spec_from_file_location("maintenance", RUNNER)
 maintenance = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(maintenance)
@@ -140,8 +142,8 @@ class MaintenanceContract(unittest.TestCase):
         self.assertIn("'post_status'=>array_values(get_post_stati([], 'names'))", maintenance.CANONICAL_PREFLIGHT_PHP)
         self.assertIn("'actual_variation_posts'=>$actualVariationPosts", maintenance.CANONICAL_PREFLIGHT_PHP)
         self.assertIn('"actual_variation_posts": 26', inspect.getsource(maintenance.validate_canonical_preflight))
-        self.assertIn('"actual_variation_posts": 26', inspect.getsource(maintenance.validate_audit))
-        self.assertIn('"canonical_count": 118', inspect.getsource(maintenance.validate_audit))
+        self.assertIn('"actual_variation_posts": 26', inspect.getsource(maintenance.validate_catalog_audit))
+        self.assertIn('"canonical_count": 118', inspect.getsource(maintenance.validate_catalog_audit))
         self.assertIn("updated", source := RUNNER.read_text())
         self.assertNotIn("rm -rf", source)
 
@@ -220,7 +222,7 @@ class MaintenanceContract(unittest.TestCase):
                  "variation_mismatches": 0, "blank_variation_attributes": 0,
                  "upsell_count": 3, "upsell_duplicates": 0, "upsell_identity_mismatches": 0,
                  "wrong_upsell_type": 0, "wrong_upsell_visibility": 0, "wrong_upsell_status": 0,
-                 "missing_provisional_provenance": 0, "published_total": 121,
+                 "missing_provisional_provenance": 0, "published_total": 121, "unexpected_published_products": 0,
                  "upsell_source_ids": list(maintenance.EXPECTED_UPSELLS)}
         maintenance.validate_audit(audit)
         maintenance.validate_canonical_preflight({"canonical_count": 118, "canonical_missing": 0,
