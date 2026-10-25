@@ -29,6 +29,11 @@ def snapshot(page):
     }))""")
 
 
+def required_pointer_target(page, control):
+    label=page.locator('label[for="'+control.get_attribute('id')+'"]')
+    return label if label.count()==1 and label.is_visible() else control
+
+
 def measure(page):
     return page.evaluate("""() => {
       const selectors={surface:'.rollsbar-legal-page > .rollsbar-shell', form:'.wc-block-checkout__main',
@@ -214,13 +219,17 @@ def main():
                         required=page.locator('.wc-block-checkout__form input[required], .wc-block-checkout__form select[required]')
                         for control in required.all():
                             control.scroll_into_view_if_needed()
-                            control.click(trial=True)
+                            # Native floating labels can cover an empty input's
+                            # centre. Its associated label is the intended pointer
+                            # target and delegates focus/toggle via HTML semantics.
+                            required_pointer_target(page,control).click(trial=True)
                         report['required_controls'][str(width)]=required.evaluate_all('els=>els.map(e=>({id:e.id,willValidate:e.willValidate,valueMissing:e.validity.valueMissing}))')
                         require(all(e['willValidate'] for e in report['required_controls'][str(width)]),f'{width}: native required validation active and controls pointer-reachable')
                         report['layout'][str(width)]=page.locator('.wc-block-components-sidebar-layout').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')
                         require(len(report['layout'][str(width)].split())==(2 if width>700 else 1),f'{width}: intended desktop/mobile breakpoint')
                         capture(page,f'candidate-{width}-checkout',report['metrics'])
                         report['candidate_geometry'][str(width)]=geometry(page)
+                        report.setdefault('summary_borders',{})[str(width)]=page.locator('.wp-block-woocommerce-checkout-order-summary-block:visible').evaluate("""e=>[e,...e.querySelectorAll('*')].filter(n=>n.getClientRects().length && parseFloat(getComputedStyle(n).borderTopWidth)>0).map(n=>({tag:n.tagName,cls:n.className,border:getComputedStyle(n).border,padding:getComputedStyle(n).padding}))""")
                         cta=page.locator('.wc-block-components-checkout-place-order-button')
                         cta.scroll_into_view_if_needed()
                         cta.click(trial=True)

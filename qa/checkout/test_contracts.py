@@ -7,6 +7,8 @@ import unittest
 sys.dont_write_bytecode=True
 ROOT=Path(__file__).resolve().parents[2]
 from playwright.sync_api import sync_playwright
+sys.path.insert(0,str(ROOT/'qa/checkout'))
+from shadow_preview import required_pointer_target
 
 HTML='''<html><body class="woocommerce-checkout"><div class="wp-block-woocommerce-checkout">
 <div class="wc-block-components-checkout-step__content"><input id="billing-address_1" autocomplete="address-line1"></div>
@@ -61,6 +63,19 @@ class CheckoutContracts(unittest.TestCase):
         self.assertEqual(self.page.locator('.rollsbar-checkout-map').count(),1)
         self.assertEqual(self.page.locator('.rollsbar-checkout-title').count(),1)
         self.assertIsNotNone(self.page.locator('#consent').get_attribute('required'))
+
+    def test_native_floating_label_is_a_reachable_input_target(self):
+        self.page.locator('#billing-address_1').evaluate("""input=>{
+          const label=document.createElement('label');label.htmlFor=input.id;label.textContent='Населённый пункт';
+          input.before(label);input.parentElement.style.position='relative';
+          Object.assign(label.style,{position:'absolute',inset:'0',height:'24px',background:'white'});
+        }""")
+        address=self.page.locator('#billing-address_1')
+        target=required_pointer_target(self.page,address)
+        self.assertEqual(target.get_attribute('for'),'billing-address_1')
+        target.click(trial=True)
+        target.click()
+        self.assertTrue(address.evaluate('e=>document.activeElement===e'))
 
     def test_exact_and_edit_invalidates_point(self):
         self.select()

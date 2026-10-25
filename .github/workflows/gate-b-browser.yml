@@ -23,10 +23,18 @@ jobs:
       ROLLSBAR_QA_EXPECTED_MARKER: ${{ github.ref == 'refs/heads/wordpress/checkout-visual-parity-2026-10-25' && '88826907fc7ffe805a7c47f36c35a74c0049e08e' || 'e0c3d4edd4c2bce0718bed8e20bc7c356a55d0ea' }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install Playwright
+      - name: Install Playwright Python packages
         run: |
           python3 -m pip install --disable-pip-version-check --quiet playwright paramiko
-          python3 -m playwright install --with-deps chromium
+      - name: Install Chromium
+        run: |
+          if [ "$GITHUB_REF" = 'refs/heads/wordpress/checkout-visual-parity-2026-10-25' ]; then
+            # The hosted Ubuntu runner already supplies Chromium runtime libraries
+            # and Liberation fonts (verified in the successful baseline log).
+            python3 -m playwright install chromium
+          else
+            python3 -m playwright install --with-deps chromium
+          fi
       - name: Read deployed application marker before browser acceptance
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
