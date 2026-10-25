@@ -1,9 +1,10 @@
-"""Candidate-only preview on real staging; never deploys or submits an order.
+"""Shadow candidate or live deployed checkout acceptance; never deploys or submits an order.
 
 Uses the accepted S1-R3Q isolated context, exact-item polling and final cleanup.
-Browser response overrides replace only checkout.css and checkout.js.
-This is not a baseline generator or proof of deployed candidate code.
+Shadow overrides replace checkout.css/js; live observes their actual response bytes.
+Shadow evidence does not prove deployment; live evidence requires release asset identity.
 """
+import argparse
 import json
 import hashlib
 import os
@@ -18,6 +19,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'wordpress/deploy'))
 from gate_b_browser import (BASE, sync_playwright, isolated_browser_page,
                             add_first_simple_product, require, store_cart_state)
+
+from release_gate import AssetIdentity, release_assets, install_asset_routes
 
 OUT = ROOT / 'qa/visual-results/checkout-parity'
 ASSETS = ROOT / 'wordpress/wp-content/plugins/rollsbar-core/assets'
@@ -104,11 +107,27 @@ def choose(page, query, exact):
 
 
 def main():
+    global OUT
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--live-deployed',action='store_true')
+    parser.add_argument('--map-only',action='store_true')
+    args=parser.parse_args()
+    live=args.live_deployed
+    if live and args.map_only:
+        parser.error('Live acceptance cannot skip checks with --map-only')
+    identity=AssetIdentity(release_assets(os.environ.get('ROLLSBAR_QA_EXPECTED_MARKER','')),BASE) if live else None
+    OUT = ROOT / ('qa/visual-results/checkout-live' if live else 'qa/visual-results/checkout-parity')
+    prefix='live' if live else 'candidate'
     OUT.mkdir(parents=True,exist_ok=True)
-    report={'kind':'CANDIDATE SHADOW PREVIEW — NOT DEPLOYED','metrics':{},'page_errors':[], 'order_submission_requests':[],
+    report={'kind':'LIVE DEPLOYED' if live else 'CANDIDATE SHADOW PREVIEW — NOT DEPLOYED','metrics':{},'page_errors':[], 'order_submission_requests':[],
             'commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+            'expected_marker':os.environ.get('ROLLSBAR_QA_EXPECTED_MARKER'),
+            'asset_identity':identity.records if live else [], 'asset_identity_errors':identity.errors if live else [],
+            'expected_assets':{a:hashlib.sha256(b).hexdigest() for a,b in identity.expected.items()} if live else {},
+            'orders':'not observable without privileged DB access; submission requests must remain zero',
             'asset_substitutions':[], 'baseline_geometry':{}, 'candidate_geometry':{}}
     def substitute(route, relative, mime):
+        require(not live,'LIVE DEPLOYED forbids checkout asset substitution')
         body=(ASSETS/relative).read_bytes()
         report['asset_substitutions'].append({'url':route.request.url,'asset':relative,'sha256':hashlib.sha256(body).hexdigest(),'bytes':len(body)})
         route.fulfill(status=200,content_type=mime,body=body)
@@ -118,6 +137,7 @@ def main():
             browser=pw.chromium.launch(headless=True,**({'channel':channel} if channel else {}))
             try:
                 with isolated_browser_page(browser,viewport={'width':1440,'height':1000},locale='ru-RU') as page:
+                    if live: page.on('response',identity.observe)
                     page.on('pageerror',lambda e:report['page_errors'].append(str(e)))
                     page.on('request',lambda r:report['order_submission_requests'].append(r.url) if r.method=='POST' and ('/wc/store/v1/checkout' in r.url or 'wc-ajax=checkout' in r.url) else None)
                     page.goto(BASE+'/',wait_until='domcontentloaded')
@@ -128,7 +148,7 @@ def main():
                     before=snapshot(page)
                     report['native_fields']=before
                     (OUT/'native.html').write_text(page.content(),encoding='utf-8')
-                    for width in [1440,1024,701,700,390,320]:
+                    for width in ([] if live else [1440,1024,701,700,390,320]):
                         page.set_viewport_size({'width':width,'height':1000 if width>700 else 844})
                         page.wait_for_timeout(500)
                         title=page.locator('.wc-block-components-checkout-order-summary__title')
@@ -138,16 +158,21 @@ def main():
                         page.locator('.wc-block-components-checkout-place-order-button').scroll_into_view_if_needed()
                         page.screenshot(path=str(OUT/f'baseline-{width}-cta.png'))
                     page.set_viewport_size({'width':1440,'height':1000})
-                    # Reload with one candidate script, avoiding two copies of the event listeners.
-                    page.route('**/rollsbar-core/assets/js/checkout.js*',lambda route:substitute(route,'js/checkout.js','application/javascript'))
-                    page.route('**/rollsbar-core/assets/css/checkout.css*',lambda route:substitute(route,'css/checkout.css','text/css'))
-                    page.reload(wait_until='domcontentloaded')
-                    page.locator('.rollsbar-checkout-map').wait_for()
-                    page.wait_for_timeout(2000)
+                    # Live uses the initial customer navigation; no reload or cache-busting.
+                    install_asset_routes(page,live,substitute)
+                    if not live:
+                        page.reload(wait_until='domcontentloaded')
+                        page.locator('.rollsbar-checkout-map').wait_for()
+                        page.wait_for_timeout(2000)
+                    else:
+                        identity.verify(report['asset_substitutions'])
+                        require(len(before)==18,'live preserves the accepted 18 native controls')
+                        require(sum(bool(e['required']) for e in before)==8,'live preserves eight required controls')
                     after=snapshot(page)
                     report['candidate_fields']=after
                     require(after==before,f'candidate preserves all {len(before)} native inputs/selects and required/visible status (generated checkbox serial normalized)')
-                    require({a['asset'] for a in report['asset_substitutions']}=={'js/checkout.js','css/checkout.css'},'both local candidate assets actually substituted')
+                    if not live:
+                        require({a['asset'] for a in report['asset_substitutions']}=={'js/checkout.js','css/checkout.css'},'both local candidate assets actually substituted')
                     report['cart']=store_cart_state(page)
                     require(product in page.locator('.wc-block-checkout__sidebar').inner_text(),'native summary contains exact product')
                     phone=page.locator('#billing-phone')
@@ -159,7 +184,7 @@ def main():
                     require(page.locator('input[value="pickup_location:0"]').is_checked(),'native pickup selected')
                     require(page.locator('input[value="cod"]').is_checked(),'payment at receipt selected')
                     require(page.locator('input[name*=delivery_zone],select[name*=delivery_zone]').count()==0,'no manual zone selector')
-                    capture(page,'candidate-1440-initial',report['metrics'])
+                    capture(page,prefix+'-1440-initial',report['metrics'])
                     report['map_geometry']=page.locator('.rollsbar-checkout-map, .rollsbar-checkout-map iframe').evaluate_all("els=>els.map(e=>({tag:e.tagName,rect:e.getBoundingClientRect().toJSON(),display:getComputedStyle(e).display,width:getComputedStyle(e).width,height:getComputedStyle(e).height}))")
                     frame=page.locator('.rollsbar-checkout-map iframe').element_handle().content_frame()
                     report['map_document']=frame.evaluate("({width:innerWidth,height:innerHeight,bodyWidth:document.body.scrollWidth})")
@@ -167,18 +192,18 @@ def main():
                     address=page.locator('#billing-address_1')
                     address.fill('Симферополь Гагарина 17')
                     page.locator('.rollsbar-address-suggestions__item').first.wait_for()
-                    capture(page,'candidate-1440-suggestions',report['metrics'])
+                    capture(page,prefix+'-1440-suggestions',report['metrics'])
                     report['exact']=choose(page,'Симферополь Гагарина 17',True)
                     page.locator('.rollsbar-checkout-map').scroll_into_view_if_needed()
                     page.wait_for_timeout(2000)
-                    capture(page,'candidate-1440-exact',report['metrics'])
+                    capture(page,prefix+'-1440-exact',report['metrics'])
                     if '--map-only' in sys.argv:
                         frame=page.locator('.rollsbar-checkout-map iframe').element_handle().content_frame()
                         print('MAP_DETAILS '+json.dumps(frame.evaluate("""()=>({width:innerWidth,height:innerHeight,htmlStyle:document.documentElement.getAttribute('style'),text:document.body.innerText.slice(0,500),els:[...document.querySelectorAll('div')].map(e=>({c:e.className,r:e.getBoundingClientRect().toJSON(),d:getComputedStyle(e).display})).filter(x=>x.r.height>=100&&x.r.width>=80).slice(0,20)})"""),ensure_ascii=False))
                         page.locator('.rollsbar-checkout-map').screenshot(path=str(OUT/'map-detail.png'))
                         return
                     report['low']=choose(page,'Дубки Раздерина 12',False)
-                    capture(page,'candidate-1440-low',report['metrics'])
+                    capture(page,prefix+'-1440-low',report['metrics'])
                     # Hold an actual provider resolve response until the customer edits.
                     pending=[]
                     def delayed_resolve(route):
@@ -227,7 +252,7 @@ def main():
                         require(all(e['willValidate'] for e in report['required_controls'][str(width)]),f'{width}: native required validation active and controls pointer-reachable')
                         report['layout'][str(width)]=page.locator('.wc-block-components-sidebar-layout').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')
                         require(len(report['layout'][str(width)].split())==(2 if width>700 else 1),f'{width}: intended desktop/mobile breakpoint')
-                        capture(page,f'candidate-{width}-checkout',report['metrics'])
+                        capture(page,f'{prefix}-{width}-checkout',report['metrics'])
                         report['candidate_geometry'][str(width)]=geometry(page)
                         report.setdefault('summary_borders',{})[str(width)]=page.locator('.wp-block-woocommerce-checkout-order-summary-block:visible').evaluate("""e=>[e,...e.querySelectorAll('*')].filter(n=>n.getClientRects().length && parseFloat(getComputedStyle(n).borderTopWidth)>0).map(n=>({tag:n.tagName,cls:n.className,border:getComputedStyle(n).border,padding:getComputedStyle(n).padding}))""")
                         cta=page.locator('.wc-block-components-checkout-place-order-button')
@@ -238,13 +263,14 @@ def main():
                         require(info['left']>=0 and info['right']<=width and info['top']>=0 and info['bottom']<=page.viewport_size['height'] and info['unobscured'],f'{width}: native CTA reachable, unclipped, unobscured')
                         report['cta'][str(width)]=info
                         report['cta'][str(width)]['document_top']=cta.evaluate('e=>e.getBoundingClientRect().top+scrollY')
-                        page.screenshot(path=str(OUT/f'candidate-{width}-cta.png'))
+                        page.screenshot(path=str(OUT/f'{prefix}-{width}-cta.png'))
                         if width in (700,390,320):
                             address.fill('Симферополь Гагарина 17')
                             page.locator('.rollsbar-address-suggestions__item').first.wait_for()
-                            capture(page,f'candidate-{width}-suggestions',report['metrics'])
+                            capture(page,f'{prefix}-{width}-suggestions',report['metrics'])
                             report[f'exact_{width}']=choose(page,'Симферополь Гагарина 17',True)
-                            capture(page,f'candidate-{width}-exact',report['metrics'])
+                            capture(page,f'{prefix}-{width}-exact',report['metrics'])
+                    if live: identity.verify(report['asset_substitutions'])
                     require(not report['page_errors'],'no uncaught application JS errors')
                     require(not report['order_submission_requests'],'zero checkout submission requests')
             finally:

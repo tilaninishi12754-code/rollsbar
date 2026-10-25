@@ -3,6 +3,21 @@ name: RollsBar Live Browser Gate B
 # Dispatch only after the exact release's verified deployed marker is observed.
 on:
   workflow_dispatch:
+    inputs:
+      checkout_mode:
+        description: Historical Gate B, candidate shadow, or deployed release acceptance
+        type: choice
+        required: true
+        default: historical
+        options:
+          - historical
+          - shadow
+          - live
+      expected_marker:
+        description: Exact 40 lowercase hex release SHA (required for shadow/live; live must equal selected ref HEAD)
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -18,11 +33,13 @@ jobs:
       name: staging
       deployment: false
     timeout-minutes: 12
-    env:
-      # The feature checkout is a browser-only candidate, not the deployed release.
-      ROLLSBAR_QA_EXPECTED_MARKER: ${{ github.ref == 'refs/heads/wordpress/checkout-visual-parity-2026-10-25' && '88826907fc7ffe805a7c47f36c35a74c0049e08e' || 'e0c3d4edd4c2bce0718bed8e20bc7c356a55d0ea' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Validate dispatch before credentials or browser acceptance
+        env:
+          DISPATCH_MODE: ${{ inputs.checkout_mode }}
+          DISPATCH_MARKER: ${{ inputs.expected_marker }}
+        run: python3 qa/checkout/release_gate.py
       - name: Install Playwright Python packages
         run: |
           python3 -m pip install --disable-pip-version-check --quiet playwright paramiko
@@ -40,28 +57,42 @@ jobs:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
-          ROLLSBAR_QA_VERIFY_HISTORICAL: ${{ github.ref == 'refs/heads/wordpress/checkout-visual-parity-2026-10-25' && '0' || '1' }}
         run: python3 qa/repair/s1_r3q_release_read.py
       - name: Run live desktop + mobile Gate B
         run: python3 wordpress/deploy/gate_b_browser.py
       - name: Preview checkout candidate through browser response interception
-        if: github.ref == 'refs/heads/wordpress/checkout-visual-parity-2026-10-25'
+        if: env.CHECKOUT_MODE == 'shadow'
         run: |
           set -o pipefail
           mkdir -p qa/visual-results/checkout-parity
           python3 qa/checkout/shadow_preview.py 2>&1 | tee qa/visual-results/checkout-parity/shadow.log
+      - name: Verify actual deployed checkout release
+        if: env.CHECKOUT_MODE == 'live'
+        run: |
+          set -o pipefail
+          mkdir -p qa/visual-results/checkout-live
+          python3 qa/checkout/shadow_preview.py --live-deployed 2>&1 | tee qa/visual-results/checkout-live/live.log
       - name: Read deployed application marker after browser acceptance
-        if: always()
+        if: always() && env.ROLLSBAR_QA_EXPECTED_MARKER != ''
         env:
+          ROLLSBAR_QA_VERIFY_HISTORICAL: '0'
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
         run: python3 qa/repair/s1_r3q_release_read.py
       - name: Upload checkout shadow evidence
-        if: always() && github.ref == 'refs/heads/wordpress/checkout-visual-parity-2026-10-25'
+        if: always() && env.CHECKOUT_MODE == 'shadow'
         uses: actions/upload-artifact@v4
         with:
           name: checkout-shadow-${{ github.run_id }}-${{ github.run_attempt }}
           path: qa/visual-results/checkout-parity/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload checkout live evidence
+        if: always() && env.CHECKOUT_MODE == 'live'
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkout-live-${{ github.run_id }}-${{ github.run_attempt }}
+          path: qa/visual-results/checkout-live/
           if-no-files-found: error
           retention-days: 14
