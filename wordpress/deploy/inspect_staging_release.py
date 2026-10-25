@@ -46,7 +46,10 @@ def execute(name, command, connector=connect):
         # Small facts use short direct requests. Only the fixed catalog body uses stdin.
         body = PREFIX + command + '\n'
         via_stdin = len(body) > 2048
-        request = 'bash -s' if via_stdin else 'bash -lc ' + shlex.quote(body)
+        # Preserve the login environment (notably its initialized PATH) for large
+        # stdin-fed probes too. The fixed request line keeps the probe body off
+        # the SSH command line and the child shell inherits the login PATH.
+        request = 'bash -lc ' + shlex.quote('exec bash -s') if via_stdin else 'bash -lc ' + shlex.quote(body)
         stdin, out, err = client.exec_command(request, timeout=45)
         if via_stdin:
             stdin.write(body)

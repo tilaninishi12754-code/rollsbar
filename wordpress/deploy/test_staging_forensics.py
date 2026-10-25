@@ -5,7 +5,10 @@ import io
 import json
 import os
 from pathlib import Path
+import shlex
+import subprocess
 import sys
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
@@ -161,8 +164,49 @@ class AtomicForensics(unittest.TestCase):
         client.exec_command.return_value=(stdin,out,err)
         result=recovery.execute('catalog_audit','x'*4096,lambda:client)
         self.assertEqual(result['status'],'PASS')
-        self.assertEqual(client.exec_command.call_args.args[0],'bash -s')
+        request=client.exec_command.call_args.args[0]
+        self.assertEqual(request,"bash -lc 'exec bash -s'")
+        self.assertNotIn(recovery.AUDIT_PHP,request)
+        self.assertGreater(len(recovery.PREFIX+recovery.AUDIT_PHP+'\n'),2048)
         stdin.write.assert_called_once();stdin.flush.assert_called_once();stdin.channel.shutdown_write.assert_called_once()
+
+    def test_login_path_bug_reproduction_and_fixed_large_probe(self):
+        bash='C:/programm/Git/bin/bash.exe' if os.name=='nt' else 'bash'
+        with tempfile.TemporaryDirectory() as tmp:
+            home=Path(tmp); bindir=home/'login-bin';bindir.mkdir()
+            wp=bindir/'wp'
+            wp.write_text('#!/usr/bin/env bash\nprintf "FAKE_WP_PATH\\n"\n',encoding='utf-8')
+            if os.name=='nt':
+                converted=subprocess.check_output(['C:/programm/Git/usr/bin/cygpath.exe','-u',str(bindir)],text=True).strip()
+            else:converted=str(bindir)
+            profile=home/'.bash_profile'
+            profile.write_text('export PATH='+shlex.quote(converted)+':$PATH\n',encoding='utf-8')
+            env={**os.environ,'HOME':str(home)}
+            small=subprocess.run([bash,'-lc','command -v wp'],env=env,text=True,capture_output=True,timeout=10)
+            self.assertEqual(small.returncode,0,small.stderr)
+            self.assertEqual(Path(small.stdout.strip()).name,'wp')
+            old=subprocess.run([bash,'-s'],input='command -v wp\n',env=env,text=True,capture_output=True,timeout=10)
+            self.assertNotEqual(old.returncode,0)
+            self.assertEqual(old.stdout,'')
+            fixed=subprocess.run([bash,'-lc','exec bash -s'],input='command -v wp\n',env=env,text=True,capture_output=True,timeout=10)
+            self.assertEqual(fixed.returncode,0,fixed.stderr)
+            self.assertEqual(Path(fixed.stdout.strip()).name,'wp')
+            self.assertEqual(Path(small.stdout.strip()),Path(fixed.stdout.strip()))
+
+    def test_large_execution_request_does_not_embed_audit_and_preserves_diagnostics(self):
+        client=Mock();stdin=Mock();out=Mock();err=Mock()
+        out.read.return_value=b'wp-path\n';err.read.return_value=b'controlled stderr\n'
+        out.channel.recv_exit_status.return_value=7
+        client.exec_command.return_value=(stdin,out,err)
+        result=recovery.execute('catalog_audit',recovery.AUDIT_PHP,lambda:client)
+        request=client.exec_command.call_args.args[0]
+        self.assertEqual(request,"bash -lc 'exec bash -s'")
+        self.assertNotIn(recovery.AUDIT_PHP,request)
+        stdin.write.assert_called_once_with(recovery.PREFIX+recovery.AUDIT_PHP+'\n')
+        stdin.flush.assert_called_once();stdin.channel.shutdown_write.assert_called_once()
+        self.assertEqual((result['status'],result['exit_code'],result['stdout'],result['stderr']),
+                         ('FAIL',7,'wp-path','controlled stderr'))
+        client.close.assert_called_once()
 
     def test_atomic_commands_are_individually_named_and_read_only(self):
         probes=recovery.base_probes()
