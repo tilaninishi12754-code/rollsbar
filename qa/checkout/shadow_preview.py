@@ -1,11 +1,14 @@
 """Candidate-only preview on real staging; never deploys or submits an order.
 
 Uses the accepted S1-R3Q isolated context, exact-item polling and final cleanup.
-Browser response override replaces only checkout.js; CSS is injected locally.
+Browser response overrides replace only checkout.css and checkout.js.
 This is not a baseline generator or proof of deployed candidate code.
 """
 import json
+import hashlib
+import os
 from pathlib import Path
+import subprocess
 import sys
 from urllib.parse import parse_qs, urlsplit
 
@@ -59,6 +62,13 @@ def capture(page, name, metrics):
     page.screenshot(path=str(OUT/(name+'-top.png')))
 
 
+def geometry(page):
+    return page.locator('.rollsbar-legal-page > .rollsbar-shell, .wc-block-checkout__main, .wc-block-checkout__sidebar, .wc-block-components-checkout-step, .wc-block-components-address-form, .rollsbar-checkout-map, .wp-block-woocommerce-checkout-order-summary-block').evaluate_all("""els=>els.filter(e=>e.getClientRects().length).map(e=>({
+      cls:e.className, text:e.innerText.slice(0,100), rect:e.getBoundingClientRect().toJSON(),
+      padding:getComputedStyle(e).padding, gap:getComputedStyle(e).gap
+    }))""")
+
+
 def choose(page, query, exact):
     address=page.locator('#billing-address_1')
     with page.expect_response(lambda r:'/address-suggestions' in r.url and parse_qs(urlsplit(r.url).query).get('query')==[query]) as response:
@@ -90,10 +100,17 @@ def choose(page, query, exact):
 
 def main():
     OUT.mkdir(parents=True,exist_ok=True)
-    report={'kind':'CANDIDATE SHADOW PREVIEW — NOT DEPLOYED','metrics':{},'page_errors':[], 'order_submission_requests':[]}
+    report={'kind':'CANDIDATE SHADOW PREVIEW — NOT DEPLOYED','metrics':{},'page_errors':[], 'order_submission_requests':[],
+            'commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+            'asset_substitutions':[], 'baseline_geometry':{}, 'candidate_geometry':{}}
+    def substitute(route, relative, mime):
+        body=(ASSETS/relative).read_bytes()
+        report['asset_substitutions'].append({'url':route.request.url,'asset':relative,'sha256':hashlib.sha256(body).hexdigest(),'bytes':len(body)})
+        route.fulfill(status=200,content_type=mime,body=body)
     try:
         with sync_playwright() as pw:
-            browser=pw.chromium.launch(channel='chrome',headless=True)
+            channel=os.environ.get('PLAYWRIGHT_CHANNEL', 'chrome' if sys.platform=='win32' else '')
+            browser=pw.chromium.launch(headless=True,**({'channel':channel} if channel else {}))
             try:
                 with isolated_browser_page(browser,viewport={'width':1440,'height':1000},locale='ru-RU') as page:
                     page.on('pageerror',lambda e:report['page_errors'].append(str(e)))
@@ -105,17 +122,27 @@ def main():
                     page.wait_for_timeout(1800)
                     before=snapshot(page)
                     report['native_fields']=before
+                    (OUT/'native.html').write_text(page.content(),encoding='utf-8')
+                    for width in [1440,1024,701,700,390,320]:
+                        page.set_viewport_size({'width':width,'height':1000 if width>700 else 844})
+                        page.wait_for_timeout(500)
+                        title=page.locator('.wc-block-components-checkout-order-summary__title')
+                        if title.get_attribute('role')=='button' and title.get_attribute('aria-expanded')=='false': title.click()
+                        capture(page,f'baseline-{width}',report['metrics'])
+                        report['baseline_geometry'][str(width)]=geometry(page)
+                        page.locator('.wc-block-components-checkout-place-order-button').scroll_into_view_if_needed()
+                        page.screenshot(path=str(OUT/f'baseline-{width}-cta.png'))
+                    page.set_viewport_size({'width':1440,'height':1000})
                     # Reload with one candidate script, avoiding two copies of the event listeners.
-                    page.route('**/rollsbar-core/assets/js/checkout.js*',lambda route:route.fulfill(
-                        status=200,content_type='application/javascript',body=(ASSETS/'js/checkout.js').read_text(encoding='utf-8')))
-                    page.route('**/rollsbar-core/assets/css/checkout.css*',lambda route:route.fulfill(
-                        status=200,content_type='text/css',body=(ASSETS/'css/checkout.css').read_text(encoding='utf-8')))
+                    page.route('**/rollsbar-core/assets/js/checkout.js*',lambda route:substitute(route,'js/checkout.js','application/javascript'))
+                    page.route('**/rollsbar-core/assets/css/checkout.css*',lambda route:substitute(route,'css/checkout.css','text/css'))
                     page.reload(wait_until='domcontentloaded')
                     page.locator('.rollsbar-checkout-map').wait_for()
                     page.wait_for_timeout(2000)
                     after=snapshot(page)
                     report['candidate_fields']=after
-                    require(after==before,'candidate preserves all 18 native inputs/selects and required/visible status (generated checkbox serial normalized)')
+                    require(after==before,f'candidate preserves all {len(before)} native inputs/selects and required/visible status (generated checkbox serial normalized)')
+                    require({a['asset'] for a in report['asset_substitutions']}=={'js/checkout.js','css/checkout.css'},'both local candidate assets actually substituted')
                     report['cart']=store_cart_state(page)
                     require(product in page.locator('.wc-block-checkout__sidebar').inner_text(),'native summary contains exact product')
                     phone=page.locator('#billing-phone')
@@ -158,7 +185,9 @@ def main():
                         require(page.locator('.wp-block-woocommerce-checkout-order-summary-block:visible').count()==1,f'{width}: exactly one responsive native summary visible')
                         require(all(e['visible'] for e in snapshot(page) if e['required']),f'{width}: all native required inputs remain visible')
                         report['layout'][str(width)]=page.locator('.wc-block-components-sidebar-layout').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')
+                        require(len(report['layout'][str(width)].split())==(2 if width>700 else 1),f'{width}: intended desktop/mobile breakpoint')
                         capture(page,f'candidate-{width}-checkout',report['metrics'])
+                        report['candidate_geometry'][str(width)]=geometry(page)
                         cta=page.locator('.wc-block-components-checkout-place-order-button')
                         cta.scroll_into_view_if_needed()
                         cta.click(trial=True)

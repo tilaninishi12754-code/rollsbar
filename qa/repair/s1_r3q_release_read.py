@@ -1,16 +1,24 @@
 """Fixed read-only staging evidence; no deployment, backup creation or restore."""
 import os
+import re
 import shlex
 from urllib.parse import urlsplit
 
 import paramiko
 
-EXPECTED = 'e0c3d4edd4c2bce0718bed8e20bc7c356a55d0ea'
-COMMAND = r'''set -eu
+EXPECTED = os.environ.get('ROLLSBAR_QA_EXPECTED_MARKER', 'e0c3d4edd4c2bce0718bed8e20bc7c356a55d0ea')
+
+
+def marker_command(expected):
+    if not re.fullmatch(r'[0-9a-f]{40}', expected):
+        raise ValueError('Expected deployed marker must be a full lowercase commit SHA')
+    return r'''set -eu
 marker=$(cat "$HOME/.rollsbar-staging-deployed-sha")
-test "$marker" = e0c3d4edd4c2bce0718bed8e20bc7c356a55d0ea
 printf 'deployed_marker=%s\n' "$marker"
-'''
+test "$marker" = ''' + expected + '\n'
+
+
+COMMAND = marker_command(EXPECTED)
 HISTORICAL = r'''
 cd "$HOME/rollsbar-backups/staging/20261024T153707Z"
 sha256sum -c SHA256SUMS

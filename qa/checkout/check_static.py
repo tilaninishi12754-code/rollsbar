@@ -12,7 +12,7 @@ ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/checkout-parity'
 OUT.mkdir(parents=True,exist_ok=True)
 PHP=ROOT/'qa/.runtime/php/php.exe'
-BASE='0ad375113e7383a504bb4d366e1051cfae931efa'
+BASE='8273df1835346be6d852fd212e1876321ea6bd77'
 ASSET=ROOT/'wordpress/wp-content/plugins/rollsbar-core'
 results={}
 
@@ -63,15 +63,10 @@ changed+=subprocess.check_output(['git','ls-files','--others','--exclude-standar
 allowed={
  'wordpress/wp-content/plugins/rollsbar-core/assets/css/checkout.css',
  'wordpress/wp-content/plugins/rollsbar-core/assets/js/checkout.js',
- 'wordpress/docs/CHECKOUT_VISUAL_PARITY_V1_REPORT.md'
+ 'wordpress/docs/CHECKOUT_VISUAL_PARITY_V2_REPORT.md',
+ '.github/workflows/gate-b-browser.yml',
+ 'qa/repair/s1_r3q_release_read.py',
 }
-# Accepted follow-on Batch: exact enqueue/version-delivery paths only.
-allowed.update({
- 'wordpress/wp-content/themes/rollsbar-theme/functions.php',
- 'wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-checkout.php',
- 'wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-analytics.php',
- 'wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-asset-version.php',
-})
 assert all(p in allowed or p.startswith('qa/checkout/') for p in changed),changed
 patterns=[r'BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY',r'\bsk-[A-Za-z0-9]{20,}',
           r'''\b(?:client_secret|api[_-]?key|password)\s*=\s*["'](?!\$|<)[^"']{8,}["']''']

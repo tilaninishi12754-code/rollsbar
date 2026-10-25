@@ -18,6 +18,9 @@ jobs:
       name: staging
       deployment: false
     timeout-minutes: 12
+    env:
+      # The feature checkout is a browser-only candidate, not the deployed release.
+      ROLLSBAR_QA_EXPECTED_MARKER: ${{ github.ref == 'refs/heads/wordpress/checkout-visual-parity-2026-10-25' && '88826907fc7ffe805a7c47f36c35a74c0049e08e' || 'e0c3d4edd4c2bce0718bed8e20bc7c356a55d0ea' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Playwright
@@ -29,10 +32,16 @@ jobs:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
-          ROLLSBAR_QA_VERIFY_HISTORICAL: '1'
+          ROLLSBAR_QA_VERIFY_HISTORICAL: ${{ github.ref == 'refs/heads/wordpress/checkout-visual-parity-2026-10-25' && '0' || '1' }}
         run: python3 qa/repair/s1_r3q_release_read.py
       - name: Run live desktop + mobile Gate B
         run: python3 wordpress/deploy/gate_b_browser.py
+      - name: Preview checkout candidate through browser response interception
+        if: github.ref == 'refs/heads/wordpress/checkout-visual-parity-2026-10-25'
+        run: |
+          set -o pipefail
+          mkdir -p qa/visual-results/checkout-parity
+          python3 qa/checkout/shadow_preview.py 2>&1 | tee qa/visual-results/checkout-parity/shadow.log
       - name: Read deployed application marker after browser acceptance
         if: always()
         env:
@@ -40,3 +49,11 @@ jobs:
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
         run: python3 qa/repair/s1_r3q_release_read.py
+      - name: Upload checkout shadow evidence
+        if: always() && github.ref == 'refs/heads/wordpress/checkout-visual-parity-2026-10-25'
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkout-shadow-${{ github.run_id }}-${{ github.run_attempt }}
+          path: qa/visual-results/checkout-parity/
+          if-no-files-found: error
+          retention-days: 14
