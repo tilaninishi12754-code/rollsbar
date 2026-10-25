@@ -308,6 +308,8 @@ body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-
 	margin: 0;
 }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-checkout-order-summary__content { border: 0; }
+/* Woo's mobile fill has its own outline inside our approved summary surface. */
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__main .checkout-order-summary-block-fill { border: 0; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-order-summary { padding: 0; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-totals-item { padding-inline: 0; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-totals-coupon { padding-inline: 0; }
