@@ -23,6 +23,15 @@ on:
       - wordpress/wp-content/plugins/rollsbar-core/**
       - wordpress/data/catalog.json
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Fixed staging operation
+        required: true
+        default: deploy
+        type: choice
+        options:
+          - deploy
+          - catalog-maintenance
 
 permissions:
   contents: read
@@ -33,6 +42,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.operation == 'deploy')
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -105,3 +115,33 @@ jobs:
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
         run: python3 wordpress/deploy/mark_staging_deployed_sha.py
+
+  catalog-maintenance:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'catalog-maintenance' && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate staging hosting secrets
+        shell: bash
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: |
+          test -n "$ISP_MANAGER_URL"
+          test -n "$ISP_MANAGER_USER"
+          test -n "$ISP_MANAGER_PASSWORD"
+          echo "::add-mask::$ISP_MANAGER_USER"
+          echo "::add-mask::$ISP_MANAGER_PASSWORD"
+      - name: Install SSH dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+      - name: Run guarded staging catalog maintenance
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: python3 wordpress/deploy/maintain_staging_catalog.py

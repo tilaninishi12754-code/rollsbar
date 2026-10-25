@@ -4,7 +4,7 @@ set -euo pipefail
 : "${WP_PATH:?}"
 : "${PROJECT_ROOT:?}"
 export ROLLSBAR_BACKUP_ROOT="$HOME/rollsbar-backups/staging"
-export ROLLSBAR_BACKUP_RETENTION=5
+export ROLLSBAR_BACKUP_RETENTION=6
 export ROLLSBAR_PRESERVE_BACKUP_SNAPSHOT=20261023T215945Z
 [[ "$(realpath "$WP_PATH")" == "$(realpath "$HOME/www/staging.rollsbar.ru")" ]]
 backup_root="$(realpath "$ROLLSBAR_BACKUP_ROOT")"
