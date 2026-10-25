@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shlex
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -22,13 +23,13 @@ CURRENT_STAGE = "startup"
 BACKUP_VERIFIED = False
 EXPECTED_UPSELLS = ("upsell-soy-sauce", "upsell-ginger", "upsell-wasabi")
 COMMANDS = (
-    "wp rollsbar catalog repair-variations --dry-run",
-    "wp rollsbar catalog repair-variations",
-    "wp rollsbar catalog repair-variations --dry-run",
+    "wp rollsbar catalog repair_variations --dry-run",
+    "wp rollsbar catalog repair_variations",
+    "wp rollsbar catalog repair_variations --dry-run",
     "wp rollsbar catalog upsells --dry-run --confirm-staging",
     "wp rollsbar catalog upsells --confirm-staging",
     "wp rollsbar catalog upsells --dry-run --confirm-staging",
-    "wp rollsbar catalog repair-variations --dry-run",
+    "wp rollsbar catalog repair_variations --dry-run",
 )
 
 
@@ -207,8 +208,27 @@ def execute(client: paramiko.SSHClient, command: str, *, stage: str, timeout: in
     if output:
         print(output, end="" if output.endswith("\n") else "\n")
     if status:
-        raise RuntimeError(f"stage={stage} failed exit={status}; partial state may exist; verified backup gate must be used for recovery")
+        evidence = stderr_evidence(error, command)
+        raise RuntimeError(f"stage={stage} failed exit={status}; partial state may exist; verified backup gate must be used for recovery; remote_stderr_tail={evidence}")
     return output
+
+
+def stderr_evidence(stderr: str, command: str, *, limit: int = 3000) -> str:
+    """Return bounded failure context without echoing fixed commands or secrets."""
+    if not stderr:
+        return "[stderr empty]"
+    evidence = stderr[-limit:]
+    if command:
+        evidence = evidence.replace(command, "[fixed remote command redacted]")
+    for name, value in os.environ.items():
+        if value and (name.startswith("ISP_MANAGER_") or re.search(r"(?:SECRET|TOKEN|PASSWORD|API_KEY|CREDENTIAL)", name, re.I)):
+            evidence = evidence.replace(value, "[REDACTED]")
+    evidence = re.sub(
+        r"(?i)\b(password|token|secret|api[_-]?key|credential)\b\s*[:=]\s*[^\s,;]+",
+        r"\1=[REDACTED]", evidence)
+    evidence = re.sub(r"(?i)ISP_MANAGER_(?:URL|USER|PASSWORD)", "[ENV_REDACTED]", evidence)
+    evidence = re.sub(r"(?m)^\s*[A-Z_][A-Z0-9_]*=.*$", "[environment assignment redacted]", evidence)
+    return evidence[-limit:].strip() or "[stderr empty]"
 
 
 def run_maintenance(client: paramiko.SSHClient) -> None:

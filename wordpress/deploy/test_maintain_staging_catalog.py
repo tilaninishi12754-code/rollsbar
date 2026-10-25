@@ -8,6 +8,7 @@ import re
 import subprocess
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 RUNNER = ROOT / "wordpress/deploy/maintain_staging_catalog.py"
@@ -107,14 +108,18 @@ class MaintenanceContract(unittest.TestCase):
     def test_fixed_command_sequence_and_real_final_readback(self):
         commands = maintenance.COMMANDS
         self.assertEqual(commands, (
-            "wp rollsbar catalog repair-variations --dry-run",
-            "wp rollsbar catalog repair-variations",
-            "wp rollsbar catalog repair-variations --dry-run",
+            "wp rollsbar catalog repair_variations --dry-run",
+            "wp rollsbar catalog repair_variations",
+            "wp rollsbar catalog repair_variations --dry-run",
             "wp rollsbar catalog upsells --dry-run --confirm-staging",
             "wp rollsbar catalog upsells --confirm-staging",
             "wp rollsbar catalog upsells --dry-run --confirm-staging",
-            "wp rollsbar catalog repair-variations --dry-run",
+            "wp rollsbar catalog repair_variations --dry-run",
         ))
+        variation_commands = [command for command in commands if "repair" in command]
+        self.assertEqual(len(variation_commands), 4)
+        self.assertTrue(all("repair_variations" in command for command in variation_commands))
+        self.assertFalse(any("repair-variations" in command for command in variation_commands))
         body = re.search(r"(?ms)^def run_maintenance\(.*?(?=^\ndef main\()", RUNNER.read_text()).group(0)
         order = [body.index(f"COMMANDS[{index}]") for index in range(7)]
         order.extend([body.index("final_readback_command()")])
@@ -139,6 +144,64 @@ class MaintenanceContract(unittest.TestCase):
         self.assertIn('"canonical_count": 118', inspect.getsource(maintenance.validate_audit))
         self.assertIn("updated", source := RUNNER.read_text())
         self.assertNotIn("rm -rf", source)
+
+    def test_pinned_wp_cli_method_matches_fixed_variation_command(self):
+        self.assertEqual(maintenance.EXPECTED_SHA, "88826907fc7ffe805a7c47f36c35a74c0049e08e")
+        pinned = subprocess.check_output([
+            "git", "show",
+            f"{maintenance.EXPECTED_SHA}:wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-catalog-importer.php",
+        ], cwd=ROOT, text=True, encoding="utf-8")
+        method = re.search(
+            r"(?s)(/\*\*.*?\*/)[ \t\r\n]*public function repair_variations\(", pinned)
+        self.assertIsNotNone(method)
+        self.assertRegex(pinned, r"public function repair_variations\(")
+        self.assertNotRegex(method.group(1), r"(?m)@subcommand\s+repair-variations\b")
+
+    def test_execute_reports_bounded_sanitized_stderr_and_fails_immediately(self):
+        class Stream:
+            def __init__(self, content, status=None):
+                self.content = content
+                self.channel = self if status is not None else None
+                self.status = status
+
+            def read(self):
+                return self.content.encode()
+
+            def recv_exit_status(self):
+                return self.status
+
+        class Client:
+            def __init__(self, stderr, status):
+                self.stderr = Stream(stderr)
+                self.stdout = Stream("", status)
+                self.calls = []
+
+            def exec_command(self, command, timeout):
+                self.calls.append((command, timeout))
+                return None, self.stdout, self.stderr
+
+        command = "fixed WP command input"
+        password = "test-secret-value"
+        stderr = "x" * 3300 + f" ISP_MANAGER_PASSWORD={password}; {command}; WP-CLI registration error"
+        client = Client(stderr, 127)
+        with patch.dict("os.environ", {"ISP_MANAGER_PASSWORD": password}):
+            with self.assertRaises(RuntimeError) as caught:
+                maintenance.execute(client, command, stage="variation-preflight")
+        message = str(caught.exception)
+        self.assertIn("stage=variation-preflight", message)
+        self.assertIn("exit=127", message)
+        evidence = message.split("remote_stderr_tail=", 1)[1]
+        self.assertLessEqual(len(evidence), 3000)
+        self.assertIn("WP-CLI registration error", evidence)
+        self.assertNotIn(password, evidence)
+        self.assertNotIn(command, evidence)
+        self.assertEqual(len(client.calls), 1)
+
+        empty = Client("", 2)
+        with self.assertRaises(RuntimeError) as empty_error:
+            maintenance.execute(empty, command, stage="empty-stderr")
+        self.assertIn("[stderr empty]", str(empty_error.exception))
+        self.assertEqual(len(empty.calls), 1)
 
     def test_local_assertions_fail_closed(self):
         maintenance.validate_variation({"parents": 13, "variations": 26, "dry_run": True, "updated": 5}, dry_run=True)
