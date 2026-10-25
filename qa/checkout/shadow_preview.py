@@ -177,14 +177,20 @@ def main():
                     # Hold an actual provider resolve response until the customer edits.
                     pending=[]
                     def delayed_resolve(route):
-                        pending.append((route,route.fetch()))
+                        pending.append(route)
                     page.route('**/address-resolve',delayed_resolve)
                     address.fill('Симферополь Гагарина 17')
-                    page.locator('.rollsbar-address-suggestions__item').first.click()
-                    page.wait_for_timeout(100)
-                    require(len(pending)==1,'live resolve response held for stale-response regression')
+                    with page.expect_request(lambda r:'/address-resolve' in r.url and r.method=='POST'):
+                        page.locator('.rollsbar-address-suggestions__item').first.click()
+                    # Pump route events until the interception is observed, rather
+                    # than assuming a 100ms network/runner scheduling deadline.
+                    for attempt in range(100):
+                        if pending:break
+                        page.wait_for_timeout(100)
+                    require(len(pending)==1,'live resolve request intercepted for stale-response regression')
                     address.fill('Адрес изменён во время проверки')
-                    route,response=pending[0]
+                    route=pending[0]
+                    response=route.fetch()
                     require(response.status==200,'delayed live DaData resolve HTTP 200')
                     route.fulfill(response=response)
                     page.wait_for_timeout(300)
