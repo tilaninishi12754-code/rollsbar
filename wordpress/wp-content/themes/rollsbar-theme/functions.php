@@ -9,6 +9,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/** Local absolute asset path -> SHA-256 prefix; release version on unavailable files. */
+function rollsbar_theme_asset_version( string $absolute_path, string $fallback ): string {
+	static $versions = array();
+
+	if ( ! array_key_exists( $absolute_path, $versions ) ) {
+		$versions[ $absolute_path ] = null;
+		if ( preg_match( '~^(?:/(?!/)|[A-Za-z]:[\\\\/])~', $absolute_path )
+			&& @is_file( $absolute_path ) && @is_readable( $absolute_path ) ) {
+			// Suppress a filesystem warning if the file disappears after the checks.
+			$hash = @hash_file( 'sha256', $absolute_path );
+			if ( false !== $hash ) {
+				$versions[ $absolute_path ] = substr( $hash, 0, 16 );
+			}
+		}
+	}
+
+	return $versions[ $absolute_path ] ?? $fallback;
+}
+
 add_action(
 	'after_setup_theme',
 	static function () {
@@ -39,14 +58,14 @@ add_action(
 			'rollsbar-theme',
 			get_stylesheet_uri(),
 			array(),
-			$version
+			rollsbar_theme_asset_version( get_stylesheet_directory() . '/style.css', $version )
 		);
 
 		wp_enqueue_style(
 			'rollsbar-app',
 			get_template_directory_uri() . '/assets/css/app.css',
 			array( 'rollsbar-theme' ),
-			$version
+			rollsbar_theme_asset_version( get_template_directory() . '/assets/css/app.css', $version )
 		);
 
 		$legal_slugs = array(
@@ -65,7 +84,7 @@ add_action(
 				'rollsbar-legal',
 				get_template_directory_uri() . '/assets/css/legal.css',
 				array( 'rollsbar-app' ),
-				$version
+				rollsbar_theme_asset_version( get_template_directory() . '/assets/css/legal.css', $version )
 			);
 		}
 
@@ -81,7 +100,7 @@ add_action(
 			'rollsbar-app',
 			get_template_directory_uri() . '/assets/js/app.js',
 			array(),
-			$version,
+			rollsbar_theme_asset_version( get_template_directory() . '/assets/js/app.js', $version ),
 			true
 		);
 		if ( class_exists( 'WC_AJAX' ) && is_front_page() ) {

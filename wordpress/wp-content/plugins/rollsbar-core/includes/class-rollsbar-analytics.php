@@ -4,6 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/class-rollsbar-asset-version.php';
+
 /**
  * Consent-gated Yandex Metrica integration.
  *
@@ -58,14 +60,14 @@ final class RollsBar_Analytics {
 			'rollsbar-analytics-consent',
 			plugins_url( 'assets/css/analytics-consent.css', ROLLSBAR_CORE_FILE ),
 			array(),
-			ROLLSBAR_CORE_VERSION
+			RollsBar_Asset_Version::for_file( dirname( __DIR__ ) . '/assets/css/analytics-consent.css', ROLLSBAR_CORE_VERSION )
 		);
 
 		wp_enqueue_script(
 			'rollsbar-analytics',
 			plugins_url( 'assets/js/analytics.js', ROLLSBAR_CORE_FILE ),
 			array( 'jquery' ),
-			ROLLSBAR_CORE_VERSION,
+			RollsBar_Asset_Version::for_file( dirname( __DIR__ ) . '/assets/js/analytics.js', ROLLSBAR_CORE_VERSION ),
 			true
 		);
 

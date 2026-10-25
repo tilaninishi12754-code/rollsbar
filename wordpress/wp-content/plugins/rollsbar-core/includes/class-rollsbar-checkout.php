@@ -4,6 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/class-rollsbar-asset-version.php';
+
 /**
  * Checkout behavior owned by Rolls Bar Core.
  *
@@ -84,14 +86,14 @@ final class RollsBar_Checkout {
 			'rollsbar-checkout',
 			plugins_url( 'assets/css/checkout.css', ROLLSBAR_CORE_FILE ),
 			array(),
-			ROLLSBAR_CORE_VERSION
+			RollsBar_Asset_Version::for_file( dirname( __DIR__ ) . '/assets/css/checkout.css', ROLLSBAR_CORE_VERSION )
 		);
 
 		wp_enqueue_script(
 			'rollsbar-checkout',
 			plugins_url( 'assets/js/checkout.js', ROLLSBAR_CORE_FILE ),
 			array(),
-			ROLLSBAR_CORE_VERSION,
+			RollsBar_Asset_Version::for_file( dirname( __DIR__ ) . '/assets/js/checkout.js', ROLLSBAR_CORE_VERSION ),
 			true
 		);
 

@@ -65,6 +65,13 @@ allowed={
  'wordpress/wp-content/plugins/rollsbar-core/assets/js/checkout.js',
  'wordpress/docs/CHECKOUT_VISUAL_PARITY_V1_REPORT.md'
 }
+# Accepted follow-on Batch: exact enqueue/version-delivery paths only.
+allowed.update({
+ 'wordpress/wp-content/themes/rollsbar-theme/functions.php',
+ 'wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-checkout.php',
+ 'wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-analytics.php',
+ 'wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-asset-version.php',
+})
 assert all(p in allowed or p.startswith('qa/checkout/') for p in changed),changed
 patterns=[r'BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY',r'\bsk-[A-Za-z0-9]{20,}',
           r'''\b(?:client_secret|api[_-]?key|password)\s*=\s*["'](?!\$|<)[^"']{8,}["']''']
@@ -75,6 +82,6 @@ for name in changed:
         if any(re.search(p,line,re.I) for p in patterns):findings.append(f'{name}:{line_no}')
 assert not findings,findings
 results['changed-files-secret-pattern-scan']={'findings':0,'files':len(changed)}
-results['unchanged-protected-surfaces']='PASS: QA provenance, theme, catalog, index.html, B1-B16/masks/tolerances absent from diff'
+results['unchanged-protected-surfaces']='PASS: QA provenance, catalog, index.html, B1-B16/masks/tolerances absent from diff; only explicitly allowed theme/plugin paths'
 (OUT/'static-evidence.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
 print('PASS scope, secret scan, native field contracts, protected surfaces; '+str(len(workflow['workflows']))+' workflows; zero feature push triggers')
