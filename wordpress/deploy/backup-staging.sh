@@ -11,19 +11,18 @@ SNAPSHOT="$BACKUP_ROOT/$TIMESTAMP"
 TMP="$BACKUP_ROOT/.tmp-$TIMESTAMP-$$"
 SNAPSHOT_GLOB='20??????T??????Z'
 PRESERVE_SNAPSHOT="${ROLLSBAR_PRESERVE_BACKUP_SNAPSHOT:-}"
-if ! [[ "$RETENTION" =~ ^[1-9][0-9]*$ ]]; then
-  echo "BACKUP FAIL: retention must be a positive integer"
+if ! [[ "$RETENTION" =~ ^[1-9][0-9]*$ && ${#RETENTION} -le 18 ]]; then
+  echo "BACKUP FAIL: retention must be a positive safely representable integer"
   exit 2
 fi
 
 # An explicitly protected recovery point must survive the next retention pass.
-# Refuse before creating a new backup, and recheck immediately before eviction.
+# It occupies one retained slot; at least one rolling slot must remain.
 if [[ -n "$PRESERVE_SNAPSHOT" ]]; then
   [[ "$PRESERVE_SNAPSHOT" =~ ^20[0-9]{6}T[0-9]{6}Z$ ]] || exit 2
-  [[ -d "$BACKUP_ROOT/$PRESERVE_SNAPSHOT" ]] || { echo 'BACKUP FAIL: protected snapshot missing'; exit 2; }
-  newer="$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name "$SNAPSHOT_GLOB" -printf '%f\n' | awk -v protected="$PRESERVE_SNAPSHOT" '$0 > protected {n++} END {print n+0}')"
-  if (( newer + 1 >= RETENTION )); then
-    echo 'BACKUP FAIL: next retention would evict protected snapshot'
+  [[ -d "$BACKUP_ROOT/$PRESERVE_SNAPSHOT" && ! -L "$BACKUP_ROOT/$PRESERVE_SNAPSHOT" ]] || { echo 'BACKUP FAIL: protected snapshot missing or linked'; exit 2; }
+  if (( RETENTION < 2 )); then
+    echo 'BACKUP FAIL: protected snapshot requires retention of at least 2'
     exit 2
   fi
 fi
@@ -36,11 +35,6 @@ if [[ ! -f "$WP_PATH/wp-load.php" ]]; then
   echo "BACKUP FAIL: WordPress installation missing"
   exit 2
 fi
-if ! [[ "$RETENTION" =~ ^[1-9][0-9]*$ ]]; then
-  echo "BACKUP FAIL: retention must be a positive integer"
-  exit 2
-fi
-
 # A recovery-safe snapshot must identify the code that is actually serving at
 # the instant the pre-deploy backup is created. The marker is written only after
 # a complete live staging deploy + HTTP hardening passes. Never substitute the
@@ -63,11 +57,42 @@ fi
 
 umask 077
 mkdir -p "$BACKUP_ROOT"
+[[ ! -L "$BACKUP_ROOT" ]] || { echo 'BACKUP FAIL: linked backup root'; exit 2; }
+BACKUP_ROOT="$(realpath "$BACKUP_ROOT")"
+SNAPSHOT="$BACKUP_ROOT/$TIMESTAMP"
+TMP="$BACKUP_ROOT/.tmp-$TIMESTAMP-$$"
 chmod 700 "$BACKUP_ROOT" || true
-rm -rf "$TMP"
-mkdir -p "$TMP"
-cleanup(){ rm -rf "$TMP"; }
+# Serialize cooperating writers, including export/publish/rotation. mkdir is
+# atomic and needs no additional runtime package. An abandoned lock fails closed.
+LOCK_DIR="$BACKUP_ROOT/.backup-staging.lock"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  echo 'BACKUP FAIL: backup already running or abandoned lock requires review'
+  exit 4
+fi
+TMP_CREATED=0
+cleanup(){ if (( TMP_CREATED )); then rm -rf -- "$TMP"; fi; rmdir -- "$LOCK_DIR"; }
 trap cleanup EXIT
+[[ ! -e "$SNAPSHOT" ]] || { echo 'BACKUP FAIL: snapshot already exists'; exit 4; }
+mkdir "$TMP"
+TMP_CREATED=1
+
+snapshot_complete(){
+  local path="$BACKUP_ROOT/$1"
+  [[ "$1" =~ ^20[0-9]{6}T[0-9]{6}Z$ && -d "$path" && ! -L "$path" &&
+     "$(realpath "$path")" == "$path" &&
+     -s "$path/database.sql.gz" && -s "$path/uploads.tar.gz" &&
+     -s "$path/manifest.txt" && -s "$path/SHA256SUMS" ]]
+}
+complete_snapshots(){
+  local names name
+  names="$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name "$SNAPSHOT_GLOB" -printf '%f\n')" || return
+  while IFS= read -r name; do
+    if snapshot_complete "$name"; then printf '%s\n' "$name"; fi
+  done <<<"$names"
+}
+if [[ -n "$PRESERVE_SNAPSHOT" ]]; then
+  snapshot_complete "$PRESERVE_SNAPSHOT" || { echo 'BACKUP FAIL: protected snapshot incomplete'; exit 2; }
+fi
 
 wp_cmd(){ wp --path="$WP_PATH" "$@"; }
 
@@ -97,14 +122,23 @@ if [[ ! -s "$TMP/uploads.tar.gz" ]]; then
 fi
 tar -tzf "$TMP/uploads.tar.gz" >/dev/null
 
+# Collect metadata with checked command status: echo "$(failing-command)" would
+# otherwise publish a checksummed but incomplete manifest and then rotate.
+site_url="$(wp_cmd option get home)"
+wordpress_version="$(wp_cmd core version)"
+woocommerce_version="$(wp_cmd plugin get woocommerce --field=version 2>/dev/null || echo unavailable)"
+published_products="$(wp_cmd post list --post_type=product --post_status=publish --format=count)"
+blog_public="$(wp_cmd option get blog_public)"
+[[ -n "$site_url" && -n "$wordpress_version" && -n "$woocommerce_version" &&
+   "$published_products" =~ ^[0-9]+$ && "$blog_public" =~ ^[01]$ ]] || { echo 'BACKUP FAIL: invalid manifest metadata'; exit 3; }
 {
   echo "rollsbar_backup_format=3"
   echo "created_utc=$TIMESTAMP"
-  echo "site_url=$(wp_cmd option get home)"
-  echo "wordpress_version=$(wp_cmd core version)"
-  echo "woocommerce_version=$(wp_cmd plugin get woocommerce --field=version 2>/dev/null || echo unavailable)"
-  echo "published_products=$(wp_cmd post list --post_type=product --post_status=publish --format=count)"
-  echo "blog_public=$(wp_cmd option get blog_public)"
+  echo "site_url=$site_url"
+  echo "wordpress_version=$wordpress_version"
+  echo "woocommerce_version=$woocommerce_version"
+  echo "published_products=$published_products"
+  echo "blog_public=$blog_public"
   echo "database_archive=database.sql.gz"
   echo "uploads_archive=uploads.tar.gz"
   echo "wp_config_included=no"
@@ -132,28 +166,50 @@ if [[ -e "$SNAPSHOT" ]]; then
   echo "BACKUP FAIL: snapshot already exists: $SNAPSHOT"
   exit 4
 fi
-mv "$TMP" "$SNAPSHOT"
-trap - EXIT
+mv -T -- "$TMP" "$SNAPSHOT"
+TMP_CREATED=0
 
-# Keep newest N complete snapshots. Never delete dot-prefixed temporary dirs
-# here; a future audit can diagnose them separately if a process was killed.
-mapfile -t old_snapshots < <(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name "$SNAPSHOT_GLOB" -printf '%f\n' | sort -r | tail -n +$((RETENTION + 1)))
-for old in "${old_snapshots[@]:-}"; do
-  if [[ -n "$PRESERVE_SNAPSHOT" && "$old" == "$PRESERVE_SNAPSHOT" ]]; then
-    echo 'BACKUP FAIL: concurrent retention risk for protected snapshot; no eviction performed'
-    exit 4
-  fi
+# Only after verification and atomic publish, reserve the protected slot and
+# retain the newest N-1 ordinary complete snapshots (or newest N without it).
+# Unknown, incomplete, linked and dot-prefixed directories are never victims.
+listing="$(complete_snapshots | LC_ALL=C sort -r)"
+snapshots=()
+[[ -z "$listing" ]] || mapfile -t snapshots <<<"$listing"
+rolling_slots=$((RETENTION - ( ${#PRESERVE_SNAPSHOT} > 0 ? 1 : 0 )))
+ordinary=0
+old_snapshots=()
+for name in "${snapshots[@]}"; do
+  [[ -z "$PRESERVE_SNAPSHOT" || "$name" != "$PRESERVE_SNAPSHOT" ]] || continue
+  ordinary=$((ordinary + 1))
+  if (( ordinary > rolling_slots )); then old_snapshots+=("$name"); fi
 done
-for old in "${old_snapshots[@]:-}"; do
-  [[ -n "$old" ]] || continue
+# Validate the entire plan before the first deletion, including fresh survival
+# if clock skew or an uncooperative writer introduced newer snapshot names.
+snapshot_complete "$TIMESTAMP" || { echo 'BACKUP FAIL: published snapshot changed; no eviction performed'; exit 4; }
+if [[ -n "$PRESERVE_SNAPSHOT" ]]; then
+  snapshot_complete "$PRESERVE_SNAPSHOT" || { echo 'BACKUP FAIL: protected snapshot changed; no eviction performed'; exit 4; }
+fi
+for old in "${old_snapshots[@]}"; do
+  [[ "$old" != "$PRESERVE_SNAPSHOT" && "$old" != "$TIMESTAMP" ]] || { echo 'BACKUP FAIL: unsafe retention victim; no eviction performed'; exit 4; }
+  snapshot_complete "$old" || { echo 'BACKUP FAIL: retention candidate changed; no eviction performed'; exit 4; }
+done
+for old in "${old_snapshots[@]}"; do
+  snapshot_complete "$old" || { echo 'BACKUP FAIL: retention candidate changed'; exit 4; }
+  [[ "$old" != "$PRESERVE_SNAPSHOT" && "$old" != "$TIMESTAMP" ]] || exit 4
   rm -rf -- "$BACKUP_ROOT/$old"
+  echo "rotated_snapshot=$old"
 done
 
 size_db="$(stat -c '%s' "$SNAPSHOT/database.sql.gz")"
 size_uploads="$(stat -c '%s' "$SNAPSHOT/uploads.tar.gz")"
-count="$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -name "$SNAPSHOT_GLOB" | wc -l | tr -d ' ')"
+count="$(complete_snapshots | wc -l | tr -d ' ')"
+(( count <= RETENTION )) || { echo 'BACKUP FAIL: concurrent retention count exceeded'; exit 4; }
+snapshot_complete "$TIMESTAMP" || exit 4
+if [[ -n "$PRESERVE_SNAPSHOT" ]]; then snapshot_complete "$PRESERVE_SNAPSHOT" || exit 4; fi
 
 echo "database_gzip_bytes=$size_db"
 echo "uploads_gzip_bytes=$size_uploads"
 echo "retained_snapshots=$count"
+rmdir -- "$LOCK_DIR"
+trap - EXIT
 echo "BACKUP VERIFIED PASS"

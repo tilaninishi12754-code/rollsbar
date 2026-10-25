@@ -62,14 +62,31 @@ workflow = (ROOT / '.github/workflows/deploy-reg-ru-staging-wordpress.yml').read
 assert workflow.index('deploy_staging_wordpress.py') < workflow.index('run: python3 wordpress/deploy/provision_staging_seo.py') < workflow.index('run: python3 wordpress/deploy/harden_staging_http.py') < workflow.index('run: python3 wordpress/deploy/audit_staging_seo.py') < workflow.index('run: python3 wordpress/deploy/mark_staging_deployed_sha.py')
 print('PASS backup/bootstrap/repair/SEO/hardening/audit/marker order and no import')
 
-for case in ['success', 'missing-old', 'corrupt-old', 'retention-risk', 'export-fail', 'wrong-version']:
+backup_cases = ['success', 'old-capacity-proof', 'current-capacity', 'repeat-rotation', 'missing-old',
+                'corrupt-old', 'export-fail', 'wrong-version', 'wrong-woocommerce',
+                'wrong-home', 'wrong-siteurl', 'wrong-environment', 'public-site',
+                'missing-wp', 'missing-cli', 'missing-marker', 'invalid-marker',
+                'marker-mode', 'retention-one', 'retention-zero', 'retention-invalid',
+                'retention-huge', 'unprotected-one',
+                'archive-fail', 'manifest-fail', 'checksum-fail', 'unprotected',
+                'lock-busy', 'concurrent-start', 'fresh-not-newest', 'tmp-collision']
+if '--case' in sys.argv:
+    selected = sys.argv[sys.argv.index('--case') + 1]
+    assert selected in backup_cases, selected
+    backup_cases = [selected]
+backup_evidence = {}
+for case in backup_cases:
     with tempfile.TemporaryDirectory(prefix='backup-', dir=RESULTS) as folder:
         base = Path(folder)
         project = base / 'project/wordpress/deploy'
         project.mkdir(parents=True)
         # Test-only HOME substitution keeps the actual user HOME untouched.
         for name in ['prepare-s1-r2-backup.sh', 'backup-staging.sh']:
-            content = (ROOT / 'wordpress/deploy' / name).read_text(encoding='utf-8').replace('$HOME', '$TEST_HOME')
+            if case == 'old-capacity-proof' and name == 'backup-staging.sh':
+                content = subprocess.check_output(['git', 'show', '21abd16e4e970e535b9f22971ee9c4464f0cea24:wordpress/deploy/' + name], cwd=ROOT).decode('utf-8')
+            else:
+                content = (ROOT / 'wordpress/deploy' / name).read_text(encoding='utf-8')
+            content = content.replace('$HOME', '$TEST_HOME')
             (project / name).write_text(content, encoding='utf-8', newline='\n')
         mock = base / 'bin'
         mock.mkdir()
@@ -77,19 +94,56 @@ for case in ['success', 'missing-old', 'corrupt-old', 'retention-risk', 'export-
 set -eu
 shift
 case "$*" in
-  'option get home'|'option get siteurl') echo https://staging.rollsbar.ru ;;
-  'option get blog_public') echo 0 ;;
-  'core version') [[ "$CASE" != wrong-version ]] || { echo 7.0; exit; }; echo 7.1.3 ;;
-  'plugin get woocommerce --field=version') echo 11.1.2 ;;
-  'eval echo wp_get_environment_type();') echo staging ;;
+  'option get home') [[ "$CASE" != wrong-home ]] || { echo https://fixture.invalid; exit; }; echo https://staging.rollsbar.ru ;;
+  'option get siteurl') [[ "$CASE" != wrong-siteurl ]] || { echo https://fixture.invalid; exit; }; echo https://staging.rollsbar.ru ;;
+  'option get blog_public') [[ "$CASE" != public-site ]] || { echo 1; exit; }; echo 0 ;;
+  'core version')
+    [[ "$CASE" != manifest-fail || ! -f "$TEST_HOME/calls" ]] || exit 8
+    [[ "$CASE" != wrong-version ]] || { echo 7.0; exit; }; echo 7.1.3 ;;
+  'plugin get woocommerce --field=version') [[ "$CASE" != wrong-woocommerce ]] || { echo 11.0; exit; }; echo 11.1.2 ;;
+  'eval echo wp_get_environment_type();') [[ "$CASE" != wrong-environment ]] || { echo production; exit; }; echo staging ;;
   'post list --post_type=product --post_status=publish --format=count') echo 118 ;;
-  'db export '* ) echo export >>"$TEST_HOME/calls"; [[ "$CASE" != export-fail ]] || exit 1; echo 'CREATE TABLE local_fixture (id INT);' ;;
+  'db export '* )
+    echo export >>"$TEST_HOME/calls"
+    [[ "$CASE" != export-fail ]] || exit 1
+    if [[ "$CASE" == concurrent-start ]]; then
+      if CASE=success bash "$PROJECT_ROOT/wordpress/deploy/backup-staging.sh" >"$TEST_HOME/concurrent.log" 2>&1; then exit 77; fi
+      grep -q 'backup already running' "$TEST_HOME/concurrent.log"
+    fi
+    echo 'CREATE TABLE local_fixture (id INT);' ;;
   *) echo unexpected_mock_wp_command >&2; exit 9 ;;
 esac
 ''', encoding='utf-8', newline='\n')
         # Windows does not expose POSIX file mode 600; only adapt that stat call.
         (mock / 'stat').write_text('''#!/usr/bin/env bash
-if [[ "$1" == -c && "$2" == %a && "$3" == *deployed-sha ]]; then echo 600; else /usr/bin/stat "$@"; fi
+if [[ "$1" == -c && "$2" == %a && "$3" == *deployed-sha ]]; then
+  if [[ "$CASE" == marker-mode ]]; then echo 644; else echo 600; fi
+else /usr/bin/stat "$@"; fi
+''', encoding='utf-8', newline='\n')
+        (mock / 'date').write_text('''#!/usr/bin/env bash
+set -eu
+if [[ "$*" == '-u +%Y%m%dT%H%M%SZ' ]]; then
+  n=0; [[ ! -f "$TEST_HOME/clock" ]] || read -r n <"$TEST_HOME/clock"
+  n=$((n+1)); echo "$n" >"$TEST_HOME/clock"
+  stamp="$(printf '20261025T1600%02dZ' "$n")"
+  if [[ "$CASE" == tmp-collision ]]; then
+    abandoned="$TEST_HOME/rollsbar-backups/staging/.tmp-$stamp-$PPID"
+    mkdir "$abandoned"; echo untouched >"$abandoned/sentinel"
+  fi
+  printf '%s\n' "$stamp"
+else /usr/bin/date "$@"; fi
+''', encoding='utf-8', newline='\n')
+        (mock / 'tar').write_text('''#!/usr/bin/env bash
+set -eu
+if [[ "$CASE" == archive-fail && "$*" == *-czf* && "$*" == *'.tmp-'* ]]; then
+  while [[ "$1" != -czf ]]; do shift; done
+  printf 'invalid tar archive\n' >"$2"
+else /usr/bin/tar "$@"; fi
+''', encoding='utf-8', newline='\n')
+        (mock / 'sha256sum').write_text('''#!/usr/bin/env bash
+set -eu
+if [[ "$CASE" == checksum-fail && "$PWD" == *'.tmp-'* && "$1" == -c ]]; then exit 9; fi
+/usr/bin/sha256sum "$@"
 ''', encoding='utf-8', newline='\n')
         harness = '''set -euo pipefail
 export TEST_HOME="$PWD/home" CASE
@@ -99,27 +153,123 @@ mkdir -p "$WP_PATH/wp-content/uploads" "$TEST_HOME/rollsbar-backups/staging/2026
 touch "$WP_PATH/wp-load.php"
 printf '%040d\n' 1 >"$TEST_HOME/.rollsbar-staging-deployed-sha"
 old="$TEST_HOME/rollsbar-backups/staging/20261023T215945Z"
-printf 'SQL fixture\n' | gzip >"$old/database.sql.gz"
-tar -C "$WP_PATH/wp-content" -czf "$old/uploads.tar.gz" uploads
-printf 'site_url=https://staging.rollsbar.ru\ndatabase_archive=database.sql.gz\nuploads_archive=uploads.tar.gz\n' >"$old/manifest.txt"
-(cd "$old"; sha256sum database.sql.gz uploads.tar.gz manifest.txt >SHA256SUMS)
+fixture_snapshot(){
+  mkdir -p "$1"
+  printf 'SQL fixture\n' | gzip >"$1/database.sql.gz"
+  tar -C "$WP_PATH/wp-content" -czf "$1/uploads.tar.gz" uploads
+  printf 'site_url=https://staging.rollsbar.ru\ndatabase_archive=database.sql.gz\nuploads_archive=uploads.tar.gz\n' >"$1/manifest.txt"
+  (cd "$1"; sha256sum database.sql.gz uploads.tar.gz manifest.txt >SHA256SUMS)
+}
+fixture_snapshot "$old"
+if [[ "$CASE" != success ]]; then
+  for n in 1 2 3 4 5; do fixture_snapshot "$TEST_HOME/rollsbar-backups/staging/20261024T00000${n}Z"; done
+fi
+# Unknown/incomplete directories and state outside BACKUP_ROOT must survive.
+mkdir -p "$TEST_HOME/rollsbar-backups/staging/.tmp-existing" "$TEST_HOME/rollsbar-backups/staging/2000000AT000000Z" "$TEST_HOME/rollsbar-backups/staging/20261022T000000Z" "$TEST_HOME/outside/20261024T000001Z"
+for dir in "$TEST_HOME/rollsbar-backups/staging/.tmp-existing" "$TEST_HOME/rollsbar-backups/staging/2000000AT000000Z" "$TEST_HOME/rollsbar-backups/staging/20261022T000000Z" "$TEST_HOME/outside/20261024T000001Z"; do echo untouched >"$dir/sentinel"; done
 if [[ "$CASE" == missing-old ]]; then mv "$old" "$old-absent"; fi
 if [[ "$CASE" == corrupt-old ]]; then echo broken >>"$old/database.sql.gz"; fi
-if [[ "$CASE" == retention-risk ]]; then for n in 1 2 3 4; do mkdir "$TEST_HOME/rollsbar-backups/staging/20261024T00000${n}Z"; done; fi
-source "$PROJECT_ROOT/wordpress/deploy/prepare-s1-r2-backup.sh"
-[[ "$ROLLSBAR_FRESH_BACKUP_VERIFIED" == YES ]]
+if [[ "$CASE" == missing-wp ]]; then rm "$WP_PATH/wp-load.php"; fi
+if [[ "$CASE" == missing-cli ]]; then mv "$PWD/bin/wp" "$PWD/bin/wp-disabled"; fi
+if [[ "$CASE" == missing-marker ]]; then rm "$TEST_HOME/.rollsbar-staging-deployed-sha"; fi
+if [[ "$CASE" == invalid-marker ]]; then echo invalid >"$TEST_HOME/.rollsbar-staging-deployed-sha"; fi
+if [[ "$CASE" == lock-busy ]]; then mkdir "$TEST_HOME/rollsbar-backups/staging/.backup-staging.lock"; echo other-owner >"$TEST_HOME/rollsbar-backups/staging/.backup-staging.lock/owner"; fi
+if [[ "$CASE" == fresh-not-newest ]]; then
+  for n in 1 2 3 4 5; do mv "$TEST_HOME/rollsbar-backups/staging/20261024T00000${n}Z" "$TEST_HOME/rollsbar-backups/staging/20261026T00000${n}Z"; done
+fi
+if [[ "$CASE" != missing-old ]]; then
+  mkdir "$TEST_HOME/protected-before"
+  cp "$old"/{database.sql.gz,uploads.tar.gz,manifest.txt,SHA256SUMS} "$TEST_HOME/protected-before/"
+fi
+(cd "$TEST_HOME/rollsbar-backups/staging"; find . -type f ! -path './.backup-staging.lock/*' -exec sha256sum {} + | sort) >"$TEST_HOME/before.sha"
+if [[ "$CASE" == old-capacity-proof || "$CASE" == current-capacity ]]; then
+  newer="$(find "$TEST_HOME/rollsbar-backups/staging" -mindepth 1 -maxdepth 1 -type d -name '20??????T??????Z' -printf '%f\\n' | awk '$0 > "20261023T215945Z" {n++} END {print n+0}')"
+  [[ "$newer" == 5 ]]
+  echo 'fixture_newer_snapshots=5'
+fi
+case "$CASE" in
+  retention-one|retention-zero|retention-invalid|retention-huge|unprotected|unprotected-one|missing-cli)
+    export ROLLSBAR_BACKUP_ROOT="$TEST_HOME/rollsbar-backups/staging"
+    export ROLLSBAR_PRESERVE_BACKUP_SNAPSHOT=20261023T215945Z ROLLSBAR_BACKUP_RETENTION=6
+    case "$CASE" in
+      retention-one) export ROLLSBAR_BACKUP_RETENTION=1 ;;
+      retention-zero) export ROLLSBAR_BACKUP_RETENTION=0 ;;
+      retention-invalid) export ROLLSBAR_BACKUP_RETENTION=bad ;;
+      retention-huge) export ROLLSBAR_BACKUP_RETENTION=99999999999999999999999999999999999 ;;
+      unprotected) export ROLLSBAR_PRESERVE_BACKUP_SNAPSHOT='' ROLLSBAR_BACKUP_RETENTION=3 ;;
+      unprotected-one) export ROLLSBAR_PRESERVE_BACKUP_SNAPSHOT='' ROLLSBAR_BACKUP_RETENTION=1 ;;
+    esac
+    bash "$PROJECT_ROOT/wordpress/deploy/backup-staging.sh" ;;
+  *)
+    runs=1; [[ "$CASE" != repeat-rotation ]] || runs=12
+    for ((iteration=0; iteration<runs; iteration++)); do
+      source "$PROJECT_ROOT/wordpress/deploy/prepare-s1-r2-backup.sh"
+      [[ "$ROLLSBAR_FRESH_BACKUP_VERIFIED" == YES ]]
+    done ;;
+esac
 echo ACCEPTED_BEFORE_BOOTSTRAP
 '''
         (base / 'harness.sh').write_text(harness, encoding='utf-8', newline='\n')
         result = subprocess.run([BASH, 'harness.sh'], cwd=base, env={**os.environ, 'CASE':case}, capture_output=True, text=True, encoding='utf-8', timeout=45)
         (RESULTS / (case + '.log')).write_text(result.stdout + result.stderr, encoding='utf-8')
-        assert (result.returncode == 0) == (case == 'success'), (case, result.stdout, result.stderr)
-        assert ('ACCEPTED_BEFORE_BOOTSTRAP' in result.stdout) == (case == 'success')
-        if case not in ['success','export-fail']:
+        succeeds = case in ['success', 'current-capacity', 'repeat-rotation', 'unprotected', 'unprotected-one', 'concurrent-start']
+        assert (result.returncode == 0) == succeeds, (case, result.stdout, result.stderr)
+        assert ('ACCEPTED_BEFORE_BOOTSTRAP' in result.stdout) == succeeds
+        if case == 'old-capacity-proof':
+            assert 'next retention would evict protected snapshot' in result.stdout
+            assert 'fixture_newer_snapshots=5' in result.stdout
+        exported = (base / 'home/calls').read_text().splitlines() if (base / 'home/calls').exists() else []
+        if case not in ['success', 'current-capacity', 'repeat-rotation', 'unprotected', 'unprotected-one', 'concurrent-start', 'export-fail', 'archive-fail', 'manifest-fail', 'checksum-fail', 'fresh-not-newest']:
             assert not (base / 'home/calls').exists(), 'refusal must precede DB export'
-        if case != 'missing-old':
-            assert (base / 'home/rollsbar-backups/staging/20261023T215945Z').is_dir()
+        backups = base / 'home/rollsbar-backups/staging'
+        complete = sorted(p.name for p in backups.iterdir() if p.is_dir() and (p / 'SHA256SUMS').is_file())
+        if succeeds:
+            fresh = sorted(p.name for p in backups.iterdir() if p.name.startswith('20261025T1600'))
+            assert fresh and all((backups / name / 'database.sql.gz').stat().st_size > 0 for name in fresh)
+            assert len(complete) == (2 if case == 'success' else 3 if case == 'unprotected' else 1 if case == 'unprotected-one' else 6), complete
+            assert len(exported) == (12 if case == 'repeat-rotation' else 1), exported
+            if case not in ['unprotected', 'unprotected-one']:
+                assert '20261023T215945Z' in complete
+                if case != 'success':assert '20261024T000001Z' not in complete
+                protected_files = list((base / 'home/protected-before').iterdir())
+                assert len(protected_files) == 4
+                for original in protected_files:
+                    assert (backups / '20261023T215945Z' / original.name).read_bytes() == original.read_bytes(), 'protected recovery bytes changed'
+            else:
+                expected = ['20261024T000004Z','20261024T000005Z','20261025T160001Z'] if case == 'unprotected' else ['20261025T160001Z']
+                assert complete == expected, complete
+            if case in ['current-capacity', 'concurrent-start']:
+                assert complete == ['20261023T215945Z', '20261024T000002Z', '20261024T000003Z', '20261024T000004Z', '20261024T000005Z', '20261025T160001Z'], complete
+            if case == 'repeat-rotation':
+                assert complete == ['20261023T215945Z'] + [f'20261025T1600{n:02d}Z' for n in range(8,13)], complete
+                assert result.stdout.count('retained_snapshots=6\n') == 12
+            must(subprocess.run([BASH, '-c', 'for d in home/rollsbar-backups/staging/20261025T1600*; do (cd "$d"; sha256sum -c SHA256SUMS; gzip -t database.sql.gz; tar -tzf uploads.tar.gz >/dev/null); done'], cwd=base, capture_output=True, text=True), 'fresh archives/checksums ' + case)
+        else:
+            # Verify every pre-existing file, not just its directory name.
+            must(subprocess.run([BASH, '-c', 'cd home/rollsbar-backups/staging; sha256sum -c "$OLD_HASHES"'], cwd=base, env={**os.environ, 'OLD_HASHES':str((base / 'home/before.sha').resolve()).replace('\\','/')}, capture_output=True, text=True), 'failure preserves every existing file ' + case)
+            if case != 'fresh-not-newest':assert not any(p.name.startswith('20261025T1600') for p in backups.iterdir()), 'invalid backup was published'
+        for directory in ['.tmp-existing', '2000000AT000000Z', '20261022T000000Z']:
+            assert (backups / directory / 'sentinel').read_text().strip() == 'untouched'
+        assert (base / 'home/outside/20261024T000001Z/sentinel').read_text().strip() == 'untouched'
+        if case == 'fresh-not-newest':assert (backups / '20261025T160001Z/database.sql.gz').is_file()
+        if case == 'tmp-collision':
+            abandoned = list(backups.glob('.tmp-20261025T160001Z-*/sentinel'))
+            assert len(abandoned) == 1 and abandoned[0].read_text().strip() == 'untouched'
+        if case == 'lock-busy':assert (backups / '.backup-staging.lock/owner').read_text().strip() == 'other-owner'
+        else:assert not (backups / '.backup-staging.lock').exists()
+        if case == 'concurrent-start':assert 'backup already running' in (base / 'home/concurrent.log').read_text()
+        backup_evidence[case] = {'exit':result.returncode, 'exports':len(exported), 'complete_after':complete,
+                                 'rotated':[line.split('=',1)[1] for line in result.stdout.splitlines() if line.startswith('rotated_snapshot=')]}
+        if case == 'current-capacity':
+            backup_evidence[case].update(protected='20261023T215945Z', protected_bytes_unchanged=True,
+                                        ordinary_before=5, ordinary_after=len(complete)-1,
+                                        total_after=len(complete), fresh_created=fresh,
+                                        fresh_archive_bytes={name:{f:(backups/name/f).stat().st_size for f in ['database.sql.gz','uploads.tar.gz']} for name in fresh})
         print('PASS actual backup gate ' + case)
+
+(RESULTS / 'backup-rotation-evidence.json').write_text(json.dumps(backup_evidence,indent=2),encoding='utf-8')
+if '--backup-only' in sys.argv:
+    print('BACKUP ROTATION FOCUSED PASS');sys.exit(0)
 
 for case in ['pending', 'canonical', 'conflict', 'apply-fail', 'post-fail', 'runtime-fail']:
     with tempfile.TemporaryDirectory(prefix='repair-', dir=RESULTS) as folder:
@@ -170,6 +320,6 @@ echo ACCEPTANCE_READY
         print('PASS actual repair sequencing ' + case)
 
 must(run([sys.executable, '-X', 'utf8', 'qa/repair/test_eval_file_scope.py']), 'both eval-file entrypoints under function scope')
-must(run([sys.executable, '-X', 'utf8', 'qa/repair/test_s1_r1.py', '--s1-r2']), 'S1-R1 suite including extended shrimp rollback states')
+must(run([sys.executable, '-X', 'utf8', 'qa/repair/test_s1_r1.py', '--s1-r2', '--backup-rotation']), 'S1-R1 backup-scope suite including extended shrimp rollback states')
 must(run(['git', 'diff', '--check']), 'diff check')
 print('S1-R2 LOCAL PRE-PUSH PASS')

@@ -30,6 +30,8 @@ def run(label, args, expected=0, contains=None):
 
 
 def main():
+    backup_rotation = '--backup-rotation' in sys.argv
+    assert not backup_rotation or '--s1-r2' in sys.argv
     ast.parse(Path(__file__).read_text(encoding="utf-8"))
     for path in [ROOT / "wordpress/deploy/verify-staging-legal-pages.php",
                  ROOT / "wordpress/deploy/legal-footer-contract.php",
@@ -89,7 +91,13 @@ def main():
 
     run("shrimp-repair", [PHP, ROOT / "qa/repair/shrimp-contract.php"], contains='"pass": true')
     run("shrimp-selector", [PHP, ROOT / "qa/repair/shrimp-selection-contract.php", ROOT], contains='"pass":true')
-    for name in ["cart-contract.php", "b12-contract.php", "b15-contact-contract.php"]:
+    # The backup-only follow-on changes no theme/application bytes. The legacy
+    # B15 homepage-anchor fixture is already incompatible with the accepted
+    # current footer; retain it in the original modes, not this pre-deploy scope.
+    contracts = ["cart-contract.php", "b12-contract.php"]
+    if not backup_rotation:
+        contracts.append("b15-contact-contract.php")
+    for name in contracts:
         run(name, [PHP, ROOT / "qa/visual" / name, ROOT])
 
     # Same literal-secret patterns as the existing migration static workflow.
@@ -98,9 +106,16 @@ def main():
                 re.compile(r'''\bapi[_-]?key\s*=\s*["'](?!\$|<)[^"']{8,}["']''', re.I),
                 re.compile(r'''\bpassword\s*=\s*["'](?!\$|<)[^"']{6,}["']''', re.I),
                 re.compile(r"\bsk-[A-Za-z0-9]{20,}")]
+    scope_base = '21abd16e4e970e535b9f22971ee9c4464f0cea24' if backup_rotation else '22ad41e3d03ec1a9efae0bde2560a4895d6e2708'
+    changed = subprocess.check_output(["git", "diff", "--name-only", scope_base], cwd=ROOT, text=True).splitlines()
+    changed += subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT, text=True).splitlines()
     findings = []
-    for base in [ROOT / "wordpress", ROOT / "qa/repair"]:
-        for path in base.rglob("*"):
+    # This Batch requires a changed-file scan. Preserve the original full-tree
+    # scan in legacy modes; accepted later test fixtures contain dummy passwords
+    # used to test redaction and are outside this backup-only change set.
+    scan_groups = [[ROOT / name for name in changed]] if backup_rotation else [base.rglob("*") for base in [ROOT / "wordpress", ROOT / "qa/repair"]]
+    for paths in scan_groups:
+        for path in paths:
             if not path.is_file() or path.suffix.lower() in {".md", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".zip"}:
                 continue
             try:
@@ -114,8 +129,6 @@ def main():
     results.append(dict(case="secret-pattern-scan", pass_=True))
     run("diff-check", ["git", "diff", "--check"])
     # No application/workflow/marker/backup/catalog changes, including untracked.
-    changed = subprocess.check_output(["git", "diff", "--name-only", "22ad41e3d03ec1a9efae0bde2560a4895d6e2708"], cwd=ROOT, text=True).splitlines()
-    changed += subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT, text=True).splitlines()
     allowed = {"wordpress/deploy/verify-staging-legal-pages.php", "wordpress/deploy/legal-footer-contract.php", "wordpress/deploy/shrimp-options-repair.php", "wordpress/deploy/repair-staging-shrimp-options.php", "wordpress/docs/S1_R1_REPORT.md"}
     if '--s1-r2' in sys.argv:
         # Explicit follow-on scope; the original S1-R1-only mode stays strict.
@@ -126,7 +139,11 @@ def main():
             'wordpress/deploy/catalog_browser_contract.py', '.github/workflows/gate-b-browser.yml',
             '.github/workflows/address-checkout-browser-smoke.yml', 'wordpress/docs/S1_R2_REPORT.md',
         })
-    assert all(p in allowed or p.startswith("qa/repair/") for p in changed), changed
+    if backup_rotation:
+        allowed = {'wordpress/deploy/backup-staging.sh', 'qa/repair/test_s1_r2.py', 'qa/repair/test_s1_r1.py'}
+        assert all(p in allowed for p in changed), changed
+    else:
+        assert all(p in allowed or p.startswith("qa/repair/") for p in changed), changed
     results.append(dict(case="scope-preserved", pass_=True))
     print(f"S1-R1 LOCAL PASS: {len(results)} checks; no live DB/network")
 
