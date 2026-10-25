@@ -32,7 +32,7 @@ class MaintenanceContract(unittest.TestCase):
         block = "  workflow_dispatch:\n" + current.split("  workflow_dispatch:\n", 1)[1].split("\npermissions:", 1)[0]
         self.assertIn("default: deploy", block)
         self.assertIn("type: choice", block)
-        self.assertEqual(re.findall(r"(?m)^\s+- ([a-z-]+)$", block), ["deploy", "catalog-maintenance"])
+        self.assertEqual(re.findall(r"(?m)^\s+- ([a-z-]+)$", block), ["deploy", "catalog-maintenance", "release-inspect"])
         self.assertIn("required: true", block)
         self.assertNotRegex(block, r"(?i)command|shell|php|wp-cli|hostname|path|environment|sha|credential")
         self.assertNotRegex(current, r"(?m)^\s+(schedule|repository_dispatch):")

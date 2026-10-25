@@ -28,20 +28,22 @@ import json
 import os
 import shlex
 import socket
+import uuid
 from urllib.parse import urlsplit
 
 import paramiko
 
 from staging_catalog_audit import AUDIT_PHP, parse_audit, validate_catalog_audit
+from staging_ssh import connect, write_new, cleanup_files, safe_path
 
-BASE = os.environ["ISP_MANAGER_URL"].strip()
-USER = os.environ["ISP_MANAGER_USER"].strip()
-PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
-DADATA_API_KEY = os.environ["ROLLSBAR_DADATA_API_KEY"].strip()
+BASE = os.environ.get("ISP_MANAGER_URL", "").strip()
+USER = os.environ.get("ISP_MANAGER_USER", "").strip()
+PASSWORD = os.environ.get("ISP_MANAGER_PASSWORD", "").strip()
+DADATA_API_KEY = os.environ.get("ROLLSBAR_DADATA_API_KEY", "").strip()
 TELEGRAM_BOT_TOKEN = os.environ.get("ROLLSBAR_TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_CHAT_ID = os.environ.get("ROLLSBAR_TELEGRAM_CHAT_ID", "").strip()
 TELEGRAM_EXPECTED = "yes" if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID else "no"
-DEPLOY_SHA = os.environ["ROLLSBAR_DEPLOY_SHA"].strip()
+DEPLOY_SHA = os.environ.get("ROLLSBAR_DEPLOY_SHA", "").strip()
 CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING", "")
 SECRET_FILE = ".rollsbar-staging-secrets.json"
 RUNTIME_FILE = ".rollsbar-staging-runtime.env"
@@ -53,26 +55,6 @@ EXPECTED_WOOCOMMERCE_VERSION = "11.1.2"
 
 def shell_quote(value: str) -> str:
     return shlex.quote(value)
-
-
-def connect() -> paramiko.SSHClient:
-    host = urlsplit(BASE).hostname or ""
-    if not host:
-        raise RuntimeError("Could not derive hosting hostname")
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(
-        hostname=host,
-        port=22,
-        username=USER,
-        password=PASSWORD,
-        timeout=15,
-        auth_timeout=15,
-        banner_timeout=15,
-        look_for_keys=False,
-        allow_agent=False,
-    )
-    return client
 
 
 def read_secrets(client: paramiko.SSHClient) -> dict[str, str]:
@@ -102,7 +84,7 @@ def mask_dynamic_secrets(data: dict[str, str]) -> None:
             print(f"::add-mask::{value}", flush=True)
 
 
-def write_runtime_env(client: paramiko.SSHClient, data: dict[str, str]) -> None:
+def write_runtime_env(client: paramiko.SSHClient, data: dict[str, str], created) -> None:
     values = {
         "DB_NAME": data["db_name"],
         "DB_USER": data["db_user"],
@@ -123,15 +105,15 @@ def write_runtime_env(client: paramiko.SSHClient, data: dict[str, str]) -> None:
     body = "".join(f"export {key}={shell_quote(value)}\n" for key, value in values.items())
     sftp = client.open_sftp()
     try:
-        with sftp.open(RUNTIME_FILE, "w") as fh:
-            fh.write(body.encode("utf-8"))
-        sftp.chmod(RUNTIME_FILE, 0o600)
+        write_new(sftp, RUNTIME_FILE, body.encode("utf-8"), 0o600, created)
     finally:
         sftp.close()
 
 
-def exec_checked(client: paramiko.SSHClient, command: str) -> str:
+def exec_checked(client: paramiko.SSHClient, command: str, on_started=None) -> str:
     _, stdout, stderr = client.exec_command(command, timeout=600)
+    if on_started:
+        on_started()
     out = stdout.read().decode("utf-8", errors="replace")
     err = stderr.read().decode("utf-8", errors="replace")
     status = stdout.channel.recv_exit_status()
@@ -152,28 +134,13 @@ def exec_checked(client: paramiko.SSHClient, command: str) -> str:
     return out
 
 
-if CONFIRM != "YES":
-    raise SystemExit("Refusing mutation: set ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING=YES")
-if len(DEPLOY_SHA) != 40 or any(c not in "0123456789abcdef" for c in DEPLOY_SHA):
-    raise SystemExit("ROLLSBAR_DEPLOY_SHA is missing")
-if len(DADATA_API_KEY) < 10:
-    raise SystemExit("ROLLSBAR_DADATA_API_KEY is missing")
-if bool(TELEGRAM_BOT_TOKEN) != bool(TELEGRAM_CHAT_ID):
-    raise SystemExit("Telegram staging secrets are partial: token and chat ID must be configured together")
-
-client = None
-try:
-    client = connect()
-    data = read_secrets(client)
-    mask_dynamic_secrets(data)
-    write_runtime_env(client, data)
-
+def build_remote_script():
     remote = f'''set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 WP_PATH="$HOME/www/{DOMAIN}"
 PROJECT_ROOT="$HOME/.rollsbar-deploy"
 RUNTIME="$HOME/{RUNTIME_FILE}"
-cleanup() {{ rm -f "$RUNTIME"; }}
+cleanup() {{ rm -f -- "$RUNTIME" "$0"; }}
 trap cleanup EXIT
 
 mkdir -p "$HOME/.local/bin" "$WP_PATH"
@@ -254,27 +221,77 @@ fi
 # acceptance stages succeed. Do not require the incoming SHA here.
 wp --path="$WP_PATH" eval {shell_quote(AUDIT_PHP)}
 '''
-    audit = parse_audit(exec_checked(client, "bash -lc " + shell_quote(remote)))
-    validate_catalog_audit(audit)
-    print("STAGING WORDPRESS DEPLOY PASS")
-except (paramiko.SSHException, socket.error, OSError, RuntimeError, ValueError) as exc:
-    message = str(exc)
-    for secret in (PASSWORD, DADATA_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID):
-        if secret:
-            message = message.replace(secret, "***")
-    print(f"staging_bootstrap=failed type={exc.__class__.__name__}")
-    print(message)
-    raise SystemExit(1)
-finally:
-    if client is not None:
+    return remote
+
+
+def run_deploy(connector=connect):
+    created = []
+    stage = "connection"
+    requested = False
+    failed = False
+    try:
+        # A: SFTP preparation only. Close the entire transport before any exec.
+        setup = connector()
         try:
-            sftp = client.open_sftp()
+            stage = "sftp_prepare"
+            data = read_secrets(setup)
+            mask_dynamic_secrets(data)
+            write_runtime_env(setup, data, created)
+            name = ".rollsbar-staging-deploy-" + uuid.uuid4().hex + ".sh"
+            sftp = setup.open_sftp()
             try:
-                sftp.remove(RUNTIME_FILE)
-            except FileNotFoundError:
-                pass
+                write_new(sftp, name, build_remote_script().encode("utf-8"), 0o700, created)
+                script_path = safe_path(sftp, name)
             finally:
                 sftp.close()
-        except Exception:
-            pass
-        client.close()
+        finally:
+            setup.close()
+
+        # B: new exec-only transport; a short request, never retried.
+        stage = "connection"
+        execution = connector()
+        try:
+            transport = execution.get_transport()
+            if transport is None or not transport.is_active():
+                raise RuntimeError("Inactive fresh execution transport")
+            stage = "exec_request"
+            requested = True
+            def started():
+                nonlocal stage
+                stage = "remote_execution"
+            audit = parse_audit(exec_checked(execution, "bash " + shell_quote(script_path), on_started=started))
+            stage = "remote_execution"
+            validate_catalog_audit(audit)
+            print("STAGING WORDPRESS DEPLOY PASS")
+        finally:
+            execution.close()
+    except (EOFError, paramiko.SSHException, socket.error, OSError, RuntimeError, ValueError, KeyError) as exc:
+        failed = True
+        # Never render exception messages that may contain runtime credentials.
+        print(f"staging_bootstrap=failed stage={stage} type={type(exc).__name__} state_ambiguous={str(requested).lower()}", flush=True)
+        print("mutating_exec_retry=no; Coordinator inspection required", flush=True)
+    finally:
+        # C: independent even if B failed during channel creation. Only run-owned paths.
+        if created:
+            try:
+                cleanup_files(created, connector=connector)
+            except (EOFError, paramiko.SSHException, socket.error, OSError, RuntimeError, ValueError) as exc:
+                failed = True
+                print(f"staging_bootstrap=failed stage=cleanup type={type(exc).__name__}", flush=True)
+    return 1 if failed else 0
+
+
+def main():
+    if CONFIRM != "YES":
+        raise SystemExit("Refusing mutation: set ROLLSBAR_CONFIRM_BOOTSTRAP_STAGING=YES")
+    if len(DEPLOY_SHA) != 40 or any(c not in "0123456789abcdef" for c in DEPLOY_SHA):
+        raise SystemExit("ROLLSBAR_DEPLOY_SHA is missing")
+    if len(DADATA_API_KEY) < 10:
+        raise SystemExit("ROLLSBAR_DADATA_API_KEY is missing")
+    if bool(TELEGRAM_BOT_TOKEN) != bool(TELEGRAM_CHAT_ID):
+        raise SystemExit("Telegram staging secrets are partial")
+    return run_deploy()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
