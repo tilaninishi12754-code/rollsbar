@@ -1,23 +1,30 @@
 <?php
 // Execute production provisioning + cart paths with the deterministic local Woo adapter.
 define('ROLLSBAR_CART_QA',true);
+define('WP_CLI',true);
 require __DIR__.'/cart-fixture.php';
 $fixture_cart=new FixtureCart();$checks=0;
 function verify($value,$message){global $checks;if(!$value)throw new Exception($message);$checks++;}
 function must_reject($request){global $fixture_cart;$before=$fixture_cart->items;try{RollsBar_Cart_Actions::mutate($request);}catch(Exception $e){verify($before===$fixture_cart->items,'Rejected request mutated cart');return;}throw new Exception('Invalid request accepted');}
 verify(count($catalog['products'])===118&&count(array_filter($fixture_products,fn($p)=>$p->get_meta('_rollsbar_upsell_only')!=='yes'))===118,'Main catalog changed');
+verify(RollsBar_Catalog_Importer::variation_attributes('QA-label')===array(sanitize_title('Вариант')=>'QA-label'),'Woo custom attribute key normalization');
 verify(count($fixture_products)===121,'Upsells not provisioned separately');
 $upsells=RollsBar_Catalog_Importer::upsell_products();verify(count($upsells)===3,'Missing hidden Woo upsells');
 foreach($upsells as $p){verify($p instanceof WC_Product_Simple&&$p->get_catalog_visibility()==='hidden','Upsell visibility/type');verify($p->get_meta('_rollsbar_upsell_only')==='yes','Upsell-only metadata');verify(str_contains($p->get_meta('_rollsbar_price_provenance'),'provisional'),'Price provenance');}
+$snapshot_upsells=RollsBar_Cart_Actions::snapshot()['upsells'];verify(array_column($snapshot_upsells,'source_id')===array_column(RollsBar_Catalog_Importer::upsell_seeds(),'id'),'Cart snapshot did not expose the exact native upsells');
 $first=$upsells[0];$first->set_name('Изменённый соус');$first->set_regular_price('37');$first->update_meta_data('_rollsbar_source_image','/admin-photo.png');
+$first->row['meta']['_rollsbar_source_id']='conflict';try{RollsBar_Catalog_Importer::provision_upsells();throw new Exception('Upsell SKU identity conflict accepted');}catch(RuntimeException $e){verify(str_contains($e->getMessage(),'identity conflict'),'Existing product identity conflict');}$first->row['meta']['_rollsbar_source_id']='upsell-soy-sauce';
 $again=RollsBar_Catalog_Importer::provision_upsells();verify($again['created']===0&&$again['existing']===3&&count($fixture_products)===121,'Provisioning duplicated products');
 verify($first->get_name()==='Изменённый соус'&&$first->get_price()==='37'&&$first->get_meta('_rollsbar_source_image')==='/admin-photo.png','Provisioning overwrote admin changes');
-$fixture_environment='production';try{RollsBar_Catalog_Importer::provision_upsells();throw new Exception('Production provisional provisioning accepted');}catch(RuntimeException $e){verify(str_contains($e->getMessage(),'locally'),'Environment guard');}$fixture_environment='local';
+$fixture_environment='staging';$fixture_site_url='https://staging.rollsbar.ru';try{RollsBar_Catalog_Importer::provision_upsells();throw new Exception('Staging without confirmation accepted');}catch(RuntimeException $e){verify(str_contains($e->getMessage(),'explicit WP-CLI'),'Staging confirmation guard');}
+$fixture_site_url='https://wrong.example';try{RollsBar_Catalog_Importer::provision_upsells(false,true);throw new Exception('Wrong staging identity accepted');}catch(RuntimeException $e){verify(str_contains($e->getMessage(),'explicit WP-CLI'),'Staging identity guard');}
+$fixture_site_url='https://staging.rollsbar.ru';$staging_result=RollsBar_Catalog_Importer::provision_upsells(false,true);verify($staging_result['existing']===3&&$staging_result['created']===0,'Confirmed staging path not idempotent');
+$fixture_environment='production';try{RollsBar_Catalog_Importer::provision_upsells(false,true);throw new Exception('Production provisional provisioning accepted');}catch(RuntimeException $e){verify(str_contains($e->getMessage(),'forbidden'),'Production guard');}$fixture_environment='local';$fixture_site_url='http://localhost';
 $parents=0;$variations=0;$wok=0;$shrimp=0;$mutated=0;
 foreach($fixture_products as $p){
  $id=$p->get_meta('_rollsbar_source_id');$r=['operation'=>'add','product_id'=>$p->get_id(),'source_id'=>$id];
  $requests=[];
- if($p->is_type('variable')){$parents++;foreach($p->get_available_variations() as $v){$requests[]=$r+['variation_id'=>$v->get_id()];$variations++;}}
+ if($p->is_type('variable')){$parents++;foreach($p->get_available_variations('objects') as $v){$label=(string)$v->row['label'];$attrs=$v->get_variation_attributes();verify(count($attrs)===1&&array_key_first($attrs)==='attribute_'.sanitize_title('Вариант')&&reset($attrs)===$label&&''!==trim($label),'Blank/wildcard or non-canonical Woo variation attribute');verify($v->variation_is_active()&&$v->variation_is_visible()&&$v->is_purchasable()&&$v->is_in_stock(),'Canonical variation unavailable in fixture');$requests[]=$r+['variation_id'=>$v->get_id()];$variations++;}}
  elseif($p->get_meta('_rollsbar_options_json')){foreach(json_decode($p->get_meta('_rollsbar_options_json'),true)[0]['choices'] as $choice){$requests[]=$r+['options'=>[$choice]];if(str_starts_with($id,'wok-'))$wok++;elseif($id==='shrimp-tempura')$shrimp++;}}
  else $requests[]=$r;
  foreach($requests as $request){

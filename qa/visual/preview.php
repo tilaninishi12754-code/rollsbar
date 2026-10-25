@@ -17,7 +17,9 @@ function esc_url_raw($s) { return $s; }
 function wp_kses_post($s) { return $s; }
 function wp_strip_all_tags($s) { return strip_tags($s); }
 function wp_json_encode($s, $flags=0) { return json_encode($s, $flags | JSON_UNESCAPED_UNICODE); }
-function home_url($s='/') { return $s; }
+function home_url($s='/') { global $fixture_site_url;return rtrim($fixture_site_url??'http://localhost','/').$s; }
+function wp_parse_url($url,$component=-1) { return parse_url($url,$component); }
+function sanitize_title($value) { return rawurlencode(strtolower((string)$value)); }
 function get_template_directory_uri() { return '/wordpress/wp-content/themes/rollsbar-theme'; }
 function get_theme_file_uri($s) { return get_template_directory_uri().'/'.$s; }
 function get_theme_mod($s) { return $GLOBALS['b15_theme_mods'][$s]??0; }
@@ -90,8 +92,8 @@ class WC_Product_Simple extends WC_Product {
 class FixtureVariation extends WC_Product {
  function is_type($s) { return in_array('variation',(array)$s,true); }
  function get_parent_id() { return intdiv($this->id,100); }
- function get_variation_attributes() { return ['attribute_fixture-choice'=>$this->row['label']]; }
- function get_attributes() { return ['fixture-choice'=>$this->row['label']]; }
+ function get_variation_attributes() { $attributes=RollsBar_Catalog_Importer::variation_attributes($this->row['label']);return array_combine(array_map(fn($key)=>'attribute_'.$key,array_keys($attributes)),array_values($attributes)); }
+ function get_attributes() { return RollsBar_Catalog_Importer::variation_attributes($this->row['label']); }
  function variation_is_active() { return true; }
  function variation_is_visible() { return true; }
  function is_purchasable() { return true; }

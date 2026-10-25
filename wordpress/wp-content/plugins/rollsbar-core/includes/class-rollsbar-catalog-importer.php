@@ -34,10 +34,18 @@ final class RollsBar_Catalog_Importer {
 		return $result;
 	}
 
-	/** Explicit local provisioning; repeat runs retain all client-editable product fields. */
-	public static function provision_upsells( bool $dry_run = false ): array {
-		if ( ! in_array( wp_get_environment_type(), array( 'local', 'development' ), true ) ) {
-			throw new RuntimeException( 'Provisional B12 upsells may only be provisioned locally. Confirm business prices before production.' );
+	/** Explicit environment-guarded provisioning; repeat runs retain client-editable product fields. */
+	public static function provision_upsells( bool $dry_run = false, bool $confirm_staging = false ): array {
+		$environment = wp_get_environment_type();
+		$host        = strtolower( (string) wp_parse_url( home_url( '/' ), PHP_URL_HOST ) );
+		if ( 'production' === $environment ) {
+			throw new RuntimeException( 'Provisional B12 upsells are forbidden on production.' );
+		}
+		if ( 'staging' === $environment && ( 'staging.rollsbar.ru' !== $host || ! $confirm_staging || ! defined( 'WP_CLI' ) || ! WP_CLI ) ) {
+			throw new RuntimeException( 'Staging provisioning requires staging.rollsbar.ru and explicit WP-CLI --confirm-staging.' );
+		}
+		if ( ! in_array( $environment, array( 'local', 'development', 'staging' ), true ) ) {
+			throw new RuntimeException( 'Unsupported environment for provisional B12 upsells.' );
 		}
 		$result = array( 'created' => 0, 'existing' => 0, 'dry_run' => $dry_run, 'provisional_price' => true );
 		foreach ( self::upsell_seeds() as $seed ) {
@@ -63,6 +71,34 @@ final class RollsBar_Catalog_Importer {
 			$product->update_meta_data( '_rollsbar_source_image', 'https://avatars.mds.yandex.net/get-sprav-products/2757887/2a0000017454b144cbf41ae8514755d70dee/XL' );
 			$product->update_meta_data( '_rollsbar_price_provenance', 'provisional-approved-demo-B12; client confirmation required before production' );
 			$product->save();
+		}
+		return $result;
+	}
+
+	/** Repair native custom variation attribute values in place, retaining Woo identities and editable data. */
+	public static function repair_variable_attributes( bool $dry_run = false ): array {
+		$products = self::load_catalog()['products'];
+		$result   = array( 'parents' => 0, 'variations' => 0, 'updated' => 0, 'dry_run' => $dry_run );
+		foreach ( $products as $row ) {
+			if ( empty( $row['variants'] ) ) { continue; }
+			++$result['parents'];
+			$product_id = self::find_product_id( self::sku_for( (string) $row['id'] ) );
+			$product    = $product_id ? wc_get_product( $product_id ) : false;
+			if ( ! $product instanceof WC_Product_Variable || $product->get_meta( '_rollsbar_source_id', true ) !== (string) $row['id'] ) { throw new RuntimeException( 'Variable product identity conflict: ' . $row['id'] ); }
+			foreach ( $row['variants'] as $variant ) {
+				$sku = self::variation_sku( (string) $row['id'], (string) $variant['label'] );
+				$variation_id = self::find_product_id( $sku );
+				$variation = $variation_id ? wc_get_product( $variation_id ) : false;
+				if ( ! $variation instanceof WC_Product_Variation || (int) $variation->get_parent_id() !== (int) $product_id ) { throw new RuntimeException( 'Variation identity conflict: ' . $sku ); }
+				++$result['variations'];
+				$attributes = $variation->get_attributes();
+				$expected_attributes = self::variation_attributes( (string) $variant['label'] );
+				$key                = (string) array_key_first( $expected_attributes );
+				if ( ( $attributes[ $key ] ?? '' ) !== (string) $variant['label'] ) {
+					++$result['updated'];
+					if ( ! $dry_run ) { $variation->set_attributes( array( $key => (string) $variant['label'] ) ); $variation->save(); }
+				}
+			}
 		}
 		return $result;
 	}
@@ -119,6 +155,11 @@ final class RollsBar_Catalog_Importer {
 		$label = trim( $label, '-' );
 
 		return $base . '-' . substr( md5( $label ), 0, 8 );
+	}
+
+	/** Woo's key for the canonical custom variation attribute and label. */
+	public static function variation_attributes( string $label ): array {
+		return array( sanitize_title( 'Вариант' ) => $label );
 	}
 
 	private static function category_id( string $slug ): int {
@@ -290,9 +331,8 @@ final class RollsBar_Catalog_Importer {
 			);
 			$variation->set_regular_price( (string) $variant['price'] );
 			$variation->set_stock_status( 'instock' );
-			$variation->set_attributes(
-				array( 'Вариант' => (string) $variant['label'] )
-			);
+			// Woo keys custom attributes by sanitize_title(), not by display label.
+			$variation->set_attributes( self::variation_attributes( (string) $variant['label'] ) );
 			$variation->save();
 		}
 
@@ -354,10 +394,19 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		 *
 		 * [--dry-run]
 		 * : Inspect identities without creating products.
+		 *
+		 * [--confirm-staging]
+		 * : Explicit confirmation required with the exact staging site hostname.
 		 */
 		public function upsells( array $args, array $assoc_args ): void {
 			unset( $args );
-			WP_CLI::success( wp_json_encode( RollsBar_Catalog_Importer::provision_upsells( isset( $assoc_args['dry-run'] ) ) ) );
+			WP_CLI::success( wp_json_encode( RollsBar_Catalog_Importer::provision_upsells( isset( $assoc_args['dry-run'] ), isset( $assoc_args['confirm-staging'] ) ) ) );
+		}
+
+		/** Repair only the canonical variable products' Woo attribute values. */
+		public function repair_variations( array $args, array $assoc_args ): void {
+			unset( $args );
+			WP_CLI::success( wp_json_encode( RollsBar_Catalog_Importer::repair_variable_attributes( isset( $assoc_args['dry-run'] ) ) ) );
 		}
 
 		public function validate(): void {

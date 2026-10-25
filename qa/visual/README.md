@@ -274,6 +274,9 @@ Run `qa/.runtime/php/php.exe qa/visual/b12-contract.php <absolute repository roo
 for exhaustive provisioning/line-identity checks. Browser mutation/failure recovery
 runs at 1440 and 320; geometry/focus/lifecycle runs at all eight widths. B11 still
 checks all choices and all eight Hits mappings.
+Run `qa/.runtime/php/php.exe qa/visual/variation-repair-contract.php` for the
+in-place canonical Woo variation attribute repair, including dry-run, identity,
+label mapping, non-empty values, and idempotency checks.
 `node qa/visual/b12-overflow.mjs` additionally verifies all five horizontal overflow
 metrics and internal vertical scrolling with 15 canonical lines at all eight widths.
 
@@ -291,8 +294,17 @@ identity convention and Woo CRUD. It seeds Soy Sauce, Ginger and Wasabi as separ
 hidden, upsell-only products, outside `catalog.json`'s 118. Persistent source IDs:
 `upsell-soy-sauce`, `upsell-ginger`, `upsell-wasabi`. The demo IDs are never Woo IDs.
 Repeat provisioning retains all existing admin name, price, stock and image edits,
-and fails on SKU identity conflicts. It refuses non-local/development environments.
+and fails on SKU identity conflicts. It refuses production and requires both the
+exact `staging.rollsbar.ru` site identity and `--confirm-staging` on staging.
+Example authorized staging commands are `wp rollsbar catalog upsells --dry-run
+--confirm-staging` followed by `wp rollsbar catalog upsells --confirm-staging`.
 No automatic provisioning runs on page requests or plugin activation.
+
+For the targeted variation attribute repair, run
+`wp rollsbar catalog repair-variations --dry-run` to inspect, then
+`wp rollsbar catalog repair-variations` to update only existing canonical
+variable parents and SKU-matched children. Woo product/variation IDs, prices,
+stock, and other child fields are retained.
 
 **20 ₽ is provisional, taken only from the approved demo for B12 local testing.
 Client confirmation is required before production.** Its provenance is recorded
