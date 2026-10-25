@@ -99,6 +99,23 @@ class CheckoutContracts(unittest.TestCase):
         self.assertEqual(self.page.locator('#billing-address_1').input_value(),'Edited while resolving')
         self.assertNotIn('&pt=',self.page.locator('iframe').get_attribute('src'))
 
+    def test_late_suggestions_cannot_replace_current_query(self):
+        # Simulate a provider transport that ignores AbortSignal; the query guard
+        # must independently discard its stale success response.
+        self.page.evaluate("""() => {
+          const realFetch=window.fetch;
+          window.fetch=(url,options)=>String(url).includes('/suggest')
+            ?new Promise(resolve=>{window.releaseOldSuggestions=()=>resolve({ok:true,json:()=>Promise.resolve({suggestions:[{display:'Stale fixture',token:'old'}]})});})
+            :realFetch(url,options);
+        }""")
+        address=self.page.locator('#billing-address_1')
+        address.fill('Old query')
+        self.page.wait_for_function('!!window.releaseOldSuggestions')
+        address.fill('New query')
+        self.page.evaluate('window.releaseOldSuggestions()')
+        self.page.wait_for_timeout(50)
+        self.assertFalse(self.page.locator('.rollsbar-address-suggestions').is_visible())
+
     def test_suggestion_reflows_at_320(self):
         self.page.locator('#billing-address_1').fill('Fixture')
         panel=self.page.locator('.rollsbar-address-suggestions')

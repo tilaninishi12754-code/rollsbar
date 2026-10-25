@@ -174,8 +174,29 @@ def main():
                         return
                     report['low']=choose(page,'Дубки Раздерина 12',False)
                     capture(page,'candidate-1440-low',report['metrics'])
+                    # Hold an actual provider resolve response until the customer edits.
+                    pending=[]
+                    def delayed_resolve(route):
+                        pending.append((route,route.fetch()))
+                    page.route('**/address-resolve',delayed_resolve)
+                    address.fill('Симферополь Гагарина 17')
+                    page.locator('.rollsbar-address-suggestions__item').first.click()
+                    page.wait_for_timeout(100)
+                    require(len(pending)==1,'live resolve response held for stale-response regression')
+                    address.fill('Адрес изменён во время проверки')
+                    route,response=pending[0]
+                    require(response.status==200,'delayed live DaData resolve HTTP 200')
+                    route.fulfill(response=response)
+                    page.wait_for_timeout(300)
+                    require(address.input_value()=='Адрес изменён во время проверки' and address.get_attribute('data-rollsbar-address-resolved') is None,'late live resolve cannot restore the old address')
+                    require('&pt=' not in page.locator('.rollsbar-checkout-map iframe').get_attribute('src'),'late live resolve cannot restore old customer marker')
+                    report['stale_resolve']='PASS: actual live resolve delivered after edit, address and map remained cleared'
+                    page.unroute('**/address-resolve',delayed_resolve)
+                    # Close current suggestions using the existing Escape behavior.
+                    address.press('Escape')
                     report['cta']={}
                     report['layout']={}
+                    report['required_controls']={}
                     for width in [1440,1024,701,700,390,320]:
                         page.set_viewport_size({'width':width,'height':1000 if width>700 else 844})
                         page.wait_for_timeout(500)
@@ -184,6 +205,12 @@ def main():
                         if title.get_attribute('role')=='button' and title.get_attribute('aria-expanded')=='false': title.click()
                         require(page.locator('.wp-block-woocommerce-checkout-order-summary-block:visible').count()==1,f'{width}: exactly one responsive native summary visible')
                         require(all(e['visible'] for e in snapshot(page) if e['required']),f'{width}: all native required inputs remain visible')
+                        required=page.locator('.wc-block-checkout__form input[required], .wc-block-checkout__form select[required]')
+                        for control in required.all():
+                            control.scroll_into_view_if_needed()
+                            control.click(trial=True)
+                        report['required_controls'][str(width)]=required.evaluate_all('els=>els.map(e=>({id:e.id,willValidate:e.willValidate,valueMissing:e.validity.valueMissing}))')
+                        require(all(e['willValidate'] for e in report['required_controls'][str(width)]),f'{width}: native required validation active and controls pointer-reachable')
                         report['layout'][str(width)]=page.locator('.wc-block-components-sidebar-layout').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')
                         require(len(report['layout'][str(width)].split())==(2 if width>700 else 1),f'{width}: intended desktop/mobile breakpoint')
                         capture(page,f'candidate-{width}-checkout',report['metrics'])
@@ -195,6 +222,7 @@ def main():
                           return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,unobscured:e.contains(document.elementFromPoint(x,y))};}""")
                         require(info['left']>=0 and info['right']<=width and info['top']>=0 and info['bottom']<=page.viewport_size['height'] and info['unobscured'],f'{width}: native CTA reachable, unclipped, unobscured')
                         report['cta'][str(width)]=info
+                        report['cta'][str(width)]['document_top']=cta.evaluate('e=>e.getBoundingClientRect().top+scrollY')
                         page.screenshot(path=str(OUT/f'candidate-{width}-cta.png'))
                         if width in (700,390,320):
                             address.fill('Симферополь Гагарина 17')
