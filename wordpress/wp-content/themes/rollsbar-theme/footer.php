@@ -70,6 +70,12 @@ $footer_delivery_location = 'Симферополь' === $footer_city ? 'по ' 
 	<?php endif; ?>
 <?php endif; ?>
 
+<?php if ( is_front_page() ) : ?>
+<a class="mobile-phone" href="tel:<?php echo esc_attr( $footer_phone_href ); ?>" aria-label="Позвонить <?php echo esc_attr( $footer_phone_display ); ?>">
+	<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.1 3.5 9 3c.8-.2 1.6.2 1.9 1l.9 2.6c.2.7 0 1.4-.6 1.8l-1.4 1a14.7 14.7 0 0 0 4.8 4.8l1-1.4c.4-.6 1.2-.8 1.8-.6l2.6.9c.8.3 1.2 1.1 1 1.9l-.5 1.9c-.2.8-.9 1.4-1.8 1.4C11.6 18.3 5.7 12.4 5.7 5.3c0-.9.6-1.6 1.4-1.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</a>
+<button type="button" class="client-back-top" aria-label="Вернуться в начало меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<?php endif; ?>
 <?php if ( is_front_page() && function_exists( 'wc_get_checkout_url' ) ) { get_template_part( 'template-parts/cart-drawer' ); } ?>
 <?php wp_footer(); ?>
 </body>

@@ -246,6 +246,7 @@ foreach ( $promo_posts as $promo_post ) {
 	foreach ( $products_by_source as $source_id => $product ) {
 		if ( '' !== $source_id && $product instanceof WC_Product ) {
 			$detail_products[ $source_id ] = rollsbar_product_detail_data( $product );
+			$detail_products[ $source_id ]['pizza'] = has_term( 'pizza', 'product_cat', $product->get_id() );
 		}
 	}
 	// Search membership and order are the public canonical catalog, never Hits or upsells.

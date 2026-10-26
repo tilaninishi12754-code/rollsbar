@@ -74,6 +74,12 @@ final class RollsBar_Cart_Actions {
 			$items = WC()->cart->get_cart();
 			if ( ! isset( $items[ $key ] ) ) { throw new Exception( 'Товар уже удалён из корзины.' ); }
 			$item = $items[ $key ];
+			// Catalog variation counters must still be unambiguous in the current server cart.
+			if ( array_key_exists( 'source_id', $request ) ) {
+				$parent = wc_get_product( $item['product_id'] );
+				$matching = array_filter( $items, static function( $line ) use ( $item ) { return (int) $line['product_id'] === (int) $item['product_id']; } );
+				if ( ! $parent || ! has_term( 'pizza', 'product_cat', $parent->get_id() ) || $parent->get_meta( '_rollsbar_source_id', true ) !== $request['source_id'] || count( $matching ) !== 1 || empty( $item['variation_id'] ) || ( $request['variation_id'] ?? null ) !== (int) $item['variation_id'] ) { throw new Exception( 'Выберите размер пиццы или измените товар в корзине.' ); }
+			}
 			$quantity = 'line_remove' === $request['operation'] ? 0 : max( 0, (int) $item['quantity'] + ( 'line_plus' === $request['operation'] ? 1 : -1 ) );
 			if ( $quantity > $item['quantity'] ) {
 				$actual = wc_get_product( $item['variation_id'] ?: $item['product_id'] );
@@ -105,6 +111,9 @@ final class RollsBar_Cart_Actions {
 			return;
 		}
 		$options = self::options( $product, is_array( $request['options'] ?? null ) ? $request['options'] : array() );
+		// JSON integer only: never truncate, abs(), or silently turn zero into one.
+		$quantity = array_key_exists( 'quantity', $request ) ? $request['quantity'] : 1;
+		if ( ! is_int( $quantity ) || $quantity < 1 ) { throw new Exception( 'Количество должно быть целым числом не меньше 1.' ); }
 		$variation_id = absint( $request['variation_id'] ?? 0 );
 		$attributes = array();
 		if ( $product->is_type( 'variable' ) ) {
@@ -114,7 +123,7 @@ final class RollsBar_Cart_Actions {
 			if ( ! $attributes || in_array( '', $attributes, true ) ) { throw new Exception( 'Выберите доступный вариант.' ); }
 		} elseif ( $variation_id ) { throw new Exception( 'Недопустимый вариант.' ); }
 		$data = $options ? array( 'rollsbar_options' => $options ) : array();
-		if ( ! apply_filters( 'woocommerce_add_to_cart_validation', true, $product->get_id(), 1, $variation_id, $attributes, $data ) || ! WC()->cart->add_to_cart( $product->get_id(), 1, $variation_id, $attributes, $data ) ) { throw new Exception( 'Не удалось добавить товар в корзину.' ); }
+		if ( ! apply_filters( 'woocommerce_add_to_cart_validation', true, $product->get_id(), $quantity, $variation_id, $attributes, $data ) || ! WC()->cart->add_to_cart( $product->get_id(), $quantity, $variation_id, $attributes, $data ) ) { throw new Exception( 'Не удалось добавить товар в корзину.' ); }
 		do_action( 'woocommerce_ajax_added_to_cart', $product->get_id() );
 	}
 

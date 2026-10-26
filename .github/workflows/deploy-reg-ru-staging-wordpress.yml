@@ -36,6 +36,7 @@ on:
           - release-inspect
           - release-resume
           - client-media
+          - storefront-ux
       release_sha:
         description: Exact already deployed application SHA (required for release-resume)
         required: false
@@ -49,6 +50,71 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  storefront-ux:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'storefront-ux' && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify storefront contracts before staging access
+        run: |
+          php qa/visual/storefront-ux-contract.php "$PWD"
+          php qa/visual/b12-contract.php "$PWD"
+          php qa/visual/client-media-contract.php
+          php -l wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-cart-actions.php
+          php -l wordpress/wp-content/themes/rollsbar-theme/front-page.php
+          php -l wordpress/wp-content/themes/rollsbar-theme/footer.php
+          node --check wordpress/wp-content/themes/rollsbar-theme/assets/js/app.js
+          python3 wordpress/deploy/test_storefront_ux_release.py
+      - name: Install staging transport and locked browser
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet paramiko
+          npm --prefix qa install --no-save --ignore-scripts --package-lock=false @playwright/test@1.64.1
+          node qa/node_modules/@playwright/test/cli.js install --with-deps chromium
+      - name: Fresh verified backup and five-file storefront deploy
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase apply
+      - name: Real Woo storefront browser acceptance without orders
+        env:
+          ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: node qa/visual/storefront-ux.mjs
+      - name: Finalize exact release marker after browser PASS
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase finalize
+      - name: Read actual state on failure without mutation retry
+        if: failure()
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase inspect
+      - name: Upload storefront release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storefront-ux-${{ github.run_id }}-${{ github.run_attempt }}
+          path: qa/visual-results/storefront-ux-staging/
+          if-no-files-found: error
+          retention-days: 30
+
   client-media:
     if: github.event_name == 'workflow_dispatch' && inputs.operation == 'client-media' && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
     runs-on: ubuntu-latest

@@ -25,10 +25,10 @@
   },
   {
     "tests": ["selector"],
-    "viewports": [1440,1051,1050,1024,701,700,390],
-    "maxDiffPixelsByViewport": {"1440":34,"1051":22,"1050":34,"1024":34,"701":22,"700":34,"390":34},
-    "scope": "selector-choices.png only; exact viewport caps shown above; 320px retains zero; no dimension tolerance",
-    "reason": "Measured 22–34 raster pixels around the selected native Woo price/label (including native NBSP formatting preserved from B8). Separate exact normalized assertions require both approved quantities/prices and the same initial selected index, so this allowance cannot bless an incorrect price or choice."
+    "viewports": [1440,1051,1050,1024,701,700,390,320],
+    "maxDiffPixelsByViewport": {"1440":34,"1051":22,"1050":34,"1024":34,"701":22,"700":34,"390":34,"320":34},
+    "scope": "selector-choices.png only; exact viewport caps shown above; no dimension tolerance",
+    "reason": "Measured 22–34 raster pixels around the selected native Woo price/label (including native NBSP formatting preserved from B8). Storefront quantity moves the mobile options group upward by 58px; inspected 320px diff now has exactly the same 34 native-select glyph pixels, while the group remains 284x101 and the select 256x49. Separate exact normalized assertions require both approved quantities/prices and the same initial selected index, so this allowance cannot bless an incorrect price or choice."
   },
   {
     "tests": ["selector"],

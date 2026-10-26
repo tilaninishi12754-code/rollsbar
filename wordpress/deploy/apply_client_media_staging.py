@@ -65,16 +65,17 @@ def execute(script):
         client.close()
 
 
-def code_hash_guard(sha, before=False):
+def code_hash_guard(sha, before=False, *, changed=None, base=BASE):
     """Compare every tracked app file; only these four paths may differ before release."""
     lines = []
+    changed = CHANGED if changed is None else changed
     paths = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', sha, '--', PLUGIN, THEME], cwd=ROOT, text=True).splitlines()
     for path in paths:
         live = '$WP_PATH/' + path.removeprefix('wordpress/')
         incoming = hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
-        if before and path in CHANGED:
+        if before and path in changed:
             try:
-                previous = hashlib.sha256(subprocess.check_output(['git','show',BASE+':'+path], cwd=ROOT, stderr=subprocess.DEVNULL)).hexdigest()
+                previous = hashlib.sha256(subprocess.check_output(['git','show',base+':'+path], cwd=ROOT, stderr=subprocess.DEVNULL)).hexdigest()
                 lines.append(f'actual="$(sha256sum "{live}" | cut -d " " -f 1)"; [[ "$actual" == {incoming} || "$actual" == {previous} ]]')
             except subprocess.CalledProcessError:
                 lines.append(f'[[ ! -e "{live}" ]] || [[ "$(sha256sum "{live}" | cut -d " " -f 1)" == {incoming} ]]')

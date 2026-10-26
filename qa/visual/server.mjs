@@ -5,7 +5,7 @@ import { resolve, join, extname, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 export const approvedSHA = 'a5e524392abcf89ffd5ace2a18218a6b59ed3b61';
-export function startPreview({renderCurrent=true}={}) {
+export function startPreview({renderCurrent=true,port=4178}={}) {
   const root = process.cwd();
   const temp = mkdtempSync(join(tmpdir(), 'rollsbar-approved-'));
   try {
@@ -46,7 +46,7 @@ export function startPreview({renderCurrent=true}={}) {
     // Current theme URLs are root-relative; approved resources remain under /approved/.
     return new Promise((resolveReady,reject) => {
       server.once('error',error=>{rmSync(temp,{recursive:true,force:true});reject(error);});
-      server.listen(4178,'127.0.0.1',()=>resolveReady({
+      server.listen(port,'127.0.0.1',()=>resolveReady({
         close:()=>new Promise(done=>server.close(()=>{rmSync(temp,{recursive:true,force:true});done();})),
         temp
       }));
