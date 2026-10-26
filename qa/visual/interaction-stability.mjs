@@ -13,6 +13,11 @@ const browser=await engine.launch();try{for(const width of [320,390,430,701,900,
  if(!live)await page.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());
  const endpoint=live?'**/*wc-ajax=rollsbar_cart*':'**/fixture-cart';
  const base=live?live+'/?interaction='+report.release_sha:'http://127.0.0.1:4181/current/';
+ const journal=[];
+ page.on('response',async response=>{try{
+  const q=JSON.parse(new URLSearchParams(response.request().postData()).get('request'));
+  if(q){const body=await response.json();journal.push({request:q,success:body.success,lines:body.data?.lines?.map(l=>({key:l.key,source_id:l.source_id,quantity:l.quantity,variation_id:l.variation_id}))});writeFileSync(out+'/'+name+'-'+width+'-responses.json',JSON.stringify(journal,null,2));}
+ }catch{}});
  const requests=[];page.on('request',r=>{try{const q=JSON.parse(new URLSearchParams(r.postData()).get('request'));if(q)requests.push(q)}catch{}});
  await page.goto(base,{waitUntil:'domcontentloaded'});
  const ready=()=>expect(page.locator('[data-rollsbar-cart-delta]').first()).toBeEnabled();await ready();
@@ -60,7 +65,7 @@ const browser=await engine.launch();try{for(const width of [320,390,430,701,900,
   if(cycle===2)await reload();
  }
  await choose(vs[0]);await expect(card(pizza).locator('.rollsbar-product-counter span')).toHaveText('1');
- for(const persisted of [false,true]){if(persisted)await reload();const before=(await snap()).lines.find(l=>l.source_id===pizza);await card(pizza).locator('[data-rollsbar-cart-delta="1"]').tap();await ready();await expect(modal).toBeHidden();expect((await snap()).lines.find(l=>l.key===before.key).quantity).toBe(before.quantity+1)}
+ for(const persisted of [false,true]){if(persisted)await reload();const before=(await snap()).lines.find(l=>l.source_id===pizza);expect(before,'canonical pizza line after add/reload '+persisted).toBeTruthy();await card(pizza).locator('[data-rollsbar-cart-delta="1"]').tap();await ready();await expect(modal).toBeHidden();expect((await snap()).lines.find(l=>l.key===before.key).quantity).toBe(before.quantity+1)}
  await choose(vs[1]);await expect(card(pizza).locator('.rollsbar-pizza-total')).toBeVisible();const multi=await snap();await card(pizza).locator('.rollsbar-pizza-total').tap();await expect(modal.locator('.rollsbar-product-options')).toBeVisible();expect((await snap()).lines).toEqual(multi.lines);await page.keyboard.press('Escape');
  // Native Woo / another window removes a size while this card still projects two.
  await req({operation:'line_remove',key:multi.lines.find(l=>l.source_id===pizza&&l.variation_id===vs[1].id).key});
