@@ -1,4 +1,7 @@
 import unittest
+from unittest.mock import patch
+import tempfile
+import json
 import apply_storefront_ux_staging as release
 
 class ReleaseTest(unittest.TestCase):
@@ -24,6 +27,20 @@ class ReleaseTest(unittest.TestCase):
   self.assertIn('phase=backend_verified',script)
   self.assertIn('phase=browser_verified',script)
   self.assertIn('staging-deployed-sha.ux-new',script)
+ def test_interaction_scope(self):
+  with patch.object(release,'BASE',release.BASE),patch.object(release,'CHANGED',release.CHANGED):
+   release.require_interaction_delta()
+   self.assertEqual(release.BASE,'328cb664d1d6e6a63b300e6788a984497fa1320d')
+   self.assertEqual(len(release.CHANGED),2)
+   self.assertTrue(all(p.endswith(('app.js','app.css')) for p in release.CHANGED))
+ def test_interaction_proof_rejects_missing_width_and_wrong_release(self):
+  with tempfile.TemporaryDirectory() as folder,patch.object(release,'OUT',release.Path(folder)):
+   path=release.OUT/'interaction/browser.json';path.parent.mkdir()
+   proof={'status':'PASS','release_sha':'candidate','checks':[{'engine':'chromium','width':w} for w in [320,390,430,701,900,1440]]}
+   path.write_text(json.dumps(proof));release.verify_interaction_proof('candidate')
+   with self.assertRaises(ValueError):release.verify_interaction_proof('other')
+   proof['checks'].pop();path.write_text(json.dumps(proof))
+   with self.assertRaises(ValueError):release.verify_interaction_proof('candidate')
  def test_transport_pins_staging(self):
   for guard in ['https://staging.rollsbar.ru',"== 'staging'",'blog_public']:
    self.assertIn(guard,release.transport.PREFIX)

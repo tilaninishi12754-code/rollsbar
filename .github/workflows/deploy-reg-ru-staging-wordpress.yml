@@ -38,6 +38,7 @@ on:
           - client-media
           - storefront-ux
           - storefront-ux-controls
+          - interaction-stability
       release_sha:
         description: Exact already deployed application SHA (required for release-resume)
         required: false
@@ -52,7 +53,7 @@ concurrency:
 
 jobs:
   storefront-ux:
-    if: github.event_name == 'workflow_dispatch' && (inputs.operation == 'storefront-ux' || inputs.operation == 'storefront-ux-controls') && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
+    if: github.event_name == 'workflow_dispatch' && (inputs.operation == 'storefront-ux' || inputs.operation == 'storefront-ux-controls' || inputs.operation == 'interaction-stability') && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -66,7 +67,7 @@ jobs:
         with:
           node-version: '24'
       - name: Verify storefront contracts before staging access
-        if: inputs.operation == 'storefront-ux'
+        if: inputs.operation == 'storefront-ux' || inputs.operation == 'interaction-stability'
         run: |
           php qa/visual/storefront-ux-contract.php "$PWD"
           php qa/visual/b12-contract.php "$PWD"
@@ -81,25 +82,31 @@ jobs:
           python3 -m pip install --disable-pip-version-check --quiet paramiko
           npm --prefix qa install --no-save --ignore-scripts --package-lock=false @playwright/test@1.64.1
           node qa/node_modules/@playwright/test/cli.js install --with-deps chromium
-      - name: Fresh verified backup and five-file storefront deploy
+      - name: Fresh verified backup and scoped storefront deploy
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
-        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase apply ${{ inputs.operation == 'storefront-ux-controls' && '--controls-only' || '' }}
+        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase apply ${{ inputs.operation == 'storefront-ux-controls' && '--controls-only' || inputs.operation == 'interaction-stability' && '--interaction-stability' || '' }}
       - name: Real Woo storefront browser acceptance without orders
         env:
           ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
         run: node qa/visual/${{ inputs.operation == 'storefront-ux-controls' && 'storefront-controls.mjs' || 'storefront-ux.mjs' }}
+      - name: Repeated interaction and pointer hit-target acceptance
+        if: inputs.operation == 'interaction-stability'
+        env:
+          ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: node qa/visual/interaction-stability.mjs
       - name: Finalize exact release marker after browser PASS
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
-        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase finalize ${{ inputs.operation == 'storefront-ux-controls' && '--controls-only' || '' }}
+        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase finalize ${{ inputs.operation == 'storefront-ux-controls' && '--controls-only' || inputs.operation == 'interaction-stability' && '--interaction-stability' || '' }}
       - name: Read actual state on failure without mutation retry
         if: failure()
         env:
@@ -107,7 +114,7 @@ jobs:
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
-        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase inspect ${{ inputs.operation == 'storefront-ux-controls' && '--controls-only' || '' }}
+        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase inspect ${{ inputs.operation == 'storefront-ux-controls' && '--controls-only' || inputs.operation == 'interaction-stability' && '--interaction-stability' || '' }}
       - name: Upload storefront release evidence
         if: always()
         uses: actions/upload-artifact@v4

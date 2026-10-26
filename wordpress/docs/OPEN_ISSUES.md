@@ -39,7 +39,7 @@ Priority order unless Coordinator explicitly changes it:
 
 ## RB-001 — Cart sometimes opens only on the second tap
 
-Status: `OPEN`
+Status: `VERIFY`
 Priority: `P0`
 Scope: storefront / mobile + desktop cart interactions
 
@@ -59,9 +59,11 @@ Acceptance:
 - no double-tap requirement on tested mobile/desktop viewports;
 - no regression to cart/session persistence.
 
+Batch implementation: interaction-stability; deterministic local Chromium/WebKit stress and original UX suites PASS. Staging deployment and live repeated-hit evidence pending. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
+
 ## RB-002 — Back-to-top sometimes reacts only on the second tap
 
-Status: `OPEN`
+Status: `VERIFY`
 Priority: `P0`
 Scope: storefront controls
 
@@ -75,9 +77,11 @@ Acceptance:
 - no invisible element intercepts pointer events;
 - phone/cart/back-to-top controls remain mutually non-overlapping and clickable.
 
+Batch implementation: interaction-stability; deterministic local Chromium/WebKit stress and original UX suites PASS. Staging deployment and live repeated-hit evidence pending. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
+
 ## RB-003 — Pizza storefront `+` can reopen selector instead of incrementing the already selected size
 
-Status: `OPEN`
+Status: `VERIFY`
 Priority: `P0`
 Scope: Woo cart snapshot / pizza variation storefront control
 
@@ -98,9 +102,11 @@ Acceptance:
 - multiple-size case remains safe and unambiguous;
 - server Woo cart remains the sole authority.
 
+Batch implementation: interaction-stability; deterministic local Chromium/WebKit stress and original UX suites PASS. Staging deployment and live repeated-hit evidence pending. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
+
 ## RB-004 — Interaction controls can visually overlap on mobile in some states
 
-Status: `OPEN`
+Status: `VERIFY`
 Priority: `P0`
 Scope: fixed storefront controls
 
@@ -112,6 +118,8 @@ Acceptance:
 - fixed cart, phone, back-to-top and product/card controls remain clickable and visually non-conflicting across real populated-cart states;
 - test at least 320, 390, 430, 701 and 900 px widths where relevant;
 - include pointer hit-testing, not only screenshots.
+
+Batch implementation: interaction-stability; deterministic local Chromium/WebKit stress and original UX suites PASS. Staging deployment and live repeated-hit evidence pending. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
 
 ## RB-005 — Add-to-cart has noticeable ~1–1.5 s feedback delay
 

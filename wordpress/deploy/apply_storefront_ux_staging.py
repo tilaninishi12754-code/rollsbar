@@ -29,6 +29,18 @@ def require_control_delta():
   raise ValueError('Focused acceptance requires the exact CSS-only delta from verified full release')
  BASE=CONTROLS_BASE; CHANGED=[css]
 
+def require_interaction_delta():
+ global BASE, CHANGED
+ BASE='328cb664d1d6e6a63b300e6788a984497fa1320d'
+ CHANGED=[transport.THEME+'assets/css/app.css',transport.THEME+'assets/js/app.js']
+ paths=subprocess.check_output(['git','diff','--name-only',BASE,'--',transport.THEME,transport.PLUGIN],cwd=ROOT,text=True).splitlines()
+ if sorted(paths)!=sorted(CHANGED):raise ValueError('Interaction release permits only storefront JS/CSS changes')
+
+def verify_interaction_proof(sha):
+ proof=json.loads((OUT/'interaction/browser.json').read_text(encoding='utf-8'))
+ if proof.get('status')!='PASS' or proof.get('release_sha')!=sha or [(c.get('engine'),c.get('width')) for c in proof.get('checks',[])]!=[('chromium',w) for w in [320,390,430,701,900,1440]]:
+  raise ValueError('Exact release interaction stress PASS at all six widths required')
+
 def verify():
  return "wp_cmd eval "+shlex.quote(transport.CATALOG_GATE_PHP)+"; echo\necho 'UX_MEDIA_BEGIN'; wp_cmd eval-file \"$PROJECT_ROOT/wordpress/deploy/verify-client-media.php\"; echo; echo 'UX_MEDIA_END'\n"
 
@@ -79,10 +91,14 @@ echo 'UX_RELEASE_PASS'
 '''
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','finalize','inspect'],required=True);p.add_argument('--controls-only',action='store_true');args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','finalize','inspect'],required=True);p.add_argument('--controls-only',action='store_true');p.add_argument('--interaction-stability',action='store_true');args=p.parse_args()
+ if args.interaction_stability:
+  if args.controls_only:raise ValueError('Choose one release scope')
+  require_interaction_delta()
  if args.controls_only:require_control_delta()
  sha=transport.release_sha();OUT.mkdir(parents=True,exist_ok=True)
  if args.phase=='finalize':
+  if args.interaction_stability:verify_interaction_proof(sha)
   proof=json.loads((OUT/'browser.json').read_text(encoding='utf-8'))
   if args.controls_only and (proof.get('inherited_full_acceptance_sha')!=CONTROLS_BASE or proof.get('scope')!='floating-controls-701-900' or [c.get('width') for c in proof.get('checks',[])]!=[701,900]):raise ValueError('Focused browser proof must cover both changed breakpoints and verified base')
   if proof.get('status')!='PASS' or proof.get('release_sha')!=sha or len(proof.get('checks',[]))!=(2 if args.controls_only else 5):raise ValueError('Exact release browser PASS required')

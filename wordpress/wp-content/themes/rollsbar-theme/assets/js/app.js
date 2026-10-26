@@ -26,6 +26,22 @@
 	var selection=null;
 	var cartCounts={},cartLines=[],detailQuantity=1,cartBusy=false,cartQueue=Promise.resolve();
 	var cartConfig=window.rollsbarCart;
+	// Keep the native pointer target alive until click/cancel completes. A Woo
+	// response can otherwise replace a card or swap fixed cart triggers mid-tap.
+	var cartGesture=null,deferredCart=null,gestureFrame=0;
+	function finishCartGesture(){
+		cartGesture=null;cancelAnimationFrame(gestureFrame);
+		if(deferredCart){var data=deferredCart;deferredCart=null;applyCart(data);setCartBusy(cartBusy);}
+	}
+	document.addEventListener('pointerdown',function(event){
+		if(event.isPrimary&&event.target.closest('.rollsbar-product-card,.rollsbar-cart-link,[data-rollsbar-mobile-cart],[data-rollsbar-orderbar],.client-back-top,.mobile-phone'))cartGesture=event.pointerId;
+	},true);
+	document.addEventListener('pointerup',function(event){
+		if(event.pointerId===cartGesture)gestureFrame=requestAnimationFrame(finishCartGesture);
+	},true);
+	document.addEventListener('pointercancel',function(event){if(event.pointerId===cartGesture)finishCartGesture();},true);
+	document.addEventListener('click',function(){if(cartGesture!==null)queueMicrotask(finishCartGesture);},true);
+	window.addEventListener('blur',finishCartGesture);
 	var drawer=document.getElementById('rollsbarCartDrawer');
 	var drawerState=null,drawerOpener=null,drawerBackground=[],drawerOverflow='',drawerScroll=null,drawerBehavior='',drawerFocus=null;
 	// B13 is a projection of the B12 server snapshot, never a second cart store.
@@ -102,7 +118,7 @@
 	}
 	async function openDrawer(trigger){
 		if(!drawer||!drawer.hidden)return;
-		if(cartBusy){await cartQueue;return openDrawer(trigger);}
+		var alreadyPending=cartBusy;
 		closeDetail();
 		drawerOpener=trigger;drawerOverflow=document.body.style.overflow;drawerScroll={x:scrollX,y:scrollY};drawerBehavior=document.documentElement.style.scrollBehavior;
 		document.documentElement.style.scrollBehavior='auto';window.scrollTo(drawerScroll.x,drawerScroll.y);
@@ -113,6 +129,7 @@
 		drawer.hidden=false;document.body.style.overflow='hidden';drawer.querySelector('.rollsbar-drawer-close').focus({preventScroll:true});
 		renderHeaderCart(drawerState);
 		drawer.querySelector('.rollsbar-drawer-error').textContent='';
+		if(alreadyPending)return; // The queued canonical response will update the open drawer.
 		setCartBusy(true);
 		try{await cartRequest({operation:'read'});}catch(error){drawer.querySelector('.rollsbar-drawer-error').textContent=error.message;}finally{setCartBusy(false);}
 	}
@@ -180,6 +197,7 @@
 	}
 	function applyCart(data){
 		if(!data||!data.counts)throw Error('Не удалось получить состояние корзины.');
+		if(cartGesture!==null){deferredCart=data;return;}
 		cartCounts=data.counts;cartLines=data.lines||[];renderCartControls();
 		renderDrawer(data);
 		if(window.jQuery&&data.fragments){
@@ -203,6 +221,10 @@
 	}
 	function setCartBusy(value){
 		cartBusy=value;
+		if(!value)document.querySelectorAll('[data-cart-pending]').forEach(function(card){delete card.dataset.cartPending;});
+		document.querySelectorAll('.rollsbar-product-card').forEach(function(card){card.setAttribute('aria-busy',String(value));});
+		action.setAttribute('aria-busy',String(value));
+		if(!modal.hidden)action.querySelector('span').textContent=value?'Добавляем…':products[modal.dataset.sourceId].selection.required?'Выбрать и добавить':'Добавить в корзину';
 		if(!modal.hidden)renderDetailQuantity();
 		if(drawer){
 			drawer.querySelectorAll('[data-drawer-action],[data-drawer-mode]').forEach(function(button){button.disabled=value;});
@@ -210,12 +232,18 @@
 			drawer.querySelector('.rollsbar-cart-drawer__panel').setAttribute('aria-busy',String(value));
 		}
 		document.querySelectorAll('[data-rollsbar-cart-delta],.rollsbar-pizza-total').forEach(function(button){button.disabled=value||!cartConfig;});
-		if(selection)selector.querySelector('.rollsbar-product-options__add').disabled=value||!selection.valid||!cartConfig;
+		if(selection){
+			var submit=selector.querySelector('.rollsbar-product-options__add');
+			submit.disabled=value||!selection.valid||!cartConfig;
+			if(value){if(!submit.hasAttribute('data-idle-label'))submit.dataset.idleLabel=submit.textContent;submit.textContent='Добавляем…';}
+			else if(submit.hasAttribute('data-idle-label')){submit.textContent=submit.dataset.idleLabel;delete submit.dataset.idleLabel;}
+		}
 	}
 	async function mutateCart(id,delta,chosen,quantity){
 		if(cartBusy||!products[id])return false;
 		var focused=document.activeElement,focusedCard=focused.hasAttribute('data-rollsbar-cart-delta')?focused.closest('[data-rollsbar-source-id]'):null;
-		setCartBusy(true);cartStatus.textContent='';
+		document.querySelectorAll('[data-rollsbar-source-id="'+id+'"]').forEach(function(card){card.dataset.cartPending='';});
+		setCartBusy(true);cartStatus.textContent='Обновляем корзину…';
 		document.querySelectorAll('.rollsbar-cart-error').forEach(function(node){node.remove();});
 		try{
 			var request={operation:delta<0?'minus':'add',source_id:id,product_id:products[id].woo_id,quantity:quantity||1,variation_id:chosen?chosen.variation_id:0,options:chosen?chosen.options.map(function(option){return option.value;}):[]};
@@ -230,6 +258,7 @@
 			// A lost response may follow a successful server mutation. Reconcile without retrying the add.
 			try{await cartRequest({operation:'read'});}catch(ignored){}
 			var target=!modal.hidden?selector.hidden?modal.querySelector('.rollsbar-product-details__content'):selector:document.querySelector('[data-rollsbar-source-id="'+id+'"] .rollsbar-product-card__body');
+			if(drawer&&!drawer.hidden)drawer.querySelector('.rollsbar-drawer-error').textContent=error.message;
 			var note=document.createElement('div');note.className='rollsbar-cart-error';note.setAttribute('role','alert');note.textContent=error.message;target.appendChild(note);
 			return false;
 		}finally{
@@ -240,6 +269,12 @@
 			}
 		}
 	}
+	function refreshCart(){
+		if(!cartConfig||cartBusy||document.hidden)return;
+		setCartBusy(true);cartRequest({operation:'read'}).catch(function(error){cartStatus.textContent=error.message;}).finally(function(){setCartBusy(false);});
+	}
+	window.addEventListener('focus',refreshCart);
+	document.addEventListener('visibilitychange',function(){if(!document.hidden)refreshCart();});
 	renderCartControls();
 	if(cartConfig){setCartBusy(true);cartRequest({operation:'read'}).catch(function(){cartStatus.textContent='Не удалось получить состояние корзины.';}).finally(function(){setCartBusy(false);});}
 	document.addEventListener('click',function(event){
@@ -415,7 +450,21 @@
 		var card=event.target.closest('.rollsbar-product-card[data-rollsbar-source-id]');
 		if(!card)return;
 		var choose=event.target.closest('[data-rollsbar-selection-open]');
-		if(choose){if(openDetail(card.dataset.rollsbarSourceId,choose,true))event.preventDefault();return;}
+		if(choose){
+			event.preventDefault();
+			var id=card.dataset.rollsbarSourceId;
+			if(choose.classList.contains('rollsbar-pizza-total')){
+				if(cartBusy)return;
+				setCartBusy(true);cartStatus.textContent='Проверяем корзину…';
+				cartRequest({operation:'read'}).then(function(data){
+					setCartBusy(false);
+					var lines=data.lines.filter(function(line){return line.source_id===id;});
+					if(lines.length===1)return mutateCart(id,1,null);
+					openDetail(id,choose,true);
+				}).catch(function(error){setCartBusy(false);cartStatus.textContent=error.message;});
+			}else openDetail(id,choose,true);
+			return;
+		}
 		var link=event.target.closest('[data-rollsbar-detail-open]');
 		if(!link&&event.target.closest('button,a,input,select,textarea,.qty,.client-action-wrap,.client-counter'))return;
 		var trigger=link||card.querySelector('h3 [data-rollsbar-detail-open]');

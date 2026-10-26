@@ -658,3 +658,9 @@ a.screen-reader-text:focus{position:fixed;top:8px;left:8px;width:auto;height:aut
 }
 
 @media(min-width:701px) and (max-width:900px){.client-back-top{bottom:calc(86px + env(safe-area-inset-bottom))}}
+
+/* Visible acknowledgement without a second cart state or a hit-test overlay. */
+.rollsbar-product-card[aria-busy="true"] .rollsbar-product-control,
+.rollsbar-product-card[aria-busy="true"] .rollsbar-product-counter{opacity:.6}
+.rollsbar-product-card[data-cart-pending] .rollsbar-product-card__body::after{content:"Обновляем корзину…";position:absolute;bottom:0;left:16px;font-size:11px;color:#666;pointer-events:none}
+.rollsbar-product-card[data-cart-pending]{position:relative}
