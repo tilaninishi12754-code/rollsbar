@@ -196,7 +196,8 @@ class DeployCatalogContract(unittest.TestCase):
         wrapper=(ROOT/'wordpress/deploy/prepare-s1-r2-backup.sh').read_text()
         self.assertIn('ROLLSBAR_BACKUP_RETENTION=6',wrapper)
         self.assertIn('ROLLSBAR_PRESERVE_BACKUP_SNAPSHOT=20261023T215945Z',wrapper)
-        for name in ['backup-staging.sh','prepare-s1-r2-backup.sh','mark_staging_deployed_sha.py']:
+        # Marker now uses the same accepted catalog guard; backup bytes stay fixed.
+        for name in ['backup-staging.sh','prepare-s1-r2-backup.sh']:
             self.assertEqual((ROOT/'wordpress/deploy'/name).read_bytes().replace(b'\r\n', b'\n'),subprocess.check_output(['git','show','a7e33f7dfa1668c193e8e49924e11bf2b0c09eb2:wordpress/deploy/'+name],cwd=ROOT))
 
 

@@ -11,15 +11,11 @@ from __future__ import annotations
 import os
 import re
 import shlex
-import socket
-from urllib.parse import urlsplit
 
-import paramiko
+from staging_catalog_audit import AUDIT_PHP, parse_audit, validate_catalog_audit
+from provision_staging_seo import run_remote
+from staging_ssh import connect
 
-BASE = os.environ["ISP_MANAGER_URL"].strip()
-USER = os.environ["ISP_MANAGER_USER"].strip()
-PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
-DEPLOY_SHA = os.environ["ROLLSBAR_DEPLOY_SHA"].strip().lower()
 DOMAIN = "staging.rollsbar.ru"
 MARKER = ".rollsbar-staging-deployed-sha"
 
@@ -28,32 +24,9 @@ def q(value: str) -> str:
     return shlex.quote(value)
 
 
-def connect() -> paramiko.SSHClient:
-    host = urlsplit(BASE).hostname or ""
-    if not host:
-        raise RuntimeError("Could not derive hosting hostname")
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(
-        hostname=host,
-        port=22,
-        username=USER,
-        password=PASSWORD,
-        timeout=15,
-        auth_timeout=15,
-        banner_timeout=15,
-        look_for_keys=False,
-        allow_agent=False,
-    )
-    return client
-
-
-if not re.fullmatch(r"[0-9a-f]{40}", DEPLOY_SHA):
-    raise SystemExit("ROLLSBAR_DEPLOY_SHA must be an exact 40-character Git SHA")
-
-client = None
-try:
-    client = connect()
+def marker_script(deploy_sha):
+    if not re.fullmatch(r"[0-9a-f]{40}", deploy_sha):
+        raise ValueError("Marker requires exact lowercase application SHA")
     remote = f'''set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 WP_PATH="$HOME/www/{DOMAIN}"
@@ -63,7 +36,6 @@ TMP="$MARKER.tmp.$$"
 [[ -f "$WP_PATH/wp-load.php" ]]
 core="$(wp --path="$WP_PATH" core version)"
 woo="$(wp --path="$WP_PATH" plugin get woocommerce --field=version)"
-products="$(wp --path="$WP_PATH" post list --post_type=product --post_status=publish --format=count)"
 blog_public="$(wp --path="$WP_PATH" option get blog_public)"
 theme="$(wp --path="$WP_PATH" theme get rollsbar-theme --field=status)"
 plugin="$(wp --path="$WP_PATH" plugin get rollsbar-core --field=status)"
@@ -71,38 +43,57 @@ http_code="$(curl -L -sS -o /dev/null -w '%{{http_code}}' --max-time 20 https://
 
 [[ "$core" == '7.1.3' ]]
 [[ "$woo" == '11.1.2' ]]
-[[ "$products" == '118' ]]
 [[ "$blog_public" == '0' ]]
 [[ "$theme" == 'active' ]]
 [[ "$plugin" == 'active' ]]
 [[ "$http_code" == '200' ]]
 
+[[ "$(git -C "$HOME/.rollsbar-deploy" rev-parse HEAD)" == {q(deploy_sha)} ]]
+[[ -z "$(git -C "$HOME/.rollsbar-deploy" status --porcelain)" ]]
+[[ "$(wp --path="$WP_PATH" option get home)" == 'https://{DOMAIN}' ]]
+[[ "$(wp --path="$WP_PATH" option get siteurl)" == 'https://{DOMAIN}' ]]
+[[ "$(wp --path="$WP_PATH" eval 'echo wp_get_environment_type();')" == 'staging' ]]
+
 umask 077
-printf '%s\n' {q(DEPLOY_SHA)} > "$TMP"
+printf '%s\n' {q(deploy_sha)} > "$TMP"
 chmod 600 "$TMP"
 mv -f "$TMP" "$MARKER"
-[[ "$(cat "$MARKER")" == {q(DEPLOY_SHA)} ]]
+[[ "$(cat "$MARKER")" == {q(deploy_sha)} ]]
 [[ "$(stat -c '%a' "$MARKER")" == '600' ]]
 
 echo 'deployed_marker=updated'
-echo 'deployed_marker_sha={DEPLOY_SHA}'
+echo 'deployed_marker_sha={deploy_sha}'
 echo 'deployed_marker_mode=600'
 echo 'STAGING DEPLOYED SHA MARKER PASS'
 '''
-    _, stdout, stderr = client.exec_command("bash -lc " + q(remote), timeout=120)
-    out = stdout.read().decode("utf-8", errors="replace")
-    err = stderr.read().decode("utf-8", errors="replace")
-    status = stdout.channel.recv_exit_status()
-    print(out, end="" if out.endswith("\n") or not out else "\n")
-    if status != 0:
-        safe = " | ".join(line for line in err.splitlines() if "password" not in line.lower())[-1200:]
-        raise RuntimeError(f"Remote deployed-SHA marker failed exit={status}: {safe}")
-    if "STAGING DEPLOYED SHA MARKER PASS" not in out:
-        raise RuntimeError("Marker command returned success without verification marker")
-except (paramiko.SSHException, socket.error, OSError, RuntimeError, ValueError) as exc:
-    message = str(exc).replace(PASSWORD, "***") if PASSWORD else str(exc)
-    print(f"deployed_marker=failed type={exc.__class__.__name__} detail={message}")
-    raise SystemExit(1)
-finally:
-    if client is not None:
-        client.close()
+    return remote
+
+
+def execute(client, deploy_sha):
+    script = marker_script(deploy_sha)  # Validate before opening any mutation path.
+    audit = parse_audit(run_remote(client,
+        'set -euo pipefail\nexport PATH="$HOME/.local/bin:$PATH"\n'
+        'wp --path="$HOME/www/staging.rollsbar.ru" eval ' + q(AUDIT_PHP)))
+    validate_catalog_audit(audit)
+    result = run_remote(client, script)
+    if "STAGING DEPLOYED SHA MARKER PASS" not in result:
+        raise RuntimeError("Marker command returned without verification marker")
+    print(result)
+
+
+def main():
+    client = None
+    try:
+        deploy_sha = os.environ.get("ROLLSBAR_DEPLOY_SHA", "")
+        marker_script(deploy_sha)
+        client = connect()
+        execute(client, deploy_sha)
+    except Exception as exc:
+        raise SystemExit("Marker persistence failed: " + type(exc).__name__)
+    finally:
+        if client is not None:
+            client.close()
+
+
+if __name__ == "__main__":
+    main()

@@ -4,7 +4,7 @@
 Safety invariants:
 - hard-coded staging target only;
 - explicit confirmation required;
-- exact repository SHA checked out on the hosting account;
+- exact application repository SHA verified on the hosting account;
 - fresh canonical DB+uploads backup verified before mutation unless a parent
   routine deploy explicitly proves it already passed the same backup gate;
 - WordPress/WooCommerce/catalog/indexability invariants verified before and after;
@@ -16,53 +16,25 @@ Safety invariants:
 from __future__ import annotations
 
 import os
+import re
 import shlex
-import socket
-from urllib.parse import urlsplit
 
-import paramiko
+from staging_catalog_audit import AUDIT_PHP, parse_audit, validate_catalog_audit
+from staging_ssh import connect
 
-BASE = os.environ["ISP_MANAGER_URL"].strip()
-USER = os.environ["ISP_MANAGER_USER"].strip()
-PASSWORD = os.environ["ISP_MANAGER_PASSWORD"].strip()
-DEPLOY_SHA = os.environ["ROLLSBAR_DEPLOY_SHA"].strip()
-CONFIRM = os.environ.get("ROLLSBAR_CONFIRM_STAGING_SEO", "")
-BACKUP_ALREADY_VERIFIED = os.environ.get("ROLLSBAR_SEO_BACKUP_ALREADY_VERIFIED", "").strip()
 
 DOMAIN = "staging.rollsbar.ru"
-REPO = "https://github.com/tilaninishi12754-code/rollsbar.git"
 WP_VERSION = "7.1.3"
 WC_VERSION = "11.1.2"
 SEO_SLUG = "wp-seopress"
 SEO_VERSION = "10.3"
-EXPECTED_PRODUCTS = "118"
 
 
 def q(value: str) -> str:
     return shlex.quote(value)
 
 
-def connect() -> paramiko.SSHClient:
-    host = urlsplit(BASE).hostname or ""
-    if not host:
-        raise RuntimeError("Could not derive hosting hostname")
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(
-        hostname=host,
-        port=22,
-        username=USER,
-        password=PASSWORD,
-        timeout=15,
-        auth_timeout=15,
-        banner_timeout=15,
-        look_for_keys=False,
-        allow_agent=False,
-    )
-    return client
-
-
-def execute(client: paramiko.SSHClient) -> str:
+def mutation_script(deploy_sha: str, backup_verified: str) -> str:
     remote = r'''set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 DOMAIN="__DOMAIN__"
@@ -70,9 +42,7 @@ WP_VERSION="__WP_VERSION__"
 WC_VERSION="__WC_VERSION__"
 SEO_SLUG="__SEO_SLUG__"
 SEO_VERSION="__SEO_VERSION__"
-EXPECTED_PRODUCTS="__EXPECTED_PRODUCTS__"
 DEPLOY_SHA="__DEPLOY_SHA__"
-REPO="__REPO__"
 BACKUP_ALREADY_VERIFIED="__BACKUP_ALREADY_VERIFIED__"
 WP_PATH="$HOME/www/$DOMAIN"
 PROJECT_ROOT="$HOME/.rollsbar-deploy"
@@ -87,7 +57,6 @@ home_url="$(wp_cmd option get home)"
 site_url="$(wp_cmd option get siteurl)"
 core_version="$(wp_cmd core version)"
 woo_version="$(wp_cmd plugin get woocommerce --field=version)"
-product_count="$(wp_cmd post list --post_type=product --post_status=publish --format=count)"
 blog_public="$(wp_cmd option get blog_public)"
 
 [[ "$home_url" == "https://$DOMAIN" ]]
@@ -97,22 +66,18 @@ blog_public="$(wp_cmd option get blog_public)"
 [[ "$(wp_cmd plugin get woocommerce --field=status)" == "active" ]]
 [[ "$(wp_cmd plugin get rollsbar-core --field=status)" == "active" ]]
 [[ "$(wp_cmd theme get rollsbar-theme --field=status)" == "active" ]]
-[[ "$product_count" == "$EXPECTED_PRODUCTS" ]]
 [[ "$blog_public" == "0" ]]
 
 echo "target=$DOMAIN"
 echo "pre_core=$core_version"
 echo "pre_woocommerce=$woo_version"
-echo "pre_products=$product_count"
 echo "pre_blog_public=$blog_public"
 
-if [[ ! -d "$PROJECT_ROOT/.git" ]]; then
-  rm -rf "$PROJECT_ROOT"
-  git clone --filter=blob:none --no-checkout "$REPO" "$PROJECT_ROOT"
-fi
-git -C "$PROJECT_ROOT" fetch --depth=1 origin "$DEPLOY_SHA"
-git -C "$PROJECT_ROOT" checkout --detach --force "$DEPLOY_SHA"
+# Application code is already deployed; SEO never fetches or checks out tooling.
+[[ -d "$PROJECT_ROOT/.git" ]]
 [[ "$(git -C "$PROJECT_ROOT" rev-parse HEAD)" == "$DEPLOY_SHA" ]]
+[[ -z "$(git -C "$PROJECT_ROOT" status --porcelain)" ]]
+[[ "$(wp_cmd eval 'echo wp_get_environment_type();')" == 'staging' ]]
 
 if [[ "$BACKUP_ALREADY_VERIFIED" == "YES" ]]; then
   echo "stage=backup_reused_from_parent_deploy_gate"
@@ -185,7 +150,6 @@ wp_cmd rewrite flush --hard >/dev/null
 seo_version="$(wp_cmd plugin get "$SEO_SLUG" --field=version)"
 seo_status="$(wp_cmd plugin get "$SEO_SLUG" --field=status)"
 woo_version_after="$(wp_cmd plugin get woocommerce --field=version)"
-product_count_after="$(wp_cmd post list --post_type=product --post_status=publish --format=count)"
 blog_public_after="$(wp_cmd option get blog_public)"
 seo_state="$(wp_cmd option get rollsbar_seo_home_description_state)"
 seo_auto="$(wp_cmd plugin auto-updates status "$SEO_SLUG" --field=status 2>/dev/null || true)"
@@ -197,7 +161,6 @@ social_state="$(wp_cmd eval '$s=get_option("seopress_social_option_name",array()
 [[ "$seo_version" == "$SEO_VERSION" ]]
 [[ "$seo_status" == "active" ]]
 [[ "$woo_version_after" == "$WC_VERSION" ]]
-[[ "$product_count_after" == "$EXPECTED_PRODUCTS" ]]
 [[ "$blog_public_after" == "0" ]]
 [[ "$(wp_cmd plugin get rollsbar-core --field=status)" == "active" ]]
 [[ "$(wp_cmd theme get rollsbar-theme --field=status)" == "active" ]]
@@ -213,7 +176,6 @@ echo "seopress_sitemap_enabled=$sitemap_state"
 echo "seopress_social=$social_state"
 echo "home_description_state=$seo_state"
 echo "post_woocommerce=$woo_version_after"
-echo "post_products=$product_count_after"
 echo "post_blog_public=$blog_public_after"
 echo "assert_core_checksums=pass"
 echo "STAGING SEO PROVISION PASS"
@@ -225,46 +187,70 @@ echo "STAGING SEO PROVISION PASS"
         "__WC_VERSION__": WC_VERSION,
         "__SEO_SLUG__": SEO_SLUG,
         "__SEO_VERSION__": SEO_VERSION,
-        "__EXPECTED_PRODUCTS__": EXPECTED_PRODUCTS,
-        "__DEPLOY_SHA__": DEPLOY_SHA,
-        "__REPO__": REPO,
-        "__BACKUP_ALREADY_VERIFIED__": BACKUP_ALREADY_VERIFIED,
+        "__DEPLOY_SHA__": deploy_sha,
+        "__BACKUP_ALREADY_VERIFIED__": backup_verified,
     }
     for marker, value in replacements.items():
         remote = remote.replace(marker, value)
 
-    _, stdout, stderr = client.exec_command("bash -lc " + q(remote), timeout=900)
+    return remote
+
+
+def run_remote(client, remote):
+    # Short exec request; fixed script goes through stdin. Never retry mutation.
+    stdin, stdout, stderr = client.exec_command("bash -lc 'exec bash -s'", timeout=900)
+    stdin.write(remote)
+    stdin.flush()
+    stdin.channel.shutdown_write()
     out = stdout.read().decode("utf-8", errors="replace")
-    err = stderr.read().decode("utf-8", errors="replace")
+    stderr.read()  # Arbitrary plugin stderr may contain credentials; never print it.
     status = stdout.channel.recv_exit_status()
-    print(out, end="" if out.endswith("\n") or not out else "\n")
     if status != 0:
-        safe_lines = [
-            line for line in err.splitlines()
-            if not any(x in line.lower() for x in ("password", "secret", "token", "dadata", "telegram"))
-        ]
-        if safe_lines:
-            print("remote_stderr=" + " | ".join(safe_lines[-12:])[:1600])
         raise RuntimeError(f"Remote SEO provision failed with exit status {status}")
     return out
 
 
-if CONFIRM != "YES":
-    raise SystemExit("Refusing staging mutation: set ROLLSBAR_CONFIRM_STAGING_SEO=YES")
-if len(DEPLOY_SHA) < 7:
-    raise SystemExit("ROLLSBAR_DEPLOY_SHA is missing")
-if BACKUP_ALREADY_VERIFIED not in ("", "YES"):
-    raise SystemExit("ROLLSBAR_SEO_BACKUP_ALREADY_VERIFIED must be empty or YES")
+def catalog_audit(client):
+    script = ('set -euo pipefail\nexport PATH="$HOME/.local/bin:$PATH"\n'
+              'wp --path="$HOME/www/staging.rollsbar.ru" eval ' + q(AUDIT_PHP))
+    audit = parse_audit(run_remote(client, script))
+    # Intentionally no incoming marker requirement during an incomplete release.
+    validate_catalog_audit(audit)
+    return audit
 
-client = None
-try:
-    client = connect()
-    result = execute(client)
+
+def execute(client, deploy_sha, backup_verified):
+    if not re.fullmatch(r"[0-9a-f]{40}", deploy_sha):
+        raise ValueError("ROLLSBAR_DEPLOY_SHA must be an exact lowercase SHA")
+    if backup_verified not in ("", "YES"):
+        raise ValueError("Invalid parent backup confirmation")
+    before = catalog_audit(client)
+    result = run_remote(client, mutation_script(deploy_sha, backup_verified))
+    after = catalog_audit(client)
+    if before != after:
+        raise RuntimeError("Catalog changed during SEO provisioning")
     if "STAGING SEO PROVISION PASS" not in result:
         raise RuntimeError("SEO provision returned without verification marker")
-except (paramiko.SSHException, socket.error, OSError, RuntimeError, ValueError) as exc:
-    message = str(exc).replace(PASSWORD, "***") if PASSWORD else str(exc)
-    raise SystemExit(message)
-finally:
-    if client is not None:
-        client.close()
+    print("STAGING SEO PROVISION PASS; identity-aware pre/post catalog unchanged")
+    return result
+
+
+def main():
+    if os.environ.get("ROLLSBAR_CONFIRM_STAGING_SEO") != "YES":
+        raise SystemExit("Refusing staging mutation: set ROLLSBAR_CONFIRM_STAGING_SEO=YES")
+    client = None
+    try:
+        deploy_sha = os.environ.get("ROLLSBAR_DEPLOY_SHA", "")
+        if not re.fullmatch(r"[0-9a-f]{40}", deploy_sha):
+            raise ValueError("ROLLSBAR_DEPLOY_SHA must be an exact lowercase SHA")
+        client = connect()
+        execute(client, deploy_sha, os.environ.get("ROLLSBAR_SEO_BACKUP_ALREADY_VERIFIED", ""))
+    except Exception as exc:
+        raise SystemExit("SEO provisioning failed: " + type(exc).__name__)
+    finally:
+        if client is not None:
+            client.close()
+
+
+if __name__ == "__main__":
+    main()
