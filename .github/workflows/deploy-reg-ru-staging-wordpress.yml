@@ -37,6 +37,7 @@ on:
           - release-resume
           - client-media
           - storefront-ux
+          - storefront-ux-controls
       release_sha:
         description: Exact already deployed application SHA (required for release-resume)
         required: false
@@ -51,7 +52,7 @@ concurrency:
 
 jobs:
   storefront-ux:
-    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'storefront-ux' && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
+    if: github.event_name == 'workflow_dispatch' && (inputs.operation == 'storefront-ux' || inputs.operation == 'storefront-ux-controls') && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -65,6 +66,7 @@ jobs:
         with:
           node-version: '24'
       - name: Verify storefront contracts before staging access
+        if: inputs.operation == 'storefront-ux'
         run: |
           php qa/visual/storefront-ux-contract.php "$PWD"
           php qa/visual/b12-contract.php "$PWD"
@@ -85,19 +87,19 @@ jobs:
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
-        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase apply
+        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase apply ${{ inputs.operation == 'storefront-ux-controls' && '--controls-only' || '' }}
       - name: Real Woo storefront browser acceptance without orders
         env:
           ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
-        run: node qa/visual/storefront-ux.mjs
+        run: node qa/visual/${{ inputs.operation == 'storefront-ux-controls' && 'storefront-controls.mjs' || 'storefront-ux.mjs' }}
       - name: Finalize exact release marker after browser PASS
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
-        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase finalize
+        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase finalize ${{ inputs.operation == 'storefront-ux-controls' && '--controls-only' || '' }}
       - name: Read actual state on failure without mutation retry
         if: failure()
         env:
@@ -105,7 +107,7 @@ jobs:
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
-        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase inspect
+        run: python3 wordpress/deploy/apply_storefront_ux_staging.py --phase inspect ${{ inputs.operation == 'storefront-ux-controls' && '--controls-only' || '' }}
       - name: Upload storefront release evidence
         if: always()
         uses: actions/upload-artifact@v4

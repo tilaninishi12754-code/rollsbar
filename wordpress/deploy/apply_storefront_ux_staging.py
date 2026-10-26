@@ -3,6 +3,7 @@
 import argparse
 import json
 import shlex
+import subprocess
 from pathlib import Path
 import apply_client_media_staging as transport
 from staging_catalog_audit import validate_catalog_audit
@@ -14,6 +15,19 @@ CHANGED=[transport.PLUGIN+'includes/class-rollsbar-cart-actions.php',
  transport.THEME+'assets/js/app.js',transport.THEME+'assets/css/app.css',
  transport.THEME+'front-page.php',transport.THEME+'footer.php']
 RECEIPT='$HOME/.rollsbar-storefront-ux-release'
+
+CONTROLS_BASE='2ad7e69c690b21bb33ff48c6c92119b01ea8a218'
+CONTROL_RULE='\n@media(min-width:701px) and (max-width:900px){.client-back-top{bottom:calc(86px + env(safe-area-inset-bottom))}}\n'
+
+def require_control_delta():
+ """Reuse previous full acceptance only for this exact additive tablet CSS fix."""
+ global BASE, CHANGED
+ css=transport.THEME+'assets/css/app.css'
+ paths=subprocess.check_output(['git','diff','--name-only',CONTROLS_BASE,'--',transport.THEME,transport.PLUGIN],cwd=ROOT,text=True).splitlines()
+ previous=subprocess.check_output(['git','show',CONTROLS_BASE+':'+css],cwd=ROOT,text=True)
+ if paths!=[css] or (ROOT/css).read_text(encoding='utf-8')!=previous+CONTROL_RULE:
+  raise ValueError('Focused acceptance requires the exact CSS-only delta from verified full release')
+ BASE=CONTROLS_BASE; CHANGED=[css]
 
 def verify():
  return "wp_cmd eval "+shlex.quote(transport.CATALOG_GATE_PHP)+"; echo\necho 'UX_MEDIA_BEGIN'; wp_cmd eval-file \"$PROJECT_ROOT/wordpress/deploy/verify-client-media.php\"; echo; echo 'UX_MEDIA_END'\n"
@@ -65,12 +79,15 @@ echo 'UX_RELEASE_PASS'
 '''
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','finalize','inspect'],required=True);args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','finalize','inspect'],required=True);p.add_argument('--controls-only',action='store_true');args=p.parse_args()
+ if args.controls_only:require_control_delta()
  sha=transport.release_sha();OUT.mkdir(parents=True,exist_ok=True)
  if args.phase=='finalize':
   proof=json.loads((OUT/'browser.json').read_text(encoding='utf-8'))
-  if proof.get('status')!='PASS' or proof.get('release_sha')!=sha or len(proof.get('checks',[]))!=5:raise ValueError('Exact release browser PASS required')
+  if args.controls_only and (proof.get('inherited_full_acceptance_sha')!=CONTROLS_BASE or proof.get('scope')!='floating-controls-701-900' or [c.get('width') for c in proof.get('checks',[])]!=[701,900]):raise ValueError('Focused browser proof must cover both changed breakpoints and verified base')
+  if proof.get('status')!='PASS' or proof.get('release_sha')!=sha or len(proof.get('checks',[]))!=(2 if args.controls_only else 5):raise ValueError('Exact release browser PASS required')
  script=apply_script(sha) if args.phase=='apply' else finalize_script(sha) if args.phase=='finalize' else f'cat "{RECEIPT}" 2>/dev/null || true\ncat "$HOME/.rollsbar-staging-deployed-sha"\ngit -C "$PROJECT_ROOT" rev-parse HEAD\n'+verify()
+ if args.controls_only and args.phase=='apply':script=f'[[ \"$(cat \"$HOME/.rollsbar-staging-deployed-sha\")\" == {CONTROLS_BASE} ]]\n'+script
  output=transport.execute(script)
  (OUT/(args.phase+'.log')).write_text(output,encoding='utf-8')
  if args.phase=='apply':

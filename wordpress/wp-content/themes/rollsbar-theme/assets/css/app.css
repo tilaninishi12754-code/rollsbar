@@ -656,3 +656,5 @@ a.screen-reader-text:focus{position:fixed;top:8px;left:8px;width:auto;height:aut
  .home .rollsbar-header-spacer{height:var(--rb-home-header-height,67px)}
  .home .rollsbar-category-nav{top:var(--rb-home-header-height,67px)}
 }
+
+@media(min-width:701px) and (max-width:900px){.client-back-top{bottom:calc(86px + env(safe-area-inset-bottom))}}
