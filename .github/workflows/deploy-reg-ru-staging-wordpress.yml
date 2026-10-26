@@ -22,6 +22,7 @@ on:
       - wordpress/wp-content/themes/rollsbar-theme/**
       - wordpress/wp-content/plugins/rollsbar-core/**
       - wordpress/data/catalog.json
+      - wordpress/data/product-media/**
   workflow_dispatch:
     inputs:
       operation:
@@ -34,6 +35,7 @@ on:
           - catalog-maintenance
           - release-inspect
           - release-resume
+          - client-media
       release_sha:
         description: Exact already deployed application SHA (required for release-resume)
         required: false
@@ -47,6 +49,64 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  client-media:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'client-media' && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Offline media contracts before staging access
+        run: |
+          php qa/visual/client-media-contract.php
+          python3 wordpress/tools/test_client_media_sources.py
+          python3 wordpress/deploy/test_client_media_release.py
+          bash -n wordpress/deploy/bootstrap-staging.sh
+          php -l wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-client-media.php
+      - name: Install staging transport and browser
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet paramiko playwright
+          python3 -m playwright install chromium
+      - name: Backup, deploy media only, sync twice and audit catalog
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          set -o pipefail
+          mkdir -p qa/visual-results/client-media
+          python3 wordpress/deploy/apply_client_media_staging.py --phase apply 2>&1 | tee qa/visual-results/client-media/release.log
+      - name: Verify real desktop and mobile client photos
+        run: python3 wordpress/deploy/client_media_browser.py
+      - name: Record verified release after browser acceptance
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: python3 wordpress/deploy/apply_client_media_staging.py --phase finalize
+      - name: Inspect actual state after a failure without retrying mutation
+        if: failure()
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: python3 wordpress/deploy/apply_client_media_staging.py --phase inspect
+      - name: Upload client media evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-media-${{ github.run_id }}-${{ github.run_attempt }}
+          path: qa/visual-results/client-media/
+          if-no-files-found: error
+          retention-days: 30
+
   deploy:
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.operation == 'deploy')
     runs-on: ubuntu-latest

@@ -42,6 +42,7 @@ jobs:
           shutil.copytree(core_src, core_work)
           (core_work/'data').mkdir(parents=True, exist_ok=True)
           shutil.copy2(catalog, core_work/'data/catalog.json')
+          shutil.copytree(Path('wordpress/data/product-media'), core_work/'data/product-media')
 
           def zip_dir(src: Path, output: Path):
               with zipfile.ZipFile(output,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:

@@ -41,6 +41,7 @@ add_action(
 
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-core.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-catalog-importer.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-client-media.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-settings.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-delivery-rules.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-geocode-policy.php';
@@ -73,6 +74,7 @@ RollsBar_Reviews::init();
 RollsBar_Analytics::init();
 
 RollsBar_Catalog_Importer::register_cli();
+RollsBar_Client_Media::register_cli();
 
 add_action(
 	'plugins_loaded',

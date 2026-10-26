@@ -1,0 +1,1799 @@
+{
+  "schema_version": 1,
+  "canon_version": "client-media-2026-10-21",
+  "canon_date": "2026-10-21",
+  "rule": "For product media assignments covered by CLIENT MEDIA CANON v2026-10-21, client-supplied media manifest overrides legacy catalog/Yandex image sources. Do not change this rule without new explicit customer/user media input.",
+  "sources": [
+    {
+      "filename": "19-10-2026_09-24-58.zip",
+      "bytes": 7550703,
+      "sha256": "9ce332520d715225a527bde90b439aa9a306579415ed3d18ab18212e1889b531",
+      "table": {
+        "filename": "Таблица Роллс бар.xlsx",
+        "sha256": "763a87755fcf0b11571f19db5190b5d872069e31811261f106cc563dfd301e57",
+        "status": "historical_customer_evidence",
+        "mapped_rows": 50
+      }
+    },
+    {
+      "filename": "21-10-2026_10-48-20.zip",
+      "bytes": 8280976,
+      "sha256": "336150f653fc2247e92612fe3388a996449222b3bc17e2b351c97d804d5d00ef",
+      "table": {
+        "filename": "Таблица Роллс бар.xlsx",
+        "sha256": "3cd4c86a8bdec068162742df466d3e0447d9dad7ae7a978951aeb04febdf11f8",
+        "status": "current_photo_assignment_authority",
+        "mapped_rows": 61
+      }
+    }
+  ],
+  "counts": {
+    "assets": 36,
+    "preserved_rows": 61,
+    "resolved_rows": 57,
+    "resolved_source_ids": 45,
+    "deferred_rows": 4,
+    "deferred_products": 2
+  },
+  "assets": [
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "4-syra-chedder",
+      "original_photo_name": "4 сыра Чеддер",
+      "file": "images/4-syra-chedder.webp",
+      "source_ids": [
+        "pizza-4-syra-chedder"
+      ],
+      "assignment_rows": [
+        77,
+        78
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "4 сыра Чеддер.webp"
+        }
+      ],
+      "source_sha256": "1a3ae2d754bc6d14f177fff392954ba4db81ff95e7db0af6ab777ab25c3ae51b",
+      "derived_sha256": "1a3ae2d754bc6d14f177fff392954ba4db81ff95e7db0af6ab777ab25c3ae51b",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "bonito",
+      "original_photo_name": "Бонито",
+      "file": "images/bonito.webp",
+      "source_ids": [
+        "rolls-bonito"
+      ],
+      "assignment_rows": [
+        103
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Бонито.webp"
+        }
+      ],
+      "source_sha256": "f9adb1fc46aa1c8e9cc30f0eefe6426f39a9136250b34703b0f21f1a3fedefd0",
+      "derived_sha256": "f9adb1fc46aa1c8e9cc30f0eefe6426f39a9136250b34703b0f21f1a3fedefd0",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "byanka",
+      "original_photo_name": "Бьянка",
+      "file": "images/byanka.webp",
+      "source_ids": [
+        "pizza-byanka"
+      ],
+      "assignment_rows": [
+        87,
+        88
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Бьянка.webp"
+        }
+      ],
+      "source_sha256": "19aed712366378f567f5e1051181fa93fd8d6112b114a46e3fa516bd148487c3",
+      "derived_sha256": "19aed712366378f567f5e1051181fa93fd8d6112b114a46e3fa516bd148487c3",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "gribnaya",
+      "original_photo_name": "Грибная",
+      "file": "images/gribnaya.webp",
+      "source_ids": [
+        "pizza-gribnaya"
+      ],
+      "assignment_rows": [
+        73,
+        74
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Грибная.webp"
+        }
+      ],
+      "source_sha256": "173eded37a091ab97086415b6050166a32124c6a5370c4b43c235930c9f9f6cb",
+      "derived_sha256": "173eded37a091ab97086415b6050166a32124c6a5370c4b43c235930c9f9f6cb",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "derevenskaya",
+      "original_photo_name": "Деревенская",
+      "file": "images/derevenskaya.webp",
+      "source_ids": [
+        "pizza-derevenskaya"
+      ],
+      "assignment_rows": [
+        69,
+        70
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Деревенская.webp"
+        }
+      ],
+      "source_sha256": "9d06f32d93245e50b992bfb609cdff2b4910eafed7bdb37003faaaaa2d0b9721",
+      "derived_sha256": "9d06f32d93245e50b992bfb609cdff2b4910eafed7bdb37003faaaaa2d0b9721",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "zapechennye-mamenori",
+      "original_photo_name": "Запеченные маменори",
+      "file": "images/zapechennye-mamenori.png",
+      "source_ids": [
+        "baked-zapechennye-mamenori-s-krabom",
+        "baked-zapechennye-mamenori-s-krevetkoy",
+        "baked-zapechennye-mamenori-s-lososem",
+        "baked-zapechennye-mamenori-s-midiyami",
+        "baked-zapechennye-mamenori-s-ugrem",
+        "baked-zapechennye-mamenori-tuncom"
+      ],
+      "assignment_rows": [
+        37,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "provenance": [
+        {
+          "archive": "21-10-2026_10-48-20.zip",
+          "member": "Запеченные маменори.WEBP"
+        }
+      ],
+      "source_sha256": "a556450c0f327287ee2889998e08a62482e252c6fea960513e3cd48d78920096",
+      "derived_sha256": "a556450c0f327287ee2889998e08a62482e252c6fea960513e3cd48d78920096",
+      "source_mime": "image/png",
+      "derived_mime": "image/png",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "zapechennye-roll",
+      "original_photo_name": "Запеченные ролл",
+      "file": "images/zapechennye-roll.webp",
+      "source_ids": [
+        "baked-zapechennye-roll-s-krabom",
+        "baked-zapechennye-roll-s-krevetkoy",
+        "baked-zapechennye-roll-s-lososem",
+        "baked-zapechennye-roll-s-midiyami",
+        "baked-zapechennye-roll-s-tuncom",
+        "baked-zapechennye-roll-s-ugrem"
+      ],
+      "assignment_rows": [
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Запеченные ролл.webp"
+        }
+      ],
+      "source_sha256": "b031febd3f830d025af977cf437cb823e49bb2d0c815f575c9d125020fd1844b",
+      "derived_sha256": "b031febd3f830d025af977cf437cb823e49bb2d0c815f575c9d125020fd1844b",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "zapechennyy-ris",
+      "original_photo_name": "Запеченный рис",
+      "file": "images/zapechennyy-ris.png",
+      "source_ids": [
+        "baked-rice-salmon",
+        "baked-rice-shrimp"
+      ],
+      "assignment_rows": [
+        13,
+        14
+      ],
+      "provenance": [
+        {
+          "archive": "21-10-2026_10-48-20.zip",
+          "member": "Запеченный рис.WEBP"
+        }
+      ],
+      "source_sha256": "e00ce15e9d64ff7a1075abad95754d5f24866de7ff80f9380ffcf76793a23c17",
+      "derived_sha256": "e00ce15e9d64ff7a1075abad95754d5f24866de7ff80f9380ffcf76793a23c17",
+      "source_mime": "image/png",
+      "derived_mime": "image/png",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "in-yan",
+      "original_photo_name": "Инь-Янь",
+      "file": "images/in-yan.webp",
+      "source_ids": [
+        "rolls-in-yan"
+      ],
+      "assignment_rows": [
+        110
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Инь-Янь.webp"
+        }
+      ],
+      "source_sha256": "f23403d6e024e8056b0061ea0fbe33a1908bf06e3a0df14333ccfc3695a78914",
+      "derived_sha256": "f23403d6e024e8056b0061ea0fbe33a1908bf06e3a0df14333ccfc3695a78914",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "italyanskiy",
+      "original_photo_name": "Итальянский",
+      "file": "images/italyanskiy.png",
+      "source_ids": [
+        "rolls-italyanskiy"
+      ],
+      "assignment_rows": [
+        104
+      ],
+      "provenance": [
+        {
+          "archive": "21-10-2026_10-48-20.zip",
+          "member": "Итальянский.WEBP"
+        }
+      ],
+      "source_sha256": "c82ac6e8dce9718695df49ea5e3b258a1f2eb942479266c8f9328564db9f700b",
+      "derived_sha256": "c82ac6e8dce9718695df49ea5e3b258a1f2eb942479266c8f9328564db9f700b",
+      "source_mime": "image/png",
+      "derived_mime": "image/png",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "kaliforniya-klassicheskaya",
+      "original_photo_name": "Калифорния классическая",
+      "file": "images/kaliforniya-klassicheskaya.webp",
+      "source_ids": [
+        "rolls-kaliforniya-klassicheskaya"
+      ],
+      "assignment_rows": [
+        98
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Калифорния классическая.webp"
+        }
+      ],
+      "source_sha256": "e0b2b44b054886722742bef885a3bee5c3235193808d0ab83b77cb4814242bae",
+      "derived_sha256": "e0b2b44b054886722742bef885a3bee5c3235193808d0ab83b77cb4814242bae",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "kaliforniya-s-kopchennym-lososem",
+      "original_photo_name": "Калифорния с копченным лососем",
+      "file": "images/kaliforniya-s-kopchennym-lososem.webp",
+      "source_ids": [
+        "rolls-kaliforniya-s-kopchennym-lososem"
+      ],
+      "assignment_rows": [
+        99
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Калифорния с копченным лососем.webp"
+        }
+      ],
+      "source_sha256": "59c21f299dbab48af8c32338dfda8e5b914b58c6e18e690981c7e88be55960f8",
+      "derived_sha256": "59c21f299dbab48af8c32338dfda8e5b914b58c6e18e690981c7e88be55960f8",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "kaliforniya-s-krabom",
+      "original_photo_name": "Калифорния с крабом",
+      "file": "images/kaliforniya-s-krabom.webp",
+      "source_ids": [
+        "rolls-kaliforniya-s-krabom"
+      ],
+      "assignment_rows": [
+        100
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Калифорния с крабом.webp"
+        }
+      ],
+      "source_sha256": "ef48cb530d4998a321f017dd7b4c2d13b8f399ef215e7459e9defa56aae09be7",
+      "derived_sha256": "ef48cb530d4998a321f017dd7b4c2d13b8f399ef215e7459e9defa56aae09be7",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "kaliforniya-s-krevetkoy",
+      "original_photo_name": "Калифорния с креветкой",
+      "file": "images/kaliforniya-s-krevetkoy.webp",
+      "source_ids": [
+        "rolls-kaliforniya-s-krevetkoy"
+      ],
+      "assignment_rows": [
+        101
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Калифорния с креветкой.webp"
+        }
+      ],
+      "source_sha256": "0b58b95d72b44b7a535f504f02fb855b89e05427b52c22e4dcaba487943a5bdf",
+      "derived_sha256": "0b58b95d72b44b7a535f504f02fb855b89e05427b52c22e4dcaba487943a5bdf",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "kani",
+      "original_photo_name": "Кани",
+      "file": "images/kani.webp",
+      "source_ids": [
+        "rolls-kani"
+      ],
+      "assignment_rows": [
+        97
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Кани.webp"
+        }
+      ],
+      "source_sha256": "0caf75385eeeaacb9be57c73d6444c914bf176e3057950d0c17907833d0f8ad9",
+      "derived_sha256": "0caf75385eeeaacb9be57c73d6444c914bf176e3057950d0c17907833d0f8ad9",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "karbonara",
+      "original_photo_name": "Карбонара",
+      "file": "images/karbonara.webp",
+      "source_ids": [
+        "pizza-karbonara"
+      ],
+      "assignment_rows": [
+        75,
+        76
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Карбонара.webp"
+        }
+      ],
+      "source_sha256": "01cdf11b4d40d7ee5d753351ff96b826a58e9fb562bcfb2fdbd7912a7a8bfda2",
+      "derived_sha256": "01cdf11b4d40d7ee5d753351ff96b826a58e9fb562bcfb2fdbd7912a7a8bfda2",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "krasnyy-drakon",
+      "original_photo_name": "Красный дракон",
+      "file": "images/krasnyy-drakon.webp",
+      "source_ids": [
+        "rolls-krasnyy-drakon"
+      ],
+      "assignment_rows": [
+        96
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Красный дракон.webp"
+        }
+      ],
+      "source_sha256": "382f7d030179012ab5efafb1341fd946c798dac541eaf0b3cf749eedb9ab5527",
+      "derived_sha256": "382f7d030179012ab5efafb1341fd946c798dac541eaf0b3cf749eedb9ab5527",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "mamenori-s-krabom",
+      "original_photo_name": "Маменори с крабом",
+      "file": "images/mamenori-s-krabom.webp",
+      "source_ids": [
+        "rolls-mamenori-s-krabom"
+      ],
+      "assignment_rows": [
+        106
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Маменори с крабом.webp"
+        }
+      ],
+      "source_sha256": "1f9aa55f3fdc03d8ddae39d67764a4f8eb57f62098bd59b95338441462be2f40",
+      "derived_sha256": "1f9aa55f3fdc03d8ddae39d67764a4f8eb57f62098bd59b95338441462be2f40",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "mamenori-s-krevetkoy",
+      "original_photo_name": "Маменори с креветкой",
+      "file": "images/mamenori-s-krevetkoy.webp",
+      "source_ids": [
+        "rolls-mamenori-s-krevetkoy"
+      ],
+      "assignment_rows": [
+        105
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Маменори с креветкой.webp"
+        }
+      ],
+      "source_sha256": "7dc56e47eba87b6f1d188306fa4d48414266b03c5d017dc971a0b4d7b2d8c07a",
+      "derived_sha256": "7dc56e47eba87b6f1d188306fa4d48414266b03c5d017dc971a0b4d7b2d8c07a",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "margarita",
+      "original_photo_name": "Маргарита",
+      "file": "images/margarita.webp",
+      "source_ids": [
+        "pizza-margarita"
+      ],
+      "assignment_rows": [
+        65,
+        66
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Маргарита.webp"
+        }
+      ],
+      "source_sha256": "86df8ab7621a692094ddbf9b43462fc8f148c5b622c57fd4fc4174c87dd523ce",
+      "derived_sha256": "86df8ab7621a692094ddbf9b43462fc8f148c5b622c57fd4fc4174c87dd523ce",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "myasnaya",
+      "original_photo_name": "Мясная",
+      "file": "images/myasnaya.webp",
+      "source_ids": [
+        "pizza-myasnaya"
+      ],
+      "assignment_rows": [
+        89,
+        90
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Мясная.webp"
+        }
+      ],
+      "source_sha256": "01811464c8dda4fce332515164f987914fc524bd6d288a166fafa8d2a06d6e0d",
+      "derived_sha256": "01811464c8dda4fce332515164f987914fc524bd6d288a166fafa8d2a06d6e0d",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "ogonek",
+      "original_photo_name": "Огонек",
+      "file": "images/ogonek.png",
+      "source_ids": [
+        "pizza-ogonek"
+      ],
+      "assignment_rows": [
+        81,
+        82
+      ],
+      "provenance": [
+        {
+          "archive": "21-10-2026_10-48-20.zip",
+          "member": "Огонек.WEBP"
+        }
+      ],
+      "source_sha256": "0fab2dd2aca1ce453adef945301a30f27b90b91094681b9d88f8ef52009b7781",
+      "derived_sha256": "0fab2dd2aca1ce453adef945301a30f27b90b91094681b9d88f8ef52009b7781",
+      "source_mime": "image/png",
+      "derived_mime": "image/png",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "ohotnichya",
+      "original_photo_name": "Охотничья",
+      "file": "images/ohotnichya.webp",
+      "source_ids": [],
+      "assignment_rows": [
+        83,
+        84
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Охотничья.webp"
+        }
+      ],
+      "source_sha256": "63d14fe631927ccc748c31237e50f9de4943787a5913baae1979735cf94f1051",
+      "derived_sha256": "63d14fe631927ccc748c31237e50f9de4943787a5913baae1979735cf94f1051",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "pepperoni",
+      "original_photo_name": "Пепперони",
+      "file": "images/pepperoni.webp",
+      "source_ids": [
+        "pizza-pepperoni"
+      ],
+      "assignment_rows": [
+        67,
+        68
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Пепперони.webp"
+        }
+      ],
+      "source_sha256": "5030724de5763a6329317c7cb8701e39561725c2f776f67067455dec30a35495",
+      "derived_sha256": "5030724de5763a6329317c7cb8701e39561725c2f776f67067455dec30a35495",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "pikant",
+      "original_photo_name": "Пикант",
+      "file": "images/pikant.webp",
+      "source_ids": [
+        "rolls-pikant"
+      ],
+      "assignment_rows": [
+        108
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Пикант.webp"
+        }
+      ],
+      "source_sha256": "33427ec3467f2dfd3cf23720c6286c35163d1996ecc349c024e858c948ba4960",
+      "derived_sha256": "33427ec3467f2dfd3cf23720c6286c35163d1996ecc349c024e858c948ba4960",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "ranch",
+      "original_photo_name": "Ранч",
+      "file": "images/ranch.webp",
+      "source_ids": [
+        "pizza-ranch"
+      ],
+      "assignment_rows": [
+        91,
+        92
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Ранч.webp"
+        }
+      ],
+      "source_sha256": "8b6fd50e8da311c085d407f687aba3a126419ab9e84e03b10066cfd3cfdf274d",
+      "derived_sha256": "8b6fd50e8da311c085d407f687aba3a126419ab9e84e03b10066cfd3cfdf274d",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "salyami",
+      "original_photo_name": "Салями",
+      "file": "images/salyami.webp",
+      "source_ids": [],
+      "assignment_rows": [
+        85,
+        86
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Салями.webp"
+        }
+      ],
+      "source_sha256": "643e61b245df92ad4415db38ef4c8ac713e07446b61af0d3d589d7458b5d5d55",
+      "derived_sha256": "643e61b245df92ad4415db38ef4c8ac713e07446b61af0d3d589d7458b5d5d55",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "surimi",
+      "original_photo_name": "Сурими",
+      "file": "images/surimi.webp",
+      "source_ids": [
+        "rolls-surimi"
+      ],
+      "assignment_rows": [
+        109
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Сурими.webp"
+        }
+      ],
+      "source_sha256": "72e293d55b3095ad3a0f4a11688512fc59747d6c9458548635204e8011ad8b67",
+      "derived_sha256": "72e293d55b3095ad3a0f4a11688512fc59747d6c9458548635204e8011ad8b67",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "tempura-roll-s-lososem",
+      "original_photo_name": "Темпура ролл с лососем",
+      "file": "images/tempura-roll-s-lososem.webp",
+      "source_ids": [
+        "tempura-tempura-roll-s-lososem"
+      ],
+      "assignment_rows": [
+        132
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Темпура ролл с лососем.webp"
+        }
+      ],
+      "source_sha256": "1e16314b7ebf5c810471046ad3b00d511197be9e16a155e1f89a49cf3d0f2ecd",
+      "derived_sha256": "1e16314b7ebf5c810471046ad3b00d511197be9e16a155e1f89a49cf3d0f2ecd",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "filadelfiya",
+      "original_photo_name": "Филадельфия",
+      "file": "images/filadelfiya.webp",
+      "source_ids": [
+        "rolls-filadelfiya"
+      ],
+      "assignment_rows": [
+        93
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Филадельфия.webp"
+        }
+      ],
+      "source_sha256": "f6413bdc946fac9a43008350c49d2f4718b66e69a4972c142870c9758b6cbd20",
+      "derived_sha256": "f6413bdc946fac9a43008350c49d2f4718b66e69a4972c142870c9758b6cbd20",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "filadelfiya-s-krevetkoy",
+      "original_photo_name": "Филадельфия с креветкой",
+      "file": "images/filadelfiya-s-krevetkoy.webp",
+      "source_ids": [
+        "rolls-filadelfiya-s-krevetkoy"
+      ],
+      "assignment_rows": [
+        95
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Филадельфия с креветкой.webp"
+        }
+      ],
+      "source_sha256": "d6120d6d27c9cb220e41343ba4743936eb7fda004074b6328bd7db9b181a2425",
+      "derived_sha256": "d6120d6d27c9cb220e41343ba4743936eb7fda004074b6328bd7db9b181a2425",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "filadelfiya-s-ugrem",
+      "original_photo_name": "Филадельфия с угрем",
+      "file": "images/filadelfiya-s-ugrem.webp",
+      "source_ids": [
+        "rolls-filadelfiya-s-ugrem"
+      ],
+      "assignment_rows": [
+        94
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Филадельфия с угрем.webp"
+        }
+      ],
+      "source_sha256": "df38260c395747a5a0ad960492700f776d892a3f9e3242b602e78ecd056837b0",
+      "derived_sha256": "df38260c395747a5a0ad960492700f776d892a3f9e3242b602e78ecd056837b0",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "cezar",
+      "original_photo_name": "Цезарь",
+      "file": "images/cezar.webp",
+      "source_ids": [
+        "pizza-cezar"
+      ],
+      "assignment_rows": [
+        71,
+        72
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Цезарь.webp"
+        }
+      ],
+      "source_sha256": "eb08e325d20b5a1dc1113d05efa0a433d1986cbe2b971bb0cedd1e1b33413912",
+      "derived_sha256": "eb08e325d20b5a1dc1113d05efa0a433d1986cbe2b971bb0cedd1e1b33413912",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "cypochka",
+      "original_photo_name": "Цыпочка",
+      "file": "images/cypochka.webp",
+      "source_ids": [
+        "pizza-cypochka"
+      ],
+      "assignment_rows": [
+        79,
+        80
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Цыпочка.webp"
+        }
+      ],
+      "source_sha256": "6e20d4747540748d6ed644a819a8822b7051650e872e758b1bb653e534f53294",
+      "derived_sha256": "6e20d4747540748d6ed644a819a8822b7051650e872e758b1bb653e534f53294",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "chizzi",
+      "original_photo_name": "Чиззи",
+      "file": "images/chizzi.webp",
+      "source_ids": [
+        "rolls-chizzi"
+      ],
+      "assignment_rows": [
+        102
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Чиззи.webp"
+        }
+      ],
+      "source_sha256": "5b781a4a598161a947b9ee28aa22e8641539690a9ed88015d01b2ac94c7e4e07",
+      "derived_sha256": "5b781a4a598161a947b9ee28aa22e8641539690a9ed88015d01b2ac94c7e4e07",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "canon_version": "client-media-2026-10-21",
+      "media_key": "chuka-roll",
+      "original_photo_name": "Чука ролл",
+      "file": "images/chuka-roll.webp",
+      "source_ids": [
+        "rolls-chuka-roll"
+      ],
+      "assignment_rows": [
+        107
+      ],
+      "provenance": [
+        {
+          "archive": "19-10-2026_09-24-58.zip",
+          "member": "Чука ролл.webp"
+        }
+      ],
+      "source_sha256": "1a1828ba8dd4567a144025eee532c1f4e186ea87bafccdb303ce2b53f1f90057",
+      "derived_sha256": "1a1828ba8dd4567a144025eee532c1f4e186ea87bafccdb303ce2b53f1f90057",
+      "source_mime": "image/webp",
+      "derived_mime": "image/webp",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    }
+  ],
+  "assignments": [
+    {
+      "table_row": 13,
+      "category": "WOK и рис",
+      "product_name": "Запеченный рис спайси",
+      "variant": null,
+      "photo_name": "Запеченный рис",
+      "source_id": "baked-rice-shrimp",
+      "media_key": "zapechennyy-ris",
+      "status": "resolved",
+      "resolution": "explicit_alias_exact_category_and_composition",
+      "catalog_name": "Запечённый рис с креветкой",
+      "catalog_category": "wok"
+    },
+    {
+      "table_row": 14,
+      "category": "WOK и рис",
+      "product_name": "Запеченный рис унаги",
+      "variant": null,
+      "photo_name": "Запеченный рис",
+      "source_id": "baked-rice-salmon",
+      "media_key": "zapechennyy-ris",
+      "status": "resolved",
+      "resolution": "explicit_alias_exact_category_and_composition",
+      "catalog_name": "Запечённый рис с лососем",
+      "catalog_category": "wok"
+    },
+    {
+      "table_row": 31,
+      "category": "Запеченные",
+      "product_name": "Запеченные ролл с лососем",
+      "variant": null,
+      "photo_name": "Запеченные ролл",
+      "source_id": "baked-zapechennye-roll-s-lososem",
+      "media_key": "zapechennye-roll",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные ролл с лососем",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 32,
+      "category": "Запеченные",
+      "product_name": "Запеченные ролл с креветкой",
+      "variant": null,
+      "photo_name": "Запеченные ролл",
+      "source_id": "baked-zapechennye-roll-s-krevetkoy",
+      "media_key": "zapechennye-roll",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные ролл с креветкой",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 33,
+      "category": "Запеченные",
+      "product_name": "Запеченные ролл с угрем",
+      "variant": null,
+      "photo_name": "Запеченные ролл",
+      "source_id": "baked-zapechennye-roll-s-ugrem",
+      "media_key": "zapechennye-roll",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные ролл с угрем",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 34,
+      "category": "Запеченные",
+      "product_name": "Запеченные ролл с мидиями",
+      "variant": null,
+      "photo_name": "Запеченные ролл",
+      "source_id": "baked-zapechennye-roll-s-midiyami",
+      "media_key": "zapechennye-roll",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные ролл с мидиями",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 35,
+      "category": "Запеченные",
+      "product_name": "Запеченные ролл с тунцом",
+      "variant": null,
+      "photo_name": "Запеченные ролл",
+      "source_id": "baked-zapechennye-roll-s-tuncom",
+      "media_key": "zapechennye-roll",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные ролл с тунцом",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 36,
+      "category": "Запеченные",
+      "product_name": "Запеченные ролл с крабом",
+      "variant": null,
+      "photo_name": "Запеченные ролл",
+      "source_id": "baked-zapechennye-roll-s-krabom",
+      "media_key": "zapechennye-roll",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные ролл с крабом",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 37,
+      "category": "Запеченные",
+      "product_name": "Запеченные маменори с лососем",
+      "variant": null,
+      "photo_name": "Запеченные маменори",
+      "source_id": "baked-zapechennye-mamenori-s-lososem",
+      "media_key": "zapechennye-mamenori",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные маменори с лососем",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 38,
+      "category": "Запеченные",
+      "product_name": "Запеченные маменори с креветкой",
+      "variant": null,
+      "photo_name": "Запеченные маменори",
+      "source_id": "baked-zapechennye-mamenori-s-krevetkoy",
+      "media_key": "zapechennye-mamenori",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные маменори с креветкой",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 39,
+      "category": "Запеченные",
+      "product_name": "Запеченные маменори с угрем",
+      "variant": null,
+      "photo_name": "Запеченные маменори",
+      "source_id": "baked-zapechennye-mamenori-s-ugrem",
+      "media_key": "zapechennye-mamenori",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные маменори с угрем",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 40,
+      "category": "Запеченные",
+      "product_name": "Запеченные маменори с мидиями",
+      "variant": null,
+      "photo_name": "Запеченные маменори",
+      "source_id": "baked-zapechennye-mamenori-s-midiyami",
+      "media_key": "zapechennye-mamenori",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные маменори с мидиями",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 41,
+      "category": "Запеченные",
+      "product_name": "Запеченные маменори тунцом",
+      "variant": null,
+      "photo_name": "Запеченные маменори",
+      "source_id": "baked-zapechennye-mamenori-tuncom",
+      "media_key": "zapechennye-mamenori",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные маменори тунцом",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 42,
+      "category": "Запеченные",
+      "product_name": "Запеченные маменори с крабом",
+      "variant": null,
+      "photo_name": "Запеченные маменори",
+      "source_id": "baked-zapechennye-mamenori-s-krabom",
+      "media_key": "zapechennye-mamenori",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Запеченные маменори с крабом",
+      "catalog_category": "baked"
+    },
+    {
+      "table_row": 65,
+      "category": "Пицца",
+      "product_name": "Маргарита",
+      "variant": "30 см",
+      "photo_name": "Маргарита",
+      "source_id": "pizza-margarita",
+      "media_key": "margarita",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Маргарита",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 66,
+      "category": "Пицца",
+      "product_name": "Маргарита",
+      "variant": "50 см",
+      "photo_name": "Маргарита",
+      "source_id": "pizza-margarita",
+      "media_key": "margarita",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Маргарита",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 67,
+      "category": "Пицца",
+      "product_name": "Пепперони",
+      "variant": "30 см",
+      "photo_name": "Пепперони",
+      "source_id": "pizza-pepperoni",
+      "media_key": "pepperoni",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Пепперони",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 68,
+      "category": "Пицца",
+      "product_name": "Пепперони",
+      "variant": "50 см",
+      "photo_name": "Пепперони",
+      "source_id": "pizza-pepperoni",
+      "media_key": "pepperoni",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Пепперони",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 69,
+      "category": "Пицца",
+      "product_name": "Деревенская",
+      "variant": "30 см",
+      "photo_name": "Деревенская",
+      "source_id": "pizza-derevenskaya",
+      "media_key": "derevenskaya",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Деревенская",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 70,
+      "category": "Пицца",
+      "product_name": "Деревенская",
+      "variant": "50 см",
+      "photo_name": "Деревенская",
+      "source_id": "pizza-derevenskaya",
+      "media_key": "derevenskaya",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Деревенская",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 71,
+      "category": "Пицца",
+      "product_name": "Цезарь",
+      "variant": "30 см",
+      "photo_name": "Цезарь",
+      "source_id": "pizza-cezar",
+      "media_key": "cezar",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Цезарь",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 72,
+      "category": "Пицца",
+      "product_name": "Цезарь",
+      "variant": "50 см",
+      "photo_name": "Цезарь",
+      "source_id": "pizza-cezar",
+      "media_key": "cezar",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Цезарь",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 73,
+      "category": "Пицца",
+      "product_name": "Грибная",
+      "variant": "30 см",
+      "photo_name": "Грибная",
+      "source_id": "pizza-gribnaya",
+      "media_key": "gribnaya",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Грибная",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 74,
+      "category": "Пицца",
+      "product_name": "Грибная",
+      "variant": "50 см",
+      "photo_name": "Грибная",
+      "source_id": "pizza-gribnaya",
+      "media_key": "gribnaya",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Грибная",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 75,
+      "category": "Пицца",
+      "product_name": "Карбонара",
+      "variant": "30 см",
+      "photo_name": "Карбонара",
+      "source_id": "pizza-karbonara",
+      "media_key": "karbonara",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Карбонара",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 76,
+      "category": "Пицца",
+      "product_name": "Карбонара",
+      "variant": "50 см",
+      "photo_name": "Карбонара",
+      "source_id": "pizza-karbonara",
+      "media_key": "karbonara",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Карбонара",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 77,
+      "category": "Пицца",
+      "product_name": "4 сыра Чеддер",
+      "variant": "30 см",
+      "photo_name": "4 сыра Чеддер",
+      "source_id": "pizza-4-syra-chedder",
+      "media_key": "4-syra-chedder",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "4 сыра Чеддер",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 78,
+      "category": "Пицца",
+      "product_name": "4 сыра Чеддер",
+      "variant": "50 см",
+      "photo_name": "4 сыра Чеддер",
+      "source_id": "pizza-4-syra-chedder",
+      "media_key": "4-syra-chedder",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "4 сыра Чеддер",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 79,
+      "category": "Пицца",
+      "product_name": "Цыпочка",
+      "variant": "30 см",
+      "photo_name": "Цыпочка",
+      "source_id": "pizza-cypochka",
+      "media_key": "cypochka",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Цыпочка",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 80,
+      "category": "Пицца",
+      "product_name": "Цыпочка",
+      "variant": "50 см",
+      "photo_name": "Цыпочка",
+      "source_id": "pizza-cypochka",
+      "media_key": "cypochka",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Цыпочка",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 81,
+      "category": "Пицца",
+      "product_name": "Огонек",
+      "variant": "30 см",
+      "photo_name": "Огонек",
+      "source_id": "pizza-ogonek",
+      "media_key": "ogonek",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Огонек",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 82,
+      "category": "Пицца",
+      "product_name": "Огонек",
+      "variant": "50 см",
+      "photo_name": "Огонек",
+      "source_id": "pizza-ogonek",
+      "media_key": "ogonek",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Огонек",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 83,
+      "category": "Пицца",
+      "product_name": "Охотничья",
+      "variant": "30 см",
+      "photo_name": "Охотничья",
+      "source_id": null,
+      "media_key": "ohotnichya",
+      "status": "deferred_new_product_identity",
+      "resolution": "deferred_new_product_identity",
+      "reason": "No canonical RollsBar source ID currently exists; separate catalog decision required."
+    },
+    {
+      "table_row": 84,
+      "category": "Пицца",
+      "product_name": "Охотничья",
+      "variant": "50 см",
+      "photo_name": "Охотничья",
+      "source_id": null,
+      "media_key": "ohotnichya",
+      "status": "deferred_new_product_identity",
+      "resolution": "deferred_new_product_identity",
+      "reason": "No canonical RollsBar source ID currently exists; separate catalog decision required."
+    },
+    {
+      "table_row": 85,
+      "category": "Пицца",
+      "product_name": "Салями",
+      "variant": "30 см",
+      "photo_name": "Салями",
+      "source_id": null,
+      "media_key": "salyami",
+      "status": "deferred_new_product_identity",
+      "resolution": "deferred_new_product_identity",
+      "reason": "No canonical RollsBar source ID currently exists; separate catalog decision required."
+    },
+    {
+      "table_row": 86,
+      "category": "Пицца",
+      "product_name": "Салями",
+      "variant": "50 см",
+      "photo_name": "Салями",
+      "source_id": null,
+      "media_key": "salyami",
+      "status": "deferred_new_product_identity",
+      "resolution": "deferred_new_product_identity",
+      "reason": "No canonical RollsBar source ID currently exists; separate catalog decision required."
+    },
+    {
+      "table_row": 87,
+      "category": "Пицца",
+      "product_name": "Бьянка",
+      "variant": "30 см",
+      "photo_name": "Бьянка",
+      "source_id": "pizza-byanka",
+      "media_key": "byanka",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Бьянка",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 88,
+      "category": "Пицца",
+      "product_name": "Бьянка",
+      "variant": "50 см",
+      "photo_name": "Бьянка",
+      "source_id": "pizza-byanka",
+      "media_key": "byanka",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Бьянка",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 89,
+      "category": "Пицца",
+      "product_name": "Мясная",
+      "variant": "30 см",
+      "photo_name": "Мясная",
+      "source_id": "pizza-myasnaya",
+      "media_key": "myasnaya",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Мясная",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 90,
+      "category": "Пицца",
+      "product_name": "Мясная",
+      "variant": "50 см",
+      "photo_name": "Мясная",
+      "source_id": "pizza-myasnaya",
+      "media_key": "myasnaya",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Мясная",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 91,
+      "category": "Пицца",
+      "product_name": "Ранч",
+      "variant": "30 см",
+      "photo_name": "Ранч",
+      "source_id": "pizza-ranch",
+      "media_key": "ranch",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Ранч",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 92,
+      "category": "Пицца",
+      "product_name": "Ранч",
+      "variant": "50 см",
+      "photo_name": "Ранч",
+      "source_id": "pizza-ranch",
+      "media_key": "ranch",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Ранч",
+      "catalog_category": "pizza"
+    },
+    {
+      "table_row": 93,
+      "category": "Роллы",
+      "product_name": "Филадельфия",
+      "variant": null,
+      "photo_name": "Филадельфия",
+      "source_id": "rolls-filadelfiya",
+      "media_key": "filadelfiya",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Филадельфия",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 94,
+      "category": "Роллы",
+      "product_name": "Филадельфия с угрем",
+      "variant": null,
+      "photo_name": "Филадельфия с угрем",
+      "source_id": "rolls-filadelfiya-s-ugrem",
+      "media_key": "filadelfiya-s-ugrem",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Филадельфия с угрем",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 95,
+      "category": "Роллы",
+      "product_name": "Филадельфия с креветкой",
+      "variant": null,
+      "photo_name": "Филадельфия с креветкой",
+      "source_id": "rolls-filadelfiya-s-krevetkoy",
+      "media_key": "filadelfiya-s-krevetkoy",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Филадельфия с креветкой",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 96,
+      "category": "Роллы",
+      "product_name": "Красный дракон",
+      "variant": null,
+      "photo_name": "Красный дракон",
+      "source_id": "rolls-krasnyy-drakon",
+      "media_key": "krasnyy-drakon",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Красный дракон",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 97,
+      "category": "Роллы",
+      "product_name": "Кани",
+      "variant": null,
+      "photo_name": "Кани",
+      "source_id": "rolls-kani",
+      "media_key": "kani",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Кани",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 98,
+      "category": "Роллы",
+      "product_name": "Калифорния классическая",
+      "variant": null,
+      "photo_name": "Калифорния классическая",
+      "source_id": "rolls-kaliforniya-klassicheskaya",
+      "media_key": "kaliforniya-klassicheskaya",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Калифорния классическая",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 99,
+      "category": "Роллы",
+      "product_name": "Калифорния с копченным лососем",
+      "variant": null,
+      "photo_name": "Калифорния с копченным лососем",
+      "source_id": "rolls-kaliforniya-s-kopchennym-lososem",
+      "media_key": "kaliforniya-s-kopchennym-lososem",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Калифорния с копченным лососем",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 100,
+      "category": "Роллы",
+      "product_name": "Калифорния с крабом",
+      "variant": null,
+      "photo_name": "Калифорния с крабом",
+      "source_id": "rolls-kaliforniya-s-krabom",
+      "media_key": "kaliforniya-s-krabom",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Калифорния с крабом",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 101,
+      "category": "Роллы",
+      "product_name": "Калифорния с креветкой",
+      "variant": null,
+      "photo_name": "Калифорния с креветкой",
+      "source_id": "rolls-kaliforniya-s-krevetkoy",
+      "media_key": "kaliforniya-s-krevetkoy",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Калифорния с креветкой",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 102,
+      "category": "Роллы",
+      "product_name": "Чиззи",
+      "variant": null,
+      "photo_name": "Чиззи",
+      "source_id": "rolls-chizzi",
+      "media_key": "chizzi",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Чиззи",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 103,
+      "category": "Роллы",
+      "product_name": "Бонито",
+      "variant": null,
+      "photo_name": "Бонито",
+      "source_id": "rolls-bonito",
+      "media_key": "bonito",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Бонито",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 104,
+      "category": "Роллы",
+      "product_name": "Итальянский",
+      "variant": null,
+      "photo_name": "Итальянский",
+      "source_id": "rolls-italyanskiy",
+      "media_key": "italyanskiy",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Итальянский",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 105,
+      "category": "Роллы",
+      "product_name": "Маменори с креветкой",
+      "variant": null,
+      "photo_name": "Маменори с креветкой",
+      "source_id": "rolls-mamenori-s-krevetkoy",
+      "media_key": "mamenori-s-krevetkoy",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Маменори с креветкой",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 106,
+      "category": "Роллы",
+      "product_name": "Маменори с крабом",
+      "variant": null,
+      "photo_name": "Маменори с крабом",
+      "source_id": "rolls-mamenori-s-krabom",
+      "media_key": "mamenori-s-krabom",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Маменори с крабом",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 107,
+      "category": "Роллы",
+      "product_name": "Чука ролл",
+      "variant": null,
+      "photo_name": "Чука ролл",
+      "source_id": "rolls-chuka-roll",
+      "media_key": "chuka-roll",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Чука ролл",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 108,
+      "category": "Роллы",
+      "product_name": "Пикант",
+      "variant": null,
+      "photo_name": "Пикант",
+      "source_id": "rolls-pikant",
+      "media_key": "pikant",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Пикант",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 109,
+      "category": "Роллы",
+      "product_name": "Сурими",
+      "variant": null,
+      "photo_name": "Сурими",
+      "source_id": "rolls-surimi",
+      "media_key": "surimi",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Сурими",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 110,
+      "category": "Роллы",
+      "product_name": "Инь-Янь",
+      "variant": null,
+      "photo_name": "Инь-Янь",
+      "source_id": "rolls-in-yan",
+      "media_key": "in-yan",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Инь-Янь",
+      "catalog_category": "rolls"
+    },
+    {
+      "table_row": 132,
+      "category": "Темпура",
+      "product_name": "Темпура ролл с лососем",
+      "variant": null,
+      "photo_name": "Темпура ролл с лососем",
+      "source_id": "tempura-tempura-roll-s-lososem",
+      "media_key": "tempura-roll-s-lososem",
+      "status": "resolved",
+      "resolution": "exact_normalized_category_name_variant",
+      "catalog_name": "Темпура ролл с лососем",
+      "catalog_category": "tempura"
+    }
+  ]
+}

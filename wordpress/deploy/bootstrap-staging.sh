@@ -47,6 +47,7 @@ sync_rollsbar_code(){
   fi
   mkdir -p "$plugin_dst/data"
   cp "$PROJECT_ROOT/wordpress/data/catalog.json" "$plugin_dst/data/catalog.json"
+  cp -a "$PROJECT_ROOT/wordpress/data/product-media" "$plugin_dst/data/product-media"
 }
 
 if [[ ! -f "$WP_PATH/wp-load.php" ]]; then
@@ -246,6 +247,12 @@ update_option(
 if [[ "$ROLLSBAR_IMPORT_SMOKE" == "1" ]]; then
   echo "Importing first 5 product cards for Gate B smoke..."
   wp_cmd rollsbar catalog import --limit=5
+fi
+
+# A promoted staging DB has all canonical identities. Limited five-card CI smoke
+# is intentionally excluded; full catalog import also reconciles media itself.
+if [[ "$(wp_cmd post list --post_type=product --meta_key=_rollsbar_source_id --format=count)" -ge 118 ]]; then
+  wp_cmd rollsbar media sync --confirm-staging
 fi
 
 # Final invariants: fail the deploy if a later change regresses staging HTTPS,

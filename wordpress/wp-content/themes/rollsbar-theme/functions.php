@@ -238,7 +238,8 @@ add_filter(
 /**
  * Resolve the canonical presentation image without mutating product data.
  *
- * An explicitly configured Woo image remains the admin override. Products
+ * Client Media Canon v2026-10-21 overrides legacy/admin images for covered IDs.
+ * For other products an explicitly configured Woo image remains the override. Products
  * imported from the approved catalog retain their original source URL in
  * _rollsbar_source_image. Products with neither use the approved branded
  * fallback instead of WooCommerce's generic placeholder.
@@ -246,14 +247,15 @@ add_filter(
  * @return array{url:string,source:string,attachment_id:int,kind:string,position:string}
  */
 function rollsbar_resolve_product_image( WC_Product $product, string $size = 'large' ): array {
-	$image_id = (int) $product->get_image_id();
+	$canonical_id = class_exists( 'RollsBar_Client_Media' ) ? RollsBar_Client_Media::attachment_for( $product ) : 0;
+	$image_id = $canonical_id ?: (int) $product->get_image_id();
 
 	if ( $image_id ) {
 		$image = wp_get_attachment_image_url( $image_id, $size );
 		if ( $image ) {
 			return array(
 				'url'           => (string) $image,
-				'source'        => 'featured',
+				'source'        => $canonical_id ? 'client-canon' : 'featured',
 				'attachment_id' => $image_id,
 				'kind'          => 'image',
 				'position'      => '',

@@ -28,6 +28,11 @@ jobs:
           python3 -m compileall -q wordpress/deploy wordpress/tools
           echo "Deployment/tool Python syntax PASS"
 
+      - name: Client media canon, safe deferral, idempotency and rebuild
+        run: |
+          php qa/visual/client-media-contract.php
+          python3 wordpress/tools/test_client_media_sources.py
+
       - name: JavaScript syntax
         run: |
           node --check wordpress/wp-content/themes/rollsbar-theme/assets/js/app.js

@@ -343,6 +343,7 @@ final class RollsBar_Catalog_Importer {
 
 	public static function import_all( bool $dry_run = false, int $limit = 0 ): array {
 		$catalog = self::load_catalog();
+		if ( class_exists( 'RollsBar_Client_Media' ) ) { RollsBar_Client_Media::validate(); }
 
 		if ( $limit > 0 ) {
 			$catalog['products'] = array_slice( $catalog['products'], 0, $limit );
@@ -373,6 +374,7 @@ final class RollsBar_Catalog_Importer {
 			++$result['created_or_updated'];
 		}
 
+		if ( ! $dry_run && class_exists( 'RollsBar_Client_Media' ) ) { RollsBar_Client_Media::after_catalog_import(); }
 		return $result;
 	}
 
