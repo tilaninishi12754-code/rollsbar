@@ -64,6 +64,34 @@ class LiveModeContracts(unittest.TestCase):
             self.assertGreater(row['bytes'],0)
             self.assertEqual(row['identity'],'PASS')
 
+    def test_exact_targets_without_query_pass(self):
+        expected={a:('release '+a).encode() for a in ASSETS}
+        identity=AssetIdentity(expected,self.BASE)
+        for asset,body in expected.items():
+            identity.observe(SimpleNamespace(url=self.BASE+
+                '/wp-content/plugins/rollsbar-core/assets/'+asset,
+                status=200,body=lambda b=body:b))
+        identity.verify([])
+
+    def test_run_40274957719_woo_stylesheet_is_unrelated(self):
+        identity=self.identity()
+        body=Mock(return_value=b'normal WooCommerce checkout stylesheet')
+        identity.observe(SimpleNamespace(url=self.BASE+
+            '/wp-content/plugins/woocommerce/assets/client/blocks/checkout.css?ver=wc-11.1.2',
+            status=200,body=body))
+        identity.verify([])
+        body.assert_not_called()
+        self.assertEqual(len(identity.records),2)
+
+    def test_theme_and_other_plugin_namesakes_are_ignored(self):
+        for path in ('/theme/foo/checkout.css', '/other-plugin/checkout.js',
+                     '/wp-content/plugins/rollsbar-core-other/assets/css/checkout.css'):
+            identity=self.identity()
+            body=Mock(side_effect=AssertionError('Unrelated response must not be read'))
+            identity.observe(SimpleNamespace(url=self.BASE+path,status=200,body=body))
+            identity.verify([])
+            body.assert_not_called()
+
     def test_stale_css_and_js_fail(self):
         for a in ASSETS:
             with self.subTest(asset=a),self.assertRaises(AssertionError):
@@ -75,14 +103,18 @@ class LiveModeContracts(unittest.TestCase):
                 self.identity(omit=a).verify([])
 
     def test_duplicate_wrong_origin_path_and_status_fail(self):
-        for change in ('duplicate','origin','path','status'):
-            identity=self.identity()
-            row=identity.records[0]
-            url=row['url']
-            if change=='origin': url=url.replace('staging.rollsbar.ru','wrong.test')
-            if change=='path': url=url.replace('/rollsbar-core/','/wrong-plugin/')
-            identity.observe(SimpleNamespace(url=url,status=500 if change=='status' else 200,body=lambda:b'extra'))
-            with self.subTest(change=change),self.assertRaises(AssertionError): identity.verify([])
+        for asset in ASSETS:
+            for change in ('duplicate','origin','path','status'):
+                identity=self.identity()
+                row=next(row for row in identity.records if row['asset']==asset)
+                url=row['url']
+                if change=='origin': url=url.replace('staging.rollsbar.ru','wrong.test')
+                if change=='path': url=url.replace('/assets/','/assets/wrong/')
+                if change!='duplicate':
+                    identity.records=[r for r in identity.records if r['asset']!=asset]
+                identity.observe(SimpleNamespace(url=url,status=500 if change=='status' else 200,
+                    body=lambda b=identity.expected[asset]:b))
+                with self.subTest(asset=asset,change=change),self.assertRaises(AssertionError): identity.verify([])
 
     def test_response_body_error_fails(self):
         identity=self.identity()
@@ -115,32 +147,32 @@ class LiveModeContracts(unittest.TestCase):
         for mode in ('shadow','live'):
             for bad in ('','main','a'*7,'A'*40,'a'*40+'\n','a'*40+';id','${SHA}'):
                 with self.subTest(mode=mode,bad=bad),self.assertRaises(ValueError):
-                    dispatch_policy(mode,bad,FEATURE,self.SHA)
-        with self.assertRaises(ValueError): dispatch_policy('live','b'*40,FEATURE,self.SHA)
-        with self.assertRaises(ValueError): dispatch_policy('oops',self.SHA,FEATURE,self.SHA)
+                    dispatch_policy(mode,bad,FEATURE)
+        with self.assertRaises(ValueError): dispatch_policy('live','b'*40,FEATURE)
+        with self.assertRaises(ValueError): dispatch_policy('oops',self.SHA,FEATURE)
 
     def test_explicit_live_uses_release_marker_not_historical(self):
-        policy=dispatch_policy('live',self.SHA,FEATURE,self.SHA)
-        self.assertEqual(policy['ROLLSBAR_QA_EXPECTED_MARKER'],self.SHA)
+        head=__import__('subprocess').check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
+        policy=dispatch_policy('live',head,FEATURE)
+        self.assertEqual(policy['ROLLSBAR_QA_EXPECTED_MARKER'],head)
         self.assertEqual(policy['CHECKOUT_MODE'],'live')
         self.assertEqual(policy['ROLLSBAR_QA_VERIFY_HISTORICAL'],'0')
         with self.assertRaises(ValueError): release_assets('bad')
         with self.assertRaises(ValueError): release_assets(self.SHA)
-        head=__import__('subprocess').check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
         assets=release_assets(head)
         self.assertEqual(set(assets),set(ASSETS))
         for asset,body in assets.items():
             self.assertEqual(body,__import__('subprocess').check_output(['git','show',head+':wordpress/wp-content/plugins/rollsbar-core/assets/'+asset],cwd=ROOT))
 
     def test_historical_behavior_preserved(self):
-        policy=dispatch_policy('historical','',FEATURE,self.SHA)
+        policy=dispatch_policy('historical','',FEATURE)
         self.assertEqual(policy['CHECKOUT_MODE'],'shadow')
         self.assertEqual(policy['ROLLSBAR_QA_EXPECTED_MARKER'],'88826907fc7ffe805a7c47f36c35a74c0049e08e')
-        policy=dispatch_policy('historical','','refs/heads/other',self.SHA)
+        policy=dispatch_policy('historical','','refs/heads/other')
         self.assertEqual(policy['CHECKOUT_MODE'],'historical')
         self.assertEqual(policy['ROLLSBAR_QA_VERIFY_HISTORICAL'],'1')
         self.assertEqual(policy['ROLLSBAR_QA_EXPECTED_MARKER'],'e0c3d4edd4c2bce0718bed8e20bc7c356a55d0ea')
-        with self.assertRaises(ValueError): dispatch_policy('historical',self.SHA,FEATURE,self.SHA)
+        with self.assertRaises(ValueError): dispatch_policy('historical',self.SHA,FEATURE)
 
     def test_workflow_marker_before_after_and_fail_closed(self):
         source=(ROOT/'.github/workflows/gate-b-browser.yml').read_text(encoding='utf-8')
@@ -180,7 +212,7 @@ class LiveModeContracts(unittest.TestCase):
 
     def test_accepted_product_backup_catalog_and_deploy_untouched(self):
         import subprocess
-        result=subprocess.run(['git','diff','--exit-code','6c6501f8d02bdcccaef59b55d936b688cc5a913a','--','wordpress','.github/workflows',':(exclude).github/workflows/gate-b-browser.yml'],cwd=ROOT,capture_output=True,text=True)
+        result=subprocess.run(['git','diff','--exit-code','1ada44e5ee3df0eb708ad4575f6e3b2edfb4cd6a','--','wordpress','.github/workflows',':(exclude).github/workflows/gate-b-browser.yml'],cwd=ROOT,capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
 
     def test_shared_assertions_cleanup_and_product_protection(self):

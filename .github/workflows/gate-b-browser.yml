@@ -14,7 +14,7 @@ on:
           - shadow
           - live
       expected_marker:
-        description: Exact 40 lowercase hex release SHA (required for shadow/live; live must equal selected ref HEAD)
+        description: Exact 40 lowercase hex application release SHA (required for shadow/live; live must be an ancestor of tooling HEAD)
         type: string
         required: false
         default: ''
@@ -35,6 +35,8 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Validate dispatch before credentials or browser acceptance
         env:
           DISPATCH_MODE: ${{ inputs.checkout_mode }}

@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parents[2]
 FEATURE = 'refs/heads/wordpress/checkout-visual-parity-2026-10-25'
 ASSET_ROOT = 'wordpress/wp-content/plugins/rollsbar-core/assets/'
+ASSET_URL_ROOT = '/wp-content/plugins/rollsbar-core/assets/'
 ASSETS = {'css/checkout.css': 'text/css', 'js/checkout.js': 'application/javascript'}
 
 
@@ -18,14 +19,30 @@ def validate_marker(value):
     return value
 
 
-def dispatch_policy(mode, marker, ref, head):
+def validate_live_release(marker):
+    """Application truth is an existing commit ancestral to current QA tooling."""
+    validate_marker(marker)
+    try:
+        kind = subprocess.check_output(['git', 'cat-file', '-t', marker], cwd=ROOT,
+                                       stderr=subprocess.DEVNULL).strip()
+        if kind != b'commit':
+            raise ValueError('Expected deployed marker must identify a commit')
+        subprocess.run(['git', 'merge-base', '--is-ancestor', marker, 'HEAD'],
+                       cwd=ROOT, check=True, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError as exc:
+        raise ValueError('Deployed release must exist and be an ancestor of tooling HEAD') from exc
+    return marker
+
+
+def dispatch_policy(mode, marker, ref):
     if mode not in ('historical', 'shadow', 'live'):
         raise ValueError('Unknown checkout mode')
     explicit = mode != 'historical'
     if explicit:
         validate_marker(marker)
-        if mode == 'live' and marker != head:
-            raise ValueError('Live release marker must equal checked-out HEAD')
+        if mode == 'live':
+            validate_live_release(marker)
     else:
         if marker:
             raise ValueError('Select shadow or live to override the historical marker')
@@ -45,11 +62,14 @@ class AssetIdentity:
 
     def observe(self, response):
         url = urlsplit(response.url)
-        # Also retain wrong-origin/path lookalikes, rather than silently ignoring them.
-        if url.path.rsplit('/', 1)[-1] not in ('checkout.css', 'checkout.js'):
+        # WooCommerce/themes may legitimately have the same basename. Only our
+        # exact targets and checkout lookalikes within our namespace are relevant.
+        relative = next((a for a in ASSETS if url.path == ASSET_URL_ROOT + a), None)
+        lookalike = (url.path.startswith(ASSET_URL_ROOT)
+                     and url.path.rsplit('/', 1)[-1] in ('checkout.css', 'checkout.js'))
+        if relative is None and not lookalike:
             return
         try:
-            relative = next((a for a in ASSETS if url.path == '/wp-content/plugins/rollsbar-core/assets/' + a), None)
             body = response.body()
             record = {'url': response.url, 'asset': relative, 'status': response.status,
                       'sha256': hashlib.sha256(body).hexdigest(), 'bytes': len(body)}
@@ -76,10 +96,7 @@ class AssetIdentity:
 
 
 def release_assets(marker):
-    validate_marker(marker)
-    head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    if marker != head:
-        raise ValueError('Live release marker must equal checked-out HEAD')
+    validate_live_release(marker)
     return {a: subprocess.check_output(['git', 'show', marker + ':' + ASSET_ROOT + a], cwd=ROOT) for a in ASSETS}
 
 
@@ -93,8 +110,7 @@ def install_asset_routes(page, live, substitute):
 
 if __name__ == '__main__':
     policy = dispatch_policy(os.environ['DISPATCH_MODE'], os.environ.get('DISPATCH_MARKER', ''),
-                             os.environ['GITHUB_REF'],
-                             subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip())
+                             os.environ['GITHUB_REF'])
     with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as stream:
         for key, value in policy.items():
             stream.write(key + '=' + value + '\n')
