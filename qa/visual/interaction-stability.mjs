@@ -11,6 +11,10 @@ const browser=await engine.launch();try{for(const width of [320,390,430,701,900,
  const context=await browser.newContext({viewport:{width,height:900},hasTouch:true,isMobile:width<=430,reducedMotion:'reduce'}),page=await context.newPage();
  await page.addInitScript(()=>localStorage.setItem('rollsbar_cookie_notice','1'));
  if(!live)await page.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());
+ // The PHP fixture omits Woo's jQuery/fragments. Model its DOM replacement seam
+ // locally so a fragment child detached during native event dispatch is covered.
+ if(!live)await page.addInitScript(()=>{window.jQuery=selector=>({replaceWith(html){document.querySelectorAll(selector).forEach(node=>{const t=document.createElement('template');t.innerHTML=html;node.replaceWith(t.content.cloneNode(true))})},trigger(){}})});
+
  const endpoint=live?'**/*wc-ajax=rollsbar_cart*':'**/fixture-cart';
  const base=live?live+'/?interaction='+report.release_sha:'http://127.0.0.1:4181/current/';
  const journal=[];
@@ -19,7 +23,7 @@ const browser=await engine.launch();try{for(const width of [320,390,430,701,900,
   if(q){const body=await response.json();journal.push({request:q,success:body.success,lines:body.data?.lines?.map(l=>({key:l.key,source_id:l.source_id,quantity:l.quantity,variation_id:l.variation_id}))});writeFileSync(out+'/'+name+'-'+width+'-responses.json',JSON.stringify(journal,null,2));}
  }catch{}});
  const requests=[];page.on('request',r=>{try{const q=JSON.parse(new URLSearchParams(r.postData()).get('request'));if(q)requests.push(q)}catch{}});
- await page.goto(base,{waitUntil:'domcontentloaded'});
+ await page.goto(base,{waitUntil:'load'});
  const ready=()=>expect(page.locator('[data-rollsbar-cart-delta]').first()).toBeEnabled();await ready();
  const data=JSON.parse(await page.locator('#rollsbarProductDetailsData').textContent());
  const simple=Object.keys(data).find(id=>!data[id].selection.required),pizza=Object.keys(data).find(id=>data[id].pizza&&data[id].variable),vs=data[pizza].selection.variations;
@@ -27,7 +31,7 @@ const browser=await engine.launch();try{for(const width of [320,390,430,701,900,
  const modal=page.locator('#rollsbarProductDetails'),drawer=page.locator('#rollsbarCartDrawer');
  const req=q=>page.evaluate(async request=>{const c=rollsbarCart;return(await(await fetch(c.url,{method:'POST',body:new URLSearchParams({nonce:c.nonce,request:JSON.stringify(request)})})).json()).data},q);
  const snap=()=>req({operation:'read'});
- async function reload(){await page.reload({waitUntil:'domcontentloaded'});await ready()}
+ async function reload(){await page.reload({waitUntil:'load'});await ready()}
  async function hit(loc,label){const box=await loc.boundingBox();expect(box,label).toBeTruthy();const result=await loc.evaluate(n=>{const r=n.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,t=document.elementFromPoint(x,y);return {ok:!!t&&(t===n||n.contains(t)),target:t?.outerHTML.slice(0,400),inert:n.inert,visibility:getComputedStyle(n).visibility,scroll:scrollY,box:r.toJSON()}});if(!result.ok)console.log(label,result);expect(result.ok,label).toBe(true);return {label,...result}}
  async function tap(loc,label){await hit(loc,label);await loc.tap()}
  function cart(){return page.locator(width>900?'.rollsbar-cart-link':width>700?'[data-rollsbar-mobile-cart]': '[data-rollsbar-orderbar]:not([hidden]),[data-rollsbar-mobile-cart]:not([hidden])').first()}
@@ -43,7 +47,9 @@ const browser=await engine.launch();try{for(const width of [320,390,430,701,900,
   await page.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,1100)});
   await expect(page.locator('.client-back-top')).toHaveClass(/show/);await page.locator('.client-back-top').evaluate(n=>n.getAnimations().forEach(a=>a.finish()));
   let release,arrived;const held=new Promise(r=>arrived=r);
-  await page.route(endpoint,async route=>{const q=JSON.parse(new URLSearchParams(route.request().postData()).get('request'));if(q.operation!=='add')return route.continue();const response=await route.fetch();await new Promise(r=>{release=r;arrived()});await route.fulfill({response})});
+  await page.route(endpoint,async route=>{const q=JSON.parse(new URLSearchParams(route.request().postData()).get('request'));if(q.operation!=='add')return route.continue();const response=await route.fetch();const body=await response.json();
+   if(!live)body.data.fragments={'.rollsbar-mobile-cart__inner':await page.locator('.rollsbar-mobile-cart__inner').evaluate(n=>n.outerHTML)};
+   await new Promise(r=>{release=r;arrived()});await route.fulfill({response,json:body})});
   // Start mutation through an actual card tap, then scroll back to the fixed controls.
   await card(simple).locator('[data-rollsbar-cart-delta="1"]').tap();await held;
   await expect(card(simple)).toHaveAttribute('aria-busy','true');
@@ -79,6 +85,11 @@ const browser=await engine.launch();try{for(const width of [320,390,430,701,900,
   await page.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,1100)});await expect(page.locator('.client-back-top')).toBeVisible();await expect(page.locator('.client-back-top')).toHaveClass(/show/);await page.locator('.client-back-top').evaluate(n=>n.getAnimations().forEach(a=>a.finish()));
   for(const loc of [cart(),page.locator('.client-back-top'),...(width<=700?[page.locator('.mobile-phone')]:[])])hits.push(await hit(loc,'fixed '+populated));
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)).toBe(0);
+  // No catalog control may receive a hit in the reserved fixed-control region.
+  const dock=await page.evaluate(()=>{const reserve=innerWidth<=900?160:90;const bad=[];for(let y=innerHeight-reserve+4;y<innerHeight;y+=12)for(let x=8;x<innerWidth;x+=16){const n=document.elementFromPoint(x,y);if(n?.closest('.rollsbar-product-card'))bad.push({x,y,tag:n.tagName});}return {reserve,bad};});
+  expect(dock.bad,'catalog leaked into fixed-control dock').toEqual([]);
+  hits.push({label:'reserved control dock',...dock});
+
   const path=out+'/'+name+'-'+width+'-'+populated+'.png';await page.screenshot({path});report.screenshots.push(path);
   await openCart();await back();
  }

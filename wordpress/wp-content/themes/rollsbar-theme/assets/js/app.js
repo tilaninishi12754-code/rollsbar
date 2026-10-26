@@ -40,7 +40,6 @@
 		if(event.pointerId===cartGesture)gestureFrame=requestAnimationFrame(finishCartGesture);
 	},true);
 	document.addEventListener('pointercancel',function(event){if(event.pointerId===cartGesture)finishCartGesture();},true);
-	document.addEventListener('click',function(){if(cartGesture!==null)queueMicrotask(finishCartGesture);},true);
 	window.addEventListener('blur',finishCartGesture);
 	var drawer=document.getElementById('rollsbarCartDrawer');
 	var drawerState=null,drawerOpener=null,drawerBackground=[],drawerOverflow='',drawerScroll=null,drawerBehavior='',drawerFocus=null;
@@ -480,6 +479,9 @@
 			else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
 		}
 	});
+	// Run after this module's delegated click handlers. A microtask from capture
+	// may run between native listeners and detach the target before delegation.
+	document.addEventListener('click',function(){if(cartGesture!==null)finishCartGesture();});
 })();
 
 (function(){
@@ -730,10 +732,13 @@
  function measure(){document.documentElement.style.setProperty('--rb-home-header-height',header.getBoundingClientRect().height+'px');}
  measure();new ResizeObserver(measure).observe(header);
  window.addEventListener('pageshow',measure);window.addEventListener('resize',measure,{passive:true});
+ // An opaque dock separates fixed controls from scrolling card actions. Keep
+ // native document scrolling and dialogs; no clipping or second scroll container.
+ var dock=document.createElement('div');dock.className='rollsbar-controls-dock';dock.setAttribute('aria-hidden','true');document.body.appendChild(dock);
  var back=document.querySelector('.client-back-top');
  if(back){
-  function sync(){back.classList.toggle('show',window.scrollY>650);}
+  function sync(){back.classList.toggle('show',window.scrollY>650);dock.hidden=innerWidth>900&&window.scrollY<=650;}
   back.addEventListener('click',function(){window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});});
-  window.addEventListener('scroll',sync,{passive:true});sync();
+  window.addEventListener('scroll',sync,{passive:true});window.addEventListener('resize',sync,{passive:true});sync();
  }
 })();

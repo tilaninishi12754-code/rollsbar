@@ -30,7 +30,7 @@ class ReleaseTest(unittest.TestCase):
  def test_interaction_scope(self):
   with patch.object(release,'BASE',release.BASE),patch.object(release,'CHANGED',release.CHANGED):
    release.require_interaction_delta()
-   self.assertEqual(release.BASE,'328cb664d1d6e6a63b300e6788a984497fa1320d')
+   self.assertEqual(release.BASE,'2c4b1bf960594689e5e726d84c0344745d93441b')
    self.assertEqual(len(release.CHANGED),2)
    self.assertTrue(all(p.endswith(('app.js','app.css')) for p in release.CHANGED))
  def test_interaction_proof_rejects_missing_width_and_wrong_release(self):

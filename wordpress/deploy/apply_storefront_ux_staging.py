@@ -31,9 +31,9 @@ def require_control_delta():
 
 def require_interaction_delta():
  global BASE, CHANGED
- BASE='328cb664d1d6e6a63b300e6788a984497fa1320d'
+ BASE='2c4b1bf960594689e5e726d84c0344745d93441b' # Observed backend_verified staging state after run 40375058146.
  CHANGED=[transport.THEME+'assets/css/app.css',transport.THEME+'assets/js/app.js']
- paths=subprocess.check_output(['git','diff','--name-only',BASE,'--',transport.THEME,transport.PLUGIN],cwd=ROOT,text=True).splitlines()
+ paths=subprocess.check_output(['git','diff','--name-only','328cb664d1d6e6a63b300e6788a984497fa1320d','--',transport.THEME,transport.PLUGIN],cwd=ROOT,text=True).splitlines()
  if sorted(paths)!=sorted(CHANGED):raise ValueError('Interaction release permits only storefront JS/CSS changes')
 
 def verify_interaction_proof(sha):

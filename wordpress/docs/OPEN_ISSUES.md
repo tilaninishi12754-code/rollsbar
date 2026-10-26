@@ -59,6 +59,8 @@ Acceptance:
 - no double-tap requirement on tested mobile/desktop viewports;
 - no regression to cart/session persistence.
 
+Staging follow-up: run 40375058146 reproduced a fragment/click ordering failure at 701 px; corrected ordering is under regression and live verification. No final PASS marker yet.
+
 Batch implementation: interaction-stability; deterministic local Chromium/WebKit stress and original UX suites PASS. Staging deployment and live repeated-hit evidence pending. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
 
 ## RB-002 — Back-to-top sometimes reacts only on the second tap
