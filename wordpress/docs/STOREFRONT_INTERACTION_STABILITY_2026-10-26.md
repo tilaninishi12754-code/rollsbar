@@ -13,7 +13,7 @@ Status: VERIFY â€” local acceptance passed; exact-release staging acceptance pen
 
 The latest server snapshot waits until a native pointer gesture completes before replacing targets. Native click remains the only activation event; no synthetic retries, guessed timers, global pointer blocking, or optimistic cart state. Cart opens immediately during a pending mutation and receives its queued canonical response. Pending feedback and duplicate suppression preserve server authority; failure reconciles without replaying the mutation.
 
-Only app.js/app.css are application changes. Checkout, catalog data and Client Media Canon are unchanged. RB-005 latency work remains deferred.
+Application changes are app.js/app.css and the native cart AJAX response boundary. Checkout, catalog data and Client Media Canon are unchanged. RB-005 latency work remains deferred.
 
 ## Verification
 
@@ -24,7 +24,7 @@ Only app.js/app.css are application changes. Checkout, catalog data and Client M
 
 ## Release
 
-Pending. The dedicated `interaction-stability` operation requires a fresh verified backup, allows only two application files against accepted application 328cb664d1d6e6a63b300e6788a984497fa1320d, preserves all other application hashes and business digest, and requires both original live UX acceptance and six-width stress proof before marking the release browser_verified.
+Pending. The dedicated `interaction-stability` operation requires a fresh verified backup, allows only three application files against accepted application 328cb664d1d6e6a63b300e6788a984497fa1320d, preserves all other application hashes and business digest, and requires both original live UX acceptance and six-width stress proof before marking the release browser_verified.
 
 Production access/mutation: no. No checkout orders. Checkout Final Direct Port not started.
 
@@ -38,3 +38,8 @@ Production access/mutation: no. No checkout orders. Checkout Final Direct Port n
 - RB-004 review found a genuine 430 px back-top/card-action overlap in live screenshots. The fixed controls now have an opaque bottom dock, below their z-index and above catalog content, with bottom scroll clearance. No invisible blocking layer, pointer-events workaround, or alternate cart state was added. The regression samples the dock area with elementFromPoint as well as the fixed controls themselves.
 - Browser harness waits for completed navigation before imposing a test scroll position; this avoids WebKit's late reload history restoration undoing the test's setup scroll. Mutation response races are still deliberately exercised between native pointer down/up.
 - Updated original UX: 10 PASS; B13 visual gate: 10 PASS / 6 existing skips; normal-motion back-top: four first taps in each engine PASS.
+
+- Run 40378432571: backup 20261026T183211Z, backend verified at 7e584a2; original UX failed at 390x900 when a removed pizza line reappeared in the immediate server read. Marker was not advanced.
+- Installed WooCommerce 11.1.2 saves session at shutdown priority 20, while WordPress 7.1.3 flushes output at priority 1. Explicit native session save now precedes success/error JSON; totals populate native session first. This fixes response/read consistency without changing cart keys or introducing a second authority.
+- Official source: https://github.com/woocommerce/woocommerce/blob/11.1.2/plugins/woocommerce/includes/class-wc-session-handler.php and https://github.com/WordPress/wordpress-develop/blob/7.1.3/src/wp-includes/default-filters.php .
+- New real AJAX-boundary fixture fails the previous implementation with “Response published before native session persistence”; patched implementation passes 193 checks, four add/read/plus/error/remove/read cycles and 32 saves before response. The next deployment guards observed 7e584a2 backend files and permits only the three named application files against accepted 328cb664.

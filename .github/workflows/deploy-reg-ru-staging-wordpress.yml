@@ -69,6 +69,7 @@ jobs:
       - name: Verify storefront contracts before staging access
         if: inputs.operation == 'storefront-ux' || inputs.operation == 'interaction-stability'
         run: |
+          php qa/visual/cart-response-contract.php "$PWD"
           php qa/visual/storefront-ux-contract.php "$PWD"
           php qa/visual/b12-contract.php "$PWD"
           php qa/visual/client-media-contract.php

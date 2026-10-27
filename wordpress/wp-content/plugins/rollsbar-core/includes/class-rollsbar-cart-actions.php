@@ -135,12 +135,18 @@ final class RollsBar_Cart_Actions {
 			if ( ! is_array( $request ) ) { throw new Exception( 'Недопустимое действие.' ); }
 			if ( 'read' !== ( $request['operation'] ?? '' ) ) { self::mutate( $request ); }
 			WC()->cart->calculate_totals();
-			wp_send_json_success( self::snapshot() + array( 'fragments' => apply_filters( 'woocommerce_add_to_cart_fragments', array() ), 'cart_hash' => WC()->cart->get_cart_hash() ) );
+			$response = self::snapshot() + array( 'fragments' => apply_filters( 'woocommerce_add_to_cart_fragments', array() ), 'cart_hash' => WC()->cart->get_cart_hash() );
+			// Persist before JSON can reach the next request; shutdown may flush output first.
+			WC()->session->save_data();
+			wp_send_json_success( $response );
 		} catch ( Exception $error ) {
 			$notices = wc_get_notices( 'error' );
 			$message = $notices ? implode( ' ', array_column( $notices, 'notice' ) ) : $error->getMessage();
 			wc_clear_notices();
-			wp_send_json_error( self::snapshot() + array( 'message' => wp_strip_all_tags( $message ) ) );
+			WC()->cart->calculate_totals();
+			$response = self::snapshot() + array( 'message' => wp_strip_all_tags( $message ) );
+			WC()->session->save_data();
+			wp_send_json_error( $response );
 		}
 	}
 
