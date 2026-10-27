@@ -22,6 +22,7 @@ final class RollsBar_Checkout {
 		add_action( 'woocommerce_init', array( __CLASS__, 'register_additional_fields' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_checkout_assets' ) );
 		add_filter( 'woocommerce_get_country_locale', array( __CLASS__, 'field_locale' ) );
+		add_filter( 'woocommerce_validate_phone', array( __CLASS__, 'validate_phone' ), 10, 3 );
 		add_action( 'template_redirect', array( __CLASS__, 'prepare_native_customer' ) );
 		add_filter( 'rest_pre_dispatch', array( __CLASS__, 'prepare_store_request' ), 10, 3 );
 		add_action( 'woocommerce_blocks_checkout_enqueue_data', array( __CLASS__, 'native_field_data' ), 5 );
@@ -85,6 +86,14 @@ final class RollsBar_Checkout {
 		}
 		array_pop( self::$contact_template_buffers );
 		echo self::omit_internal_contact_html( ob_get_clean() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- native rendered template, contact row removed only.
+	}
+
+	/** Supported Woo phone validator; keep requiredness in the native fields. */
+	public static function validate_phone( bool $valid, $phone, $country = null ): bool {
+		unset( $country );
+		$digits = preg_replace( '/\D/', '', (string) $phone );
+		// Requiredness stays with Woo. A prefix is not a complete contact number.
+		return $valid && ( '' === trim( (string) $phone ) || ( strlen( $digits ) >= 10 && strlen( $digits ) <= 15 ) );
 	}
 
 	/** Same contract is consumed by Blocks countryData and Store API validation. */

@@ -25,6 +25,9 @@ $ref=new ReflectionClass(Automattic\WooCommerce\StoreApi\Utilities\OrderControll
 $controller=$ref->newInstanceWithoutConstructor();$validate=$ref->getMethod('validate_email');
 foreach(['','broken'] as $value){$rejected=false;try{$validate->invoke($controller,new WC_Order($value));}catch(Automattic\WooCommerce\StoreApi\Exceptions\RouteException $e){$rejected=true;}check($rejected,'real Woo 11.1.2 rejects '.($value?:'empty').' email');}
 $email=RollsBar_Checkout::internal_email();
+check(!RollsBar_Checkout::validate_phone(true,'+7'),'country prefix is not a complete phone');
+check(RollsBar_Checkout::validate_phone(true,'+7 (978) 000-00-00'),'full formatted phone accepted');
+check(!RollsBar_Checkout::validate_phone(false,'+79780000000'),'native invalid phone result is never bypassed');
 $GLOBALS['wc']->customer=new class {
  public int $saved=0; public array $values=[];
  function set_billing_country($v){$this->values['country']=$v;}

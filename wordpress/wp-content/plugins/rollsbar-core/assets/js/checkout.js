@@ -18,13 +18,24 @@
 	var deliverySubscription=false;
 	var deliveryError='';
 	var deliveryProof='';
+	var contactPhoneError='';
 	function syncDelivery(){
 		if(!window.wp||!wp.data)return;
 		var checkout=wp.data.select('wc/store/checkout'),cart=wp.data.select('wc/store/cart');
 		if(!checkout||!cart||!checkout.prefersCollection)return;
 		var pickup=checkout.prefersCollection();
 		document.body.classList.toggle('rollsbar-checkout-pickup',pickup);
-		var customer=cart.getCustomerData(),address=pickup?'':String((customer.shippingAddress||{}).address_1||(customer.billingAddress||{}).address_1||'');
+		var customer=cart.getCustomerData(),contact=pickup?customer.billingAddress:customer.shippingAddress;
+		var phone=String((contact||{}).phone||''),digits=phone.replace(/\D/g,'');
+		var phoneError=phone.trim()&&(digits.length<10||digits.length>15)?'Укажите номер телефона полностью.':'';
+		if(phoneError!==contactPhoneError){
+			contactPhoneError=phoneError;
+			var phoneValidation=wp.data.dispatch('wc/store/validation');
+			if(phoneError)phoneValidation.setValidationErrors({'rollsbar-contact-phone':{message:phoneError,hidden:false}});
+			else phoneValidation.clearValidationError('rollsbar-contact-phone');
+		}
+		setAddressStatus(document.querySelector(pickup?'#billing-phone':'#shipping-phone'),phoneError,phoneError?'warning':'');
+		var address=pickup?'':String((customer.shippingAddress||{}).address_1||(customer.billingAddress||{}).address_1||'');
 		var totals=cart.getCartTotals(),minor=Number(totals.currency_minor_unit)||0;
 		var amount=(Number(totals.total_items)-Number(totals.total_discount))/Math.pow(10,minor);
 		var valid=deliveryAddress&&address===deliveryAddress.display;
@@ -135,9 +146,8 @@
 		if(input.dataset.rollsbarPhonePrepared==='1')return;
 		input.dataset.rollsbarPhonePrepared='1';
 
-		if(!String(input.value||'').trim()){
-			setNativeValue(input,prefix);
-		}
+		input.placeholder=prefix+'999 999-99-99';
+		if(String(input.value||'').trim()===prefix.trim())setNativeValue(input,'');
 
 		input.addEventListener('blur',function(){
 			var raw=String(input.value||'').trim();

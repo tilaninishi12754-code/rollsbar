@@ -48,6 +48,13 @@ try:
       window.__rbPickupPayload=JSON.parse(JSON.stringify(o.data));return Promise.reject({code:'qa_stop',message:'QA: остановлено до HTTP.',data:{status:400}});
      }return next(o);
     });}''')
+    phone.fill('+7')
+    p.wait_for_function('!!wp.data.select("wc/store/validation").getValidationError("rollsbar-contact-phone")')
+    p.locator('.wc-block-components-checkout-place-order-button').click()
+    p.wait_for_function('wp.data.select("wc/store/checkout").isIdle()')
+    require(p.evaluate('window.__rbPickupPayload') is None,'prefix-only phone blocked before native POST assembly')
+    phone.fill('+79780000000')
+    p.wait_for_function('()=>!wp.data.select("wc/store/validation").getValidationError("rollsbar-contact-phone")&&!wp.data.select("wc/store/cart").isCustomerDataUpdating()&&!wp.data.select("wc/store/checkout").isCalculating()')
     p.locator('.wc-block-components-checkout-place-order-button').click()
     p.wait_for_function('window.__rbPickupPayload!==null')
     payload=p.evaluate('window.__rbPickupPayload')

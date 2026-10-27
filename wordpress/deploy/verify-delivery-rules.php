@@ -3,6 +3,8 @@
 if ( ! defined( 'ABSPATH' ) ) { exit( 1 ); }
 require __DIR__ . '/verify-checkout-direct-port.php';
 rb_direct_assert( class_exists( 'RollsBar_Delivery_Minimum' ), 'delivery classifier loaded' );
+rb_direct_assert( ! WC_Validation::is_phone('+7','RU'), 'actual native phone validator rejects country prefix alone' );
+rb_direct_assert( WC_Validation::is_phone('+7 (978) 000-00-00','RU'), 'actual native phone validator accepts full formatted number' );
 $methods = WC()->shipping()->get_shipping_methods();
 rb_direct_assert( isset( $methods['rollsbar_delivery'] ) && 'yes' === $methods['rollsbar_delivery']->enabled, 'native delivery method registered and enabled' );
 rb_direct_assert( Automattic\WooCommerce\Blocks\Utils\CartCheckoutUtils::shipping_methods_exist(), 'Woo exposes native delivery/pickup control' );

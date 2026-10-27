@@ -455,6 +455,8 @@ body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-he
 
 /* Owner-approved delivery/pickup scenario. Woo retains both fulfillment flows. */
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-method { order: 0; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-text-input input[type=tel]::placeholder { opacity: 0; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-text-input.is-active input[type=tel]::placeholder { opacity: .55; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-method-option { min-height: 48px; border-radius: 14px; font-weight: 700; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-method-option--selected { border-color: #d92525; background: #fff4f4; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields { order: 1; }
