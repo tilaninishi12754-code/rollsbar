@@ -169,6 +169,11 @@ try:
    print('initial visibility',p.evaluate('document.visibilityState'),flush=True)
    try:
     p.wait_for_function("document.querySelector('.rollsbar-product-card')?.getAttribute('aria-busy')==='false' && document.querySelector('.rollsbar-product-card [data-rollsbar-cart-delta=\"1\"]')?.disabled===false")
+    if LIVE:
+     rules=json.loads(p.locator('script[type="speculationrules"]').inner_text())
+     rule_text=json.dumps(rules)
+     require(all(path in rule_text for path in ['/checkout/*','/cart/*','/product/*']),'native homepage speculation rules exclude stateful Woo documents')
+     report['native_speculation_rules']=rules
     add_first_simple_product(p)
    except Exception:
     report['initial_cart_diagnostic']=p.evaluate("({hidden:document.hidden,status:document.querySelector('.rollsbar-cart-status')?.textContent,busy:document.querySelector('.rollsbar-product-card')?.getAttribute('aria-busy'),config:!!window.rollsbarCart})")

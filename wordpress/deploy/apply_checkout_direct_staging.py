@@ -6,7 +6,7 @@ from apply_storefront_ux_staging import verify
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/checkout-direct'
 BASE='b481a6fa3d2db7a5524667c51d263ceb117a05d7'
-PREVIOUS_APP='3a1bac237181dfc776e86e2a5c0f007d5494b3d3'
+PREVIOUS_APP='4938a714e2da682a0c456ddc1cc98df7f6d14f01'
 CHANGED=[transport.PLUGIN+p for p in ['assets/css/checkout.css','assets/js/checkout.js','includes/class-rollsbar-checkout.php']]
 RECEIPT='$HOME/.rollsbar-checkout-direct-release'
 

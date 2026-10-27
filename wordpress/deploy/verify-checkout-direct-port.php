@@ -7,6 +7,8 @@ function rb_direct_assert( $condition, $label ) {
 }
 rb_direct_assert( 'staging' === wp_get_environment_type() && 'https://staging.rollsbar.ru' === home_url(), 'staging only' );
 rb_direct_assert( '11.1.2' === WC_VERSION, 'actual WooCommerce 11.1.2' );
+$excluded=apply_filters('wp_speculation_rules_href_exclude_paths',array('/keep/*'),'prefetch');
+rb_direct_assert(in_array('/checkout/*',$excluded,true)&&in_array('/cart/*',$excluded,true)&&in_array('/product/*',$excluded,true)&&in_array('/keep/*',$excluded,true)&&!in_array('/*',$excluded,true),'native speculation configuration excludes stateful Woo documents only');
 if ( ! WC()->session ) { wc_load_cart(); }
 $email = RollsBar_Checkout::internal_email();
 rb_direct_assert( is_email( $email ) && str_ends_with( $email, '@checkout.rollsbar.invalid' ), 'native WP accepts reserved internal identity' );
@@ -77,5 +79,18 @@ RollsBar_Checkout::native_field_data();
 $registry = Automattic\WooCommerce\Blocks\Package::container()->get( Automattic\WooCommerce\Blocks\Assets\AssetDataRegistry::class );
 $data = (new ReflectionClass($registry))->getMethod('get')->invoke($registry);
 rb_direct_assert( true === $data['defaultFields']['email']['hidden'], 'native email field configuration hidden before hydration' );
+$order->set_address($address,'billing'); $order->set_total(420); $order->set_date_created('2026-10-27 12:00:00'); $order->set_payment_method_title('Оплата при получении');
+$summary_ref=new ReflectionClass(Automattic\WooCommerce\Blocks\BlockTypes\OrderConfirmation\Summary::class);
+$summary=$summary_ref->newInstanceWithoutConstructor();
+$raw_summary=$summary_ref->getMethod('render_content')->invoke($summary,$order,true,array(),'');
+rb_direct_assert( str_contains($raw_summary,$email), 'actual native confirmation would expose compatibility email before presentation filter' );
+$safe_summary=apply_filters('render_block_woocommerce/order-confirmation-summary',$raw_summary);
+rb_direct_assert( !str_contains($safe_summary,'@checkout.rollsbar.invalid') && str_contains($safe_summary,'420') && str_contains($safe_summary,'Оплата при получении'), 'actual native confirmation omits internal contact while retaining totals/payment' );
+ob_start(); wc_get_template('order/order-details-customer.php',array('order'=>$order)); $safe_details=ob_get_clean();
+rb_direct_assert( !str_contains($safe_details,'@checkout.rollsbar.invalid') && str_contains($safe_details,'+79780000000'), 'actual native customer-details template omits internal email and retains phone' );
+$account_ref=new ReflectionClass(Automattic\WooCommerce\Blocks\BlockTypes\OrderConfirmation\CreateAccount::class);
+rb_direct_assert( false === $account_ref->getMethod('is_feature_enabled')->invoke($account_ref->newInstanceWithoutConstructor()), 'native delayed account creation disabled, including default option' );
+$validate_email->invoke($controller,$order);
+rb_direct_assert( $email === $order->get_billing_email(), 'native order email data and validation untouched by display filters' );
 rb_direct_assert( 0 === $order->get_id(), 'fixture never persisted an order' );
 echo "DIRECT_PORT_NATIVE_INTEGRATION_PASS\n";

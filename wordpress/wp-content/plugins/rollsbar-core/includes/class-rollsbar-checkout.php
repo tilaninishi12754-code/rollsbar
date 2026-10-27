@@ -16,6 +16,7 @@ require_once __DIR__ . '/class-rollsbar-asset-version.php';
 final class RollsBar_Checkout {
 
 	private const FIELD_PREFIX = 'rollsbar/';
+	private static array $contact_template_buffers = array();
 
 	public static function init(): void {
 		add_action( 'woocommerce_init', array( __CLASS__, 'register_additional_fields' ) );
@@ -29,6 +30,53 @@ final class RollsBar_Checkout {
 		add_filter( 'wp_mail', array( __CLASS__, 'remove_internal_reply_headers' ), PHP_INT_MAX );
 		add_filter( 'woocommerce_checkout_registration_enabled', '__return_false' );
 		add_filter( 'woocommerce_checkout_registration_required', '__return_false' );
+		add_filter( 'option_woocommerce_enable_delayed_account_creation', '__return_false' );
+		add_filter( 'default_option_woocommerce_enable_delayed_account_creation', '__return_false' );
+		add_filter( 'render_block_woocommerce/order-confirmation-summary', array( __CLASS__, 'omit_internal_contact_html' ) );
+		add_action( 'woocommerce_before_template_part', array( __CLASS__, 'before_contact_template' ), PHP_INT_MAX, 4 );
+		add_action( 'woocommerce_after_template_part', array( __CLASS__, 'after_contact_template' ), PHP_INT_MIN, 4 );
+		add_filter( 'wp_speculation_rules_href_exclude_paths', array( __CLASS__, 'commerce_speculation_exclusions' ) );
+	}
+
+	/** Stateful native Woo documents must load only on actual activation. */
+	public static function commerce_speculation_exclusions( array $paths ): array {
+		foreach ( array( wc_get_cart_url(), wc_get_checkout_url() ) as $url ) {
+			$path = (string) wp_parse_url( $url, PHP_URL_PATH );
+			if ( '' !== $path && '/' !== $path ) {
+				$paths[] = rtrim( $path, '/' );
+				$paths[] = rtrim( $path, '/' ) . '/*';
+			}
+		}
+		$product = get_post_type_object( 'product' );
+		if ( $product && is_array( $product->rewrite ) && ! empty( $product->rewrite['slug'] ) ) {
+			$slug = preg_replace( '/%[^%]+%/', '*', trim( $product->rewrite['slug'], '/' ) );
+			$paths[] = '/' . $slug . '/*';
+		}
+		return array_values( array_unique( $paths ) );
+	}
+
+	/** Presentation only, after native order access checks; never filter order data. */
+	public static function omit_internal_contact_html( string $html ): string {
+		return preg_replace_callback( '#<(li|p)\b[^>]*>.*?</\1>#is', static function ( $match ) {
+			return false !== stripos( $match[0], '@checkout.rollsbar.invalid' ) ? '' : $match[0];
+		}, $html );
+	}
+
+	/** Classic order-details presentation can also follow a native Block checkout. */
+	public static function before_contact_template( $name, $path, $located, $args ): void {
+		if ( 'order/order-details-customer.php' !== $name || empty( $args['order'] ) || ! $args['order'] instanceof WC_Order || false === stripos( $args['order']->get_billing_email(), '@checkout.rollsbar.invalid' ) ) {
+			return;
+		}
+		self::$contact_template_buffers[] = ob_get_level();
+		ob_start();
+	}
+
+	public static function after_contact_template( $name, $path, $located, $args ): void {
+		if ( 'order/order-details-customer.php' !== $name || ! self::$contact_template_buffers || ob_get_level() !== end( self::$contact_template_buffers ) + 1 ) {
+			return;
+		}
+		array_pop( self::$contact_template_buffers );
+		echo self::omit_internal_contact_html( ob_get_clean() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- native rendered template, contact row removed only.
 	}
 
 	/** Same contract is consumed by Blocks countryData and Store API validation. */
@@ -60,6 +108,10 @@ final class RollsBar_Checkout {
 
 	public static function prepare_native_customer(): void {
 		if ( ! is_checkout() || is_order_received_page() || ! WC()->customer ) {
+			return;
+		}
+		$purpose = strtolower( (string) ( $_SERVER['HTTP_SEC_PURPOSE'] ?? $_SERVER['HTTP_PURPOSE'] ?? '' ) );
+		if ( false !== strpos( $purpose, 'prefetch' ) || false !== strpos( $purpose, 'prerender' ) ) {
 			return;
 		}
 		WC()->customer->set_billing_country( 'RU' );
