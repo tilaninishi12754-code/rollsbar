@@ -1,7 +1,7 @@
 # RollsBar Issue Register
 
 Status owner: RollsBar Coordinator
-Last updated: 2026-10-26
+Last updated: 2026-10-27
 
 This file is the durable source of truth for unresolved / deferred RollsBar defects and follow-up work. New confirmed issues should be recorded here instead of living only in chat. Do not reopen items marked DONE without new evidence.
 
@@ -27,19 +27,19 @@ Priority order unless Coordinator explicitly changes it:
 ## Current accepted checkpoint
 
 - Branch: `wordpress/checkout-visual-parity-2026-10-25`.
-- Storefront UX Final Fixes: verified PASS on staging.
-- Deployed application marker from that accepted batch: `328cb664d1d6e6a63b300e6788a984497fa1320d`.
+- Storefront Interaction Stability: verified PASS on staging (2026-10-27), run 40463955833.
+- Deployed application marker: `b481a6fa3d2db7a5524667c51d263ceb117a05d7`, receipt `browser_verified`, backup `20261027T065607Z`.
 - Client Media Canon `client-media-2026-10-21`: 36 canonical assets, 45 mapped product identities, 57 applied rows, 4 deferred rows preserved.
 - Catalog invariant: 118 canonical products / 13 variable parents / 26 variations + 3 hidden staging upsells = 121 published product posts.
 - Production remains forbidden without an explicit production gate and authorization.
 
 ---
 
-# P0 — next batch: STOREFRONT INTERACTION STABILITY
+# P0 — completed batch: STOREFRONT INTERACTION STABILITY
 
 ## RB-001 — Cart sometimes opens only on the second tap
 
-Status: `VERIFY`
+Status: `DONE`
 Priority: `P0`
 Scope: storefront / mobile + desktop cart interactions
 
@@ -59,13 +59,13 @@ Acceptance:
 - no double-tap requirement on tested mobile/desktop viewports;
 - no regression to cart/session persistence.
 
-Staging follow-up: run 40375058146 reproduced a fragment/click ordering failure at 701 px; corrected ordering is under regression and live verification. No final PASS marker yet.
+Staging investigation: run 40375058146 reproduced fragment/click ordering failure at 701 px. Snapshot application now follows delegated click handling; final run 40463955833 passed at all six widths.
 
-Batch implementation: interaction-stability; deterministic local Chromium/WebKit stress and original UX suites PASS. Staging deployment and live repeated-hit evidence pending. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
+Final evidence: run [40463955833](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40463955833), application b481a6f. Original live UX 5/5 and repeated interaction/hit-target checks at 320/390/430/701/900/1440 all PASS. Local Chromium/WebKit stress 12/12 and original UX 10/10 PASS. Live screenshots reviewed. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
 
 ## RB-002 — Back-to-top sometimes reacts only on the second tap
 
-Status: `VERIFY`
+Status: `DONE`
 Priority: `P0`
 Scope: storefront controls
 
@@ -79,11 +79,11 @@ Acceptance:
 - no invisible element intercepts pointer events;
 - phone/cart/back-to-top controls remain mutually non-overlapping and clickable.
 
-Batch implementation: interaction-stability; deterministic local Chromium/WebKit stress and original UX suites PASS. Staging deployment and live repeated-hit evidence pending. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
+Final evidence: run [40463955833](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40463955833), application b481a6f. Original live UX 5/5 and repeated interaction/hit-target checks at 320/390/430/701/900/1440 all PASS. Local Chromium/WebKit stress 12/12 and original UX 10/10 PASS. Live screenshots reviewed. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
 
 ## RB-003 — Pizza storefront `+` can reopen selector instead of incrementing the already selected size
 
-Status: `VERIFY`
+Status: `DONE`
 Priority: `P0`
 Scope: Woo cart snapshot / pizza variation storefront control
 
@@ -104,11 +104,13 @@ Acceptance:
 - multiple-size case remains safe and unambiguous;
 - server Woo cart remains the sole authority.
 
-Batch implementation: interaction-stability; deterministic local Chromium/WebKit stress and original UX suites PASS. Staging deployment and live repeated-hit evidence pending. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
+Additional confirmed cause: run 40378432571 observed a removed line reappearing in the next server read. Native Woo session persistence ran after WordPress output flush. Explicit native save before success/error JSON now passes a 193-check AJAX-boundary regression (old code fails) and the full live acceptance. No alternate cart authority was introduced.
+
+Final evidence: run [40463955833](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40463955833), application b481a6f. Original live UX 5/5 and repeated interaction/hit-target checks at 320/390/430/701/900/1440 all PASS. Local Chromium/WebKit stress 12/12 and original UX 10/10 PASS. Live screenshots reviewed. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
 
 ## RB-004 — Interaction controls can visually overlap on mobile in some states
 
-Status: `VERIFY`
+Status: `DONE`
 Priority: `P0`
 Scope: fixed storefront controls
 
@@ -121,7 +123,7 @@ Acceptance:
 - test at least 320, 390, 430, 701 and 900 px widths where relevant;
 - include pointer hit-testing, not only screenshots.
 
-Batch implementation: interaction-stability; deterministic local Chromium/WebKit stress and original UX suites PASS. Staging deployment and live repeated-hit evidence pending. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
+Final evidence: run [40463955833](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40463955833), application b481a6f. Original live UX 5/5 and repeated interaction/hit-target checks at 320/390/430/701/900/1440 all PASS. Local Chromium/WebKit stress 12/12 and original UX 10/10 PASS. Live screenshots reviewed. See `STOREFRONT_INTERACTION_STABILITY_2026-10-26.md`.
 
 ## RB-005 — Add-to-cart has noticeable ~1–1.5 s feedback delay
 
@@ -136,6 +138,7 @@ Important:
 - This is not currently treated as a functional correctness blocker if the native Woo mutation completes correctly.
 - In the current P0 batch, ensure the pending period cannot cause duplicate/ignored interactions and has clear UI feedback.
 - Actual latency profiling/optimization belongs to the performance batch.
+- Completed safety subset in b481a6f: visible pending feedback, disabled duplicate mutation, immediate cart opening while pending, response consistency and error recovery. Verified by live run 40463955833; latency optimization remains deferred.
 
 Future acceptance:
 - instrument request/server/UI timings;

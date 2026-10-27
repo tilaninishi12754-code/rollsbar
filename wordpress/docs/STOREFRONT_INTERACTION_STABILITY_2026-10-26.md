@@ -1,6 +1,6 @@
 # Storefront interaction stability — 2026-10-26
 
-Status: VERIFY — local acceptance passed; exact-release staging acceptance pending.
+Status: PASS — exact-release staging acceptance verified on 2026-10-27.
 
 ## Reproduced mechanisms
 
@@ -24,7 +24,7 @@ Application changes are app.js/app.css and the native cart AJAX response boundar
 
 ## Release
 
-Pending. The dedicated `interaction-stability` operation requires a fresh verified backup, allows only three application files against accepted application 328cb664d1d6e6a63b300e6788a984497fa1320d, preserves all other application hashes and business digest, and requires both original live UX acceptance and six-width stress proof before marking the release browser_verified.
+Completed by run 40463955833. The dedicated `interaction-stability` operation requires a fresh verified backup, allows only three application files against accepted application 328cb664d1d6e6a63b300e6788a984497fa1320d, preserves all other application hashes and business digest, and requires both original live UX acceptance and six-width stress proof before marking the release browser_verified.
 
 Production access/mutation: no. No checkout orders. Checkout Final Direct Port not started.
 
@@ -42,4 +42,17 @@ Production access/mutation: no. No checkout orders. Checkout Final Direct Port n
 - Run 40378432571: backup 20261026T183211Z, backend verified at 7e584a2; original UX failed at 390x900 when a removed pizza line reappeared in the immediate server read. Marker was not advanced.
 - Installed WooCommerce 11.1.2 saves session at shutdown priority 20, while WordPress 7.1.3 flushes output at priority 1. Explicit native session save now precedes success/error JSON; totals populate native session first. This fixes response/read consistency without changing cart keys or introducing a second authority.
 - Official source: https://github.com/woocommerce/woocommerce/blob/11.1.2/plugins/woocommerce/includes/class-wc-session-handler.php and https://github.com/WordPress/wordpress-develop/blob/7.1.3/src/wp-includes/default-filters.php .
-- New real AJAX-boundary fixture fails the previous implementation with �Response published before native session persistence�; patched implementation passes 193 checks, four add/read/plus/error/remove/read cycles and 32 saves before response. The next deployment guards observed 7e584a2 backend files and permits only the three named application files against accepted 328cb664.
+- New real AJAX-boundary fixture fails the previous implementation with “Response published before native session persistence”; patched implementation passes 193 checks, four add/read/plus/error/remove/read cycles and 32 saves before response. The final deployment guarded observed 7e584a2 backend files and permits only the three named application files against accepted 328cb664.
+
+## Final acceptance — 2026-10-27
+
+- Run: https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40463955833 (success).
+- Application and finalized staging marker: `b481a6fa3d2db7a5524667c51d263ceb117a05d7`; receipt `phase=browser_verified`, `UX_RELEASE_PASS`.
+- Fresh backup: `20261027T065607Z`, verified before mutation. Business digest unchanged: `f6ac2c1c227e658b06b50e5a6b6abfa5680e00d3c5030b521c35726e3cc71068`.
+- Original live UX: 5/5 PASS. Live interaction stress: 6/6 PASS at 320/390/430/701/900/1440, four repeated interaction cycles per width plus controlled pointer/response races, reload, exact pizza and true multi-size cases, remove/re-add and error recovery. Every reserved-dock hit sample passed.
+- Local browser evidence: stress 12/12 Chromium/WebKit, original UX 10/10, B13 10 PASS / 6 pre-existing skips. New native persistence boundary: 193 checks / 32 saves before JSON; release guard tests: 5 PASS.
+- Catalog 118 / 13 / 26 + 3 and media 36 assets / 45 identities remain verified. Checkout code unchanged; no orders created. Production access/mutation: no.
+- Downloaded evidence artifact `12715622946`; SHA256 `22da61036e7930d9380aed117eb5a61727b42bfe37869e977fdffe38f6de7f28` matches GitHub digest. Local extracted evidence: `qa/visual-results/interaction-staging-final/`.
+- Visually inspected populated screenshots at every stress width, empty 900, pending 390, original 320x568 controls and 430 product detail. Fixed controls are separated from catalog hit targets; pending acknowledgement is visible. Two lazy-loaded images in the first 900 screenshot are present in the subsequent empty-cart screenshot; media mapping/hash gate passes.
+- RB-001/002/003/004: DONE. RB-005: DEFERRED for latency; pending/race-safety subset DONE. Checkout Final Direct Port not started.
+- Final follow-up commit changes documentation only; deployed application remains b481a6f.
