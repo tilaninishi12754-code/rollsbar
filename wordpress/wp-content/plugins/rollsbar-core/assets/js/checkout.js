@@ -12,6 +12,52 @@
 	var activeRequest=null;
 	var debounceTimer=null;
 	var resolveRequests=new WeakMap();
+	var nativeContextPrepared=false;
+	var summaryObserver=null;
+	function positionNativeAction(){
+		var layout=document.querySelector('.wc-block-components-sidebar-layout');
+		var summary=document.querySelector('.wc-block-checkout__sidebar .wp-block-woocommerce-checkout-order-summary-block');
+		var sidebar=document.querySelector('.wc-block-checkout__sidebar');
+		if(!layout||!summary||!sidebar)return;
+		var base=layout.getBoundingClientRect(),card=summary.getBoundingClientRect(),lane=sidebar.getBoundingClientRect();
+		layout.style.setProperty('--rb-action-top',(card.bottom-base.top+16)+'px');
+		layout.style.setProperty('--rb-action-left',(lane.left-base.left+17)+'px');
+		layout.style.setProperty('--rb-action-width',(lane.width-34)+'px');
+		if(!summaryObserver&&window.ResizeObserver){
+			summaryObserver=new ResizeObserver(positionNativeAction);
+			summaryObserver.observe(summary);summaryObserver.observe(layout);
+		}
+	}
+	function prepareNativeSummary(){
+		var title=document.querySelector('.wc-block-checkout__sidebar .wc-block-components-checkout-order-summary__title');
+		if(!title||title.getAttribute('role')!=='button'||title.dataset.rollsbarExpanded==='1')return;
+		title.dataset.rollsbarExpanded='1';
+		// Use Woo's own presentation toggle; source summary is initially expanded.
+		if(title.getAttribute('aria-expanded')==='false')title.click();
+	}
+
+	function prepareNativeContext(){
+		if(nativeContextPrepared||!window.wp||!wp.data||!document.querySelector('.wp-block-woocommerce-checkout'))return;
+		var store=wp.data.select('wc/store/cart');
+		if(!store||!store.getCustomerData)return;
+		nativeContextPrepared=true;
+		var updating=false;
+		function sync(){
+			if(updating)return;
+			var customer=store.getCustomerData(),billing=customer.billingAddress,shipping=customer.shippingAddress;
+			if(!billing||!shipping)return;
+			updating=true;
+			try{
+				var patch={};
+				if(billing.country!=='RU')patch.country='RU';
+				if(config.internalEmail&&billing.email!==config.internalEmail)patch.email=config.internalEmail;
+				if(Object.keys(patch).length)wp.data.dispatch('wc/store/cart').setBillingAddress(patch);
+				if(shipping.country!=='RU')wp.data.dispatch('wc/store/cart').setShippingAddress({country:'RU'});
+			}finally{updating=false;}
+		}
+		sync();
+		wp.data.subscribe(sync,'wc/store/cart');
+	}
 
 	function looksLikePhone(input){
 		if(!input||input.tagName!=='INPUT')return false;
@@ -69,10 +115,13 @@
 		if(panel)return panel;
 		panel=document.createElement('div');
 		panel.className='rollsbar-address-suggestions';
+		panel.id='rollsbarAddressSuggestions';
 		panel.setAttribute('role','listbox');
 		panel.setAttribute('aria-label','Подсказки адреса');
 		panel.hidden=true;
 		document.body.appendChild(panel);
+		var dialog=document.querySelector('[data-rollsbar-modal="1"]');
+		if(dialog)dialog.setAttribute('aria-owns',panel.id);
 		return panel;
 	}
 
@@ -126,13 +175,52 @@
 
 	function decorateCheckout(){
 		var checkout=document.querySelector('.wp-block-woocommerce-checkout');
-		if(!checkout)return;
+		if(!checkout||document.body.classList.contains('woocommerce-order-received'))return;
 		if(!document.querySelector('.rollsbar-checkout-title')){
 			var title=document.createElement('h1');
 			title.className='rollsbar-checkout-title';
 			title.textContent='Оформление заказа';
 			checkout.before(title);
 		}
+		var shell=checkout.closest('.rollsbar-shell');
+		if(!shell||shell.dataset.rollsbarModal==='1')return;
+		shell.dataset.rollsbarModal='1';
+		shell.setAttribute('role','dialog');
+		shell.setAttribute('aria-modal','true');
+		shell.setAttribute('aria-labelledby','rollsbarCheckoutHeading');
+		shell.setAttribute('tabindex','-1');
+		document.querySelector('.rollsbar-checkout-title').id='rollsbarCheckoutHeading';
+		var close=shell.querySelector('.rollsbar-legal-page__back');
+		close.setAttribute('aria-label','Закрыть оформление и вернуться в меню');
+		var heading=document.querySelector('.rollsbar-checkout-title');
+		var head=document.createElement('div');
+		head.className='rollsbar-checkout-head';
+		heading.before(head);
+		head.appendChild(heading);
+		head.appendChild(close);
+		var backdrop=document.createElement('button');
+		backdrop.type='button';
+		backdrop.className='rollsbar-checkout-backdrop';
+		backdrop.setAttribute('aria-label','Закрыть оформление и вернуться в меню');
+		backdrop.tabIndex=-1;
+		shell.before(backdrop);
+		backdrop.addEventListener('click',function(){close.click();});
+		document.querySelectorAll('body > header,body > footer,body > .rollsbar-mobile-cart').forEach(function(node){node.inert=true;});
+		shell.focus({preventScroll:true});
+		document.addEventListener('keydown',function(event){
+			if(event.key==='Escape'){
+				if(panel&&!panel.hidden){hidePanel();event.preventDefault();return;}
+				event.preventDefault();close.click();return;
+			}
+			if(event.key!=='Tab')return;
+			var candidates=Array.from(shell.querySelectorAll('a[href],button,input,select,textarea,[tabindex="0"]'));
+			if(panel&&!panel.hidden)candidates=candidates.concat(Array.from(panel.querySelectorAll('button,a[href]')));
+			var targets=candidates.filter(function(n){return !n.disabled&&n.getClientRects().length;});
+			if(!targets.length){event.preventDefault();shell.focus();return;}
+			var first=targets[0],last=targets[targets.length-1];
+			if(event.shiftKey&&(document.activeElement===first||document.activeElement===shell)){event.preventDefault();last.focus();}
+			else if(!event.shiftKey&&(document.activeElement===last||document.activeElement===shell)){event.preventDefault();first.focus();}
+		});
 	}
 
 	function hidePanel(){
@@ -337,12 +425,15 @@
 		});
 
 		input.addEventListener('keydown',function(event){
-			if(event.key==='Escape')hidePanel();
+			if(event.key==='Escape'&&panel&&!panel.hidden){hidePanel();event.preventDefault();event.stopPropagation();}
 		});
 	}
 
 	function scan(){
+		prepareNativeContext();
 		decorateCheckout();
+		prepareNativeSummary();
+		positionNativeAction();
 		document.querySelectorAll('input').forEach(function(input){
 			preparePhone(input);
 			prepareAddress(input);
@@ -356,6 +447,7 @@
 	});
 
 	window.addEventListener('resize',positionPanel);
+	window.addEventListener('resize',positionNativeAction);
 	window.addEventListener('scroll',positionPanel,true);
 
 	scan();

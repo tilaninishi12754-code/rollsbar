@@ -151,7 +151,7 @@ Future acceptance:
 
 ## RB-006 — Checkout visual implementation does not match immutable approved checkout
 
-Status: `OPEN`
+Status: `IN PROGRESS`
 Priority: `P1` after RB-001..RB-004
 Target batch: `CHECKOUT FINAL DIRECT PORT`
 
@@ -168,6 +168,8 @@ Required approach:
 - preserve native Woo Checkout Block / Store API / Local Pickup / COD / privacy / Additional Checkout Fields / DaData behavior;
 - strict screenshot/reference comparison at desktop and mobile widths;
 - no self-waiver of large visual differences as merely acceptable responsive adaptation.
+
+Current batch: native field/email compatibility and fixed modal shell implemented locally; staging evidence pending. No DONE claim before live gates and screenshot inspection. See `CHECKOUT_FINAL_DIRECT_PORT_REPORT_2026-10-27.md`.
 
 ---
 
