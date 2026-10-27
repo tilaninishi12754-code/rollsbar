@@ -41,18 +41,16 @@ foreach ( array( 'first_name', 'phone', 'address_1' ) as $key ) {
 $field_service = Automattic\WooCommerce\Blocks\Package::container()->get( Automattic\WooCommerce\Blocks\Domain\Services\CheckoutFields::class );
 $order_fields = array('rollsbar/privacy-consent'=>true,'rollsbar/entrance'=>'2','rollsbar/door-code'=>'10','rollsbar/floor'=>'3','rollsbar/apartment-office'=>'4');
 rb_direct_assert( ! $field_service->validate_fields_for_location($order_fields,'order')->has_errors(), 'native Additional Checkout Fields validate approved values' );
-$order_fields['rollsbar/privacy-consent']=false;
-rb_direct_assert( $field_service->validate_fields_for_location($order_fields,'order')->has_errors(), 'native explicit privacy consent remains required' );
 $request = new WP_REST_Request( 'POST', '/wc/store/v1/checkout' );
-$request->set_body_params( array( 'billing_address' => array_merge( array( 'last_name'=>'', 'company'=>'', 'address_2'=>'', 'city'=>'', 'state'=>'', 'postcode'=>'', 'email'=>'' ), $address ), 'payment_method'=>'cod', 'additional_fields'=>array( 'rollsbar/privacy-consent'=>true ), 'customer_note'=>'' ) );
+$request->set_body_params( array( 'billing_address' => array_merge( array( 'last_name'=>'', 'company'=>'', 'address_2'=>'', 'city'=>'', 'state'=>'', 'postcode'=>'', 'email'=>'' ), $address ), 'payment_method'=>'cod', 'additional_fields'=>$order_fields, 'customer_note'=>'' ) );
 $request->set_param( 'create_account', true );
 RollsBar_Checkout::prepare_store_request( null, null, $request );
 rb_direct_assert( false === $request->get_param('create_account') && $email === $request->get_param('billing_address')['email'], 'guest request adapter prevents account creation and hydrates email' );
 rb_direct_assert( 'RU' === $request->get_param('billing_address')['country'] && 'RU' === $request->get_param('shipping_address')['country'], 'native hidden countries restored before schema validation' );
 $server = rest_get_server();
-$args = null;
+$args = null; $native_route = null;
 foreach ( $server->get_routes()['/wc/store/v1/checkout'] ?? array() as $endpoint ) {
- if ( is_array($endpoint) && ! empty($endpoint['methods']['POST']) ) { $args=$endpoint['args']; break; }
+ if ( is_array($endpoint) && ! empty($endpoint['methods']['POST']) ) { $args=$endpoint['args']; $native_route=$endpoint['callback'][0]; break; }
 }
 rb_direct_assert( is_array($args), 'installed Store API POST schema located without dispatching checkout' );
 $request->set_attributes( array('args'=>$args) );
@@ -60,6 +58,14 @@ $valid = $request->has_valid_params();
 rb_direct_assert( ! is_wp_error($valid), 'approved native payload passes actual WP REST / Store API request schema' . (is_wp_error($valid) ? ': '.$valid->get_error_message() : '') );
 $sanitized = $request->sanitize_params();
 rb_direct_assert( ! is_wp_error($sanitized) && $request->get_param('billing_address')['email']===$email, 'native request sanitization preserves compatibility identity' );
+// validate_fields_for_location applies extension callbacks only. Woo enforces
+// requiredness in the route's pure validate_callback before processing an order.
+rb_direct_assert( $native_route instanceof Automattic\WooCommerce\StoreApi\Routes\V1\Checkout, 'actual installed checkout route validator located' );
+rb_direct_assert( true === $native_route->validate_callback($request), 'native route accepts explicit consent without processing an order' );
+$request->set_param('additional_fields',array('rollsbar/privacy-consent'=>false));
+$without_consent=$native_route->validate_callback($request);
+rb_direct_assert( is_wp_error($without_consent) && isset($without_consent->get_error_data()['details']['additional_fields']), 'native route rejects false required privacy consent' );
+$request->set_param('additional_fields',$order_fields);
 rb_direct_assert( false === apply_filters( 'woocommerce_checkout_registration_enabled', true ), 'native account creation UI disabled' );
 rb_direct_assert( false === apply_filters( 'pre_wp_mail', null, array( 'to' => $email, 'headers' => array() ) ), 'mail to compatibility identity blocked before transport' );
 rb_direct_assert( null === RollsBar_Checkout::block_internal_mail( null, array( 'to' => 'operator@example.org' ) ), 'operator mail path unchanged' );
