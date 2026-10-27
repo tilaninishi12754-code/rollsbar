@@ -458,6 +458,7 @@ body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__s
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-method-option { min-height: 48px; border-radius: 14px; font-weight: 700; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-method-option--selected { border-color: #d92525; background: #fff4f4; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields { order: 1; }
+body.rollsbar-checkout-pickup .wc-block-checkout__pickup-options { order: 2; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-methods { order: 4; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields > .wc-block-components-checkout-step__heading-container { display: none; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields .wc-block-components-address-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }

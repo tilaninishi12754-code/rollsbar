@@ -17,7 +17,7 @@ final class RollsBar_Delivery_Minimum {
 
 	public static function classify( array $data ): array {
 		$unknown = array( 'status' => 'unresolved', 'minimum' => null, 'message' => 'Не удалось определить условия доставки. Уточните адрес до дома или свяжитесь с нами: +7 978 688-22-88.' );
-		if ( '0' !== (string) ( $data['qc_geo'] ?? '' ) || empty( $data['house'] ) || empty( $data['house_fias_id'] ) || ! is_numeric( $data['geo_lat'] ?? null ) || ! is_numeric( $data['geo_lon'] ?? null ) || ! is_finite( (float) $data['geo_lat'] ) || ! is_finite( (float) $data['geo_lon'] ) || abs( (float) $data['geo_lat'] ) > 90 || abs( (float) $data['geo_lon'] ) > 180 ) {
+		if ( empty( $data['house'] ) || empty( $data['house_fias_id'] ) ) {
 			$unknown['message'] = 'Выберите точный адрес с номером дома из подсказок.';
 			return $unknown;
 		}
@@ -34,6 +34,9 @@ final class RollsBar_Delivery_Minimum {
 		}
 		$matches = array();
 		foreach ( self::rules() as $rule ) {
+			// These are whole-identity rules with a verified FIAS house. Coordinates
+			// never determine a minimum, split a street, or imply polygon membership.
+			// The independent geocode policy retains the original qc_geo restrictions.
 			if ( ! empty( $data['planning_structure_fias_id'] ) && in_array( self::normalize( (string) ( $data['planning_structure'] ?? '' ) ), array_map( array( __CLASS__, 'normalize' ), $rule['area_aliases'] ?? array() ), true ) ) { $matches[] = $rule; continue; }
 			$type = $rule['type'];
 			if ( 'unresolved' === $type ) { continue; }
@@ -48,7 +51,7 @@ final class RollsBar_Delivery_Minimum {
 		$amounts = array_unique( array_column( $matches, 'minimum' ) );
 		if ( 1 !== count( $amounts ) ) { return $unknown; }
 		$minimum = (int) reset( $amounts );
-		return array( 'status' => 'resolved', 'minimum' => $minimum, 'sources' => array_column( $matches, 'cell' ), 'message' => 'Бесплатная доставка при заказе от ' . number_format( $minimum, 0, '.', ' ' ) . ' ₽.' );
+		return array( 'status' => 'resolved', 'minimum' => $minimum, 'basis' => 'fias_identity', 'sources' => array_column( $matches, 'cell' ), 'message' => 'Бесплатная доставка при заказе от ' . number_format( $minimum, 0, '.', ' ' ) . ' ₽.' );
 	}
 
 	/** Signed provider identity; client-supplied minima never enter this contract. */

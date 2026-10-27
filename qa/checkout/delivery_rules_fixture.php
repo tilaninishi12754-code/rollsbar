@@ -23,7 +23,14 @@ foreach ( RollsBar_Delivery_Minimum::rules() as $r ) {
 check_rule( count( $tiers ) === 7, 'all seven tiers covered' );
 foreach ( array( 'Кечкеметская', 'Беспалова' ) as $street ) { check_rule( 'ambiguous' === RollsBar_Delivery_Minimum::classify( identity( array( 'street' => $street ) ) )['status'], 'boundary not guessed: ' . $street ); }
 foreach ( array( array( 'street' => 'Киевская' ), array( 'street' => 'Несуществующая' ), array( 'region' => 'Московская' ), array( 'city' => 'Другой', 'area' => 'Другой' ), array( 'house' => '' ), array( 'house_fias_id' => '' ), array( 'street_fias_id' => '' ) ) as $i => $patch ) { check_rule( 'resolved' !== RollsBar_Delivery_Minimum::classify( identity( $patch ) )['status'], 'unknown/unsupported identity fail closed ' . $i ); }
-foreach ( array( null, 1, 2, 3, 4, 5 ) as $precision ) { check_rule( 'resolved' !== RollsBar_Delivery_Minimum::classify( identity( array( 'qc_geo' => $precision ) ) )['status'], 'lower precision fail closed ' . var_export( $precision, true ) ); }
+foreach ( array( null, 1, 2, 3, 4, 5 ) as $precision ) { check_rule( 'resolved' !== RollsBar_Delivery_Minimum::classify( identity( array( 'qc_geo' => $precision, 'house_fias_id' => '' ) ) )['status'], 'approximate address without verified FIAS house fails closed ' . var_export( $precision, true ) ); }
+require __DIR__ . '/../../wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-geocode-policy.php';
+$denisovka = identity(array('city'=>'','settlement'=>'Денисовка','settlement_fias_id'=>'807c873c-8913-45a8-9255-5e04c55500bd','house_fias_id'=>'3f41224e-ea1a-4314-a9df-98b16219fc5c','qc_geo'=>3));
+check_rule(3000===RollsBar_Delivery_Minimum::classify($denisovka)['minimum'],'verified whole-locality FIAS house determines minimum without house coordinates');
+check_rule(false===RollsBar_Geocode_Policy::evaluate(3)['allow_auto_zone'],'approximate coordinates remain forbidden for geographic zone assignment');
+check_rule(1200===RollsBar_Delivery_Minimum::classify(identity(array('qc_geo'=>3)))['minimum'],'whole approved street identity is independent of geocode precision');
+$denisovka['house_fias_id']='';
+check_rule(null===RollsBar_Delivery_Minimum::classify($denisovka)['minimum'],'locality without verified house still fails closed');
 $proof = RollsBar_Delivery_Minimum::proof( identity(), 'г Симферополь, ул Гагарина, д 1' );
 check_rule( 'unresolved' === RollsBar_Delivery_Minimum::verify( $proof . 'x', 'г Симферополь, ул Гагарина, д 1', 9999 )['status'], 'tampered proof rejected' );
 check_rule( 'unresolved' === RollsBar_Delivery_Minimum::verify( $proof, 'Другой адрес', 9999 )['status'], 'stale proof cannot authorize edited address' );

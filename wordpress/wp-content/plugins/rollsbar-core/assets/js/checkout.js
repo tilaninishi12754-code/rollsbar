@@ -139,12 +139,6 @@
 			setNativeValue(input,prefix);
 		}
 
-		input.addEventListener('focus',function(){
-			if(!String(input.value||'').trim()){
-				setNativeValue(input,prefix);
-			}
-		});
-
 		input.addEventListener('blur',function(){
 			var raw=String(input.value||'').trim();
 			if(/^8[\s(\-]?\d/.test(raw)){
@@ -429,7 +423,9 @@
 			input.dataset.rollsbarAddressAutoZone=allowAuto?'1':'0';
 			addressMap(input,result);
 
-			if(allowAuto){
+			if(result.delivery){
+				syncDelivery();
+			}else if(allowAuto){
 				setAddressStatus(input,'Адрес определён точно.','success');
 			}else if(Number(result.qc_geo)===1){
 				setAddressStatus(input,'Проверьте дом: координаты соответствуют ближайшему известному дому.','warning');

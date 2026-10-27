@@ -139,6 +139,7 @@ try:
      require(payload['extensions']['rollsbar-delivery']['address_proof']!='','actual native submit includes signed address proof')
      require(payload['payment_method']=='cod' and payload.get('create_account') is False,'actual native guest COD payload')
      require(payload['billing_address']['email'].endswith('@checkout.rollsbar.invalid'),'native email compatibility retained')
+     require(payload['billing_address']['first_name']=='Тест' and re.sub(r'\D','',payload['billing_address']['phone'])=='79780000000','native identity and full phone retained without duplicated prefix')
      require(payload['customer_note']=='Тест без отправки заказа','native comment storage')
      require(payload['additional_fields']['rollsbar/privacy-consent'] is True,'native privacy consent')
      for field,value in [('entrance','2'),('door-code','10'),('floor','3'),('apartment-office','4')]:require(payload['additional_fields']['rollsbar/'+field]==value,'native optional field '+field)

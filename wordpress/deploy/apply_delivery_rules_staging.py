@@ -6,7 +6,7 @@ from apply_storefront_ux_staging import verify
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/delivery-rules'
 BASE='921698e085263f23493e8f757aa0e7c1b561946c'
-PREVIOUS_APP='3a158ae46a29fb69f6d9131df349659819ec25a3'
+PREVIOUS_APP='954c99f4ca37ea08b364a71686aa772c929a2913'
 CHANGED=[transport.PLUGIN+p for p in [
  'data/delivery-minimum.json','includes/class-rollsbar-delivery-minimum.php',
  'includes/class-rollsbar-delivery-checkout.php','includes/class-rollsbar-native-delivery-method.php',
@@ -52,8 +52,8 @@ echo DELIVERY_BACKEND_PASS
 '''
 
 def manifest():
- files=sorted(OUT.glob('delivery-*.png'))+sorted(OUT.glob('pickup-*.png'))
- if len(files)!=10:raise ValueError('Ten actual delivery/pickup screenshots required')
+ files=sorted(OUT.glob('*.png'))
+ if len(files)!=20:raise ValueError('Ten modal, seven address and three adversarial screenshots required')
  return hashlib.sha256('\n'.join(p.name+':'+hashlib.sha256(p.read_bytes()).hexdigest() for p in files).encode()).hexdigest()
 
 def finalize(sha):
@@ -63,6 +63,8 @@ def finalize(sha):
  if proof.get('native_presubmit',{}).get('status')!='PASS':raise ValueError('Native pre-submit assembly must PASS without HTTP submission')
  addresses=json.loads((OUT/'address-evidence.json').read_text(encoding='utf8'))
  if addresses.get('status')!='PASS' or addresses.get('release_sha')!=sha:raise ValueError('Exact live provider address coverage required')
+ adversarial=json.loads((OUT/'adversarial-evidence.json').read_text(encoding='utf8'))
+ if adversarial.get('status')!='PASS' or adversarial.get('release_sha')!=sha or [c['width'] for c in adversarial['checks']]!=[320,700,701]:raise ValueError('Exact live adversarial pickup/reopen/precision gate required')
  for path in ['original-browser.json','browser.json']:
   data=json.loads((ROOT/'qa/visual-results/storefront-ux-staging'/path).read_text(encoding='utf8'))
   if data.get('status')!='PASS' or data.get('release_sha')!=sha:raise ValueError('Exact storefront regression proof required: '+path)

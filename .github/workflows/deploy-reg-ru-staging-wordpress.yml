@@ -525,6 +525,9 @@ jobs:
       - name: Live exact address tiers and fail-closed cases
         if: inputs.direct_port_phase == 'apply'
         run: python3 qa/checkout/delivery_address_probe.py
+      - name: Adversarial native pickup and close-reopen gate (no orders)
+        if: inputs.direct_port_phase == 'apply'
+        run: python3 qa/checkout/delivery_adversarial.py
       - name: Storefront original regression
         if: inputs.direct_port_phase == 'apply'
         env:
