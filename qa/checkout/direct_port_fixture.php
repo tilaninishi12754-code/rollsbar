@@ -33,6 +33,7 @@ $l=RollsBar_Checkout::field_locale([])['RU'];
 foreach(['first_name','phone','address_1'] as $key){check($l[$key]['required']&&!$l[$key]['hidden'],"$key visible required");}
 foreach(['last_name','company','address_2','state','postcode'] as $key){check(!$l[$key]['required']&&$l[$key]['hidden'],"$key hidden optional");}
 check(!$l['city']['required']&&!$l['city']['hidden'],'locality optional visible');
+check($l['country']['required']&&!$l['country']['hidden'],'native country lookup remains required; seeded RU control omitted by presentation');
 file_put_contents(__DIR__.'/../visual-results/checkout-direct/locale.json',json_encode($l,JSON_UNESCAPED_UNICODE));
 check(RollsBar_Checkout::pickup_locations([['name'=>'Rolls Bar']])[0]['name']==='Симферополь, Кечкеметская улица, 1','pickup exact');
 

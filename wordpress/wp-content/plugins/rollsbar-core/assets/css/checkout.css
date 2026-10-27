@@ -367,6 +367,9 @@ body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-
 	body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-address-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 /* Final Direct Port: immutable 5e7836e checkout shell, including its 1050/700 rules. */
+/* Country remains a valid required native RU control and is submitted normally.
+   Woo 11.1.2 deliberately prevents hiding this locale lookup key via locale. */
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-address-form__country { display: none; }
 body.woocommerce-checkout:not(.woocommerce-order-received) { overflow: hidden; background: #fff; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-header { display: block; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-legal-page {
@@ -433,7 +436,10 @@ body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__billing-fields .wc-block-components-address-address-wrapper,
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__billing-fields .wc-block-components-address-form-wrapper { display: contents; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-title { min-height: 38px; font-weight: 700; }
-body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-text-input input { min-height: 50px; height: 50px; }
+/* Use the immutable input's intrinsic font metrics (50px on Segoe UI, 48px on
+   Linux Arial), rather than fixing the Windows measurement on every platform. */
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-form .wc-block-components-text-input input[type] { min-height: 0; height: auto; font-size: 16px; line-height: normal; padding: 14px 15px; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-form .wc-block-components-text-input.is-active input[type] { padding-top: 20px; padding-bottom: 8px; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-address-address-wrapper.is-editing > .wc-block-components-address-card-wrapper { display: none; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-notices:empty { display: none; }
 /* Match the immutable heading/close flex footprint at 390px as well as 320px. */

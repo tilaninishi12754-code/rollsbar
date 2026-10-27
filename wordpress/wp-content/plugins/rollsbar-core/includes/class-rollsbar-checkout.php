@@ -40,7 +40,9 @@ final class RollsBar_Checkout {
 		$locale['RU']['phone'] = array( 'label' => 'Телефон', 'required' => true, 'hidden' => false, 'index' => 20 );
 		$locale['RU']['address_1'] = array( 'label' => 'Адрес', 'required' => true, 'hidden' => false );
 		$locale['RU']['city'] = array( 'label' => 'Населённый пункт', 'optionalLabel' => 'Населённый пункт (необязательно)', 'required' => false, 'hidden' => false );
-		$locale['RU']['country'] = array( 'required' => true, 'hidden' => true );
+		// Woo 11.1.2 keeps country as the required locale lookup key. Its preset
+		// RU control remains native; presentation omits it from the customer UI.
+		$locale['RU']['country'] = array( 'required' => true, 'hidden' => false );
 		return $locale;
 	}
 

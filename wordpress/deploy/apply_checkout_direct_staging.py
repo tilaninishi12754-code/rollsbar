@@ -6,6 +6,7 @@ from apply_storefront_ux_staging import verify
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/checkout-direct'
 BASE='b481a6fa3d2db7a5524667c51d263ceb117a05d7'
+PREVIOUS_APP='3a1bac237181dfc776e86e2a5c0f007d5494b3d3'
 CHANGED=[transport.PLUGIN+p for p in ['assets/css/checkout.css','assets/js/checkout.js','includes/class-rollsbar-checkout.php']]
 RECEIPT='$HOME/.rollsbar-checkout-direct-release'
 
@@ -19,7 +20,7 @@ def backend():
 def apply(sha):
  copy=''.join(f'install -m 0644 "$PROJECT_ROOT/{p}" "$WP_PATH/{p.removeprefix("wordpress/")}.direct-new"\nmv -f "$WP_PATH/{p.removeprefix("wordpress/")}.direct-new" "$WP_PATH/{p.removeprefix("wordpress/")}"\n' for p in CHANGED)
  return f'''[[ -d "$PROJECT_ROOT/.git" && -z "$(git -C "$PROJECT_ROOT" status --porcelain)" ]]
-{transport.code_hash_guard(sha,before=True,changed=CHANGED,base=BASE)}
+{transport.code_hash_guard(sha,before=True,changed=CHANGED,base=PREVIOUS_APP)}
 {verify()}
 business_before="$(wp_cmd eval {shlex.quote(transport.BUSINESS_PHP)})"
 git -C "$PROJECT_ROOT" fetch --depth=1 origin {sha}

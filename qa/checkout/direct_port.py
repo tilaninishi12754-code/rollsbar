@@ -195,7 +195,9 @@ try:
     require(shell['overflow']=='auto' and shell['scrollHeight']>shell['clientHeight'],'internal modal scroll '+str(width))
     require(p.evaluate('getComputedStyle(document.body).overflow')=='hidden','body scroll locked')
     require(p.evaluate('document.documentElement.scrollWidth-innerWidth')<=1,'no page overflow')
-    require(p.locator('#email,#billing-last_name,#billing-country,#billing-state,#billing-postcode').count()==0,'no disallowed native customer fields')
+    require(p.locator('#email,#billing-last_name,#billing-state,#billing-postcode').count()==0,'no disallowed native customer fields')
+    country=p.locator('#billing-country')
+    require(country.count()==1 and not country.is_visible() and country.input_value()=='RU' and country.is_enabled(),'country is native valid RU internal control, absent from customer UI')
     for key in ['first_name','phone','address_1']:
      require(p.locator('#billing-'+key).is_visible() and p.locator('#billing-'+key).get_attribute('required') is not None,key+' required')
     require(p.locator('#billing-city').get_attribute('required') is None,'locality optional')
@@ -281,9 +283,7 @@ try:
    require(p.evaluate('window.__rollsbarSubmitCount')==1,'one native submit assembly, stopped before HTTP')
    require(payload['billing_address']['email'].endswith('@checkout.rollsbar.invalid'),'native submission carries internal compatible email without customer input')
    require(payload.get('create_account') is False and payload['payment_method']=='cod','native guest COD payload without account creation')
-   # Blocks strips hidden address fields in its submit assembly. The server
-   # pre-dispatch adapter restores RU before native schema/address validation.
-   require(payload['billing_address']['country'] in ['', 'RU'] and payload['shipping_address']['country'] in ['', 'RU'] and payload['billing_address']['city']=='','native hidden-country assembly, optional locality empty; RU adapter verified by PHP fixture')
+   require(payload['billing_address']['country']=='RU' and payload['shipping_address']['country']=='RU' and payload['billing_address']['city']=='','native internal country RU submitted normally, optional locality empty')
    require(payload['customer_note']=='Тест без создания заказа','native customer note storage contract')
    require(payload['additional_fields']['rollsbar/privacy-consent'] is True,'native explicit privacy consent contract')
    for key,value in [('entrance','2'),('door-code','10'),('floor','3'),('apartment-office','4')]:require(payload['additional_fields']['rollsbar/'+key]==value,'native Additional Checkout Fields payload '+key)
