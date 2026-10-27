@@ -29,6 +29,14 @@ def require_control_delta():
   raise ValueError('Focused acceptance requires the exact CSS-only delta from verified full release')
  BASE=CONTROLS_BASE; CHANGED=[css]
 
+NO_DOCK_BASE='529cbf3dc536b13dce40d74bbfbb8d054a9f2cfd'
+def require_no_dock_delta():
+ global BASE,CHANGED
+ BASE=NO_DOCK_BASE;CHANGED=[transport.THEME+'assets/css/app.css']
+ paths=subprocess.check_output(['git','diff','--name-only',BASE,'--',transport.THEME,transport.PLUGIN],cwd=ROOT,text=True).splitlines()
+ if paths!=CHANGED:raise ValueError('No-dock release permits only storefront CSS')
+
+
 def require_interaction_delta():
  global BASE, CHANGED
  BASE='7e584a25285cbee82322c37bc7ea40187c0cd4a7' # Observed backend_verified staging state after run 40378432571.
@@ -91,7 +99,10 @@ echo 'UX_RELEASE_PASS'
 '''
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','finalize','inspect'],required=True);p.add_argument('--controls-only',action='store_true');p.add_argument('--interaction-stability',action='store_true');args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','finalize','inspect'],required=True);p.add_argument('--controls-only',action='store_true');p.add_argument('--interaction-stability',action='store_true');p.add_argument('--no-dock',action='store_true');args=p.parse_args()
+ if args.no_dock:
+  if args.controls_only or args.interaction_stability:raise ValueError('Choose one release scope')
+  require_no_dock_delta()
  if args.interaction_stability:
   if args.controls_only:raise ValueError('Choose one release scope')
   require_interaction_delta()
@@ -101,6 +112,7 @@ def main():
   if args.interaction_stability:verify_interaction_proof(sha)
   proof=json.loads((OUT/'browser.json').read_text(encoding='utf-8'))
   if args.controls_only and (proof.get('inherited_full_acceptance_sha')!=CONTROLS_BASE or proof.get('scope')!='floating-controls-701-900' or [c.get('width') for c in proof.get('checks',[])]!=[701,900]):raise ValueError('Focused browser proof must cover both changed breakpoints and verified base')
+  if args.no_dock and (proof.get('scope')!='controls-no-dock' or proof.get('inherited_full_acceptance_sha')!=NO_DOCK_BASE or [c.get('width') for c in proof.get('checks',[])]!=[320,390,701,900,1440]):raise ValueError('Exact no-dock control proof required')
   if proof.get('status')!='PASS' or proof.get('release_sha')!=sha or len(proof.get('checks',[]))!=(2 if args.controls_only else 5):raise ValueError('Exact release browser PASS required')
  script=apply_script(sha) if args.phase=='apply' else finalize_script(sha) if args.phase=='finalize' else f'cat "{RECEIPT}" 2>/dev/null || true\ncat "$HOME/.rollsbar-staging-deployed-sha"\ngit -C "$PROJECT_ROOT" rev-parse HEAD\n'+verify()
  if args.controls_only and args.phase=='apply':script=f'[[ \"$(cat \"$HOME/.rollsbar-staging-deployed-sha\")\" == {CONTROLS_BASE} ]]\n'+script

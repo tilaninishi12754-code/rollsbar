@@ -665,12 +665,13 @@ a.screen-reader-text:focus{position:fixed;top:8px;left:8px;width:auto;height:aut
 .rollsbar-product-card[data-cart-pending] .rollsbar-product-card__body::after{content:"Обновляем корзину…";position:absolute;bottom:0;left:16px;font-size:11px;color:#666;pointer-events:none}
 .rollsbar-product-card[data-cart-pending]{position:relative}
 
-/* Content scrolls above the fixed-control dock, with room to reach the last row. */
+/* Keep final catalog actions reachable beneath the individual floating controls. */
 @media(max-width:900px){body.home{padding-bottom:160px}}
 
-.rollsbar-controls-dock{position:fixed;inset:auto 0 0;height:160px;background:#fff;border-top:1px solid #f0f0f0;z-index:90}
+/* Client-approved: no full-width shelf; buttons retain their own opaque surfaces. */
+.rollsbar-controls-dock{display:none}
 .rollsbar-controls-dock[hidden]{display:none}
-@media(min-width:901px){.rollsbar-controls-dock{height:90px}body.home{padding-bottom:90px}}
+@media(min-width:901px){body.home{padding-bottom:90px}}
 
 @media(max-width:900px){html:has(body.home){scroll-padding-bottom:160px}}
 @media(min-width:901px){html:has(body.home){scroll-padding-bottom:90px}}
