@@ -28,7 +28,7 @@ Priority order unless Coordinator explicitly changes it:
 
 - Branch: `wordpress/checkout-visual-parity-2026-10-25`.
 - Checkout Final Direct Port and Storefront Interaction Stability: verified PASS on staging (2026-10-28), apply run 40583002012, finalization 40585851050.
-- Deployed application marker: `529cbf3dc536b13dce40d74bbfbb8d054a9f2cfd`, receipt `browser_verified`, fresh verified backup `20261027T210114Z`.
+- Deployed application marker: `921698e085263f23493e8f757aa0e7c1b561946c`, receipt `browser_verified`, fresh verified backup `20261027T213818Z`; CSS-only no-shelf controls acceptance run 40588306513. Checkout application bytes remain identical to accepted 529cbf3.
 - Client Media Canon `client-media-2026-10-21`: 36 canonical assets, 45 mapped product identities, 57 applied rows, 4 deferred rows preserved.
 - Catalog invariant: 118 canonical products / 13 variable parents / 26 variations + 3 hidden staging upsells = 121 published product posts.
 - Production remains forbidden without an explicit production gate and authorization.
@@ -239,6 +239,8 @@ Priority: `P3`
 
 The control has been restored. Keep regression evidence so later checkout/performance changes do not silently remove it again.
 
+2026-10-28 UI follow-up: client requested removal of the full-width control shelf. Focused five-width control/hit/first-tap proof passes at application 921698e. The historical whole-band occlusion assertion remains unchanged; a future approved QA contract migration must reconcile it with the new visible-catalog-between-controls requirement. No full legacy stress PASS is claimed for this CSS-only follow-up.
+
 ## RB-011 — Public `/wp-content/debug.log` hardening tail
 
 Status: `DEFERRED`
@@ -252,6 +254,15 @@ Status: `DEFERRED`
 Priority: `P3`
 
 Accepted current Woo version during prior staging work. Do not combine a Woo core/plugin update with functional/checkout fixes unless explicitly scheduled with regression coverage.
+
+---
+
+## RB-013 — Full-width white shelf obscures the lower catalog
+
+Status: `DONE`
+Priority: `P1`
+
+Client screenshots showed an unwanted white bottom band on desktop/mobile. CSS-only removal hides the shelf and preserves individual back-to-top/cart/phone controls and scroll clearance. Staging run [40588306513](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40588306513), application `921698e085263f23493e8f757aa0e7c1b561946c`, fresh backup `20261027T213818Z`, receipt `browser_verified`. Focused 320/390/701/900/1440 empty/populated-cart checks PASS, nine-point control hit tests and first cart/back-top activations PASS. Desktop/mobile staging screenshots inspected. Checkout bytes unchanged; no production access. See `CONTROLS_NO_DOCK_2026-10-28.md`.
 
 ---
 
