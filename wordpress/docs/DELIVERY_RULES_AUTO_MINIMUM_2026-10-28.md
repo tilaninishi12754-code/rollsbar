@@ -2,6 +2,8 @@
 
 Status: implemented locally, staging verification pending. Production forbidden.
 
+First staging candidate `3a158ae46a29fb69f6d9131df349659819ec25a3` installed by run `40599042401`, fresh verified backup `20261027T230135Z`; native backend integration PASS, receipt `backend_verified`. Live tests exposed an input/validation render race on editing a previously resolved address. Fixed by keeping validation dispatch out of the per-mutation scan and deferring input invalidation until Woo consumes its native change event. The new deterministic browser regression reproduces the old failure and passes with the fix. No orders were submitted. New candidate verification remains pending.
+
 Owner approved the combined scope in this worker chat: native Delivery/Pickup first; pickup requires name/phone only and displays the exact restaurant address; delivery uses name/phone, one `Город, улица и дом` input, optional entrance/intercom/floor/apartment, and always-open native customer note. Map deferred, no polygons. Native consent/COD/email compatibility retained.
 
 Source workbook: `маршрут доставка.xlsx`, sheet `Лист1`, SHA256 `4093f02c4446de749102a6b1e82b7e65d1bd0855b99644e3e411f92a5097095f`. All 92 source cells/provenance retained in plugin JSON. Mazanka override 4000 applies to both duplicate rows. These are minimum goods amounts for free delivery, never fees. Cart goods total after discounts excludes shipping, fees and taxes.

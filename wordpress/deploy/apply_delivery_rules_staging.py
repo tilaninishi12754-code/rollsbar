@@ -6,6 +6,7 @@ from apply_storefront_ux_staging import verify
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/delivery-rules'
 BASE='921698e085263f23493e8f757aa0e7c1b561946c'
+PREVIOUS_APP='3a158ae46a29fb69f6d9131df349659819ec25a3'
 CHANGED=[transport.PLUGIN+p for p in [
  'data/delivery-minimum.json','includes/class-rollsbar-delivery-minimum.php',
  'includes/class-rollsbar-delivery-checkout.php','includes/class-rollsbar-native-delivery-method.php',
@@ -28,7 +29,7 @@ def apply(sha):
   stage+=f'mkdir -p "$(dirname "{live}")"\ninstall -m 0644 "$PROJECT_ROOT/{path}" "{live}.delivery-new"\n'
   publish+=f'mv -f "{live}.delivery-new" "{live}"\n'
  return f'''[[ -d "$PROJECT_ROOT/.git" && -z "$(git -C "$PROJECT_ROOT" status --porcelain)" ]]
-{transport.code_hash_guard(sha,before=True,changed=CHANGED,base=BASE)}
+{transport.code_hash_guard(sha,before=True,changed=CHANGED,base=PREVIOUS_APP)}
 {verify()}
 business_before="$(wp_cmd eval {shlex.quote(transport.BUSINESS_PHP)})"
 git -C "$PROJECT_ROOT" fetch --depth=1 origin {sha}
@@ -59,6 +60,9 @@ def finalize(sha):
  proof=json.loads((OUT/'evidence.json').read_text(encoding='utf8'))
  if proof.get('status')!='AUTOMATED_PASS_AWAITING_SCREENSHOT_REVIEW' or proof.get('release_sha')!=sha or proof.get('mode')!='live':raise ValueError('Exact live native checkout PASS required')
  if [r['width'] for r in proof['checks']]!=[1440,701,700,390,320] or proof['submissions'] or proof['errors']:raise ValueError('Incomplete browser proof')
+ if proof.get('native_presubmit',{}).get('status')!='PASS':raise ValueError('Native pre-submit assembly must PASS without HTTP submission')
+ addresses=json.loads((OUT/'address-evidence.json').read_text(encoding='utf8'))
+ if addresses.get('status')!='PASS' or addresses.get('release_sha')!=sha:raise ValueError('Exact live provider address coverage required')
  for path in ['original-browser.json','browser.json']:
   data=json.loads((ROOT/'qa/visual-results/storefront-ux-staging'/path).read_text(encoding='utf8'))
   if data.get('status')!='PASS' or data.get('release_sha')!=sha:raise ValueError('Exact storefront regression proof required: '+path)

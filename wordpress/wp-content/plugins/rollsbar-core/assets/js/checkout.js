@@ -300,7 +300,9 @@
 		if(!input)return;
 		resolveRequests.delete(input);
 		deliveryAddress=null;
-		syncDelivery();
+		// Let Woo's React onChange consume this input before validation dispatches
+		// can re-render the controlled field with its previous address.
+		setTimeout(syncDelivery,0);
 		delete input.dataset.rollsbarAddressResolved;
 		delete input.dataset.rollsbarAddressQcGeo;
 		delete input.dataset.rollsbarAddressLat;
@@ -479,7 +481,7 @@
 
 	function scan(){
 		prepareNativeContext();
-		syncDelivery();
+		if(!deliverySubscription)syncDelivery();
 		prepareOrderNote();
 		decorateCheckout();
 		prepareNativeSummary();

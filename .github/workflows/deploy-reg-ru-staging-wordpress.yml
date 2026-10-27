@@ -522,6 +522,9 @@ jobs:
       - name: Live native modal, field, COD and DaData gate (no order submission)
         if: inputs.direct_port_phase == 'apply'
         run: python3 qa/checkout/delivery_scenario.py --live
+      - name: Live exact address tiers and fail-closed cases
+        if: inputs.direct_port_phase == 'apply'
+        run: python3 qa/checkout/delivery_address_probe.py
       - name: Storefront original regression
         if: inputs.direct_port_phase == 'apply'
         env:

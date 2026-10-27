@@ -1,6 +1,7 @@
 """Delivery/pickup UX gate with real Woo Blocks. Never submit an order."""
 import json,sys,os,subprocess,re,time,hashlib
 from pathlib import Path
+from urllib.parse import urlsplit,parse_qs
 sys.stdout.reconfigure(encoding='utf8',line_buffering=True)
 ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'wordpress/deploy'))
 from gate_b_browser import BASE,isolated_browser_page,add_first_simple_product,require,store_cart_state
@@ -87,6 +88,16 @@ try:
     p.wait_for_function('()=>wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")?.message.includes("1")')
     require('1200' in p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum").message').replace('\u00a0','').replace(' ',''),'address minimum blocks underfilled cart')
     require(p.evaluate('wp.data.select("wc/store/checkout").getExtensionData()["rollsbar-delivery"].address_proof')!='','native checkout carries signed address proof')
+    if width==1440:
+     query='Симферополь Лермонтова 16'
+     with p.expect_response(lambda r:'/rollsbar/v1/address-suggestions' in r.url and parse_qs(urlsplit(r.url).query).get('query')==[query]) as fresh:
+      address.fill(query)
+     candidates=fresh.value.json()['suggestions']
+     p.wait_for_function('(value)=>wp.data.select("wc/store/cart").getCustomerData().shippingAddress.address_1===value',arg=query)
+     p.wait_for_function('(value)=>document.querySelector(".rollsbar-address-suggestions__item")?.textContent===value',arg=candidates[0]['display'])
+     require(not p.evaluate('wp.data.select("wc/store/checkout").getExtensionData()["rollsbar-delivery"].address_proof'),'editing consumes latest value and clears old proof')
+     p.locator('.rollsbar-address-suggestions__item').first.click()
+     p.wait_for_function("()=>document.querySelector('input[data-rollsbar-address-resolved]')")
     modal=p.locator('[data-rollsbar-modal="1"]')
     geometry=modal.evaluate('e=>{let r=e.getBoundingClientRect(),s=getComputedStyle(e);return {x:r.x,y:r.y,width:r.width,height:r.height,radius:s.borderRadius,position:s.position,scrollHeight:e.scrollHeight,clientHeight:e.clientHeight}}')
     print('GEOMETRY',geometry,flush=True)
@@ -105,17 +116,25 @@ try:
     require(visible(p,'input[id$="-address_1"]').count()==1,'delivery restored')
     if width==1440:
      p.evaluate('async()=>{const s=wp.data.select("wc/store/cart");await wp.data.dispatch("wc/store/cart").changeCartItemQuantity(s.getCartData().items[0].key,3)}')
-     p.wait_for_function('()=>!wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")')
+     try:p.wait_for_function('()=>!wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")')
+     except Exception:
+      report['minimum_failure']={'validation':p.evaluate('wp.data.select("wc/store/validation").getValidationErrors()'),'customer':p.evaluate('wp.data.select("wc/store/cart").getCustomerData()'),'totals':p.evaluate('wp.data.select("wc/store/cart").getCartTotals()'),'proof':p.evaluate('wp.data.select("wc/store/checkout").getExtensionData()'),'body':p.locator('body').inner_text()}
+      raise
      for field,value in [('entrance','2'),('door-code','10'),('floor','3'),('apartment-office','4')]:p.locator('#order-rollsbar-'+field).fill(value)
      p.locator('.wc-block-checkout__add-note textarea').fill('Тест без отправки заказа')
      p.locator('#order-rollsbar-privacy-consent').check()
+     p.wait_for_function('()=>!wp.data.select("wc/store/cart").isCustomerDataUpdating()&&!wp.data.select("wc/store/checkout").isCalculating()')
      p.evaluate('''()=>{window.__rbDeliveryPresubmit=null;wp.apiFetch.use((options,next)=>{
       if((options.path||options.url||'').includes('/wc/store/v1/checkout')&&(options.method||'GET').toUpperCase()==='POST'){
        window.__rbDeliveryPresubmit=JSON.parse(JSON.stringify(options.data));return Promise.reject({code:'rollsbar_qa_presubmit_stop',message:'QA: остановлено до HTTP, заказ не создавался.',data:{status:400}});
       }return next(options);
      });}''')
      p.locator('.wc-block-components-checkout-place-order-button').click()
-     p.wait_for_function('window.__rbDeliveryPresubmit!==null')
+     try:p.wait_for_function('window.__rbDeliveryPresubmit!==null')
+     except Exception:
+      report['presubmit_failure']={'validation':p.evaluate('wp.data.select("wc/store/validation").getValidationErrors()'),'customer':p.evaluate('wp.data.select("wc/store/cart").getCustomerData()'),'body':p.locator('body').inner_text()}
+      p.screenshot(path=str(OUT/'presubmit-failed.png'))
+      raise
      payload=p.evaluate('window.__rbDeliveryPresubmit')
      require(payload['extensions']['rollsbar-delivery']['address_proof']!='','actual native submit includes signed address proof')
      require(payload['payment_method']=='cod' and payload.get('create_account') is False,'actual native guest COD payload')
