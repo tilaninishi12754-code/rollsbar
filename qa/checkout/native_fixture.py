@@ -113,7 +113,7 @@ class NativeFixture:
     content,headers=self.node_call(path,req.post_data.encode(),cookie);mime='application/json'
    elif path=='/checkout/':content=self.html(cookie).encode();mime='text/html;charset=utf-8'
    elif path.startswith('/wp-json/'):
-    data=json.loads(req.post_data or '{}');content=json.dumps(self.api(path.removeprefix('/wp-json')+('?' + url.query if url.query else ''),req.method,data,cookie),ensure_ascii=False).encode();mime='application/json';headers={'Nonce':self.nonce}
+    data=json.loads(req.post_data or '{}');method=req.all_headers().get('x-http-method-override',req.method).upper();content=json.dumps(self.api(path.removeprefix('/wp-json')+('?' + url.query if url.query else ''),method,data,cookie),ensure_ascii=False).encode();mime='application/json';headers={'Nonce':self.nonce}
    else:
     if path.startswith('/wp-includes/'):file=self.root/'qa/.runtime/wp-7.1.3/wordpress'/path.lstrip('/')
     elif path.startswith('/wp-content/uploads/'):file=self.root/'qa/.runtime/native-media'/path.lstrip('/')

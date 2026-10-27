@@ -12,6 +12,7 @@ sys.stdout.reconfigure(encoding='utf-8',line_buffering=True)
 ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'wordpress/deploy'))
 from shadow_preview import choose
 from gate_b_browser import BASE,isolated_browser_page,add_first_simple_product,store_cart_state,require,first_visible
+from request_guard import is_order_submission,effective_rest_method
 from playwright.sync_api import sync_playwright
 OUT=ROOT/'qa/visual-results/checkout-direct';OUT.mkdir(parents=True,exist_ok=True)
 SOURCE=subprocess.check_output(['git','show','5e7836e22110ec076603bb1fa2b12f8bb90ee756:index.html'],cwd=ROOT)
@@ -78,6 +79,7 @@ def from_cart(page):
   report['failed_checkout']={'body':page.locator('body').inner_text(),'cart':store_cart_state(page)}
   raise
  require(page.locator('.wp-block-woocommerce-checkout').count()==1,'first cart activation opens one native modal')
+ require(page.evaluate('wcSettings.checkoutData.order_id===0'),'isolated fresh checkout has no order to update')
 
 def geom(p,selector):
  return p.locator(selector).evaluate('e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return {x:r.x,y:r.y,width:r.width,height:r.height,radius:s.borderRadius,padding:s.padding,shadow:s.boxShadow,overflow:s.overflowY,scrollHeight:e.scrollHeight,clientHeight:e.clientHeight}}')
@@ -116,6 +118,10 @@ try:
   if ref.locator('#cookieAccept').is_visible():ref.locator('#cookieAccept').click()
   ref.evaluate("document.querySelector('#checkoutModal').classList.add('open');document.body.style.overflow='hidden'")
   with isolated_browser_page(browser,viewport={'width':1440,'height':1000},locale='ru-RU',service_workers='block') as p:
+   # Batch-specific guard understands WP 7.1.3's POST + method override. The
+   # historical baseline helper stays byte-for-byte unchanged and independently
+   # tested. Real native POST and all legacy checkout POST remain blocked.
+   p.context.route('**/*',lambda r:r.abort() if is_order_submission(r.request) else r.continue_())
    if LIVE:p.on('response',identity.observe)
    p.on('request',lambda r:print('store request',r.url,flush=True) if '/wc/store/' in r.url else None)
    def ajax_trace(response):
@@ -125,7 +131,14 @@ try:
      print('native AJAX response',round(time.monotonic(),2),response.status,flush=True)
    p.on('response',ajax_trace)
    p.on('pageerror',lambda e:report['errors'].append(str(e)))
-   p.route('**/wc/store/v1/checkout*',lambda r:(report['submissions'].append(r.request.url),r.abort()) if r.request.method=='POST' else r.fallback())
+   def checkout_guard(route):
+    if is_order_submission(route.request):
+     report['submissions'].append(route.request.url);route.abort()
+    else:
+     if effective_rest_method(route.request) in ['PUT','PATCH']:
+      report.setdefault('native_session_updates',[]).append({'url':route.request.url,'transport_method':route.request.method,'rest_method':effective_rest_method(route.request)})
+     route.fallback()
+   p.route('**/wc/store/v1/checkout*',checkout_guard)
    if OFFLINE:
     from native_fixture import NativeFixture
     fixture=NativeFixture(ROOT,OUT,hydrate)
@@ -145,7 +158,7 @@ try:
     p.route('**/wc/store/v1/cart',cart_response)
     p.route('**/wc/store/v1/cart/update-customer*',cart_response)
     p.route('**/wc/store/v1/batch*',cart_response)
-    p.route('**/wc/store/v1/checkout*',lambda r: (report['submissions'].append(r.request.url),r.abort()) if r.request.method=='POST' else cart_response(r))
+    p.route('**/wc/store/v1/checkout*',lambda r: (report['submissions'].append(r.request.url),r.abort()) if is_order_submission(r.request) else cart_response(r))
     for asset,mime in [('css/checkout.css','text/css'),('js/checkout.js','application/javascript')]:
      p.route('**/rollsbar-core/assets/'+asset+'*',lambda r,request,a=asset,m=mime:r.fulfill(status=200,content_type=m,body=(ASSETS/a).read_bytes()))
    def navigation_trace(route):
