@@ -22,6 +22,7 @@ LIVE='--live' in sys.argv
 OFFLINE='--local-native' in sys.argv
 if LIVE and OFFLINE:raise ValueError('Choose live or local native fixture')
 fixture=None
+map_io={'pending':set(),'last':time.monotonic()}
 identity=AssetIdentity(release_assets(os.environ['ROLLSBAR_DEPLOY_SHA']),BASE) if LIVE else None
 WIDTHS=[1440,701,700,390,320]
 report={'run_id':str(uuid.uuid4()),'source_sha256':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [ASSETS/'css/checkout.css',ASSETS/'js/checkout.js',ASSETS.parent/'includes/class-rollsbar-checkout.php']},'release_sha':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'mode':'live' if LIVE else 'offline-native' if OFFLINE else 'native-shadow','status':'RUNNING','checks':[],'submissions':[],'errors':[]}
@@ -94,30 +95,52 @@ def geom(p,selector):
  return p.locator(selector).evaluate('e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return {x:r.x,y:r.y,width:r.width,height:r.height,radius:s.borderRadius,padding:s.padding,shadow:s.boxShadow,overflow:s.overflowY,scrollHeight:e.scrollHeight,clientHeight:e.clientHeight}}')
 
 def map_ready(page,reveal=False):
+ page.bring_to_front() # Reference-tab scrolling must not suspend candidate iframe animation frames.
  if reveal:page.locator('.rollsbar-checkout-map iframe').scroll_into_view_if_needed()
  frame=page.locator('.rollsbar-checkout-map iframe').element_handle().content_frame()
  require(frame is not None,'native map frame attached')
  # Yandex inserts each tile image only after download. "All current images
  # complete" can therefore pass with a single tile and leave most map blank.
- # Measure the union of loaded tile rectangles over the whole visible map.
- coverage="""()=>{
+ # Measure visible coverage; a declared vector map must finish its final
+ # renderer instead of passing on the temporary raster preview.
+ coverage=r"""()=>{
   const w=innerWidth,h=innerHeight;
-  const rects=[...document.images].filter(i=>i.src.includes('renderer-tiles.maps.yandex.ru/tiles')&&i.complete&&i.naturalWidth>0).map(i=>i.getBoundingClientRect()).map(r=>({l:Math.max(0,r.left),r:Math.min(w,r.right),t:Math.max(0,r.top),b:Math.min(h,r.bottom)})).filter(r=>r.r>r.l&&r.b>r.t);
+  const opaque=i=>{for(let e=i;e;e=e.parentElement){const s=getComputedStyle(e);if(s.display==='none'||s.visibility!=='visible'||parseFloat(s.opacity)<0.995)return false}return true};
+  if(document.readyState!=='complete')return false;
+  const vectorExpected=[...document.scripts].some(s=>/isVectorEnabled.{0,4}:\s*true/.test(s.textContent));
+  const canvases=[...document.querySelectorAll('.ymaps3x0--main-engine-container canvas')];
+  const vector=vectorExpected||canvases.length>0;
+  const tiles=vector?canvases.filter(c=>c.width>0&&c.height>0&&opaque(c)):[...document.images].filter(i=>i.src.includes('renderer-tiles.maps.yandex.ru/tiles')&&i.complete&&i.naturalWidth>0&&opaque(i));
+  const rects=tiles.map(i=>i.getBoundingClientRect()).map(r=>({l:Math.max(0,r.left),r:Math.min(w,r.right),t:Math.max(0,r.top),b:Math.min(h,r.bottom)})).filter(r=>r.r>r.l&&r.b>r.t);
+  const engineReady=!vector||['_app_ready','_map_ready','_font_loaded','_vector_ready'].every(c=>document.body.classList.contains(c));
   const xs=[...new Set([0,w,...rects.flatMap(r=>[r.l,r.r])])].sort((a,b)=>a-b);let area=0;
   for(let n=1;n<xs.length;n++){
    const l=xs[n-1],r=xs[n],ys=rects.filter(t=>t.l<=l&&t.r>=r).map(t=>[t.t,t.b]).sort((a,b)=>a[0]-b[0]);let end=0,covered=0;
    for(const [top,bottom] of ys){covered+=Math.max(0,bottom-Math.max(top,end));end=Math.max(end,bottom);}
    area+=(r-l)*covered;
   }
-  return area/(w*h)>=0.995;
+  window.__rbTileStatus={renderer:vector?'vector':'raster',vectorExpected,engineReady,images:document.images.length,tiles:tiles.length,coverage:area/(w*h),visibility:document.visibilityState,at:performance.now()};
+  if(!engineReady||area/(w*h)<0.995){window.__rbTileStable=null;return false;}
+  const key=JSON.stringify(tiles.map(i=>{const r=i.getBoundingClientRect();return [i.src||'canvas',i.width,i.height,...[r.x,r.y,r.width,r.height].map(n=>Math.round(n*10))]}));
+  if(window.__rbTileStable?.key!==key){window.__rbTileStable={key,since:performance.now()};return false;}
+  window.__rbTileStatus.stableFor=performance.now()-window.__rbTileStable.since;
+  return window.__rbTileStatus.stableFor>=500;
  }"""
- try:frame.wait_for_function(coverage)
+ try:
+  deadline=time.monotonic()+30
+  while time.monotonic()<deadline:
+   ready=frame.evaluate(coverage)
+   if ready and not map_io['pending'] and time.monotonic()-map_io['last']>=0.5:break
+   page.wait_for_timeout(100)
+  else:raise TimeoutError('Map renderer/coverage/resources did not settle within unchanged 30s deadline')
  except Exception:
-  report['map_failure']={'url':frame.url,'state':frame.evaluate("({ready:document.readyState,images:[...document.images].map(i=>({url:i.src,complete:i.complete,width:i.naturalWidth}))})")}
+  (OUT/'map-failed-frame.html').write_text(frame.content(),encoding='utf8')
+  report['map_failure']={'diagnostic':frame.evaluate('window.__rbTileStatus'),'url':frame.url,'state':frame.evaluate("({ready:document.readyState,images:[...document.images].map(i=>({url:i.src,complete:i.complete,width:i.naturalWidth}))})")}
   page.locator('.rollsbar-checkout-map').screenshot(path=str(OUT/'map-failed.png'))
   raise
  frame.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
- require(True,'real Yandex map tiles loaded before screenshot')
+ report.setdefault('map_captures',[]).append(frame.evaluate('window.__rbTileStatus'))
+ require(True,'real Yandex final renderer and map resources loaded before screenshot')
 try:
  with sync_playwright() as pw:
   browser=pw.chromium.launch(headless=True)
@@ -139,6 +162,16 @@ try:
      # A response from the previous document may already be discarded here.
      print('native AJAX response',round(time.monotonic(),2),response.status,flush=True)
    p.on('response',ajax_trace)
+   def map_started(request):
+    if 'renderer-tiles.maps.yandex.' in request.url:
+     map_io['pending'].add(request);map_io['last']=time.monotonic()
+   def map_finished(request):
+    if request in map_io['pending']:
+     map_io['pending'].discard(request);map_io['last']=time.monotonic()
+   def map_navigated(frame):
+    if 'yandex.ru/map-widget/' in frame.url:
+     map_io['pending'].clear();map_io['last']=time.monotonic()
+   p.on('request',map_started);p.on('requestfinished',map_finished);p.on('requestfailed',map_finished);p.on('framenavigated',map_navigated)
    cart_journal={};report['cart_transport']=[]
    def cart_event(kind,request,response=None):
     if 'wc-ajax=rollsbar_cart' not in request.url:return
@@ -277,6 +310,9 @@ try:
     require(action.evaluate('e=>{const r=e.getBoundingClientRect(),t=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return e===t||e.contains(t)}'),'native CTA hit target')
     require(action.bounding_box()['height']>=44,'CTA minimum hit height')
     ref.locator('.checkout-summary button[type=submit]').scroll_into_view_if_needed()
+    # Validation/focus can overlap Yandex camera/tile transitions after top capture.
+    map_box=p.locator('.rollsbar-checkout-map iframe').bounding_box()
+    if map_box and map_box['y']<height and map_box['y']+map_box['height']>0:map_ready(p)
     p.screenshot(path=str(OUT/f'candidate-{width}-cta.png'));ref.screenshot(path=str(OUT/f'reference-{width}-cta.png'))
     ImageChops.difference(Image.open(OUT/f'candidate-{width}-cta.png').convert('RGB'),Image.open(OUT/f'reference-{width}-cta.png').convert('RGB')).save(OUT/f'diff-{width}-cta.png')
     ref.locator('.checkout-panel').evaluate('e=>e.scrollTop=0')
