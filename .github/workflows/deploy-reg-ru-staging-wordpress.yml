@@ -528,6 +528,9 @@ jobs:
       - name: Adversarial native pickup and close-reopen gate (no orders)
         if: inputs.direct_port_phase == 'apply'
         run: python3 qa/checkout/delivery_adversarial.py
+      - name: Immutable modal chrome and unmasked source diffs
+        if: inputs.direct_port_phase == 'apply'
+        run: python3 qa/checkout/delivery_reference.py
       - name: Storefront original regression
         if: inputs.direct_port_phase == 'apply'
         env:
@@ -557,5 +560,6 @@ jobs:
           name: delivery-rules-${{ github.run_id }}
           path: |
             qa/visual-results/delivery-rules/
+            qa/visual-results/delivery-reference/
             qa/visual-results/storefront-ux-staging/
           retention-days: 30

@@ -7,11 +7,13 @@ ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'wordpress/d
 from gate_b_browser import BASE,isolated_browser_page,add_first_simple_product,require
 from playwright.sync_api import sync_playwright
 from request_guard import is_order_submission
+from delivery_test_context import delivery_page
 OUT=ROOT/'qa/visual-results/delivery-rules';OUT.mkdir(parents=True,exist_ok=True)
 CASES=[
  (1200,'Симферополь Гагарина 17'),(1200,'Симферополь Лермонтова 16'),
  (1500,'Симферополь Бела Куна 5'),(1500,'Симферополь 51-й Армии 55'),
  (2000,'Крым Мирное Таврическая 120'),(2000,'Крым Мирное Стадионная 19'),
+ (2000,'Крым Грэсовский Яблочкова 12'),
  (2500,'Крым Молодёжное Крымская 13'),(2500,'Крым Аграрное Спортивная 9'),
  (3000,'Крым Денисовка Энергетиков 2'),(3000,'Крым Фонтаны Верхние Фонтаны 32'),
  (3500,'Крым Урожайное 8 Марта 31'),(3500,'Крым Урожайное 8 Марта 32'),
@@ -22,7 +24,7 @@ report={'status':'RUNNING','release_sha':os.environ['ROLLSBAR_DEPLOY_SHA'],'case
 try:
  with sync_playwright() as pw:
   browser=pw.chromium.launch()
-  with isolated_browser_page(browser,viewport={'width':1440,'height':900},locale='ru-RU') as p:
+  with delivery_page(browser,viewport={'width':1440,'height':900},locale='ru-RU') as p:
    def guard(route):
     if is_order_submission(route.request):raise RuntimeError('Unexpected checkout POST')
     route.fallback()

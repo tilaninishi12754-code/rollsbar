@@ -6,7 +6,7 @@ from apply_storefront_ux_staging import verify
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/delivery-rules'
 BASE='921698e085263f23493e8f757aa0e7c1b561946c'
-PREVIOUS_APP='3b596429ee541e5514611f4d86cfa9f69f6b0869'
+PREVIOUS_APP='b96fc2b38ca89f9e0815b8fc62c93074f2b13f96'
 CHANGED=[transport.PLUGIN+p for p in [
  'data/delivery-minimum.json','includes/class-rollsbar-delivery-minimum.php',
  'includes/class-rollsbar-delivery-checkout.php','includes/class-rollsbar-native-delivery-method.php',
@@ -54,7 +54,9 @@ echo DELIVERY_BACKEND_PASS
 def manifest():
  files=sorted(OUT.glob('*.png'))
  if len(files)!=20:raise ValueError('Ten modal, seven address and three adversarial screenshots required')
- return hashlib.sha256('\n'.join(p.name+':'+hashlib.sha256(p.read_bytes()).hexdigest() for p in files).encode()).hexdigest()
+ reference=sorted((ROOT/'qa/visual-results/delivery-reference').glob('*.png'))
+ if len(reference)!=15:raise ValueError('Five immutable reference/candidate/unmasked diff sets required')
+ return hashlib.sha256('\n'.join(str(p.relative_to(ROOT/'qa/visual-results'))+':'+hashlib.sha256(p.read_bytes()).hexdigest() for p in files+reference).encode()).hexdigest()
 
 def finalize(sha):
  proof=json.loads((OUT/'evidence.json').read_text(encoding='utf8'))
@@ -65,6 +67,8 @@ def finalize(sha):
  if addresses.get('status')!='PASS' or addresses.get('release_sha')!=sha:raise ValueError('Exact live provider address coverage required')
  adversarial=json.loads((OUT/'adversarial-evidence.json').read_text(encoding='utf8'))
  if adversarial.get('status')!='PASS' or adversarial.get('release_sha')!=sha or [c['width'] for c in adversarial['checks']]!=[320,700,701]:raise ValueError('Exact live adversarial pickup/reopen/precision gate required')
+ reference=json.loads((ROOT/'qa/visual-results/delivery-reference/evidence.json').read_text(encoding='utf8'))
+ if reference.get('release_sha')!=sha or reference.get('status')!='MODAL_CHROME_PASS_CONTENT_CHANGED_BY_OWNER' or reference.get('reference')!='5e7836e22110ec076603bb1fa2b12f8bb90ee756:index.html' or reference.get('masks')!=[]:raise ValueError('Immutable modal geometry and unmasked source diffs required')
  for path in ['original-browser.json','browser.json']:
   data=json.loads((ROOT/'qa/visual-results/storefront-ux-staging'/path).read_text(encoding='utf8'))
   if data.get('status')!='PASS' or data.get('release_sha')!=sha:raise ValueError('Exact storefront regression proof required: '+path)

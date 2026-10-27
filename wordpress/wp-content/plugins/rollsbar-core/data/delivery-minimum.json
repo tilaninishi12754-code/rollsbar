@@ -457,11 +457,11 @@
       "cell": "D14",
       "source": "ГРЭС",
       "minimum": 2000,
-      "type": "area",
+      "type": "locality",
       "aliases": [
-        "ГРЭС"
+        "Грэсовский"
       ],
-      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+      "reason": "DaData resolves the source name ГРЭС to пгт Грэсовский, settlement_fias_id d3f14746-73e5-4ad2-85b3-f76e1b3cbc5c; verified staging 2026-10-28."
     },
     {
       "cell": "D15",

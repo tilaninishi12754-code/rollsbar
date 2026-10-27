@@ -9,6 +9,7 @@ from playwright.sync_api import sync_playwright
 from request_guard import is_order_submission
 from release_gate import AssetIdentity,release_assets
 from delivery_native_fixture import DeliveryFixture
+from delivery_test_context import delivery_page
 OUT=ROOT/'qa/visual-results/delivery-rules';OUT.mkdir(parents=True,exist_ok=True)
 CAPTURE=ROOT/'qa/visual-results/checkout-direct'
 LIVE='--live' in sys.argv
@@ -49,7 +50,7 @@ try:
   browser=pw.chromium.launch()
   if not LIVE:fixture=DeliveryFixture(ROOT,CAPTURE,hydrate)
   for width in [1440,701,700,390,320]:
-   with isolated_browser_page(browser,viewport={'width':width,'height':900},is_mobile=width<=700,has_touch=width<=700) as p:
+   with delivery_page(browser,viewport={'width':width,'height':900},is_mobile=width<=700,has_touch=width<=700) as p:
     if fixture:p.context.route(BASE+'/**',fixture.route)
     identity=AssetIdentity(release_assets(os.environ['ROLLSBAR_DEPLOY_SHA']),BASE) if LIVE else None
     if identity:p.on('response',identity.observe)

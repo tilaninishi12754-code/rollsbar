@@ -7,6 +7,7 @@ ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'wordpress/d
 from gate_b_browser import BASE,isolated_browser_page,add_first_simple_product,first_visible,require,store_cart_state
 from playwright.sync_api import sync_playwright
 from request_guard import is_order_submission
+from delivery_test_context import delivery_page
 OUT=ROOT/'qa/visual-results/delivery-rules';OUT.mkdir(parents=True,exist_ok=True)
 report={'status':'RUNNING','release_sha':os.environ['ROLLSBAR_DEPLOY_SHA'],'checks':[],'submissions':[]}
 def enter(p):
@@ -22,7 +23,7 @@ try:
  with sync_playwright() as pw:
   browser=pw.chromium.launch()
   for width in [320,700,701]:
-   with isolated_browser_page(browser,viewport={'width':width,'height':900},is_mobile=width<=700,has_touch=width<=700,locale='ru-RU') as p:
+   with delivery_page(browser,viewport={'width':width,'height':900},is_mobile=width<=700,has_touch=width<=700,locale='ru-RU') as p:
     def guard(route):
      if is_order_submission(route.request):report['submissions'].append(route.request.url);route.abort()
      else:route.fallback()
