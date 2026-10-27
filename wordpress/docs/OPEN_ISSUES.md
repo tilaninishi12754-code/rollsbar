@@ -1,7 +1,7 @@
 # RollsBar Issue Register
 
 Status owner: RollsBar Coordinator
-Last updated: 2026-10-27
+Last updated: 2026-10-28
 
 This file is the durable source of truth for unresolved / deferred RollsBar defects and follow-up work. New confirmed issues should be recorded here instead of living only in chat. Do not reopen items marked DONE without new evidence.
 
@@ -27,8 +27,8 @@ Priority order unless Coordinator explicitly changes it:
 ## Current accepted checkpoint
 
 - Branch: `wordpress/checkout-visual-parity-2026-10-25`.
-- Storefront Interaction Stability: verified PASS on staging (2026-10-27), run 40463955833.
-- Deployed application marker: `b481a6fa3d2db7a5524667c51d263ceb117a05d7`, receipt `browser_verified`, backup `20261027T065607Z`.
+- Checkout Final Direct Port and Storefront Interaction Stability: verified PASS on staging (2026-10-28), apply run 40583002012, finalization 40585851050.
+- Deployed application marker: `529cbf3dc536b13dce40d74bbfbb8d054a9f2cfd`, receipt `browser_verified`, fresh verified backup `20261027T210114Z`.
 - Client Media Canon `client-media-2026-10-21`: 36 canonical assets, 45 mapped product identities, 57 applied rows, 4 deferred rows preserved.
 - Catalog invariant: 118 canonical products / 13 variable parents / 26 variations + 3 hidden staging upsells = 121 published product posts.
 - Production remains forbidden without an explicit production gate and authorization.
@@ -151,15 +151,15 @@ Future acceptance:
 
 ## RB-006 — Checkout visual implementation does not match immutable approved checkout
 
-Status: `IN PROGRESS`
+Status: `DONE`
 Priority: `P1` after RB-001..RB-004
 Target batch: `CHECKOUT FINAL DIRECT PORT`
 
 Immutable visual source:
 `5e7836e22110ec076603bb1fa2b12f8bb90ee756:index.html`
 
-Known mismatch:
-- current staging checkout behaves like a route/page sheet;
+Resolved mismatch (before this batch):
+- earlier staging checkout behaved like a route/page sheet;
 - approved source is a true fixed modal overlay with backdrop, centered panel, internal scrolling and modal dismissal behavior;
 - earlier broad visual PASS was invalid because large differences were classified as acceptable adaptations.
 
@@ -169,7 +169,7 @@ Required approach:
 - strict screenshot/reference comparison at desktop and mobile widths;
 - no self-waiver of large visual differences as merely acceptable responsive adaptation.
 
-Current batch: native field/email compatibility and fixed modal shell implemented locally; staging evidence pending. No DONE claim before live gates and screenshot inspection. See `CHECKOUT_FINAL_DIRECT_PORT_REPORT_2026-10-27.md`.
+Final acceptance: [apply 40583002012](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40583002012) and [finalization 40585851050](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40585851050), application/marker `529cbf3dc536b13dce40d74bbfbb8d054a9f2cfd`, receipt `browser_verified`, backup `20261027T210114Z`. Native modal 5/5, original storefront UX 5/5, Interaction Stability 6/6, independent post-green adversarial checks PASS. All 32 reference/candidate/diff/map images inspected; reviewed manifest `589fada0f55ad80975b303e65cbbfe84546be17baa573f29c37c543ad0753615`. Approved field set, native email validation/guest mail protection, exact pickup and COD verified. No orders created and production untouched. See `CHECKOUT_FINAL_DIRECT_PORT_REPORT_2026-10-27.md`.
 
 ---
 
@@ -262,7 +262,7 @@ Do not reopen without new evidence:
 - `CLIENT PRODUCT MEDIA CANON`: PASS — 57 applied / 4 deferred / 61 preserved.
 - `STOREFRONT UX FINAL FIXES`: PASS for its original acceptance set.
 - mobile sticky header: clean fresh browser load reported correct by user; stale embedded-session behavior is tracked separately as RB-008.
-- checkout functional/native Woo safety from previous gate remains accepted; visual parity remains open as RB-006.
+- checkout native Woo safety and Final Direct Port modal/field acceptance are PASS; RB-006 is DONE with exact-release staging evidence.
 
 ---
 

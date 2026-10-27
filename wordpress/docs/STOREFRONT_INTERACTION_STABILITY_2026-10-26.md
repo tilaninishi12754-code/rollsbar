@@ -56,3 +56,7 @@ Production access/mutation: no. No checkout orders. Checkout Final Direct Port n
 - Visually inspected populated screenshots at every stress width, empty 900, pending 390, original 320x568 controls and 430 product detail. Fixed controls are separated from catalog hit targets; pending acknowledgement is visible. Two lazy-loaded images in the first 900 screenshot are present in the subsequent empty-cart screenshot; media mapping/hash gate passes.
 - RB-001/002/003/004: DONE. RB-005: DEFERRED for latency; pending/race-safety subset DONE. Checkout Final Direct Port not started.
 - Final follow-up commit changes documentation only; deployed application remains b481a6f.
+
+## Checkout Final Direct Port regression — 2026-10-28
+
+Application/marker `529cbf3dc536b13dce40d74bbfbb8d054a9f2cfd`, apply run [40583002012](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40583002012), finalized by [40585851050](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40585851050). Original live UX 5/5 and unchanged Interaction Stability 6/6 at 320/390/430/701/900/1440 PASS; populated screenshots at all six widths inspected. Independent post-green checkout/return smoke also PASS. Storefront application files remain unchanged; checkout's native commerce speculation exclusions prevent background session interference. Catalog/media and business guards PASS. RB-001..RB-004 remain DONE, RB-005 latency work deferred. No orders created; production untouched. See `CHECKOUT_FINAL_DIRECT_PORT_REPORT_2026-10-27.md`.
