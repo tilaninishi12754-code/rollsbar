@@ -434,12 +434,12 @@ jobs:
         if: inputs.direct_port_phase == 'apply'
         env:
           ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
-        run: node qa/visual/storefront-ux.mjs
+        run: node --import ./qa/visual/staging-browser-diagnostics.mjs qa/visual/storefront-ux.mjs
       - name: Storefront Interaction Stability regression
         if: inputs.direct_port_phase == 'apply'
         env:
           ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
-        run: node qa/visual/interaction-stability.mjs
+        run: node --import ./qa/visual/staging-browser-diagnostics.mjs qa/visual/interaction-stability.mjs
       - name: Screenshot manifest for subsequent vision review
         if: inputs.direct_port_phase == 'apply'
         run: python3 wordpress/deploy/apply_checkout_direct_staging.py --phase manifest > qa/visual-results/checkout-direct/screenshot-manifest.txt
