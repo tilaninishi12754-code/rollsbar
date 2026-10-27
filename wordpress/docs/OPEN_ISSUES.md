@@ -268,6 +268,13 @@ Client screenshots showed an unwanted white bottom band on desktop/mobile. CSS-o
 
 # Closed / accepted context
 
+## RB-014 — Delivery/pickup scenario and automatic free-delivery minimum
+
+Status: `IN PROGRESS`
+Priority: `P1`
+
+Owner authorized the combined 2026-10-28 batch. Implemented locally: native fulfillment toggle, conditional customer address/details, one address field, always-open native comment, hidden map; 92-cell source rule registry and signed DaData identity with pre-order Store API enforcement. Mazanka = 4000. Unknown/ambiguous/approximate addresses fail closed. Local deterministic and native five-width browser gates PASS; fresh staging deploy/live address coverage and final regressions pending. Existing RB-006 acceptance remains historical and does not certify this new candidate. See `DELIVERY_RULES_AUTO_MINIMUM_2026-10-28.md`.
+
 Do not reopen without new evidence:
 
 - `CLIENT PRODUCT MEDIA CANON`: PASS — 57 applied / 4 deferred / 61 preserved.

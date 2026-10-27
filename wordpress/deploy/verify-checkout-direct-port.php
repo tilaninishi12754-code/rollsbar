@@ -35,11 +35,15 @@ $order->set_address( $address, 'billing' );
 $errors = new WP_Error();
 $validate_address->invoke( $controller, $order, 'billing', $errors );
 rb_direct_assert( ! $errors->has_errors(), 'native address validation accepts approved fields with optional locality/surname/state/postcode absent' );
-foreach ( array( 'first_name', 'phone', 'address_1' ) as $key ) {
+foreach ( array( 'first_name', 'phone' ) as $key ) {
  $test = $address; $test[$key] = ''; $order->set_address( $test, 'billing' ); $errors = new WP_Error();
  $validate_address->invoke( $controller, $order, 'billing', $errors );
  rb_direct_assert( $errors->has_errors(), 'native address validator requires ' . $key );
 }
+$order->set_address( array_merge( $address, array( 'address_1' => '' ) ), 'billing' );
+$errors = new WP_Error();
+$validate_address->invoke( $controller, $order, 'billing', $errors );
+rb_direct_assert( ! $errors->has_errors(), 'pickup native billing contract permits absent customer address; delivery has separate pre-order proof validation' );
 $field_service = Automattic\WooCommerce\Blocks\Package::container()->get( Automattic\WooCommerce\Blocks\Domain\Services\CheckoutFields::class );
 $order_fields = array('rollsbar/privacy-consent'=>true,'rollsbar/entrance'=>'2','rollsbar/door-code'=>'10','rollsbar/floor'=>'3','rollsbar/apartment-office'=>'4');
 rb_direct_assert( ! $field_service->validate_fields_for_location($order_fields,'order')->has_errors(), 'native Additional Checkout Fields validate approved values' );

@@ -177,6 +177,8 @@ final class RollsBar_Address_Suggestions {
 				'lon'      => $lon,
 				'qc_geo'   => $qc_geo,
 				'precision'=> $policy,
+				'delivery' => RollsBar_Delivery_Minimum::classify( $data ),
+				'address_proof' => RollsBar_Delivery_Minimum::proof( $data, $display ),
 			)
 		);
 	}

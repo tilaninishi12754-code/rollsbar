@@ -36,6 +36,14 @@ final class RollsBar_Checkout {
 		add_action( 'woocommerce_before_template_part', array( __CLASS__, 'before_contact_template' ), PHP_INT_MAX, 4 );
 		add_action( 'woocommerce_after_template_part', array( __CLASS__, 'after_contact_template' ), PHP_INT_MIN, 4 );
 		add_filter( 'wp_speculation_rules_href_exclude_paths', array( __CLASS__, 'commerce_speculation_exclusions' ) );
+		add_filter( 'render_block_data', static function ( $block ) {
+			if ( 'woocommerce/checkout-shipping-method-block' === ( $block['blockName'] ?? '' ) ) {
+				$block['attrs']['shippingText'] = 'Доставка';
+				$block['attrs']['localPickupText'] = 'Самовывоз';
+				$block['attrs']['title'] = 'Способ получения';
+			}
+			return $block;
+		} );
 	}
 
 	/** Stateful native Woo documents must load only on actual activation. */
@@ -86,8 +94,10 @@ final class RollsBar_Checkout {
 		}
 		$locale['RU']['first_name'] = array( 'label' => 'Имя', 'required' => true, 'hidden' => false );
 		$locale['RU']['phone'] = array( 'label' => 'Телефон', 'required' => true, 'hidden' => false, 'index' => 20 );
-		$locale['RU']['address_1'] = array( 'label' => 'Адрес', 'required' => true, 'hidden' => false );
-		$locale['RU']['city'] = array( 'label' => 'Населённый пункт', 'optionalLabel' => 'Населённый пункт (необязательно)', 'required' => false, 'hidden' => false );
+		// Pickup needs no customer address. Delivery requires a signed exact address
+		// through the native Store API pre-order gate, not a hidden required input.
+		$locale['RU']['address_1'] = array( 'label' => 'Город, улица и дом', 'optionalLabel' => 'Город, улица и дом', 'required' => false, 'hidden' => false );
+		$locale['RU']['city'] = array( 'required' => false, 'hidden' => true );
 		// Woo 11.1.2 keeps country as the required locale lookup key. Its preset
 		// RU control remains native; presentation omits it from the customer UI.
 		$locale['RU']['country'] = array( 'required' => true, 'hidden' => false );
@@ -152,7 +162,10 @@ final class RollsBar_Checkout {
 		foreach ( self::field_locale( array() )['RU'] as $key => $config ) {
 			$data[ $key ] = array_merge( $data[ $key ] ?? array(), $config );
 		}
-		$data['city']['optionalLabel'] = 'Населённый пункт (необязательно)';
+		foreach ( array( 'entrance', 'door-code', 'floor', 'apartment-office' ) as $key ) {
+			$id = self::FIELD_PREFIX . $key;
+			if ( isset( $data[ $id ] ) ) { $data[ $id ]['optionalLabel'] = $data[ $id ]['label']; }
+		}
 		$data['email']['hidden'] = true;
 		$container->get( \Automattic\WooCommerce\Blocks\Assets\AssetDataRegistry::class )->add( 'defaultFields', $data );
 	}

@@ -41,6 +41,7 @@ on:
           - interaction-stability
           - checkout-direct-port
           - controls-no-dock
+          - delivery-rules
       release_sha:
         description: Exact already deployed application SHA (required for release-resume)
         required: false
@@ -457,5 +458,98 @@ jobs:
           name: checkout-direct-${{ github.run_id }}
           path: |
             qa/visual-results/checkout-direct/
+            qa/visual-results/storefront-ux-staging/
+          retention-days: 30
+
+  delivery-rules:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'delivery-rules' && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
+    permissions:
+      contents: read
+      actions: read
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 30
+    env:
+      ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+      DIRECT_PORT_PHASE: ${{ inputs.direct_port_phase }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Scope and syntax before credentials
+        run: |
+          python3 -c "import sys;sys.path.insert(0,'wordpress/deploy');from apply_delivery_rules_staging import scope;scope()"
+          php -l wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-checkout.php
+          php -l wordpress/deploy/verify-delivery-rules.php
+          node --check wordpress/wp-content/plugins/rollsbar-core/assets/js/checkout.js
+      - name: Install transport
+        run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+      - name: Install browser gates
+        if: inputs.direct_port_phase == 'apply'
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet playwright Pillow
+          npm --prefix qa install --no-save --ignore-scripts --package-lock=false @playwright/test@1.64.1
+          node qa/node_modules/@playwright/test/cli.js install --with-deps chromium
+          python3 -m playwright install chromium
+      - name: Validate finalized proof run
+        if: inputs.direct_port_phase == 'finalize'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROOF_RUN: ${{ inputs.proof_run_id }}
+        run: |
+          [[ "$PROOF_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PROOF_RUN" > /tmp/direct-run.json
+          python3 -c "import json,os;d=json.load(open('/tmp/direct-run.json'));assert d['head_sha']==os.environ['GITHUB_SHA'] and d['conclusion']=='success' and d['name']=='Deploy REG.RU RollsBar Staging WordPress'"
+      - uses: actions/download-artifact@v4
+        if: inputs.direct_port_phase == 'finalize'
+        with:
+          name: delivery-rules-${{ inputs.proof_run_id }}
+          path: qa/visual-results
+          run-id: ${{ inputs.proof_run_id }}
+          github-token: ${{ github.token }}
+      - name: Fresh verified backup and narrow deploy / inspected finalization
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_REVIEWED_MANIFEST: ${{ inputs.reviewed_manifest }}
+        run: python3 wordpress/deploy/apply_delivery_rules_staging.py --phase "$DIRECT_PORT_PHASE"
+      - name: Live native modal, field, COD and DaData gate (no order submission)
+        if: inputs.direct_port_phase == 'apply'
+        run: python3 qa/checkout/delivery_scenario.py --live
+      - name: Storefront original regression
+        if: inputs.direct_port_phase == 'apply'
+        env:
+          ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
+        run: node --import ./qa/visual/staging-browser-diagnostics.mjs qa/visual/storefront-ux.mjs
+      - name: Preserve original storefront proof
+        if: inputs.direct_port_phase == 'apply'
+        run: cp qa/visual-results/storefront-ux-staging/browser.json qa/visual-results/storefront-ux-staging/original-browser.json
+      - name: Storefront controls regression (accepted no-shelf contract)
+        if: inputs.direct_port_phase == 'apply'
+        env:
+          ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
+        run: node --import ./qa/visual/staging-browser-diagnostics.mjs qa/visual/controls-no-dock.mjs
+      - name: Screenshot manifest for subsequent vision review
+        if: inputs.direct_port_phase == 'apply'
+        run: python3 wordpress/deploy/apply_delivery_rules_staging.py --phase manifest > qa/visual-results/delivery-rules/screenshot-manifest.txt
+      - name: Inspect actual state after failure (no mutation retry)
+        if: failure()
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+        run: python3 wordpress/deploy/apply_delivery_rules_staging.py --phase inspect
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: delivery-rules-${{ github.run_id }}
+          path: |
+            qa/visual-results/delivery-rules/
             qa/visual-results/storefront-ux-staging/
           retention-days: 30

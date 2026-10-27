@@ -1,0 +1,856 @@
+{
+  "source": "маршрут доставка.xlsx",
+  "sheet": "Лист1",
+  "sha256": "4093f02c4446de749102a6b1e82b7e65d1bd0855b99644e3e411f92a5097095f",
+  "central_market_origin": "Симферополь, Кечкеметская улица, 1",
+  "rules": [
+    {
+      "cell": "B3",
+      "source": "р-он Москольцо",
+      "minimum": 1200,
+      "type": "area",
+      "aliases": [
+        "Москольцо"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "B4",
+      "source": "ул.Кечкеметская до ул.Арабатская",
+      "minimum": 1200,
+      "type": "unresolved",
+      "aliases": [],
+      "reason": "Boundary has no approved street/house range; do not infer from distance or free text."
+    },
+    {
+      "cell": "B5",
+      "source": "ул.Железнодорожн.",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Железнодорожная"
+      ]
+    },
+    {
+      "cell": "B6",
+      "source": "ул.Ростовская",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Ростовская"
+      ]
+    },
+    {
+      "cell": "B7",
+      "source": "ул.Камская",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Камская"
+      ]
+    },
+    {
+      "cell": "B8",
+      "source": "ул.Садовая",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Садовая"
+      ]
+    },
+    {
+      "cell": "B9",
+      "source": "ул.Мол.Подпольщ.",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Молодых Подпольщиков"
+      ]
+    },
+    {
+      "cell": "B10",
+      "source": "ул.Стрелковая",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Стрелковая"
+      ]
+    },
+    {
+      "cell": "B11",
+      "source": "ул.Свободная",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Свободная"
+      ]
+    },
+    {
+      "cell": "B12",
+      "source": "ул.Общественная",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Общественная"
+      ]
+    },
+    {
+      "cell": "B13",
+      "source": "ул.Московская",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Московская"
+      ]
+    },
+    {
+      "cell": "B14",
+      "source": "ул.Чонгарская",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Чонгарская"
+      ]
+    },
+    {
+      "cell": "B15",
+      "source": "ул.Лизы Чайкиной",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Лизы Чайкиной"
+      ]
+    },
+    {
+      "cell": "B16",
+      "source": "ул.Шалфейная",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Шалфейная"
+      ]
+    },
+    {
+      "cell": "B17",
+      "source": "ул.Вишневая",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Вишневая"
+      ]
+    },
+    {
+      "cell": "B18",
+      "source": "ул.Лермонтова",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Лермонтова"
+      ]
+    },
+    {
+      "cell": "B19",
+      "source": "ул.Гагарина ",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Гагарина"
+      ]
+    },
+    {
+      "cell": "B20",
+      "source": "ул.Троллейбусная ",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Троллейбусная"
+      ]
+    },
+    {
+      "cell": "B21",
+      "source": "ДКП",
+      "minimum": 1200,
+      "type": "area",
+      "aliases": [
+        "ДКП"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "B22",
+      "source": "ПРИВОЗ",
+      "minimum": 1200,
+      "type": "area",
+      "aliases": [
+        "Привоз"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "B23",
+      "source": "ул.Никанорова",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Никанорова"
+      ]
+    },
+    {
+      "cell": "B24",
+      "source": "ул.Павленко",
+      "minimum": 1200,
+      "type": "street",
+      "aliases": [
+        "Павленко"
+      ]
+    },
+    {
+      "cell": "B25",
+      "source": "Ж/Д ВОКЗАЛ",
+      "minimum": 1200,
+      "type": "area",
+      "aliases": [
+        "Железнодорожный вокзал"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "C3",
+      "source": "от ДКП до Автовокзала",
+      "minimum": 1500,
+      "type": "unresolved",
+      "aliases": [],
+      "reason": "Boundary has no approved street/house range; do not infer from distance or free text."
+    },
+    {
+      "cell": "C4",
+      "source": "Давыдовка",
+      "minimum": 1500,
+      "type": "locality",
+      "aliases": [
+        "Давыдовка"
+      ]
+    },
+    {
+      "cell": "C5",
+      "source": "ул.Николаевская",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "Николаевская"
+      ]
+    },
+    {
+      "cell": "C6",
+      "source": "Луговое",
+      "minimum": 1500,
+      "type": "locality",
+      "aliases": [
+        "Луговое"
+      ]
+    },
+    {
+      "cell": "C7",
+      "source": "ул.Б.Куна",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "Бела Куна",
+        "Белы Куна"
+      ]
+    },
+    {
+      "cell": "C8",
+      "source": "ул.Бородина",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "Бородина"
+      ]
+    },
+    {
+      "cell": "C9",
+      "source": "ул.51 Армии",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "51-й Армии",
+        "51 Армии"
+      ]
+    },
+    {
+      "cell": "C10",
+      "source": "до ц.Рынка",
+      "minimum": 1500,
+      "type": "unresolved",
+      "aliases": [],
+      "reason": "Boundary has no approved street/house range; do not infer from distance or free text."
+    },
+    {
+      "cell": "C11",
+      "source": "ул.Титова",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "Титова"
+      ]
+    },
+    {
+      "cell": "C12",
+      "source": "проспект Победы",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "Победы"
+      ]
+    },
+    {
+      "cell": "C13",
+      "source": "проспект Кирова",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "Кирова"
+      ]
+    },
+    {
+      "cell": "C14",
+      "source": "ул.Буденного",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "Будённого"
+      ]
+    },
+    {
+      "cell": "C15",
+      "source": "МЕГАНОМ",
+      "minimum": 1500,
+      "type": "area",
+      "aliases": [
+        "Меганом"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "C16",
+      "source": "Г.Сталинграда",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "Героев Сталинграда"
+      ]
+    },
+    {
+      "cell": "C17",
+      "source": "М.Жукова",
+      "minimum": 1500,
+      "type": "street",
+      "aliases": [
+        "Маршала Жукова"
+      ]
+    },
+    {
+      "cell": "D3",
+      "source": "СВОБОДА",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Свобода"
+      ]
+    },
+    {
+      "cell": "D4",
+      "source": "АЙКАВАН",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Айкаван"
+      ]
+    },
+    {
+      "cell": "D5",
+      "source": "АКРОПОЛИС",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Акрополис"
+      ]
+    },
+    {
+      "cell": "D6",
+      "source": "АНА-ЮРТ",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Ана-Юрт"
+      ]
+    },
+    {
+      "cell": "D7",
+      "source": "БЕЛОЕ                     (р-он ФМ)",
+      "minimum": 2000,
+      "type": "area",
+      "aliases": [
+        "Белое"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "D8",
+      "source": "БЕЛОЕ 3",
+      "minimum": 2000,
+      "type": "area",
+      "aliases": [
+        "Белое 3"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "D9",
+      "source": "БЕЛОЕ 4",
+      "minimum": 2000,
+      "type": "area",
+      "aliases": [
+        "Белое 4"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "D10",
+      "source": "БЕЛОЕ 5",
+      "minimum": 2000,
+      "type": "area",
+      "aliases": [
+        "Белое 5"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "D11",
+      "source": "Живописное",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Живописное"
+      ]
+    },
+    {
+      "cell": "D12",
+      "source": "МИРНОЕ",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Мирное"
+      ]
+    },
+    {
+      "cell": "D13",
+      "source": "ДУБКИ",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Дубки"
+      ]
+    },
+    {
+      "cell": "D14",
+      "source": "ГРЭС",
+      "minimum": 2000,
+      "type": "area",
+      "aliases": [
+        "ГРЭС"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "D15",
+      "source": "Комсомольское",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Комсомольское"
+      ]
+    },
+    {
+      "cell": "D16",
+      "source": "старый Аэропорт ул.Мальченко",
+      "minimum": 2000,
+      "type": "street",
+      "aliases": [
+        "Мальченко"
+      ]
+    },
+    {
+      "cell": "D17",
+      "source": "Перово",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Перово"
+      ]
+    },
+    {
+      "cell": "D18",
+      "source": "ц.РЫНОК",
+      "minimum": 2000,
+      "type": "area",
+      "aliases": [
+        "Центральный рынок"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "D19",
+      "source": "ул.Чехова",
+      "minimum": 2000,
+      "type": "street",
+      "aliases": [
+        "Чехова"
+      ]
+    },
+    {
+      "cell": "D20",
+      "source": "ул.Крылова",
+      "minimum": 2000,
+      "type": "street",
+      "aliases": [
+        "Крылова"
+      ]
+    },
+    {
+      "cell": "D21",
+      "source": "ПЕРОВО",
+      "minimum": 2000,
+      "type": "locality",
+      "aliases": [
+        "Перово"
+      ]
+    },
+    {
+      "cell": "E3",
+      "source": "Марьино",
+      "minimum": 2500,
+      "type": "locality",
+      "aliases": [
+        "Марьино"
+      ]
+    },
+    {
+      "cell": "E4",
+      "source": "Пневматика  БАЛАКЛАВСКАЯ",
+      "minimum": 2500,
+      "type": "street",
+      "aliases": [
+        "Балаклавская"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood.",
+      "area_aliases": [
+        "Пневматика"
+      ]
+    },
+    {
+      "cell": "E5",
+      "source": "7-я гор.Больница",
+      "minimum": 2500,
+      "type": "area",
+      "aliases": [
+        "7-я городская больница"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "E6",
+      "source": "КАМЕНКА",
+      "minimum": 2500,
+      "type": "area",
+      "aliases": [
+        "Каменка"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "E7",
+      "source": "Строгановка",
+      "minimum": 2500,
+      "type": "locality",
+      "aliases": [
+        "Строгановка"
+      ]
+    },
+    {
+      "cell": "E8",
+      "source": "Молодежное Аграрное",
+      "minimum": 2500,
+      "type": "locality",
+      "aliases": [
+        "Молодёжное",
+        "Аграрное"
+      ]
+    },
+    {
+      "cell": "E9",
+      "source": "Больница Семашко (новая)",
+      "minimum": 2500,
+      "type": "area",
+      "aliases": [
+        "Больница Семашко"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "E10",
+      "source": "район ТНУ",
+      "minimum": 2500,
+      "type": "area",
+      "aliases": [
+        "ТНУ"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "E11",
+      "source": "Беспаоова ДО МАРЬИНО",
+      "minimum": 2500,
+      "type": "unresolved",
+      "aliases": [],
+      "reason": "Boundary has no approved street/house range; do not infer from distance or free text."
+    },
+    {
+      "cell": "E12",
+      "source": "ул.Батурина",
+      "minimum": 2500,
+      "type": "street",
+      "aliases": [
+        "Батурина"
+      ]
+    },
+    {
+      "cell": "E13",
+      "source": "ЗАЛЕССКАЯ",
+      "minimum": 2500,
+      "type": "street",
+      "aliases": [
+        "Залесская"
+      ]
+    },
+    {
+      "cell": "E14",
+      "source": "УКРОМНОЕ",
+      "minimum": 2500,
+      "type": "locality",
+      "aliases": [
+        "Укромное"
+      ]
+    },
+    {
+      "cell": "F3",
+      "source": "Денисовка",
+      "minimum": 3000,
+      "type": "locality",
+      "aliases": [
+        "Денисовка"
+      ]
+    },
+    {
+      "cell": "F4",
+      "source": "Ивановка",
+      "minimum": 3000,
+      "type": "locality",
+      "aliases": [
+        "Ивановка"
+      ]
+    },
+    {
+      "cell": "F5",
+      "source": "с.Кирпичное",
+      "minimum": 3000,
+      "type": "locality",
+      "aliases": [
+        "Кирпичное"
+      ]
+    },
+    {
+      "cell": "F6",
+      "source": "с.Украинка",
+      "minimum": 3000,
+      "type": "locality",
+      "aliases": [
+        "Украинка"
+      ]
+    },
+    {
+      "cell": "F7",
+      "source": "с.Залесье",
+      "minimum": 3000,
+      "type": "locality",
+      "aliases": [
+        "Залесье"
+      ]
+    },
+    {
+      "cell": "F8",
+      "source": "Фонтаны",
+      "minimum": 3000,
+      "type": "locality",
+      "aliases": [
+        "Фонтаны"
+      ]
+    },
+    {
+      "cell": "F9",
+      "source": "Беспалова ОТ МАРЬИНО",
+      "minimum": 3000,
+      "type": "unresolved",
+      "aliases": [],
+      "reason": "Boundary has no approved street/house range; do not infer from distance or free text."
+    },
+    {
+      "cell": "F10",
+      "source": "КИРПИЧНОЕ",
+      "minimum": 3000,
+      "type": "locality",
+      "aliases": [
+        "Кирпичное"
+      ]
+    },
+    {
+      "cell": "G3",
+      "source": "Лозовое",
+      "minimum": 3500,
+      "type": "locality",
+      "aliases": [
+        "Лозовое"
+      ]
+    },
+    {
+      "cell": "G4",
+      "source": "Пионерское",
+      "minimum": 3500,
+      "type": "locality",
+      "aliases": [
+        "Пионерское"
+      ]
+    },
+    {
+      "cell": "G5",
+      "source": "Урожайное",
+      "minimum": 3500,
+      "type": "locality",
+      "aliases": [
+        "Урожайное"
+      ]
+    },
+    {
+      "cell": "G6",
+      "source": "с.Солнечное",
+      "minimum": 3500,
+      "type": "locality",
+      "aliases": [
+        "Солнечное"
+      ]
+    },
+    {
+      "cell": "G7",
+      "source": "ТРУДОВОЕ",
+      "minimum": 3500,
+      "type": "locality",
+      "aliases": [
+        "Трудовое"
+      ]
+    },
+    {
+      "cell": "G8",
+      "source": "МАЗАНКА",
+      "minimum": 4000,
+      "type": "locality",
+      "aliases": [
+        "Мазанка"
+      ],
+      "override": "Owner confirmation 2026-10-28: Mazanka=4000"
+    },
+    {
+      "cell": "G9",
+      "source": "3-й массив",
+      "minimum": 3500,
+      "type": "area",
+      "aliases": [
+        "3-й массив"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "G10",
+      "source": "ЖИВОПИСНОЕ 2 (Трудовое)",
+      "minimum": 3500,
+      "type": "area",
+      "aliases": [
+        "Живописное 2"
+      ],
+      "reason": "Matches only exact DaData planning_structure identity; never infer landmark neighbourhood."
+    },
+    {
+      "cell": "H3",
+      "source": "Донское",
+      "minimum": 4000,
+      "type": "locality",
+      "aliases": [
+        "Донское"
+      ]
+    },
+    {
+      "cell": "H4",
+      "source": "Перевальн.",
+      "minimum": 4000,
+      "type": "locality",
+      "aliases": [
+        "Перевальное"
+      ]
+    },
+    {
+      "cell": "H5",
+      "source": "Заречное",
+      "minimum": 4000,
+      "type": "locality",
+      "aliases": [
+        "Заречное"
+      ]
+    },
+    {
+      "cell": "H6",
+      "source": "Доброе",
+      "minimum": 4000,
+      "type": "locality",
+      "aliases": [
+        "Доброе"
+      ]
+    },
+    {
+      "cell": "H7",
+      "source": "Мазанка",
+      "minimum": 4000,
+      "type": "locality",
+      "aliases": [
+        "Мазанка"
+      ]
+    },
+    {
+      "cell": "H8",
+      "source": "Родниковое",
+      "minimum": 4000,
+      "type": "locality",
+      "aliases": [
+        "Родниковое"
+      ]
+    },
+    {
+      "cell": "H9",
+      "source": "Приятное Свидание",
+      "minimum": 4000,
+      "type": "locality",
+      "aliases": [
+        "Приятное Свидание"
+      ]
+    }
+  ]
+}

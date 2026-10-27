@@ -1,0 +1,17 @@
+# Delivery/pickup UX and automatic minimum — 2026-10-28
+
+Status: implemented locally, staging verification pending. Production forbidden.
+
+Owner approved the combined scope in this worker chat: native Delivery/Pickup first; pickup requires name/phone only and displays the exact restaurant address; delivery uses name/phone, one `Город, улица и дом` input, optional entrance/intercom/floor/apartment, and always-open native customer note. Map deferred, no polygons. Native consent/COD/email compatibility retained.
+
+Source workbook: `маршрут доставка.xlsx`, sheet `Лист1`, SHA256 `4093f02c4446de749102a6b1e82b7e65d1bd0855b99644e3e411f92a5097095f`. All 92 source cells/provenance retained in plugin JSON. Mazanka override 4000 applies to both duplicate rows. These are minimum goods amounts for free delivery, never fees. Cart goods total after discounts excludes shipping, fees and taxes.
+
+Native architecture: one Checkout Block and Store API; registered Woo shipping method `rollsbar_delivery` plus existing `pickup_location`. Drawer mode selects the native session rate, and drawer reads the native selection. No second cart or order submission path. Core name/phone remain required; country preset and technical email retain native validation. Customer address is optional in the common native locale for pickup; delivery is required by pre-order Store API proof validation and the native frontend validation store.
+
+DaData resolve signs the provider identity/display/expiry. Server recomputes the minimum from the signed identity and native cart amount. Edited/missing/forged/expired proof and approximate geocodes fail closed before native order creation. Browser carries this proof through supported checkout extensionData. No duplicate address/note storage.
+
+Rules match exact normalized provider street/locality identity within Simferopol/Simferopol district, Crimea, with FIAS identity and exact house precision. Area/landmark rows only match an explicit provider planning-structure identity; surrounding streets are never inferred. Five boundary source cells remain unresolved (three owner-listed boundaries plus the Central Market approach). The Central Market origin is retained as Кечкеметская улица, 1; it supplies no invented geometry. Live provider coverage is still to be measured.
+
+Local evidence: deterministic PHP covers all seven tiers, exact and one-kopeck-below thresholds, Mazanka, unknown/ambiguous addresses, precision and proof tampering. Native Woo 11.1.2 frontend fixture passes 1440/701/700/390/320, delivery/pickup switching, field visibility, fixed modal geometry, overflow, COD, note and actual pre-submit assembly stopped before HTTP. Ten screenshots captured; desktop/mobile screenshots inspected during iteration. Cart response contract 193 assertions passes. Installed-Woo server integration and live staging gates remain pending.
+
+Release: explicit ten-file application scope from accepted deployed app `921698e085263f23493e8f757aa0e7c1b561946c`, fresh verified staging backup, native backend fixture, live native browser gate, original storefront and accepted no-shelf controls regression. Existing whole-band legacy interaction assertion remains unchanged; see RB-010. No order, account or mail is created by QA.

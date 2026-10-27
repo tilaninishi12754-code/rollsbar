@@ -50,9 +50,10 @@ check($r->params['billing_address']['email']===$email&&$r->params['billing_addre
 check($r->params['shipping_address']['country']==='RU','native hidden shipping country restored before validation');
 check($r->params['create_account']===false,'guest cannot create account');
 $l=RollsBar_Checkout::field_locale([])['RU'];
-foreach(['first_name','phone','address_1'] as $key){check($l[$key]['required']&&!$l[$key]['hidden'],"$key visible required");}
+foreach(['first_name','phone'] as $key){check($l[$key]['required']&&!$l[$key]['hidden'],"$key visible required");}
+check(!$l['address_1']['required']&&!$l['address_1']['hidden'],'native customer address optional for pickup; delivery proof gate requires exact address');
 foreach(['last_name','company','address_2','state','postcode'] as $key){check(!$l[$key]['required']&&$l[$key]['hidden'],"$key hidden optional");}
-check(!$l['city']['required']&&!$l['city']['hidden'],'locality optional visible');
+check(!$l['city']['required']&&$l['city']['hidden'],'locality optional hidden; delivery uses one address');
 check($l['country']['required']&&!$l['country']['hidden'],'native country lookup remains required; seeded RU control omitted by presentation');
 file_put_contents(__DIR__.'/../visual-results/checkout-direct/locale.json',json_encode($l,JSON_UNESCAPED_UNICODE));
 check(RollsBar_Checkout::pickup_locations([['name'=>'Rolls Bar']])[0]['name']==='Симферополь, Кечкеметская улица, 1','pickup exact');

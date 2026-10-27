@@ -44,6 +44,8 @@ require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-catalog-importer.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-client-media.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-settings.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-delivery-rules.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-delivery-minimum.php';
+require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-delivery-checkout.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-geocode-policy.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-address-suggestions.php';
 require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-content-types.php';
@@ -60,6 +62,7 @@ require_once ROLLSBAR_CORE_DIR . 'includes/class-rollsbar-analytics.php';
 
 RollsBar_Settings::init();
 RollsBar_Delivery_Rules::init();
+RollsBar_Delivery_Checkout::init();
 RollsBar_Address_Suggestions::init();
 RollsBar_Content_Types::init();
 RollsBar_Vacancy_Page::init();

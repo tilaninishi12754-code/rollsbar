@@ -452,3 +452,26 @@ body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-he
 body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-head .rollsbar-legal-page__back { position: relative; top: auto; right: auto; flex: none; color: #171717; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-head .rollsbar-legal-page__back { background: #f6f6f6; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-head .rollsbar-legal-page__back { flex: 0 1 auto; padding: 2px 6px; }
+
+/* Owner-approved delivery/pickup scenario. Woo retains both fulfillment flows. */
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-method { order: 0; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-method-option { min-height: 48px; border-radius: 14px; font-weight: 700; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-method-option--selected { border-color: #d92525; background: #fff4f4; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields { order: 1; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-methods { order: 4; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields > .wc-block-components-checkout-step__heading-container { display: none; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields .wc-block-components-address-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields .wc-block-components-address-form > * { grid-column: 1/-1; margin: 0; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__add-note > .wc-block-components-checkbox { display: none; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__use-address-for-billing,
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-option { display: none; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__add-note textarea { min-height: 100px; width: 100%; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-map { display: none; }
+body.rollsbar-checkout-pickup .wc-block-components-address-form__address_1,
+body.rollsbar-checkout-pickup .wc-block-components-text-input:has(#order-rollsbar-entrance),
+body.rollsbar-checkout-pickup .wc-block-components-text-input:has(#order-rollsbar-door-code),
+body.rollsbar-checkout-pickup .wc-block-components-text-input:has(#order-rollsbar-floor),
+body.rollsbar-checkout-pickup .wc-block-components-text-input:has(#order-rollsbar-apartment-office) { display: none; }
+@media(max-width:700px) {
+ body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields .wc-block-components-address-form { grid-template-columns: minmax(0,1fr); }
+}

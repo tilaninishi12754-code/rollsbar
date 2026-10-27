@@ -40,7 +40,7 @@ final class RollsBar_Cart_Actions {
 		foreach ( RollsBar_Catalog_Importer::upsell_products() as $product ) {
 			$upsells[] = array( 'source_id' => $product->get_meta( '_rollsbar_source_id', true ), 'product_id' => $product->get_id(), 'name' => $product->get_name(), 'price' => html_entity_decode( wp_strip_all_tags( WC()->cart->get_product_price( $product ) ), ENT_QUOTES, 'UTF-8' ), 'available' => $product->is_purchasable() && $product->is_in_stock() );
 		}
-		return array( 'counts' => (object) $counts, 'lines' => $lines, 'upsells' => $upsells, 'mode' => WC()->session->get( 'rollsbar_cart_mode', 'delivery' ), 'subtotal' => html_entity_decode( wp_strip_all_tags( WC()->cart->get_cart_subtotal() ), ENT_QUOTES, 'UTF-8' ) );
+		return array( 'counts' => (object) $counts, 'lines' => $lines, 'upsells' => $upsells, 'mode' => class_exists( 'RollsBar_Delivery_Checkout' ) ? RollsBar_Delivery_Checkout::mode() : WC()->session->get( 'rollsbar_cart_mode', 'delivery' ), 'subtotal' => html_entity_decode( wp_strip_all_tags( WC()->cart->get_cart_subtotal() ), ENT_QUOTES, 'UTF-8' ) );
 	}
 
 	/** Exact option whitelist; labels/price/availability from the browser are never trusted. */
@@ -67,6 +67,7 @@ final class RollsBar_Cart_Actions {
 		if ( 'mode' === ( $request['operation'] ?? '' ) ) {
 			if ( ! in_array( $request['mode'] ?? '', array( 'delivery', 'pickup' ), true ) ) { throw new Exception( 'Недопустимый способ получения.' ); }
 			WC()->session->set( 'rollsbar_cart_mode', $request['mode'] );
+			if ( class_exists( 'RollsBar_Delivery_Checkout' ) ) { RollsBar_Delivery_Checkout::choose_mode( $request['mode'] ); }
 			return;
 		}
 		if ( in_array( $request['operation'] ?? '', array( 'line_plus', 'line_minus', 'line_remove' ), true ) ) {
