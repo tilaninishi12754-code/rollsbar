@@ -20,7 +20,13 @@ try {
  $data = array( 'qc_geo' => '0', 'house' => '1', 'house_fias_id' => 'fixture-house', 'geo_lat' => '44.9', 'geo_lon' => '34.1', 'region' => 'Крым', 'area' => 'Симферопольский', 'city' => 'Симферополь', 'city_fias_id' => 'fixture-city', 'street' => 'Гагарина', 'street_fias_id' => 'fixture-street' );
  $display = 'г Симферополь, ул Гагарина, д 1';
  $request = new WP_REST_Request( 'POST', '/wc/store/v1/checkout' );
- $request->set_body_params(array('shipping_address'=>array('address_1'=>$display),'extensions'=>array('rollsbar-delivery'=>array('address_proof'=>RollsBar_Delivery_Minimum::proof($data,$display)))));
+ $signed_proof=RollsBar_Delivery_Minimum::proof($data,$display);
+ $request->set_body_params(array('billing_address'=>$address,'shipping_address'=>array_merge($address,array('address_1'=>$display)),'payment_method'=>'cod','additional_fields'=>$order_fields,'extensions'=>array('rollsbar-delivery'=>array('address_proof'=>$signed_proof))));
+ RollsBar_Checkout::prepare_store_request(null,null,$request);
+ $request->set_attributes(array('args'=>$args));
+ rb_direct_assert(!is_wp_error($request->has_valid_params()),'actual installed Store API schema accepts signed proof extension');
+ rb_direct_assert(!is_wp_error($request->sanitize_params())&&$signed_proof===$request->get_param('extensions')['rollsbar-delivery']['address_proof'],'actual native REST sanitization retains signed proof');
+ rb_direct_assert(true===$native_route->validate_callback($request),'actual native field validator accepts signed delivery payload without dispatch');
  WC()->session->set('chosen_shipping_methods',array('rollsbar_delivery'));
  foreach ( array(array(1199.99,false),array(1200,true),array(4000,true)) as $case ) {
   WC()->cart->fixture_amount=$case[0];

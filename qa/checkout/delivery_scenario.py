@@ -109,6 +109,7 @@ try:
     require(not p.locator('input[id$="-address_1"]').filter(visible=True).count(),'pickup customer address absent')
     require(not p.locator('#order-rollsbar-entrance').is_visible(),'pickup details absent')
     require('Симферополь, Кечкеметская улица, 1' in p.locator('.wc-block-checkout__pickup-options').inner_text(),'exact pickup address')
+    require(p.locator('.wc-block-checkout__pickup-options').bounding_box()['y']<p.locator('.wc-block-checkout__order-notes').bounding_box()['y'],'pickup address precedes comment')
     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'pickup no delivery requirement')
     require(p.locator('input[value="cod"]').is_checked(),'native COD')
     modal.evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/f'pickup-{width}.png'))
