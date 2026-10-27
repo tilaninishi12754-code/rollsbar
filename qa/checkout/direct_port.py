@@ -308,6 +308,11 @@ try:
    from_cart(p)
    require(p.locator('.wp-block-woocommerce-checkout').count()==1,'reopen has one native checkout lifecycle')
    p.locator('.rollsbar-checkout-backdrop').click(position={'x':1,'y':1});p.wait_for_url(BASE+'/',wait_until='domcontentloaded')
+   # Direct-entry setup is a separate forced navigation. Let the home page's
+   # native initialization read settle first; otherwise Chromium can orphan a
+   # routed old-document fetch before it emits a terminal request event.
+   p.wait_for_function("document.querySelector('.rollsbar-product-card')?.getAttribute('aria-busy')==='false'")
+   require(all('page_finished' in r or 'failed' in r for r in report['cart_transport']),'direct entry setup starts after native home cart read settles')
    p.goto(BASE+'/checkout/',wait_until='domcontentloaded');p.locator('[role=dialog]').wait_for()
    require(p.locator('[role=dialog]').count()==1,'direct checkout entry remains modal')
    # Exercise Woo's real submit assembly, stopping in public apiFetch middleware
