@@ -10,7 +10,7 @@ import hashlib
 from release_gate import AssetIdentity,release_assets
 sys.stdout.reconfigure(encoding='utf-8',line_buffering=True)
 ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'wordpress/deploy'))
-from shadow_preview import choose
+from shadow_preview import choose as native_choose
 from gate_b_browser import BASE,isolated_browser_page,add_first_simple_product,store_cart_state,require,first_visible
 from request_guard import is_order_submission,effective_rest_method
 from playwright.sync_api import sync_playwright
@@ -81,6 +81,14 @@ def from_cart(page):
  require(page.locator('.wp-block-woocommerce-checkout').count()==1,'first cart activation opens one native modal')
  require(page.evaluate('wcSettings.checkoutData.order_id===0'),'isolated fresh checkout has no order to update')
 
+def choose(page,query,exact):
+ try:return native_choose(page,query,exact)
+ except Exception:
+  # Preserve evidence before isolated cleanup/navigation destroys the field.
+  report['address_failure']={'query':query,'field':page.locator('#billing-address_1').evaluate('e=>({value:e.value,html:e.outerHTML,focused:document.activeElement===e,status:e.parentElement.innerText})'),'input_events':page.evaluate('window.__rbAddressInputEvents||[]')}
+  page.screenshot(path=str(OUT/'address-failed.png'))
+  raise
+
 def geom(p,selector):
  return p.locator(selector).evaluate('e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return {x:r.x,y:r.y,width:r.width,height:r.height,radius:s.borderRadius,padding:s.padding,shadow:s.boxShadow,overflow:s.overflowY,scrollHeight:e.scrollHeight,clientHeight:e.clientHeight}}')
 
@@ -130,6 +138,15 @@ try:
      # A response from the previous document may already be discarded here.
      print('native AJAX response',round(time.monotonic(),2),response.status,flush=True)
    p.on('response',ajax_trace)
+   # Diagnostic journal only: no response substitution, retry or timeout change.
+   report['address_transport']=[]
+   def address_event(kind,request,status=None):
+    if '/rollsbar/v1/address-' in request.url:
+     report['address_transport'].append({'event':kind,'url':request.url,'method':request.method,'status':status,'elapsed':round(time.monotonic(),3)})
+   p.on('request',lambda r:address_event('request',r))
+   p.on('response',lambda r:address_event('response',r.request,r.status))
+   p.on('requestfailed',lambda r:address_event('failed',r,r.failure))
+   p.add_init_script("window.__rbAddressInputEvents=[];document.addEventListener('input',e=>{if(e.target.id==='billing-address_1')window.__rbAddressInputEvents.push({value:e.target.value,programmatic:e.target.dataset.rollsbarAddressProgrammatic||'',time:performance.now()})},true)")
    p.on('pageerror',lambda e:report['errors'].append(str(e)))
    def checkout_guard(route):
     if is_order_submission(route.request):
