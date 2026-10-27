@@ -3,7 +3,9 @@
 The owner changed field composition and removed the map, so full-content pixel
 equality is not an acceptance claim. Existing frozen baselines stay untouched.
 """
-import sys,os,json,subprocess,hashlib
+import sys,os,json,subprocess,hashlib,mimetypes
+from urllib.parse import urlsplit,unquote
+from functools import lru_cache
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from threading import Thread
@@ -17,11 +19,21 @@ from release_gate import AssetIdentity,release_assets
 from delivery_test_context import delivery_page
 SOURCE_REF='5e7836e22110ec076603bb1fa2b12f8bb90ee756:index.html'
 SOURCE=subprocess.check_output(['git','show',SOURCE_REF],cwd=ROOT)
+source_assets={}
+@lru_cache(maxsize=256)
+def source_asset(path):
+ try:return subprocess.check_output(['git','show',SOURCE_REF.split(':')[0]+':'+path],cwd=ROOT,stderr=subprocess.DEVNULL)
+ except subprocess.CalledProcessError:return None
 OUT=ROOT/'qa/visual-results/delivery-reference';OUT.mkdir(parents=True,exist_ok=True)
 class Reference(BaseHTTPRequestHandler):
  def log_message(self,*args):pass
  def do_GET(self):
-  self.send_response(200);self.send_header('Content-Type','text/html;charset=utf-8');self.end_headers();self.wfile.write(SOURCE)
+  path=unquote(urlsplit(self.path).path).lstrip('/')
+  if '..' in Path(path).parts or '\\' in path:self.send_error(400);return
+  body=SOURCE if path=='reference.html' else source_asset(path)
+  if body is None:self.send_error(404);return
+  if path!='reference.html':source_assets[path]=hashlib.sha256(body).hexdigest()
+  self.send_response(200);self.send_header('Content-Type','text/html;charset=utf-8' if path=='reference.html' else mimetypes.guess_type(path)[0] or 'application/octet-stream');self.end_headers();self.wfile.write(body)
 server=ThreadingHTTPServer(('127.0.0.1',0),Reference);Thread(target=server.serve_forever,daemon=True).start()
 report={'status':'RUNNING','release_sha':os.environ['ROLLSBAR_DEPLOY_SHA'],'reference':SOURCE_REF,'source_sha256':hashlib.sha256(SOURCE).hexdigest(),'checks':[],'pixel_equality_claimed':False,'masks':[]}
 def geometry(p,selector):
@@ -50,7 +62,7 @@ try:
     require(native['height']<=900*.92+2,'original modal viewport height bound')
     require(abs(native['y']-((900-native['height'])/2 if width>700 else 900-native['height']))<=2,'approved vertical modal alignment')
     backdrop=p.locator('.rollsbar-checkout-backdrop').evaluate('e=>{let s=getComputedStyle(e),r=e.getBoundingClientRect();return {background:s.backgroundColor,blur:s.backdropFilter,x:r.x,y:r.y,width:r.width,height:r.height}}')
-    source_backdrop=ref.locator('#checkoutModal').evaluate('e=>{let s=getComputedStyle(e);return {background:s.backgroundColor,blur:s.backdropFilter}}')
+    source_backdrop=ref.locator('#checkoutModal > .backdrop').evaluate('e=>{let s=getComputedStyle(e);return {background:s.backgroundColor,blur:s.backdropFilter}}')
     require(backdrop['background']==source_backdrop['background'] and backdrop['blur']==source_backdrop['blur'],'immutable backdrop color/blur')
     require(abs(backdrop['x'])<=1 and abs(backdrop['y'])<=1 and abs(backdrop['width']-width)<=1 and abs(backdrop['height']-900)<=1,'backdrop covers viewport')
     require(abs(geometry(p,'.wc-block-checkout__sidebar')['width']-geometry(ref,'.checkout-summary')['width'])<=2,'approved desktop/mobile summary lane width')
@@ -62,4 +74,5 @@ try:
  report['status']='MODAL_CHROME_PASS_CONTENT_CHANGED_BY_OWNER'
 finally:
  server.shutdown()
+ report['immutable_asset_sha256']=source_assets
  (OUT/'evidence.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
