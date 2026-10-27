@@ -1,5 +1,6 @@
 """Final Direct Port native Blocks preview/live gates. Never submit checkout."""
 import json,os,re,subprocess,sys,uuid,time
+from urllib.parse import parse_qs
 from pathlib import Path
 from urllib.parse import unquote,quote
 from functools import partial
@@ -138,6 +139,24 @@ try:
      # A response from the previous document may already be discarded here.
      print('native AJAX response',round(time.monotonic(),2),response.status,flush=True)
    p.on('response',ajax_trace)
+   cart_journal={};report['cart_transport']=[]
+   def cart_event(kind,request,response=None):
+    if 'wc-ajax=rollsbar_cart' not in request.url:return
+    if kind=='request':
+     try:operation=json.loads(parse_qs(request.post_data or '').get('request',['null'])[0])
+     except (ValueError,TypeError):operation=None
+     row={'origin_page':p.url,'operation':operation,'started':time.monotonic()}
+     cart_journal[request]=row;report['cart_transport'].append(row)
+    row=cart_journal.get(request)
+    if row is not None:
+     row[kind]=round(time.monotonic()-row['started'],3);row['timing']=request.timing
+     if response is not None:row['http']=response.status
+     if kind=='failed':row['failure']=request.failure
+   p.on('request',lambda r:cart_event('request',r))
+   p.on('response',lambda r:cart_event('headers',r.request,r))
+   p.on('requestfinished',lambda r:cart_event('page_finished',r))
+   p.on('requestfailed',lambda r:cart_event('failed',r))
+   p.context.on('requestfinished',lambda r:cart_event('context_finished',r))
    # Diagnostic journal only: no response substitution, retry or timeout change.
    report['address_transport']=[]
    def address_event(kind,request,status=None):
