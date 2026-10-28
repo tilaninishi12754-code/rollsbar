@@ -59,6 +59,7 @@ try:
     if minimum is None:require(rule['status']!='resolved' and rule['minimum'] is None,'no invented minimum '+query)
     else:require(rule['status']=='resolved' and rule['minimum']==minimum,'actual provider minimum '+query+' = '+str(minimum))
     p.wait_for_function('(value)=>[...document.querySelectorAll("input[id$=address_1]")].some(e=>e.value===value)',arg=result['display'])
+    p.wait_for_function('(proof)=>wp.data.select("wc/store/checkout").getExtensionData()["rollsbar-delivery"]?.address_proof===proof',arg=result['address_proof'])
     p.wait_for_function('()=>!!wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")')
     message=p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum").message')
     if minimum is not None:require(str(minimum) in message.replace(' ','').replace('\u00a0',''),'native browser blocks below '+str(minimum))
