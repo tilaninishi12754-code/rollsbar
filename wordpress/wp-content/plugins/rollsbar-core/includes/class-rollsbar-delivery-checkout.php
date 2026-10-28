@@ -8,6 +8,7 @@ final class RollsBar_Delivery_Checkout {
 		add_action( 'woocommerce_shipping_init', array( __CLASS__, 'load_method' ) );
 		add_filter( 'woocommerce_shipping_methods', static function ( $methods ) { $methods['rollsbar_delivery'] = 'RollsBar_Native_Delivery_Method'; return $methods; } );
 		add_filter( 'rest_request_before_callbacks', array( __CLASS__, 'validate_request' ), 10, 3 );
+		add_filter( 'woocommerce_shipping_chosen_method', array( __CLASS__, 'default_method' ), 10, 3 );
 		add_action( 'woocommerce_blocks_loaded', static function () {
 			woocommerce_store_api_register_endpoint_data( array(
 				'endpoint' => \Automattic\WooCommerce\StoreApi\Schemas\V1\CheckoutSchema::IDENTIFIER,
@@ -34,6 +35,7 @@ final class RollsBar_Delivery_Checkout {
 
 	public static function choose_mode( string $mode ): void {
 		if ( 'staging' !== wp_get_environment_type() ) { return; }
+		if ( WC()->cart->is_empty() ) { WC()->session->set( 'chosen_shipping_methods', array() ); return; }
 		WC()->cart->calculate_shipping();
 		$chosen = array();
 		foreach ( WC()->shipping()->get_packages() as $id => $package ) {
@@ -42,6 +44,14 @@ final class RollsBar_Delivery_Checkout {
 			}
 		}
 		if ( $chosen ) { WC()->session->set( 'chosen_shipping_methods', $chosen ); WC()->cart->calculate_totals(); }
+	}
+
+	public static function default_method( $default, array $rates, $chosen ): string {
+		if ( ( $chosen && isset( $rates[ $chosen ] ) ) || ! WC()->session || 'pickup' !== WC()->session->get( 'rollsbar_cart_mode', 'delivery' ) ) { return (string) $default; }
+		foreach ( $rates as $id => $rate ) {
+			if ( 'pickup_location' === $rate->get_method_id() ) { return (string) $id; }
+		}
+		return (string) $default;
 	}
 
 	public static function validate_request( $response, $handler, $request ) {

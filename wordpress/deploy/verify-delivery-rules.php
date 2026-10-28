@@ -17,8 +17,16 @@ class RB_Delivery_Fixture_Cart extends WC_Cart {
 }
 $previous_cart = WC()->cart;
 $previous_chosen = WC()->session->get( 'chosen_shipping_methods', array() );
+$previous_mode = WC()->session->get( 'rollsbar_cart_mode', 'delivery' );
 try {
  WC()->cart = new RB_Delivery_Fixture_Cart();
+ WC()->session->set('rollsbar_cart_mode','pickup');
+ WC()->session->set('chosen_shipping_methods',array('rollsbar_delivery'));
+ RollsBar_Delivery_Checkout::choose_mode('pickup');
+ rb_direct_assert(array()===WC()->session->get('chosen_shipping_methods'),'empty-cart preference clears obsolete native rate');
+ $available=array('rollsbar_delivery'=>new WC_Shipping_Rate('rollsbar_delivery','Доставка',0,array(),'rollsbar_delivery'),'pickup_location:0'=>new WC_Shipping_Rate('pickup_location:0','Самовывоз',0,array(),'pickup_location'));
+ rb_direct_assert('pickup_location:0'===RollsBar_Delivery_Checkout::default_method('rollsbar_delivery',$available,''),'empty-cart pickup preference initializes native pickup rate');
+ rb_direct_assert('rollsbar_delivery'===RollsBar_Delivery_Checkout::default_method('rollsbar_delivery',$available,'rollsbar_delivery'),'explicit native delivery selection overrides earlier preference');
  $data = array( 'qc_geo' => '0', 'house' => '1', 'house_fias_id' => 'fixture-house', 'geo_lat' => '44.9', 'geo_lon' => '34.1', 'region' => 'Крым', 'area' => 'Симферопольский', 'city' => 'Симферополь', 'city_fias_id' => 'fixture-city', 'street' => 'Гагарина', 'street_fias_id' => 'fixture-street' );
  $display = 'г Симферополь, ул Гагарина, д 1';
  $request = new WP_REST_Request( 'POST', '/wc/store/v1/checkout' );
@@ -47,6 +55,7 @@ try {
 } finally {
  WC()->cart=$previous_cart;
  WC()->session->set('chosen_shipping_methods',$previous_chosen);
+ WC()->session->set('rollsbar_cart_mode',$previous_mode);
 }
 rb_direct_assert(0===$order->get_id(),'all native integration orders remain unsaved');
 echo "DELIVERY_NATIVE_INTEGRATION_PASS\n";

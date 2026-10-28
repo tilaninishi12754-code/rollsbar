@@ -43,6 +43,7 @@ def mode(p,pickup):
  target.click()
  p.wait_for_function('(pickup)=>wp.data.select("wc/store/checkout").prefersCollection()===pickup',arg=pickup)
  p.wait_for_function('()=>!wp.data.select("wc/store/cart").isCustomerDataUpdating()')
+ settle_native(p)
 
 fixture=None
 try:
@@ -149,6 +150,9 @@ try:
       raise
      payload=p.evaluate('window.__rbDeliveryPresubmit')
      require(payload['extensions']['rollsbar-delivery']['address_proof']!='','actual native submit includes signed address proof')
+     import base64
+     confirmed=json.loads(base64.b64decode(payload['extensions']['rollsbar-delivery']['address_proof'].split('.')[0])) if LIVE else {'display':payload['shipping_address']['address_1']}
+     require(payload['shipping_address']['address_1']==confirmed['display'],'native submission address equals signed provider confirmation')
      require(payload['payment_method']=='cod' and payload.get('create_account') is False,'actual native guest COD payload')
      require(payload['billing_address']['email'].endswith('@checkout.rollsbar.invalid'),'native email compatibility retained')
      require(payload['billing_address']['first_name']=='Тест' and re.sub(r'\D','',payload['billing_address']['phone'])=='79780000000','native identity and full phone retained without duplicated prefix')

@@ -19,6 +19,17 @@
 	var deliveryError='';
 	var deliveryProof='';
 	var contactPhoneError='';
+	function nativeAddressIdle(){
+		return new Promise(function(resolve,reject){
+			var stop=function(){};
+			var timer=setTimeout(function(){stop();reject(new Error('native customer update timeout'));},10000);
+			function ready(){
+				var cart=wp.data.select('wc/store/cart'),checkout=wp.data.select('wc/store/checkout');
+				if(!cart.isCustomerDataUpdating()&&!checkout.isCalculating()){clearTimeout(timer);stop();resolve();}
+			}
+			stop=wp.data.subscribe(ready);ready();
+		});
+	}
 	function syncDelivery(){
 		if(!window.wp||!wp.data)return;
 		var checkout=wp.data.select('wc/store/checkout'),cart=wp.data.select('wc/store/cart');
@@ -414,13 +425,27 @@
 		}).then(function(response){
 			if(!response.ok)throw new Error('resolve '+response.status);
 			return response.json();
-		}).then(function(result){
+		}).then(async function(result){
 			if(resolveRequests.get(input)!==requestIdentity||!input.isConnected)return;
 			if(!result||typeof result.display!=='string')throw new Error('invalid resolve payload');
 
-			input.dataset.rollsbarAddressProgrammatic='1';
-			setNativeValue(input,result.display);
-			delete input.dataset.rollsbarAddressProgrammatic;
+			var nativeCart=window.wp&&wp.data&&wp.data.dispatch('wc/store/cart');
+			if(nativeCart&&nativeCart.setShippingAddress&&nativeCart.setBillingAddress&&nativeCart.updateCustomerData){
+				// Commit the confirmed value through Woo's public address state. DOM
+				// input events alone can leave a debounced raw query in the session.
+				if((input.id||'').indexOf('shipping-')===0){
+					nativeCart.setShippingAddress({address_1:result.display});
+					var nativeCheckout=wp.data.select('wc/store/checkout');
+					if(nativeCheckout&&nativeCheckout.getUseShippingAsBilling())nativeCart.setBillingAddress({address_1:result.display});
+				}else nativeCart.setBillingAddress({address_1:result.display});
+				await nativeAddressIdle();
+				if(resolveRequests.get(input)!==requestIdentity||!input.isConnected)return;
+				var customer=wp.data.select('wc/store/cart').getCustomerData();
+				var patch=(input.id||'').indexOf('shipping-')===0?{shipping_address:Object.assign({},customer.shippingAddress,{address_1:result.display})}:{billing_address:Object.assign({},customer.billingAddress,{address_1:result.display})};
+				if(patch.shipping_address&&nativeCheckout&&nativeCheckout.getUseShippingAsBilling())patch.billing_address=Object.assign({},customer.billingAddress,{address_1:result.display});
+				await nativeCart.updateCustomerData(patch);
+			}else throw new Error('Native Woo customer data unavailable');
+			if(resolveRequests.get(input)!==requestIdentity||!input.isConnected)return;
 			deliveryAddress=result;
 			syncDelivery();
 
