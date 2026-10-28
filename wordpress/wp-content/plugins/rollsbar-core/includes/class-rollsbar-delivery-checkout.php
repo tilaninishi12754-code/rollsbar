@@ -35,6 +35,8 @@ final class RollsBar_Delivery_Checkout {
 
 	public static function choose_mode( string $mode ): void {
 		if ( 'staging' !== wp_get_environment_type() ) { return; }
+		// A receiving-mode choice can precede the first item and its native session cookie.
+		WC()->session->set_customer_session_cookie( true );
 		if ( WC()->cart->is_empty() ) { WC()->session->set( 'chosen_shipping_methods', array() ); return; }
 		WC()->cart->calculate_shipping();
 		$chosen = array();
