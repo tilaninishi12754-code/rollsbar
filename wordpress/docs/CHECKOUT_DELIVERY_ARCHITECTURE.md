@@ -3,6 +3,14 @@
 Updated: 2026-10-08
 Status: STAGING IMPLEMENTATION — DADATA-FIRST, COURIER ENFORCEMENT STILL OFF
 
+## Accepted override — 2026-10-28
+
+The owner-authorized Delivery Rules / Auto Minimum batch supersedes the older polygon prerequisite **for whole-street/locality minimum rules only**. Staging application `8568c10a14c2d74771f9f8fcc0e5b8a9c31acc3e` is browser_verified (apply 40718770624, finalization 40720499963).
+
+Current flow: `DaData → verified FIAS house + exact locality/street identity → deterministic free-delivery minimum → native Store API pre-order validation`. Native Delivery/Pickup control is active; pickup requires name/phone only, delivery uses one address and optional details. Map hidden. Whole-identity rules do not use approximate coordinates to infer boundaries. Existing qc_geo safety for geographic/polygon decisions is unchanged. Polygons, geographic zone enforcement, delivery tariffs and outside-zone rules remain deferred. No price for delivery is invented; 1200–4000 ₽ are minimum goods amounts for free delivery. Unknown/ambiguous/unverified-house cases fail closed.
+
+See `DELIVERY_RULES_AUTO_MINIMUM_2026-10-28.md` and RB-014 for exact fields, signed proof/native session architecture and final evidence. The architecture below is historical context where it conflicts with this override.
+
 ## Current architecture
 
 Use:

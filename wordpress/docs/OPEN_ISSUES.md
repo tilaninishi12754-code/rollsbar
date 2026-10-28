@@ -28,7 +28,7 @@ Priority order unless Coordinator explicitly changes it:
 
 - Branch: `wordpress/checkout-visual-parity-2026-10-25`.
 - Checkout Final Direct Port and Storefront Interaction Stability: verified PASS on staging (2026-10-28), apply run 40583002012, finalization 40585851050.
-- Deployed application marker: `921698e085263f23493e8f757aa0e7c1b561946c`, receipt `browser_verified`, fresh verified backup `20261027T213818Z`; CSS-only no-shelf controls acceptance run 40588306513. Checkout application bytes remain identical to accepted 529cbf3.
+- Current deployed application marker: `8568c10a14c2d74771f9f8fcc0e5b8a9c31acc3e`, receipt `browser_verified`, fresh verified backup `20261028T154410Z`; delivery/pickup + automatic minimum apply 40718770624, inspected finalization 40720499963. Owner-updated fields/map removal accepted with native Woo preserved; modal geometry 5/5, provider addresses 20/20, adversarial 3/3, original storefront 5/5 and no-shelf controls 5/5 PASS. See `DELIVERY_RULES_AUTO_MINIMUM_2026-10-28.md`.
 - Client Media Canon `client-media-2026-10-21`: 36 canonical assets, 45 mapped product identities, 57 applied rows, 4 deferred rows preserved.
 - Catalog invariant: 118 canonical products / 13 variable parents / 26 variations + 3 hidden staging upsells = 121 published product posts.
 - Production remains forbidden without an explicit production gate and authorization.
@@ -171,6 +171,8 @@ Required approach:
 
 Final acceptance: [apply 40583002012](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40583002012) and [finalization 40585851050](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40585851050), application/marker `529cbf3dc536b13dce40d74bbfbb8d054a9f2cfd`, receipt `browser_verified`, backup `20261027T210114Z`. Native modal 5/5, original storefront UX 5/5, Interaction Stability 6/6, independent post-green adversarial checks PASS. All 32 reference/candidate/diff/map images inspected; reviewed manifest `589fada0f55ad80975b303e65cbbfe84546be17baa573f29c37c543ad0753615`. Approved field set, native email validation/guest mail protection, exact pickup and COD verified. No orders created and production untouched. See `CHECKOUT_FINAL_DIRECT_PORT_REPORT_2026-10-27.md`.
 
+Owner-requested 2026-10-28 follow-up: delivery/pickup field composition and hidden map are verified at application `8568c10a14c2d74771f9f8fcc0e5b8a9c31acc3e`, apply 40718770624/finalization 40720499963. Immutable modal chrome remains 5/5 PASS, all 35 current screenshots inspected. This supersedes prior field composition only; original acceptance remains historical. See RB-014 and its report.
+
 ---
 
 # P2 — PERFORMANCE / CACHE
@@ -270,10 +272,12 @@ Client screenshots showed an unwanted white bottom band on desktop/mobile. CSS-o
 
 ## RB-014 — Delivery/pickup scenario and automatic free-delivery minimum
 
-Status: `IN PROGRESS`
+Status: `DONE`
 Priority: `P1`
 
-Owner authorized the combined 2026-10-28 batch. Implemented locally: native fulfillment toggle, conditional customer address/details, one address field, always-open native comment, hidden map; 92-cell source rule registry and signed DaData identity with pre-order Store API enforcement. Mazanka = 4000. Unknown/ambiguous addresses and addresses without a verified FIAS house fail closed. Local deterministic and native five-width browser gates PASS; fresh staging deploy/live address coverage and final regressions pending. Existing RB-006 acceptance remains historical and does not certify this new candidate. See `DELIVERY_RULES_AUTO_MINIMUM_2026-10-28.md`.
+Owner-authorized combined batch verified on staging: native Delivery/Pickup first, pickup name/phone only plus exact restaurant address; delivery uses one address field, optional details and always-open native comment, map hidden. All 92 source cells retained; seven automatic free-delivery minimums enforced server-side before native Store API checkout. Mazanka = 4000. Unknown/unverified-house and unresolved boundary identities fail closed without invented thresholds.
+
+Final evidence: [apply 40718770624](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40718770624), [finalization 40720499963](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40720499963); application/marker `8568c10a14c2d74771f9f8fcc0e5b8a9c31acc3e`, receipt `browser_verified`, fresh verified backup `20261028T154410Z`. Native five-width gate 5/5, real addresses 20/20 (two per tier plus exceptions), adversarial 320/700/701 3/3, immutable modal geometry 5/5, original storefront 5/5 and accepted no-shelf controls 5/5 PASS. All 35 reference/candidate/diff/address/modal/adversarial PNGs inspected; reviewed manifest `8fd3f8b66ddcb4be91ce8ceabf8157195ac0cc18d3232566536c7e67bad748fd`. Native COD, Additional Fields, totals, email privacy and guest contracts PASS without creating an order/account/mail. Production untouched. RB-010 historical whole-band QA migration remains deferred. See `DELIVERY_RULES_AUTO_MINIMUM_2026-10-28.md`.
 
 Do not reopen without new evidence:
 
