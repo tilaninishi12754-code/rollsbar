@@ -9,7 +9,7 @@ from playwright.sync_api import sync_playwright
 from request_guard import is_order_submission
 from release_gate import AssetIdentity,release_assets
 from delivery_native_fixture import DeliveryFixture
-from delivery_test_context import delivery_page
+from delivery_test_context import delivery_page,settle_native
 OUT=ROOT/'qa/visual-results/delivery-rules';OUT.mkdir(parents=True,exist_ok=True)
 CAPTURE=ROOT/'qa/visual-results/checkout-direct'
 LIVE='--live' in sys.argv
@@ -61,12 +61,18 @@ try:
     p.context.route('**/*',guard)
     p.goto(BASE+'/',wait_until='domcontentloaded');add_first_simple_product(p)
     p.wait_for_function('()=>document.querySelector(".rollsbar-cart-link")')
+    settle_native(p)
     p.goto(BASE+'/checkout/',wait_until='domcontentloaded')
     p.locator('[data-rollsbar-modal="1"]').wait_for(state='visible')
     p.locator('.wc-block-checkout__shipping-method').wait_for(state='visible')
     mode(p,False)
     p.wait_for_timeout(250)
     require(p.locator('.wp-block-woocommerce-checkout').count()==1,'one native Checkout lifecycle')
+    server_cart=p.evaluate('async()=>await(await fetch("/wp-json/wc/store/v1/cart",{credentials:"same-origin"})).json()')
+    shown=p.locator('.wc-block-checkout__sidebar .wc-block-components-totals-footer-item .wc-block-components-totals-item__value').inner_text()
+    shown_amount=float(re.sub(r'[^0-9,.]','',shown).replace(',','.'))
+    require(abs(shown_amount-int(server_cart['totals']['total_price'])/10**server_cart['totals']['currency_minor_unit'])<.001,'checkout visible total equals independent Store API total')
+    require(all(item['name'] in p.locator('.wc-block-checkout__sidebar').inner_text() for item in server_cart['items']),'checkout summary contains authoritative cart products')
     require(p.locator('iframe[src*="map"]').count()==0,'map deferred; no iframe/request')
     require(not p.locator('input[type="email"]').filter(visible=True).count(),'email absent')
     require(not p.locator('[id$="-city"]').filter(visible=True).count(),'locality absent')

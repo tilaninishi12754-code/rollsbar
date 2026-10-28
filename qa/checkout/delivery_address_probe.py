@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'wordpress/d
 from gate_b_browser import BASE,isolated_browser_page,add_first_simple_product,require
 from playwright.sync_api import sync_playwright
 from request_guard import is_order_submission
-from delivery_test_context import delivery_page
+from delivery_test_context import delivery_page,settle_native
 OUT=ROOT/'qa/visual-results/delivery-rules';OUT.mkdir(parents=True,exist_ok=True)
 CASES=[
  (1200,'Симферополь Гагарина 17'),(1200,'Симферополь Лермонтова 16'),
@@ -30,6 +30,7 @@ try:
     route.fallback()
    p.context.route('**/*',guard)
    p.goto(BASE+'/',wait_until='domcontentloaded');add_first_simple_product(p)
+   settle_native(p)
    p.goto(BASE+'/checkout/',wait_until='domcontentloaded')
    p.locator('.wc-block-checkout__shipping-method [role=radio]').first.click()
    address=p.locator('input[id$="-address_1"]').filter(visible=True).first

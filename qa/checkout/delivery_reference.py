@@ -16,7 +16,7 @@ from gate_b_browser import BASE,isolated_browser_page,add_first_simple_product,r
 from playwright.sync_api import sync_playwright
 from request_guard import is_order_submission
 from release_gate import AssetIdentity,release_assets
-from delivery_test_context import delivery_page
+from delivery_test_context import delivery_page,settle_native
 SOURCE_REF='5e7836e22110ec076603bb1fa2b12f8bb90ee756:index.html'
 SOURCE=subprocess.check_output(['git','show',SOURCE_REF],cwd=ROOT)
 source_assets={}
@@ -51,6 +51,7 @@ try:
    p.context.route('**/*',lambda r:r.abort() if is_order_submission(r.request) else r.fallback())
    identity=AssetIdentity(release_assets(os.environ['ROLLSBAR_DEPLOY_SHA']),BASE);p.on('response',identity.observe)
    p.goto(BASE+'/',wait_until='domcontentloaded');add_first_simple_product(p)
+   settle_native(p)
    p.goto(BASE+'/checkout/',wait_until='domcontentloaded');p.locator('[data-rollsbar-modal="1"]').wait_for(state='visible')
    for width in [1440,701,700,390,320]:
     p.set_viewport_size({'width':width,'height':900});ref.set_viewport_size({'width':width,'height':900})

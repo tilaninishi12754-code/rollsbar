@@ -449,7 +449,7 @@
 			}));
 		}).catch(function(){
 			if(resolveRequests.get(input)!==requestIdentity||!input.isConnected)return;
-			setAddressStatus(input,'Не удалось уточнить адрес. Введите его вручную или попробуйте другой вариант.','error');
+			setAddressStatus(input,'Не удалось уточнить адрес. Выберите другой вариант из подсказок или позвоните: +7 978 688-22-88.','error');
 		});
 	}
 

@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'wordpress/d
 from gate_b_browser import BASE,isolated_browser_page,add_first_simple_product,first_visible,require,store_cart_state
 from playwright.sync_api import sync_playwright
 from request_guard import is_order_submission
-from delivery_test_context import delivery_page
+from delivery_test_context import delivery_page,settle_native
 OUT=ROOT/'qa/visual-results/delivery-rules';OUT.mkdir(parents=True,exist_ok=True)
 report={'status':'RUNNING','release_sha':os.environ['ROLLSBAR_DEPLOY_SHA'],'checks':[],'submissions':[]}
 def enter(p):
@@ -16,6 +16,7 @@ def enter(p):
  require(trigger is not None,'cart trigger visible');trigger.click()
  p.locator('#rollsbarCartDrawer').wait_for(state='visible')
  p.wait_for_function('document.querySelector(".rollsbar-cart-drawer__panel")?.getAttribute("aria-busy")==="false"')
+ settle_native(p)
  p.locator('.rollsbar-drawer-checkout').click();p.wait_for_url(BASE+'/checkout/',wait_until='domcontentloaded')
  p.locator('[data-rollsbar-modal="1"]').wait_for(state='visible')
  require(p.locator('.wp-block-woocommerce-checkout').count()==1,'first cart activation opens one native checkout')
@@ -67,6 +68,7 @@ try:
     require(p.evaluate('document.scrollingElement.scrollTop===0'),'body stays locked while modal scrolls')
     p.locator('.rollsbar-legal-page__back').focus();p.keyboard.press('Shift+Tab')
     require(p.locator('[role=dialog]').evaluate('e=>e.contains(document.activeElement)'),'focus stays in modal')
+    settle_native(p)
     p.keyboard.press('Escape');p.wait_for_url(BASE+'/',wait_until='domcontentloaded')
     require(store_cart_state(p)['itemsCount']==1,'close preserves native cart session')
     enter(p)
