@@ -522,7 +522,9 @@ jobs:
         run: python3 wordpress/deploy/apply_delivery_rules_staging.py --phase "$DIRECT_PORT_PHASE"
       - name: Live native modal, field, COD and DaData gate (no order submission)
         if: inputs.direct_port_phase == 'apply'
-        run: python3 qa/checkout/delivery_scenario.py --live
+        run: |
+          python3 qa/checkout/canonical_host.py
+          python3 qa/checkout/delivery_scenario.py --live
       - name: Live exact address tiers and fail-closed cases
         if: inputs.direct_port_phase == 'apply'
         run: python3 qa/checkout/delivery_address_probe.py
@@ -564,6 +566,7 @@ jobs:
           name: delivery-rules-${{ github.run_id }}
           path: |
             qa/visual-results/delivery-rules/
+            qa/visual-results/canonical-host/
             qa/visual-results/delivery-reference/
             qa/visual-results/storefront-ux-staging/
           retention-days: 30
@@ -575,6 +578,7 @@ jobs:
           path: |
             qa/visual-results/delivery-rules/**/*.png
             qa/visual-results/delivery-rules/**/*.json
+            qa/visual-results/canonical-host/
             qa/visual-results/delivery-rules/*.txt
             qa/visual-results/delivery-rules/*.log
             qa/visual-results/delivery-reference/

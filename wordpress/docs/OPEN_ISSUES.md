@@ -7,6 +7,10 @@ This file is the durable source of truth for unresolved / deferred RollsBar defe
 
 ## RB-019 — Checkout cold loading and redundant assets
 
+## RB-021 — Trailing-dot storefront loses session on checkout navigation
+
+Status: VERIFY. Priority: P1. User screenshot shows `staging.rollsbar.ru.` while checkout link uses canonical host without dot. Isolated Chromium reproduces populated drawer on dotted origin → canonical `/checkout/` → empty `/cart/`; canonical-origin control reaches populated checkout. Relative cart AJAX operates on the dotted origin; absolute native checkout link switches cookie origins. Normalize only the configured staging trailing-dot alias on GET/HEAD at init priority-100, before Woo sessions. No mutation redirects, session copying, cart reconstruction or checkout authority changes. Local routing fixture PASS; staging four-distinct-products desktop/mobile regression pending. Evidence: `CART_CANONICAL_HOST_2026-10-29.md`.
+
 Status: OPEN (cold latency); narrow asset cleanup **STAGING PASS**. Priority: P2. Owner-authorized checkout latency investigation, 2026-10-29.
 
 Un-routed real-cache before desktop/mobile cold3.751/6.138s; after6.528/4.355s, warm0.967/0.812s. Stable cold improvement not proven. Removed checkout speculative hints and classic checkout script only on native block route; no blanket cache/session changes. Captured resources129→74, actual bytes742169→719040; do not equate entry count with download bytes. Application/markerfb0fb54, apply40950660265/finalize40952441600 PASS, backup20261029T203821Z, all75 screenshots viewed. Full evidence: `CHECKOUT_LOADING_2026-10-29.md`. Further acceptance: comparable repeated cold probes must demonstrate improvement without harming native/session/storefront contracts. Broader RB-005/RB-007/RB-008 work remains deferred.

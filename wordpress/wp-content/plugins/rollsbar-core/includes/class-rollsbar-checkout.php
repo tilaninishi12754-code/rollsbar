@@ -19,6 +19,7 @@ final class RollsBar_Checkout {
 	private static array $contact_template_buffers = array();
 
 	public static function init(): void {
+		add_action( 'init', array( __CLASS__, 'canonical_staging_host' ), -100 );
 		add_filter( 'option_woocommerce_cod_settings', array( __CLASS__, 'receipt_payment_settings' ) );
 		add_filter( 'woocommerce_order_get_payment_method_title', array( __CLASS__, 'receipt_payment_title' ), 20, 2 );
 		add_filter( 'woocommerce_order_shipping_to_display', array( __CLASS__, 'pickup_order_display' ), 20, 2 );
@@ -50,6 +51,23 @@ final class RollsBar_Checkout {
 			}
 			return $block;
 		} );
+	}
+
+	/** Normalize the DNS trailing-dot alias before Woo starts a new session. */
+	public static function canonical_staging_host_target( string $host, string $uri, string $method ): string {
+		if ( 'staging' !== wp_get_environment_type() || ! in_array( $method, array( 'GET', 'HEAD' ), true ) ) { return ''; }
+		$home = home_url( '/' );
+		$canonical = wp_parse_url( $home, PHP_URL_HOST );
+		if ( ! $canonical || strtolower( $host ) !== strtolower( $canonical ) . '.' ) { return ''; }
+		return rtrim( $home, '/' ) . '/' . ltrim( $uri, '/' );
+	}
+
+	public static function canonical_staging_host(): void {
+		$target = self::canonical_staging_host_target( (string) ( $_SERVER['HTTP_HOST'] ?? '' ), (string) ( $_SERVER['REQUEST_URI'] ?? '/' ), (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) );
+		if ( '' !== $target ) {
+			wp_safe_redirect( $target, 301, 'RollsBar canonical staging host' );
+			exit;
+		}
 	}
 
 	/** Stateful native Woo documents must load only on actual activation. */
