@@ -1,6 +1,7 @@
 <?php
 /** Staging-only diagnostics. No orders, messages, queue jobs or option writes. */
 if (!defined('ABSPATH') || wp_get_environment_type() !== 'staging') {throw new RuntimeException('staging required');}
+global $wpdb;
 $start=microtime(true);
 $emails=WC()->mailer();
 $result=array('environment'=>'staging','woo'=>WC_VERSION,
@@ -13,7 +14,7 @@ $result=array('environment'=>'staging','woo'=>WC_VERSION,
 foreach(array('Exception','SMTP','PHPMailer') as $class){require_once ABSPATH.WPINC.'/PHPMailer/'.$class.'.php';}
 if($result['smtp_configured'])for($i=0;$i<3;$i++){
  $m=new \PHPMailer\PHPMailer\PHPMailer(true);do_action('phpmailer_init',$m);
- $m->SMTPDebug=0;$m->Timeout=12;$m->Timelimit=12;$t=microtime(true);$ok=false;
+ $m->SMTPDebug=0;$m->Timeout=12;$m->getSMTPInstance()->Timelimit=12;$t=microtime(true);$ok=false;
  try{$ok=$m->smtpConnect();}catch(\Throwable $error){}finally{$m->smtpClose();}
  $result['smtp_connections'][]=array('seconds'=>microtime(true)-$t,'success'=>$ok);
 }
