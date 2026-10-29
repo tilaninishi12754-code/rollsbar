@@ -5,6 +5,8 @@ Status: **STAGING PASS**. RB-014 DONE; RB-006 preserved with the owner's updated
 Application/verified deployed marker: `8568c10a14c2d74771f9f8fcc0e5b8a9c31acc3e`.
 [Apply and automated evidence 40718770624](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40718770624); [inspected finalization 40720499963](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40720499963), receipt `browser_verified`, `DELIVERY_STAGING_PASS`. Fresh verified staging backup: `20261028T154410Z`, outside webroot under `/var/www/u3646545/data/rollsbar-backups/staging/20261028T154410Z`. DB/uploads/manifests/checksums/archive verification PASS before narrow deployment.
 
+2026-10-29 owner follow-up accepted at application `53ade0760655cfdee392a2aeb4e34955f223552b`: receipt payment/pickup copy and visible delivery CTA validation. See `CHECKOUT_RECEIPT_FEEDBACK_REPORT_2026-10-29.md` / RB-015. Rule coverage and original batch evidence below remain historical.
+
 ## Customer scenario and native authority
 
 One existing Woo Checkout Block on `/checkout`, rendered in the approved fixed modal; one Store API/Woo session/cart and original native submission. First control: **Доставка / Самовывоз**. Native `rollsbar_delivery` method and existing Blocks `pickup_location` own fulfillment. No secondary checkout lifecycle, cart or order endpoint.

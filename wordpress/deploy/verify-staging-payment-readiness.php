@@ -29,7 +29,7 @@ $cod = $gateways['cod'];
 if ( 'yes' !== (string) $cod->enabled ) {
 	$fail( 'Launch payment-at-receipt gateway is not enabled.' );
 }
-if ( 'Оплата при получении' !== trim( (string) $cod->title ) ) {
+if ( 'Наличными или картой при получении' !== trim( (string) $cod->title ) ) {
 	$fail( 'Launch payment gateway title is not the approved provider-neutral title.' );
 }
 
@@ -91,7 +91,7 @@ update_option( 'rollsbar_online_payment_state', 'reserved_disabled', false );
 
 echo "PAYMENT LAUNCH MODE RUNTIME PASS\n";
 echo "payment_at_receipt=enabled\n";
-echo "cod_title=Оплата при получении\n";
+echo "cod_title=Наличными или картой при получении\n";
 echo "enabled_gateway_ids=" . implode( ',', $enabled ) . "\n";
 echo "online_payment_state=reserved_disabled\n";
 echo "online_card_gateway_visible=no\n";

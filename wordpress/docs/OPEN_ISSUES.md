@@ -1,7 +1,7 @@
 # RollsBar Issue Register
 
 Status owner: RollsBar Coordinator
-Last updated: 2026-10-28
+Last updated: 2026-10-29
 
 This file is the durable source of truth for unresolved / deferred RollsBar defects and follow-up work. New confirmed issues should be recorded here instead of living only in chat. Do not reopen items marked DONE without new evidence.
 
@@ -28,7 +28,7 @@ Priority order unless Coordinator explicitly changes it:
 
 - Branch: `wordpress/checkout-visual-parity-2026-10-25`.
 - Checkout Final Direct Port and Storefront Interaction Stability: verified PASS on staging (2026-10-28), apply run 40583002012, finalization 40585851050.
-- Current deployed application marker: `8568c10a14c2d74771f9f8fcc0e5b8a9c31acc3e`, receipt `browser_verified`, fresh verified backup `20261028T154410Z`; delivery/pickup + automatic minimum apply 40718770624, inspected finalization 40720499963. Owner-updated fields/map removal accepted with native Woo preserved; modal geometry 5/5, provider addresses 20/20, adversarial 3/3, original storefront 5/5 and no-shelf controls 5/5 PASS. See `DELIVERY_RULES_AUTO_MINIMUM_2026-10-28.md`.
+- Current deployed application marker: `53ade0760655cfdee392a2aeb4e34955f223552b`, receipt `browser_verified`, fresh verified backup `20261029T093647Z`; receipt/feedback apply 40850856268 and inspected finalization 40852211597. Native modal 5/5, address coverage 20/20, adversarial 3/3, immutable geometry 5/5, storefront 5/5 and controls 5/5 PASS. See `CHECKOUT_RECEIPT_FEEDBACK_REPORT_2026-10-29.md`; prior RB-014 acceptance retained.
 - Client Media Canon `client-media-2026-10-21`: 36 canonical assets, 45 mapped product identities, 57 applied rows, 4 deferred rows preserved.
 - Catalog invariant: 118 canonical products / 13 variable parents / 26 variations + 3 hidden staging upsells = 121 published product posts.
 - Production remains forbidden without an explicit production gate and authorization.
@@ -299,7 +299,9 @@ Do not reopen without new evidence:
 
 ## RB-015 — Receipt payment/pickup copy and silent delivery validation
 
-Status: `IN PROGRESS`
+Status: `DONE`
 Priority: `P1`
 
-Owner screenshots 2026-10-29: native COD thank-you instructions incorrectly promise cash-only delivery, pickup receipt shows mistranslated collection label and duplicated location/address. Delivery CTA appears inactive when custom address/minimum validation is off-screen. Scope: cash/card at receipt text (no online gateway), single native pickup receipt address, visible blocker next to CTA and focus/scroll to address, preserving native pre-order enforcement. Local native five-width gate PASS including blocked-click feedback/focus; installed Woo receipt fixture and staging acceptance pending. No orders may be created by worker QA without Coordinator permission.
+Owner's 2026-10-29 screenshots resolved on staging: native COD consistently says cash/card at receipt; native pickup receipt has one address and no collection mistranslation. Delivery address/minimum blocker is visible next to CTA; click focuses/scrolls to the problem, valid native submit retained. Pickup clears pending suggestions, eliminating a pointer interception exposed by live QA. Exact unmatched-address wording corrected; minimum rules/coverage not relaxed.
+
+[Apply 40850856268](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40850856268), [finalization 40852211597](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40852211597); application/marker `53ade0760655cfdee392a2aeb4e34955f223552b`, receipt `browser_verified`, fresh backup `20261029T093647Z`. Installed native receipt renderer/order-display fixtures PASS without saving orders; live five-width feedback/native gate 5/5, addresses 20/20, adversarial 3/3, immutable geometry 5/5, storefront 5/5 and no-shelf controls 5/5 PASS. All 35 CI screenshots + four CTA closeups and storefront images inspected. Manifest `2fdc154060eb7aadc652ee1a368062ccafd857b1c09ae74550ab4c976c770558`. No worker-created order/account/mail; production untouched. Map/boundaries and RB-010 remain deferred. See `CHECKOUT_RECEIPT_FEEDBACK_REPORT_2026-10-29.md`.
