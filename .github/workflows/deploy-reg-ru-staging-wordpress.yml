@@ -51,7 +51,7 @@ on:
         description: Checkout Direct Port phase
         type: choice
         default: apply
-        options: [apply, inspect, finalize]
+        options: [apply, inspect, finalize, enable-mail]
       proof_run_id:
         description: Successful Direct Port apply run ID (finalize only)
         type: string

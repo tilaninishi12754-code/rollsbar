@@ -15,6 +15,24 @@ CHANGED=[transport.PLUGIN+p for p in [
  'assets/js/checkout.js','assets/css/checkout.css','assets/delivery-map.html','data/delivery-geography.json']]
 RECEIPT='$HOME/.rollsbar-delivery-rules-release'
 
+def enable_mail(sha):
+ probe=(ROOT/'wordpress/deploy/probe-checkout-mail-latency.php').read_text().removeprefix('<?php')
+ return f'''export WP_PATH PROJECT_ROOT
+source "$PROJECT_ROOT/wordpress/deploy/prepare-s1-r2-backup.sh"
+[[ "$ROLLSBAR_FRESH_BACKUP_VERIFIED" == YES ]]
+mail_previous="$(wp_cmd eval 'echo get_option("woocommerce_feature_deferred_transactional_emails_enabled","no");')"
+[[ "$mail_previous" == no ]]
+wp_cmd eval 'if (WC_VERSION!=="11.1.2" || !class_exists("Automattic\\\\WooCommerce\\\\Internal\\\\Email\\\\DeferredEmailQueue") || !function_exists("as_enqueue_async_action")) throw new RuntimeException("native deferred email prerequisites missing");'
+trap 'wp_cmd option update woocommerce_feature_deferred_transactional_emails_enabled "$mail_previous" >/dev/null' ERR
+wp_cmd option update woocommerce_feature_deferred_transactional_emails_enabled yes --autoload=no
+wp_cmd eval 'WC()->mailer(); if (!apply_filters("woocommerce_defer_transactional_emails",Automattic\\WooCommerce\\Utilities\\FeaturesUtil::feature_is_enabled("deferred_transactional_emails")) || !has_action("woocommerce_order_status_pending_to_processing",array("WC_Emails","queue_transactional_email")) || has_action("woocommerce_order_status_pending_to_processing",array("WC_Emails","send_transactional_email")) || !has_action("woocommerce_send_queued_transactional_email")) throw new RuntimeException("native email queue not active"); echo "NATIVE_MAIL_QUEUE_ENABLED\\n";'
+trap - ERR
+umask 077
+printf '%s\\n' 'release={sha}' "backup=$ROLLSBAR_FRESH_BACKUP_SNAPSHOT" "previous=$mail_previous" 'feature=deferred_transactional_emails' 'enabled=yes' 'phase=native_verified_awaiting_single_authorized_order' > "$HOME/.rollsbar-mail-queue-release"
+cat "$HOME/.rollsbar-mail-queue-release"
+wp_cmd eval {shlex.quote(probe)}
+'''
+
 def scope():
  paths=subprocess.check_output(['git','diff','--name-only',BASE,'--',transport.PLUGIN,transport.THEME],cwd=ROOT,text=True).splitlines()
  if sorted(paths)!=sorted(CHANGED):raise ValueError('Delivery batch application files differ from the explicit twelve-file scope')
@@ -91,11 +109,11 @@ echo DELIVERY_STAGING_PASS
 '''
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest'],required=True);args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest','enable-mail'],required=True);args=p.parse_args()
  OUT.mkdir(parents=True,exist_ok=True)
  if args.phase=='manifest':print(manifest());return
  sha=transport.release_sha();scope()
- script=apply(sha) if args.phase=='apply' else finalize(sha) if args.phase=='finalize' else f'''cat "{RECEIPT}" 2>/dev/null || true
+ script=enable_mail(sha) if args.phase=='enable-mail' else apply(sha) if args.phase=='apply' else finalize(sha) if args.phase=='finalize' else f'''cat "{RECEIPT}" 2>/dev/null || true
 cat "$HOME/.rollsbar-staging-deployed-sha"
 git -C "$PROJECT_ROOT" rev-parse HEAD
 printf 'actual_wp_version='; wp_cmd core version
