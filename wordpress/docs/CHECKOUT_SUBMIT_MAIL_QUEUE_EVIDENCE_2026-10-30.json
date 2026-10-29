@@ -1,0 +1,87 @@
+{
+  "status": "STAGING_PASS",
+  "date": "2026-10-30",
+  "scope": "native deferred transactional email feature option only",
+  "production_access_or_mutation": false,
+  "backup": "20261029T212022Z",
+  "enable_release": "21922074203bc9fd9b833ad5bbb97f53f8b94c1e",
+  "baseline_smtp_seconds": [
+    5.1926209926605225,
+    5.192525863647461,
+    4.476907968521118
+  ],
+  "submission": {
+    "status": "ORDER_CREATED_AWAITING_SERVER_QUEUE_PROOF",
+    "authorized_orders": 1,
+    "order_posts": [
+      {
+        "url": "https://staging.rollsbar.ru/wp-json/wc/store/v1/checkout?_locale=site",
+        "method": "POST"
+      }
+    ],
+    "orders_created": 1,
+    "http": 200,
+    "checkout_response_seconds": 1.2735341999941738,
+    "request_timing": {
+      "startTime": 1793308925969.2522,
+      "domainLookupStart": -1,
+      "domainLookupEnd": -1,
+      "connectStart": -1,
+      "secureConnectionStart": -1,
+      "connectEnd": -1,
+      "requestStart": 0.832,
+      "responseStart": 1178.206,
+      "responseEnd": 1183.661
+    },
+    "order_id": 348,
+    "order_status": "processing",
+    "payment_result_status": "success",
+    "confirmation_seconds": 2.544086399997468,
+    "confirmation_visible": true
+  },
+  "native_email_proof": {
+    "status": "PASS",
+    "order_id": 348,
+    "order_status": "processing",
+    "payment_method": "cod",
+    "new_order_email_sent": true,
+    "native_queued_jobs": [
+      {
+        "action_id": 971,
+        "status": "complete"
+      }
+    ],
+    "feature_enabled": true,
+    "technical_email_reserved": true,
+    "account_created": false,
+    "orders_created_by_verification": 0
+  },
+  "screenshot": {
+    "path": "qa/visual-results/mail-queue/single-order-confirmation-390.png",
+    "sha256": "10aeefe8334b64ae940856630e66782fdf2b7f20d497a39336041e0e8c75ed1b",
+    "actually_viewed": true
+  },
+  "artifacts": [
+    {
+      "run": "40956164406",
+      "id": 12934365473,
+      "zip_sha256": "a4beb2faa56983ac478d97ae5e26fb405eacccdf9fce784cece8a5f5115c45a1",
+      "verified": true,
+      "files": 2
+    },
+    {
+      "run": "40956867901",
+      "id": 12934286500,
+      "zip_sha256": "c2af91d592680a300a48fd38229bc41f4ccf09068c7820578729a36a0664e2aa",
+      "verified": true,
+      "files": 2
+    },
+    {
+      "run": "40957742262",
+      "id": 12933104793,
+      "zip_sha256": "9f238f57cca7a91f9d69a6fe9951e6b67e2cd49a33f7f44ec7390fc1c50bff61",
+      "verified": true,
+      "files": 2
+    }
+  ]
+}

@@ -1,15 +1,19 @@
 # RollsBar Issue Register
 
 Status owner: RollsBar Coordinator
-Last updated: 2026-10-29
+Last updated: 2026-10-30
 
 This file is the durable source of truth for unresolved / deferred RollsBar defects and follow-up work. New confirmed issues should be recorded here instead of living only in chat. Do not reopen items marked DONE without new evidence.
 
-## RB-019 — Checkout cold loading and redundant assets
+## RB-022 — Final order submission waits for synchronous SMTP
+
+Status: DONE — staging single-order scope. Priority: P1. SMTP connect/auth measured5.193/5.193/4.477s while native email deferral was OFF. Enabled official Woo11.1.2 deferred emails with fresh backup20261029T212022Z (run40956867901). One explicitly owner-authorized labeled test order348: single native POST, final response1.274s, confirmation2.544s, guest COD/pickup/no account. Native queue action971 COMPLETE and Woo new-order-email-sent=true verified40957742262; receipt authorized_order_and_native_email_verified. No production access/mutation. Full evidence `CHECKOUT_SUBMIT_MAIL_QUEUE_2026-10-30.md` and JSON. This does not close RB-019 cold form startup.
 
 ## RB-021 — Trailing-dot storefront loses session on checkout navigation
 
-Status: VERIFY. Priority: P1. User screenshot shows `staging.rollsbar.ru.` while checkout link uses canonical host without dot. Isolated Chromium reproduces populated drawer on dotted origin → canonical `/checkout/` → empty `/cart/`; canonical-origin control reaches populated checkout. Relative cart AJAX operates on the dotted origin; absolute native checkout link switches cookie origins. Normalize only the configured staging trailing-dot alias on GET/HEAD at init priority-100, before Woo sessions. No mutation redirects, session copying, cart reconstruction or checkout authority changes. Local routing fixture PASS; staging four-distinct-products desktop/mobile regression pending. Evidence: `CART_CANONICAL_HOST_2026-10-29.md`.
+Status: DEFERRED after owner clarified the noncanonical URL was their input and shifted work to final-submit latency. Priority: P2. Dotted-origin session split was reproduced, canonical entry works. Candidatec613f3f applied with backend checks, but run40954043553 failed the new dotted-entry redirect gate; no automatic-normalization PASS or finalization claimed. Existing PHP hook's effectiveness is unproven on this host; no cookie migration/cart reconstruction attempted. Server application remainsc613f3f, historical accepted markerfb0fb54. Evidence: `CART_CANONICAL_HOST_2026-10-29.md`. This separate failed candidate must not be conflated with successful option-only email queue verification.
+
+## RB-019 — Checkout cold loading and redundant assets
 
 Status: OPEN (cold latency); narrow asset cleanup **STAGING PASS**. Priority: P2. Owner-authorized checkout latency investigation, 2026-10-29.
 

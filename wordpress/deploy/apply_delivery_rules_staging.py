@@ -6,7 +6,7 @@ from apply_storefront_ux_staging import verify
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/delivery-rules'
 BASE='921698e085263f23493e8f757aa0e7c1b561946c'
-PREVIOUS_APP='fb0fb54cb4c9e4015e163f016d5dc0a8252c57df'
+PREVIOUS_APP='c613f3f88b806b4851322aca036c8c2e8afc6b8a'
 CHANGED=[transport.PLUGIN+p for p in [
  'data/delivery-minimum.json','includes/class-rollsbar-delivery-minimum.php',
  'includes/class-rollsbar-delivery-checkout.php','includes/class-rollsbar-native-delivery-method.php',
@@ -23,6 +23,9 @@ def verify_mail():
 printf '%s\\n' "$mail_proof"
 if [[ "$mail_proof" == *'"status":"PASS"'* ]]; then
  sed -i 's/phase=native_verified_awaiting_single_authorized_order/phase=authorized_order_and_native_email_verified/' "$HOME/.rollsbar-mail-queue-release"
+else
+ echo MAIL_QUEUE_NOT_YET_VERIFIED
+ exit 2
 fi
 cat "$HOME/.rollsbar-mail-queue-release"
 '''
@@ -121,11 +124,11 @@ echo DELIVERY_STAGING_PASS
 '''
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest','enable-mail','verify-mail'],required=True);args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest','probe-mail','enable-mail','verify-mail'],required=True);args=p.parse_args()
  OUT.mkdir(parents=True,exist_ok=True)
  if args.phase=='manifest':print(manifest());return
  sha=transport.release_sha();scope()
- script=verify_mail() if args.phase=='verify-mail' else enable_mail(sha) if args.phase=='enable-mail' else apply(sha) if args.phase=='apply' else finalize(sha) if args.phase=='finalize' else f'''cat "{RECEIPT}" 2>/dev/null || true
+ script=('wp_cmd eval '+shlex.quote((ROOT/'wordpress/deploy/probe-checkout-mail-latency.php').read_text().removeprefix('<?php'))) if args.phase=='probe-mail' else verify_mail() if args.phase=='verify-mail' else enable_mail(sha) if args.phase=='enable-mail' else apply(sha) if args.phase=='apply' else finalize(sha) if args.phase=='finalize' else f'''cat "{RECEIPT}" 2>/dev/null || true
 cat "$HOME/.rollsbar-staging-deployed-sha"
 git -C "$PROJECT_ROOT" rev-parse HEAD
 printf 'actual_wp_version='; wp_cmd core version
@@ -133,7 +136,6 @@ printf 'actual_woo_version='; wp_cmd plugin get woocommerce --field=version
 for file in database.sql.gz uploads.tar.gz manifest.txt SHA256SUMS; do
  if [[ -s "$HOME/rollsbar-backups/staging/20261023T215945Z/$file" ]]; then echo "historical_$file=present"; else echo "historical_$file=missing"; fi
 done
-wp_cmd eval {shlex.quote((ROOT/'wordpress/deploy/probe-checkout-mail-latency.php').read_text().removeprefix('<?php'))}
 '''
  output=transport.execute(script);(OUT/(args.phase+'.log')).write_text(output,encoding='utf8')
  if args.phase=='apply':
