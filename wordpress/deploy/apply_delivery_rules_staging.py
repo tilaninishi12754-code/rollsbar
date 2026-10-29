@@ -91,7 +91,15 @@ def main():
  OUT.mkdir(parents=True,exist_ok=True)
  if args.phase=='manifest':print(manifest());return
  sha=transport.release_sha();scope()
- script=apply(sha) if args.phase=='apply' else finalize(sha) if args.phase=='finalize' else f'cat "{RECEIPT}" 2>/dev/null || true\ncat "$HOME/.rollsbar-staging-deployed-sha"\ngit -C "$PROJECT_ROOT" rev-parse HEAD\n'
+ script=apply(sha) if args.phase=='apply' else finalize(sha) if args.phase=='finalize' else f'''cat "{RECEIPT}" 2>/dev/null || true
+cat "$HOME/.rollsbar-staging-deployed-sha"
+git -C "$PROJECT_ROOT" rev-parse HEAD
+printf 'actual_wp_version='; wp_cmd core version
+printf 'actual_woo_version='; wp_cmd plugin get woocommerce --field=version
+for file in database.sql.gz uploads.tar.gz manifest.txt SHA256SUMS; do
+ if [[ -s "$HOME/rollsbar-backups/staging/20261023T215945Z/$file" ]]; then echo "historical_$file=present"; else echo "historical_$file=missing"; fi
+done
+'''
  output=transport.execute(script);(OUT/(args.phase+'.log')).write_text(output,encoding='utf8')
  if args.phase=='apply':
   if 'DELIVERY_BACKEND_PASS' not in output:raise RuntimeError('Missing backend receipt')
