@@ -15,6 +15,18 @@ CHANGED=[transport.PLUGIN+p for p in [
  'assets/js/checkout.js','assets/css/checkout.css','assets/delivery-map.html','data/delivery-geography.json']]
 RECEIPT='$HOME/.rollsbar-delivery-rules-release'
 
+def verify_mail():
+ order_id=os.environ.get('ROLLSBAR_MAIL_TEST_ORDER_ID','')
+ if not order_id.isdecimal() or int(order_id)<=0:raise ValueError('explicit authorized test order ID required')
+ php=(ROOT/'wordpress/deploy/verify-checkout-mail-queue.php').read_text().removeprefix('<?php').replace('__TEST_ORDER_ID__',str(int(order_id)))
+ return f'''mail_proof="$(wp_cmd eval {shlex.quote(php)})"
+printf '%s\\n' "$mail_proof"
+if [[ "$mail_proof" == *'"status":"PASS"'* ]]; then
+ sed -i 's/phase=native_verified_awaiting_single_authorized_order/phase=authorized_order_and_native_email_verified/' "$HOME/.rollsbar-mail-queue-release"
+fi
+cat "$HOME/.rollsbar-mail-queue-release"
+'''
+
 def enable_mail(sha):
  probe=(ROOT/'wordpress/deploy/probe-checkout-mail-latency.php').read_text().removeprefix('<?php')
  return f'''export WP_PATH PROJECT_ROOT
@@ -109,11 +121,11 @@ echo DELIVERY_STAGING_PASS
 '''
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest','enable-mail'],required=True);args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest','enable-mail','verify-mail'],required=True);args=p.parse_args()
  OUT.mkdir(parents=True,exist_ok=True)
  if args.phase=='manifest':print(manifest());return
  sha=transport.release_sha();scope()
- script=enable_mail(sha) if args.phase=='enable-mail' else apply(sha) if args.phase=='apply' else finalize(sha) if args.phase=='finalize' else f'''cat "{RECEIPT}" 2>/dev/null || true
+ script=verify_mail() if args.phase=='verify-mail' else enable_mail(sha) if args.phase=='enable-mail' else apply(sha) if args.phase=='apply' else finalize(sha) if args.phase=='finalize' else f'''cat "{RECEIPT}" 2>/dev/null || true
 cat "$HOME/.rollsbar-staging-deployed-sha"
 git -C "$PROJECT_ROOT" rev-parse HEAD
 printf 'actual_wp_version='; wp_cmd core version

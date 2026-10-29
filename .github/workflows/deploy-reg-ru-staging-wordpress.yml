@@ -51,7 +51,11 @@ on:
         description: Checkout Direct Port phase
         type: choice
         default: apply
-        options: [apply, inspect, finalize, enable-mail]
+        options: [apply, inspect, finalize, enable-mail, verify-mail]
+      test_order_id:
+        description: Single owner-authorized staging test order to inspect (never create)
+        type: string
+        default: ''
       proof_run_id:
         description: Successful Direct Port apply run ID (finalize only)
         type: string
@@ -474,6 +478,7 @@ jobs:
     env:
       ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
       DIRECT_PORT_PHASE: ${{ inputs.direct_port_phase }}
+      ROLLSBAR_MAIL_TEST_ORDER_ID: ${{ inputs.test_order_id }}
     steps:
       - uses: actions/checkout@v4
         with:
