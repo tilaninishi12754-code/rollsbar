@@ -131,6 +131,7 @@ try:
     require(p.locator('.wc-block-checkout__pickup-options').bounding_box()['y']<p.locator('.wc-block-checkout__order-notes').bounding_box()['y'],'pickup address precedes comment')
     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'pickup no delivery requirement')
     require(not p.locator('.rollsbar-submit-feedback').inner_text(),'pickup has no stale delivery blocker message')
+    require(not p.locator('#rollsbarAddressSuggestions').is_visible(),'pickup has no stale address list obscuring fulfillment controls')
     require(p.locator('input[value="cod"]').is_checked(),'native COD')
     modal.evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/f'pickup-{width}.png'))
     mode(p,False)

@@ -35,6 +35,7 @@
 		var checkout=wp.data.select('wc/store/checkout'),cart=wp.data.select('wc/store/cart');
 		if(!checkout||!cart||!checkout.prefersCollection)return;
 		var pickup=checkout.prefersCollection();
+		if(pickup){clearTimeout(debounceTimer);hidePanel();activeInput=null;}
 		document.body.classList.toggle('rollsbar-checkout-pickup',pickup);
 		var customer=cart.getCustomerData(),contact=pickup?customer.billingAddress:customer.shippingAddress;
 		var phone=String((contact||{}).phone||''),digits=phone.replace(/\D/g,'');
@@ -379,6 +380,7 @@
 	}
 
 	function requestSuggestions(input){
+		if(!input.getClientRects().length||document.body.classList.contains('rollsbar-checkout-pickup'))return;
 		var query=String(input.value||'').trim();
 		if(query.length<minChars){
 			hidePanel();
@@ -399,6 +401,7 @@
 			return response.json();
 		}).then(function(payload){
 			activeRequest=null;
+			if(!input.getClientRects().length||document.body.classList.contains('rollsbar-checkout-pickup'))return;
 			if(activeInput&&activeInput!==input)return;
 			if(String(input.value||'').trim()!==query)return;
 			renderSuggestions(input,payload&&payload.suggestions?payload.suggestions:[]);
@@ -494,6 +497,7 @@
 
 		input.addEventListener('focus',function(){
 			activeInput=input;
+			if(input.dataset.rollsbarAddressResolved==='1')return;
 			if(String(input.value||'').trim().length>=minChars){
 				scheduleSuggestions(input);
 			}
