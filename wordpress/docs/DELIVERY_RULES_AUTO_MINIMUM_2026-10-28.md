@@ -7,6 +7,8 @@ Application/verified deployed marker: `8568c10a14c2d74771f9f8fcc0e5b8a9c31acc3e`
 
 2026-10-29 owner follow-up accepted at application `53ade0760655cfdee392a2aeb4e34955f223552b`: receipt payment/pickup copy and visible delivery CTA validation. See `CHECKOUT_RECEIPT_FEEDBACK_REPORT_2026-10-29.md` / RB-015. Rule coverage and original batch evidence below remain historical.
 
+2026-10-29 later owner policy: callback submission now requires phone plus explicit consent; name/address/minimum are advisory. See `CHECKOUT_PHONE_ONLY_REQUEST_2026-10-29.md` / RB-016. Earlier strict-minimum acceptance below remains historical.
+
 ## Customer scenario and native authority
 
 One existing Woo Checkout Block on `/checkout`, rendered in the approved fixed modal; one Store API/Woo session/cart and original native submission. First control: **Доставка / Самовывоз**. Native `rollsbar_delivery` method and existing Blocks `pickup_location` own fulfillment. No secondary checkout lifecycle, cart or order endpoint.

@@ -28,7 +28,7 @@ Priority order unless Coordinator explicitly changes it:
 
 - Branch: `wordpress/checkout-visual-parity-2026-10-25`.
 - Checkout Final Direct Port and Storefront Interaction Stability: verified PASS on staging (2026-10-28), apply run 40583002012, finalization 40585851050.
-- Current deployed application marker: `53ade0760655cfdee392a2aeb4e34955f223552b`, receipt `browser_verified`, fresh verified backup `20261029T093647Z`; receipt/feedback apply 40850856268 and inspected finalization 40852211597. Native modal 5/5, address coverage 20/20, adversarial 3/3, immutable geometry 5/5, storefront 5/5 and controls 5/5 PASS. See `CHECKOUT_RECEIPT_FEEDBACK_REPORT_2026-10-29.md`; prior RB-014 acceptance retained.
+- Current deployed application marker: `a4d5e5a68c59bb7904c36749b2dfadf828c67a22`, receipt `browser_verified`, fresh backup `20261029T102229Z`; callback/required-consent apply 40856936705, inspected finalization 40858251322. Required customer input: phone plus explicit consent; name/address/minimum advisory. Native 5/5, addresses 20/20, adversarial 3/3, immutable geometry 5/5, storefront 5/5 and controls 5/5 PASS. All 40 modal/reference/consent images inspected. See `CHECKOUT_PHONE_ONLY_REQUEST_2026-10-29.md`; earlier acceptance is historical.
 - Client Media Canon `client-media-2026-10-21`: 36 canonical assets, 45 mapped product identities, 57 applied rows, 4 deferred rows preserved.
 - Catalog invariant: 118 canonical products / 13 variable parents / 26 variations + 3 hidden staging upsells = 121 published product posts.
 - Production remains forbidden without an explicit production gate and authorization.
@@ -307,9 +307,18 @@ Owner's 2026-10-29 screenshots resolved on staging: native COD consistently says
 [Apply 40850856268](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40850856268), [finalization 40852211597](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40852211597); application/marker `53ade0760655cfdee392a2aeb4e34955f223552b`, receipt `browser_verified`, fresh backup `20261029T093647Z`. Installed native receipt renderer/order-display fixtures PASS without saving orders; live five-width feedback/native gate 5/5, addresses 20/20, adversarial 3/3, immutable geometry 5/5, storefront 5/5 and no-shelf controls 5/5 PASS. All 35 CI screenshots + four CTA closeups and storefront images inspected. Manifest `2fdc154060eb7aadc652ee1a368062ccafd857b1c09ae74550ab4c976c770558`. No worker-created order/account/mail; production untouched. Map/boundaries and RB-010 remain deferred. See `CHECKOUT_RECEIPT_FEEDBACK_REPORT_2026-10-29.md`.
 
 
-## RB-016 — Phone-only callback submission
+## RB-016 — Callback submission with phone and explicit consent
 
-Status: `IN PROGRESS`
+Status: `DONE`
 Priority: `P1`
 
-Owner explicitly changed submission policy 2026-10-29: only customer phone required; missing name/address, unmatched address and below-minimum total must not lose a callback contact. Commercial delivery rules become advisory. Explicit consent remains required (owner clarification), with visible marker/focus/scroll when unchecked; never fabricated. Native Store API/Woo order/session/COD remain sole authority. Local five-width native phone-only and below-minimum assembly PASS, empty/incomplete phone rejected; live acceptance pending. See `CHECKOUT_PHONE_ONLY_REQUEST_2026-10-29.md`. Earlier strict-minimum/name/consent acceptance is historical, not the current request contract.
+Owner's updated 2026-10-29 contract: complete phone + explicit consent required; name/address/details/comment and free-delivery minimum do not block a callback request. No fabricated consent. Unchecked consent gets CTA explanation, red block/background, focus and scroll into view; marker clears after checking. Native Store API/order/session/COD/email safety retained, delivery rule matching remains advisory and does not invent thresholds.
+
+[Apply 40856936705](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40856936705), [finalization 40858251322](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40858251322); application/marker `a4d5e5a68c59bb7904c36749b2dfadf828c67a22`, browser_verified, fresh backup `20261029T102229Z`. Installed native validators PASS; live 5/5 covers phone-only-with-consent assembly, absent-name/address, below-minimum acceptance, unchecked-consent rejection/marker/focus/clear. Address 20/20, adversarial 3/3, geometry 5/5, storefront 5/5 and no-shelf controls 5/5 PASS. All 35 standard + five consent PNGs inspected. Standard manifest `6a48b3640a7a0dc05756f6ba635962dcd7305b5e9a66be807e0ecbe79f881ba6`; consent manifest `1114ff6a773fcac7b342a44bb413eb13df759a3bbd822c07a9dc40dc56bd7123`. No completed order POST/account/customer mail by QA; production untouched. Earlier required-name/address/minimum acceptance is historical. See `CHECKOUT_PHONE_ONLY_REQUEST_2026-10-29.md`.
+
+## RB-017 — Native submission-failure fallback mentions email in phone callback UX
+
+Status: `DEFERRED`
+Priority: `P2`
+
+Observed during deliberate QA pre-submit rejection: Woo's generic failure banner says to check email, although this guest flow has no customer email. Normal fresh checkout/consent-error captures do not show it; actual native callback assembly passes. This is existing failure-copy debt, not a commercial validation blocker. Keep native error/retry protection; a later narrow copy change should explain retry/contact by phone without claiming the request was accepted when submission failed. Do not hide real errors or fabricate success. Evidence: intercepted POST mode/adversarial snapshots in run 40856936705. Outside RB-016 minimal consent/required-fields scope.
