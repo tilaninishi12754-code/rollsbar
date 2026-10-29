@@ -470,7 +470,9 @@ body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__a
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__use-address-for-billing,
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-option { display: none; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__add-note textarea { min-height: 100px; width: 100%; }
-body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-map { display: none; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-map { display: block; order: 6; margin-top: 12px; min-width: 0; max-width: 100%; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-map iframe { display: block; width: 100%; height: 250px; border: 0; }
+body.woocommerce-checkout.rollsbar-checkout-pickup:not(.woocommerce-order-received) .rollsbar-checkout-map { display: none; }
 body.rollsbar-checkout-pickup .wc-block-components-address-form__address_1,
 body.rollsbar-checkout-pickup .wc-block-components-text-input:has(#order-rollsbar-entrance),
 body.rollsbar-checkout-pickup .wc-block-components-text-input:has(#order-rollsbar-door-code),

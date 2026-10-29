@@ -6,18 +6,18 @@ from apply_storefront_ux_staging import verify
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/delivery-rules'
 BASE='921698e085263f23493e8f757aa0e7c1b561946c'
-PREVIOUS_APP='e3b280415d2091690c4b4121ce732120e8393959'
+PREVIOUS_APP='a4d5e5a68c59bb7904c36749b2dfadf828c67a22'
 CHANGED=[transport.PLUGIN+p for p in [
  'data/delivery-minimum.json','includes/class-rollsbar-delivery-minimum.php',
  'includes/class-rollsbar-delivery-checkout.php','includes/class-rollsbar-native-delivery-method.php',
  'rollsbar-core.php','includes/class-rollsbar-address-suggestions.php',
  'includes/class-rollsbar-checkout.php','includes/class-rollsbar-cart-actions.php',
- 'assets/js/checkout.js','assets/css/checkout.css']]
+ 'assets/js/checkout.js','assets/css/checkout.css','assets/delivery-map.html','data/delivery-geography.json']]
 RECEIPT='$HOME/.rollsbar-delivery-rules-release'
 
 def scope():
  paths=subprocess.check_output(['git','diff','--name-only',BASE,'--',transport.PLUGIN,transport.THEME],cwd=ROOT,text=True).splitlines()
- if sorted(paths)!=sorted(CHANGED):raise ValueError('Delivery batch application files differ from the explicit ten-file scope')
+ if sorted(paths)!=sorted(CHANGED):raise ValueError('Delivery batch application files differ from the explicit twelve-file scope')
 
 def backend():
  return 'wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-delivery-rules.php"\n'+verify()
@@ -56,13 +56,17 @@ def manifest():
  if len(files)!=20:raise ValueError('Ten modal, seven address and three adversarial screenshots required')
  reference=sorted((ROOT/'qa/visual-results/delivery-reference').glob('*.png'))
  if len(reference)!=15:raise ValueError('Five immutable reference/candidate/unmasked diff sets required')
- return hashlib.sha256('\n'.join(str(p.relative_to(ROOT/'qa/visual-results'))+':'+hashlib.sha256(p.read_bytes()).hexdigest() for p in files+reference).encode()).hexdigest()
+ maps=sorted((OUT/'map').glob('*.png'))
+ if len(maps)!=5:raise ValueError('Five restored-map screenshots required')
+ return hashlib.sha256('\n'.join(str(p.relative_to(ROOT/'qa/visual-results'))+':'+hashlib.sha256(p.read_bytes()).hexdigest() for p in files+reference+maps).encode()).hexdigest()
 
 def finalize(sha):
  proof=json.loads((OUT/'evidence.json').read_text(encoding='utf8'))
  if proof.get('status')!='AUTOMATED_PASS_AWAITING_SCREENSHOT_REVIEW' or proof.get('release_sha')!=sha or proof.get('mode')!='live':raise ValueError('Exact live native checkout PASS required')
  if [r['width'] for r in proof['checks']]!=[1440,701,700,390,320] or proof['submissions'] or proof['errors']:raise ValueError('Incomplete browser proof')
  if proof.get('native_presubmit',{}).get('status')!='PASS':raise ValueError('Native pre-submit assembly must PASS without HTTP submission')
+ map_proof=json.loads((OUT/'map/evidence.json').read_text(encoding='utf8'))
+ if map_proof.get('status')!='PASS' or map_proof.get('release_sha')!=sha or [c['width'] for c in map_proof['checks']]!=[1440,701,700,390,320] or map_proof['errors']:raise ValueError('Exact live five-width map proof required')
  addresses=json.loads((OUT/'address-evidence.json').read_text(encoding='utf8'))
  if addresses.get('status')!='PASS' or addresses.get('release_sha')!=sha:raise ValueError('Exact live provider address coverage required')
  adversarial=json.loads((OUT/'adversarial-evidence.json').read_text(encoding='utf8'))

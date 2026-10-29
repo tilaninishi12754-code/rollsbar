@@ -320,6 +320,7 @@ final class RollsBar_Checkout {
 				array(
 					'phonePrefix'        => '+7 ',
 					'internalEmail'      => is_user_logged_in() ? '' : self::internal_email(),
+					'mapUrl'             => 'staging' === wp_get_environment_type() ? add_query_arg( 'ver', RollsBar_Asset_Version::for_file( dirname( __DIR__ ) . '/assets/delivery-map.html', ROLLSBAR_CORE_VERSION ), plugins_url( 'assets/delivery-map.html', ROLLSBAR_CORE_FILE ) ) : '',
 					'addressSuggestions' => array(
 						'enabled'      => $address_suggestions_enabled,
 						'suggestUrl'   => rest_url( 'rollsbar/v1/address-suggestions' ),

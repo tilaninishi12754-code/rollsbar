@@ -19,7 +19,7 @@ CASES=[
  (3500,'Крым Урожайное 8 Марта 31'),(3500,'Крым Урожайное 8 Марта 32'),
  (4000,'Крым Донское Комсомольская 146А'),(4000,'Крым Мазанка Ясная 14'),
  (None,'Симферополь Кечкеметская 79'),(None,'Симферополь Беспалова 53'),
- (None,'Симферополь Киевская 139А'),(None,'Москва Тверская 1'),(None,'Симферополь Киевская')]
+ (1200,'Симферополь Киевская 139А'),(None,'Москва Тверская 1'),(None,'Симферополь Киевская')]
 report={'status':'RUNNING','release_sha':os.environ['ROLLSBAR_DEPLOY_SHA'],'cases':[],'orders_created':0}
 try:
  with sync_playwright() as pw:
@@ -58,6 +58,7 @@ try:
     report['cases'].append(row)
     if minimum is None:require(rule['status']!='resolved' and rule['minimum'] is None,'no invented minimum '+query)
     else:require(rule['status']=='resolved' and rule['minimum']==minimum,'actual provider minimum '+query+' = '+str(minimum))
+    if query=='Симферополь Киевская 139А':require(rule.get('provisional') is True and rule.get('basis')=='owner_geographic_advisory','new exact-house geographic fallback is explicitly provisional')
     p.wait_for_function('(value)=>[...document.querySelectorAll("input[id$=address_1]")].some(e=>e.value===value)',arg=result['display'])
     p.wait_for_function('(proof)=>wp.data.select("wc/store/checkout").getExtensionData()["rollsbar-delivery"]?.address_proof===proof',arg=result['address_proof'])
     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'address rule is advisory for callback')
@@ -65,7 +66,7 @@ try:
     if minimum is not None:require(str(minimum) in message.replace(' ','').replace('\u00a0',''),'native browser displays advisory minimum '+str(minimum))
     row['browser_message']=message
     print('PASS',query,rule,flush=True)
-    if minimum==4000 or minimum is None:
+    if minimum==4000 or minimum is None or query=='Симферополь Киевская 139А':
      p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/('address-'+str(len(report['cases']))+'.png')))
    for tier in [1200,1500,2000,2500,3000,3500,4000]:
     unique={r['display'] for r in report['cases'] if r['expected']==tier}

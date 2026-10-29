@@ -1,6 +1,6 @@
 """Immutable modal chrome comparison; retain unmasked full-frame pixel diffs.
 
-The owner changed field composition and removed the map, so full-content pixel
+The owner changed field composition and restored an advisory map, so full-content pixel
 equality is not an acceptance claim. Existing frozen baselines stay untouched.
 """
 import sys,os,json,subprocess,hashlib,mimetypes

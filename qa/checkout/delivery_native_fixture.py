@@ -17,6 +17,7 @@ class DeliveryFixture(NativeFixture):
  def html(self,cookie):
   # Projection of the PHP render_block_data filter for the captured native document.
   html=super().html(cookie)
+  html=html.replace('window.rollsBarCheckoutConfig={','window.rollsBarCheckoutConfig={"mapUrl":"/wp-content/plugins/rollsbar-core/assets/delivery-map.html",')
   import re
   html=html.replace('data-block-name="woocommerce/checkout-shipping-method-block"','data-block-name="woocommerce/checkout-shipping-method-block" data-shipping-text="Доставка" data-local-pickup-text="Самовывоз" data-title="Способ получения"')
   return html

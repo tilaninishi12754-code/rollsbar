@@ -80,3 +80,11 @@ try {
 }
 rb_direct_assert(0===$order->get_id(),'all native integration orders remain unsaved');
 echo "DELIVERY_NATIVE_INTEGRATION_PASS\n";
+$geo_cases=json_decode(file_get_contents(__DIR__.'/../../qa/checkout/geography-points.json'),true,512,JSON_THROW_ON_ERROR);
+foreach($geo_cases as $minimum=>$points){foreach($points as $point){
+ $geo_data=array('region'=>'Крым','city'=>'Симферополь','city_fias_id'=>'fixture-city','area'=>'Симферопольский','street'=>'Улица вне точной таблицы','street_fias_id'=>'fixture-street','house'=>'1','house_fias_id'=>'fixture-house','qc_geo'=>0,'geo_lon'=>$point[0],'geo_lat'=>$point[1]);
+ $geo_result=RollsBar_Delivery_Minimum::classify($geo_data);
+ rb_direct_assert((int)$minimum===$geo_result['minimum']&&true===$geo_result['provisional'],'installed geographic advisory at '.$minimum);
+ $geo_data['qc_geo']=2;rb_direct_assert(null===RollsBar_Delivery_Minimum::classify($geo_data)['minimum'],'installed lower-precision polygon remains unresolved');
+}}
+echo "DELIVERY_GEOGRAPHY_NATIVE_PASS\n";

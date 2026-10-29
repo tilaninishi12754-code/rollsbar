@@ -55,7 +55,7 @@
 		var rule=valid?deliveryAddress.delivery:null;
 		var message=pickup?'':!rule?'Адрес можно указать сейчас или сообщить менеджеру по телефону.':rule.message;
 		if(!pickup&&rule&&rule.status==='resolved'){
-			message=amount<rule.minimum?'Бесплатная доставка от '+rule.minimum.toLocaleString('ru-RU')+' ₽. Условия заявки уточнит менеджер.':'';
+			message=rule.provisional?rule.message:amount<rule.minimum?'Бесплатная доставка от '+rule.minimum.toLocaleString('ru-RU')+' ₽. Условия заявки уточнит менеджер.':'';
 		}
 		if(message!==deliveryError){
 			deliveryError=message;
@@ -198,7 +198,7 @@
 	// Display only: Woo owns the inputs; DaData alone supplies an exact point.
 	// This decoration never updates the cart, rates, native fields or order state.
 	function addressMap(input,result){
-		return; // Owner deferred the map; retain provider precision for delivery rules.
+		if(!config.mapUrl||input.id!=='shipping-address_1')return;
 		var step=input.closest('.wc-block-components-checkout-step__content');
 		if(!step)return;
 		var card=step.querySelector('.rollsbar-checkout-map');
@@ -210,28 +210,27 @@
 			frame.title='Карта Rolls Bar';
 			frame.loading='lazy';
 			frame.referrerPolicy='no-referrer';
+			frame.src=config.mapUrl;
+			frame.addEventListener('load',function(){addressMap(input,deliveryAddress);});
 			card.appendChild(frame);
 			var note=document.createElement('p');
 			note.className='rollsbar-checkout-map__note';
 			note.setAttribute('aria-live','polite');
 			card.appendChild(note);
-			step.appendChild(card);
+			var form=input.closest('.wc-block-components-address-form');
+			if(form)form.after(card);else step.appendChild(card);
 		}
 		var exact=result&&(result.qc_geo===0||result.qc_geo==='0')&&result.precision&&result.precision.allow_auto_zone===true;
 		var lat=result&&result.lat,lon=result&&result.lon;
 		exact=exact&&(typeof lat==='number'||typeof lat==='string')&&(typeof lon==='number'||typeof lon==='string')&&String(lat).trim()!==''&&String(lon).trim()!==''&&Number.isFinite(Number(lat))&&Number.isFinite(Number(lon))&&Math.abs(Number(lat))<=90&&Math.abs(Number(lon))<=180;
 		// Initial/approximate state shows the existing public business listing,
 		// never an invented customer coordinate or delivery polygon.
-		var src='https://yandex.ru/map-widget/v1/?mode=search&oid=229692973623&ol=biz&z=13&lang=ru_RU';
-		if(exact){
-			var point=Number(lon)+','+Number(lat);
-			src='https://yandex.ru/map-widget/v1/?ll='+encodeURIComponent(point)+'&pt='+encodeURIComponent(point+',pm2rdm')+'&z=17&lang=ru_RU';
-		}
 		var iframe=card.querySelector('iframe');
-		if(iframe.getAttribute('src')!==src)iframe.src=src;
-		iframe.title=exact?'Карта точно определённого адреса':'Карта Rolls Bar';
+		iframe.title='Карта адреса и зон доставки Rolls Bar';
+		var state=JSON.stringify({type:'rollsbar-map-address',exact:!!exact,lat:exact?Number(lat):null,lon:exact?Number(lon):null});
+		if(iframe.contentWindow)iframe.contentWindow.postMessage(JSON.parse(state),location.origin);
 		card.dataset.exact=exact?'1':'0';
-		card.querySelector('p').textContent=exact?'Адрес определён точно. Карта показывает адрес, условия получения подтверждает оператор.':result?'Уточните адрес до дома. На карте — Rolls Bar, точка вашего адреса пока не определена.':'На карте — Rolls Bar. Выберите адрес из подсказок, чтобы увидеть его точку. Условия получения подтверждает оператор.';
+		card.querySelector('p').textContent=exact?'Ваш адрес отмечен на карте. Цвет зоны показывает минимальный заказ для бесплатной доставки. Точные условия подтвердит менеджер.':result?'Точка адреса пока определена приблизительно. Уточните дом или оставьте номер — менеджер поможет.':'Выберите адрес из подсказок — покажем его на карте. Цветные зоны обозначают минимальный заказ для бесплатной доставки.';
 	}
 
 	function decorateCheckout(){

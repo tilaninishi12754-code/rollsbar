@@ -487,6 +487,7 @@ jobs:
           php -l wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-checkout.php
           php -l wordpress/deploy/verify-delivery-rules.php
           node --check wordpress/wp-content/plugins/rollsbar-core/assets/js/checkout.js
+          php qa/checkout/geography_fixture.php
       - name: Install transport
         run: python3 -m pip install --disable-pip-version-check --quiet paramiko
       - name: Install browser gates
@@ -525,6 +526,9 @@ jobs:
       - name: Live exact address tiers and fail-closed cases
         if: inputs.direct_port_phase == 'apply'
         run: python3 qa/checkout/delivery_address_probe.py
+      - name: Live restored map and exact address point
+        if: inputs.direct_port_phase == 'apply'
+        run: python3 qa/checkout/delivery_map.py
       - name: Adversarial native pickup and close-reopen gate (no orders)
         if: inputs.direct_port_phase == 'apply'
         run: python3 qa/checkout/delivery_adversarial.py
