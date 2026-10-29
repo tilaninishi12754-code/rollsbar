@@ -20,6 +20,8 @@ final class RollsBar_Checkout {
 
 	public static function init(): void {
 		add_action( 'init', array( __CLASS__, 'canonical_staging_host' ), -100 );
+		add_filter( 'wp_headers', array( __CLASS__, 'dynamic_page_headers' ) );
+		add_filter( 'rest_request_after_callbacks', array( __CLASS__, 'clear_completed_note' ), 20, 3 );
 		add_filter( 'option_woocommerce_cod_settings', array( __CLASS__, 'receipt_payment_settings' ) );
 		add_filter( 'woocommerce_order_get_payment_method_title', array( __CLASS__, 'receipt_payment_title' ), 20, 2 );
 		add_filter( 'woocommerce_order_shipping_to_display', array( __CLASS__, 'pickup_order_display' ), 20, 2 );
@@ -53,7 +55,25 @@ final class RollsBar_Checkout {
 		} );
 	}
 
-	/** Normalize the DNS trailing-dot alias before Woo starts a new session. */
+	/** Dynamic documents must fetch the current version; versioned assets stay cached. */
+	public static function dynamic_page_headers( array $headers ): array {
+		if ( 'staging' === wp_get_environment_type() && ( is_front_page() || is_checkout() || is_cart() ) ) {
+			$headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0, private';
+			$headers['Expires'] = 'Wed, 11 Jan 1984 05:00:00 GMT';
+		}
+		return $headers;
+	}
+
+	public static function clear_completed_note( $response, $handler, $request ) {
+		if ( 'POST' !== $request->get_method() || ! preg_match( '#^/wc/store/v[0-9]+/checkout$#', $request->get_route() ) || is_wp_error( $response ) || ! $response instanceof WP_REST_Response ) { return $response; }
+		$data = $response->get_data();
+		if ( is_array( $data ) && $response->get_status() >= 200 && $response->get_status() < 300 && ! empty( $data['order_id'] ) && 'success' === ( $data['payment_result']['payment_status'] ?? '' ) && WC()->session ) {
+			WC()->session->__unset( 'store_api_customer_note' );
+			WC()->session->save_data();
+		}
+		return $response;
+	}
+
 	public static function canonical_staging_host_target( string $host, string $uri, string $method ): string {
 		if ( 'staging' !== wp_get_environment_type() || ! in_array( $method, array( 'GET', 'HEAD' ), true ) ) { return ''; }
 		$home = home_url( '/' );
@@ -339,6 +359,7 @@ final class RollsBar_Checkout {
 			'window.rollsBarCheckoutConfig=' . wp_json_encode(
 				array(
 					'phonePrefix'        => '+7 ',
+					'deliverySelection'  => self::delivery_selection(),
 					'internalEmail'      => is_user_logged_in() ? '' : self::internal_email(),
 					'mapUrl'             => 'staging' === wp_get_environment_type() ? add_query_arg( 'ver', RollsBar_Asset_Version::for_file( dirname( __DIR__ ) . '/assets/delivery-map.html', ROLLSBAR_CORE_VERSION ), plugins_url( 'assets/delivery-map.html', ROLLSBAR_CORE_FILE ) ) : '',
 					'addressSuggestions' => array(
@@ -356,7 +377,17 @@ final class RollsBar_Checkout {
 		);
 	}
 
-	/** Match Woo's native block asset policy before the theme prints its head. */
+	/** Restore only verified selection metadata; the native customer owns address storage. */
+	private static function delivery_selection() {
+		if ( ! WC()->session || ! WC()->customer ) { return null; }
+		$proof = (string) WC()->session->get( 'rollsbar_delivery_address_proof', '' );
+		$address = WC()->customer->get_shipping_address_1();
+		$decision = RollsBar_Delivery_Minimum::verify( $proof, $address, 1000000000 );
+		if ( null === $decision['minimum'] ) { return null; }
+		$data = json_decode( (string) base64_decode( explode( '.', $proof )[0], true ), true )['data'];
+		return array( 'display' => $address, 'delivery' => $decision, 'address_proof' => $proof, 'qc_geo' => $data['qc_geo'] ?? null, 'lat' => $data['geo_lat'] ?? null, 'lon' => $data['geo_lon'] ?? null, 'precision' => RollsBar_Geocode_Policy::evaluate( $data['qc_geo'] ?? null ) );
+	}
+
 	public static function native_checkout_scripts(): void {
 		if ( is_checkout() && ! is_order_received_page() && has_block( 'woocommerce/checkout', wc_get_page_id( 'checkout' ) ) ) {
 			// Woo's block render schedules this dequeue after the theme has already
@@ -377,18 +408,19 @@ final class RollsBar_Checkout {
 (function(){
  'use strict';
  var key='rollsbar_checkout_return_scroll';
+ window.addEventListener('pageshow',function(event){if(event.persisted){try{sessionStorage.setItem('rollsbar_refresh_scroll',String(scrollY));}catch(error){}location.reload();}});
  document.addEventListener('click',function(event){
   var link=event.target.closest('.rollsbar-drawer-checkout');
   if(!link||event.defaultPrevented||link.getAttribute('aria-disabled')==='true')return;
   try{sessionStorage.setItem(key,String(scrollY));}catch(error){}
  });
  function restore(){
-  var previous;
-  try{previous=sessionStorage.getItem(key);sessionStorage.removeItem(key);}catch(error){return;}
+  var previous,refreshed;
+  try{refreshed=sessionStorage.getItem('rollsbar_refresh_scroll');sessionStorage.removeItem('rollsbar_refresh_scroll');previous=refreshed===null?sessionStorage.getItem(key):refreshed;sessionStorage.removeItem(key);}catch(error){return;}
   if(previous===null||!/^\d+(\.\d+)?$/.test(previous))return;
   var from;
-  try{from=new URL(document.referrer);}catch(error){return;}
-  if(from.origin!==location.origin||from.pathname!=='/checkout/')return;
+  if(refreshed===null){try{from=new URL(document.referrer);}catch(error){return;}
+   if(from.origin!==location.origin||from.pathname!=='/checkout/')return;}
   // Initial cart/header sizing must not anchor the restored menu 22px away.
   // End the guard as soon as native cart initialization settles, or on user input.
   var root=document.documentElement,anchor=root.style.overflowAnchor,observer;

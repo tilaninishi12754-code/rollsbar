@@ -90,6 +90,7 @@ final class RollsBar_Address_Suggestions {
 			}
 
 			$data = isset( $suggestion['data'] ) && is_array( $suggestion['data'] ) ? $suggestion['data'] : array();
+			if ( ! self::local_scope( $data ) ) { continue; }
 			$country_iso = strtoupper( trim( (string) ( $data['country_iso_code'] ?? '' ) ) );
 			if ( '' !== $country_iso && 'RU' !== $country_iso ) {
 				continue;
@@ -166,6 +167,14 @@ final class RollsBar_Address_Suggestions {
 		if ( null === $lat || null === $lon ) {
 			$policy = RollsBar_Geocode_Policy::evaluate( null );
 		}
+		// Provider metadata only; customer address remains exclusively in Woo.
+		if ( ! WC()->session ) { WC()->initialize_session(); }
+		WC()->session->set( 'rollsbar_delivery_address_proof', RollsBar_Delivery_Minimum::proof( $data, $display ) );
+		// Rate wording now depends on the verified selection, not raw input alone.
+		foreach ( array_keys( WC()->session->get_session_data() ) as $key ) {
+			if ( str_starts_with( $key, 'shipping_for_package_' ) ) { WC()->session->__unset( $key ); }
+		}
+		WC()->session->save_data();
 
 		return rest_ensure_response(
 			array(
@@ -216,18 +225,17 @@ final class RollsBar_Address_Suggestions {
 		return true;
 	}
 
+	public static function local_scope( array $data ): bool {
+		return 'Крым' === ( $data['region'] ?? '' ) && ( 'Симферополь' === ( $data['city'] ?? '' ) || 'Симферопольский' === ( $data['area'] ?? '' ) );
+	}
+
 	private static function provider_request( string $query, int $count ) {
 		$payload = array(
 			'query'    => $query,
 			'count'    => max( 1, min( 20, $count ) ),
 			'language' => 'ru',
+			'locations' => array( array( 'region' => 'Крым', 'city' => 'Симферополь' ), array( 'region' => 'Крым', 'area' => 'Симферопольский' ) ),
 		);
-
-		if ( $count > 1 ) {
-			$payload['locations_boost'] = array(
-				array( 'city' => 'Симферополь' ),
-			);
-		}
 
 		$response = wp_remote_post(
 			self::API_URL,

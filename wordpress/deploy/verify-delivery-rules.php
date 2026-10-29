@@ -53,7 +53,7 @@ try {
  rb_direct_assert(!is_wp_error($request->sanitize_params())&&$signed_proof===$request->get_param('extensions')['rollsbar-delivery']['address_proof'],'actual native REST sanitization retains signed proof');
  rb_direct_assert(true===$native_route->validate_callback($request),'actual native field validator accepts signed delivery payload without dispatch');
  WC()->session->set('chosen_shipping_methods',array('rollsbar_delivery'));
- foreach ( array(array(1199.99,true),array(1200,true),array(4000,true)) as $case ) {
+ foreach ( array(array(1199.99,false),array(1200,true),array(4000,true)) as $case ) {
   WC()->cart->fixture_amount=$case[0];
   $response=RollsBar_Delivery_Checkout::validate_request(null,null,$request);
   rb_direct_assert($case[1] ? null===$response : is_wp_error($response),'pre-order native delivery minimum at '.$case[0]);
@@ -88,3 +88,23 @@ foreach($geo_cases as $minimum=>$points){foreach($points as $point){
  $geo_data['qc_geo']=2;rb_direct_assert(null===RollsBar_Delivery_Minimum::classify($geo_data)['minimum'],'installed lower-precision polygon remains unresolved');
 }}
 echo "DELIVERY_GEOGRAPHY_NATIVE_PASS\n";
+
+// Actual installed callback, real native session methods, isolated in memory.
+$policy_session=WC()->session;
+try {
+ WC()->session=new class extends WC_Session_Handler {
+  public function __construct() {}
+  public function save_data($old_session_key=0) {}
+ };
+ rb_direct_assert(false!==has_filter('rest_request_after_callbacks',array('RollsBar_Checkout','clear_completed_note')),'successful checkout note cleanup hook installed');
+ foreach(array(array('POST',200,'success',true),array('POST',400,'failure',false),array('PUT',200,'success',false),array('POST',200,'pending',false)) as $case){
+  WC()->session->set('store_api_customer_note','Привезти 30.10 к 14:00');
+  WC()->session->set('retained_contact','fixture-phone');
+  $policy_request=new WP_REST_Request($case[0],'/wc/store/v1/checkout');
+  $policy_response=new WP_REST_Response(array('order_id'=>42,'payment_result'=>array('payment_status'=>$case[2])),$case[1]);
+  rb_direct_assert($policy_response===RollsBar_Checkout::clear_completed_note($policy_response,null,$policy_request),'native REST response untouched');
+  rb_direct_assert($case[3] ? null===WC()->session->get('store_api_customer_note') : 'Привезти 30.10 к 14:00'===WC()->session->get('store_api_customer_note'),'native note clears only for successful checkout '.$case[0].' '.$case[1].' '.$case[2]);
+  rb_direct_assert('fixture-phone'===WC()->session->get('retained_contact'),'native other session data preserved');
+ }
+} finally {WC()->session=$policy_session;}
+echo "CHECKOUT_NOTE_NATIVE_FIXTURE_PASS_NO_ORDERS\n";

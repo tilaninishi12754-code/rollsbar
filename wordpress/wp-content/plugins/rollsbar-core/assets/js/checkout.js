@@ -14,15 +14,21 @@
 	var resolveRequests=new WeakMap();
 	var nativeContextPrepared=false;
 	var summaryObserver=null;
-	var deliveryAddress=null;
+	var deliveryAddress=config.deliverySelection||null;
+	var previousDeliveryAddress=deliveryAddress;
 	var deliverySubscription=false;
 	var deliveryError='';
 	var deliveryProof='';
 	var contactPhoneError='';
+	var deliveryMinimumError='';
+	var deliveryTerms='Уточнит менеджер';
+	var addressServiceError='';
 	var consentAttempted=false;
 	window.addEventListener('message',function(event){
-		if(event.origin!==location.origin||!event.data||event.data.type!=='rollsbar-map-escape')return;
+		if(event.origin!==location.origin||!event.data||!['rollsbar-map-escape','rollsbar-map-ready'].includes(event.data.type))return;
 		var frame=document.querySelector('.rollsbar-checkout-map iframe');
+		if(!frame||event.source!==frame.contentWindow)return;
+		if(event.data.type==='rollsbar-map-ready'){delete frame.dataset.rollsbarMapState;addressMap(document.querySelector('#shipping-address_1'),deliveryAddress);return;}
 		var close=document.querySelector('[data-rollsbar-modal="1"] .rollsbar-legal-page__back');
 		if(frame&&event.source===frame.contentWindow&&close)close.click();
 	});
@@ -54,28 +60,50 @@
 			else phoneValidation.clearValidationError('rollsbar-contact-phone');
 		}
 		setAddressStatus(document.querySelector(pickup?'#billing-phone':'#shipping-phone'),phoneError,phoneError?'warning':'');
-		var address=pickup?'':String((customer.shippingAddress||{}).address_1||(customer.billingAddress||{}).address_1||'');
+		var address=pickup?'':String((customer.shippingAddress||{}).address_1||'');
+		if(!deliveryAddress&&previousDeliveryAddress&&previousDeliveryAddress.display===address)deliveryAddress=previousDeliveryAddress;
 		var totals=cart.getCartTotals(),minor=Number(totals.currency_minor_unit)||0;
 		var amount=(Number(totals.total_items)-Number(totals.total_discount))/Math.pow(10,minor);
 		var valid=deliveryAddress&&address===deliveryAddress.display;
 		var rule=valid?deliveryAddress.delivery:null;
-		var message=pickup?'':!rule?'Адрес можно указать сейчас или сообщить менеджеру по телефону.':rule.message;
+		var unknownMessage=addressServiceError||(!address?'Укажите улицу и дом и выберите адрес из подсказок. Если адрес не находится, отправьте заявку — менеджер поможет.':!valid?'Выберите адрес с номером дома из подсказок. Если его нет в списке, отправьте заявку — менеджер поможет.':'Условия доставки по этому адресу пока не определены. Отправьте заявку — менеджер свяжется с вами и уточнит условия.');
+		var message=pickup?'':unknownMessage;
+		var minimumError='';
+		deliveryTerms='Уточнит менеджер';
 		if(!pickup&&rule&&rule.status==='resolved'){
-			message=rule.provisional?rule.message:amount<rule.minimum?'Бесплатная доставка от '+rule.minimum.toLocaleString('ru-RU')+' ₽. Условия заявки уточнит менеджер.':'';
+			var minimum=Number(rule.minimum),missing=Math.max(0,Math.round((minimum-amount)*100)/100);
+			minimumError=missing>0?'Минимальный заказ для доставки — '+minimum.toLocaleString('ru-RU')+' ₽. Добавьте товаров ещё на '+missing.toLocaleString('ru-RU')+' ₽.':'';
+			message=minimumError||'Минимум '+minimum.toLocaleString('ru-RU')+' ₽ набран — доставка бесплатная.';
+			deliveryTerms=minimumError?'От '+minimum.toLocaleString('ru-RU')+' ₽':'Бесплатно';
+		}
+		if(minimumError!==deliveryMinimumError){
+			deliveryMinimumError=minimumError;
+			var nativeValidation=wp.data.dispatch('wc/store/validation');
+			if(minimumError)nativeValidation.setValidationErrors({'rollsbar-delivery-minimum':{message:minimumError,hidden:false}});
+			else nativeValidation.clearValidationError('rollsbar-delivery-minimum');
 		}
 		if(message!==deliveryError){
 			deliveryError=message;
-			var validation=wp.data.dispatch('wc/store/validation');
-			validation.clearValidationError('rollsbar-delivery-minimum');
 		}
+		prepareShippingTerms(pickup);
 		var proof=valid?deliveryAddress.address_proof:'';
 		if(proof!==deliveryProof){deliveryProof=proof;wp.data.dispatch('wc/store/checkout').setExtensionData('rollsbar-delivery',{address_proof:proof});}
 		var input=document.querySelector(pickup?'#billing-address_1':'#shipping-address_1')||document.querySelector('#billing-address_1');
 		if(input&&!pickup){
 			input.setAttribute('aria-required','false');
 			setAddressStatus(input,message||(rule&&rule.message)||'',message?'warning':'success');
+			addressMap(input,valid?deliveryAddress:null);
 		}
 		if(!deliverySubscription){deliverySubscription=true;wp.data.subscribe(syncDelivery);}
+	}
+	function prepareShippingTerms(pickup){
+		document.querySelectorAll('.wc-block-components-totals-shipping .wc-block-components-totals-item__value:not(.rollsbar-delivery-terms)').forEach(function(value){
+			var own=value.parentNode.querySelector('.rollsbar-delivery-terms');
+			value.hidden=!pickup;
+			if(pickup){if(own)own.remove();return;}
+			if(!own){own=document.createElement('span');own.className='rollsbar-delivery-terms wc-block-components-totals-item__value';own.setAttribute('aria-live','polite');value.after(own);}
+			if(own.textContent!==deliveryTerms)own.textContent=deliveryTerms;
+		});
 	}
 	function prepareOrderNote(){
 		var sameAddress=document.querySelector('.wc-block-checkout__use-address-for-billing input');
@@ -168,6 +196,13 @@
 
 		input.placeholder=prefix+'999 999-99-99';
 		if(String(input.value||'').trim()===prefix.trim())setNativeValue(input,'');
+		input.addEventListener('input',function(){
+			var raw=String(input.value||''),cursor=input.selectionStart;
+			if(/^[78]/.test(raw)){
+				setNativeValue(input,'+7'+raw.slice(1));
+				if(cursor!==null)input.setSelectionRange(cursor+1,cursor+1);
+			}
+		});
 
 		input.addEventListener('blur',function(){
 			var raw=String(input.value||'').trim();
@@ -204,7 +239,7 @@
 	// Display only: Woo owns the inputs; DaData alone supplies an exact point.
 	// This decoration never updates the cart, rates, native fields or order state.
 	function addressMap(input,result){
-		if(!config.mapUrl||input.id!=='shipping-address_1')return;
+		if(!input||!config.mapUrl||input.id!=='shipping-address_1')return;
 		var step=input.closest('.wc-block-components-checkout-step__content');
 		if(!step)return;
 		var card=step.querySelector('.rollsbar-checkout-map');
@@ -234,7 +269,7 @@
 		var iframe=card.querySelector('iframe');
 		iframe.title='Карта адреса и зон доставки Rolls Bar';
 		var state=JSON.stringify({type:'rollsbar-map-address',exact:!!exact,lat:exact?Number(lat):null,lon:exact?Number(lon):null});
-		if(iframe.contentWindow)iframe.contentWindow.postMessage(JSON.parse(state),location.origin);
+		if(iframe.contentWindow&&iframe.dataset.rollsbarMapState!==state){iframe.contentWindow.postMessage(JSON.parse(state),location.origin);iframe.dataset.rollsbarMapState=state;}
 		card.dataset.exact=exact?'1':'0';
 		card.querySelector('p').textContent=exact?'Ваш адрес отмечен на карте. Цвет зоны показывает минимальный заказ для бесплатной доставки. Точные условия подтвердит менеджер.':result?'Точка адреса пока определена приблизительно. Уточните дом или оставьте номер — менеджер поможет.':'Выберите адрес из подсказок — покажем его на карте. Цветные зоны обозначают минимальный заказ для бесплатной доставки.';
 	}
@@ -355,7 +390,7 @@
 		if(!Array.isArray(items)||!items.length){
 			var empty=document.createElement('div');
 			empty.className='rollsbar-address-suggestions__empty';
-			empty.textContent='Адрес не найден';
+			empty.textContent='Адрес не найден в наших подсказках. Проверьте улицу и дом или отправьте заявку — менеджер поможет.';
 			box.appendChild(empty);
 			providerFooter(box);
 			box.hidden=false;
@@ -387,6 +422,7 @@
 	function requestSuggestions(input){
 		if(!input.getClientRects().length||document.body.classList.contains('rollsbar-checkout-pickup'))return;
 		var query=String(input.value||'').trim();
+		addressServiceError='';
 		if(query.length<minChars){
 			hidePanel();
 			return;
@@ -414,7 +450,8 @@
 			if(error&&error.name==='AbortError')return;
 			activeRequest=null;
 			hidePanel();
-			setAddressStatus(input,'Подсказки адреса временно недоступны. Попробуйте позже или позвоните: +7 978 688-22-88.','warning');
+			addressServiceError='Подсказки временно недоступны. Адрес можно написать вручную и отправить заявку — менеджер уточнит условия доставки.';
+			setAddressStatus(input,addressServiceError,'warning');
 		});
 	}
 
@@ -457,6 +494,7 @@
 			}else throw new Error('Native Woo customer data unavailable');
 			if(resolveRequests.get(input)!==requestIdentity||!input.isConnected)return;
 			deliveryAddress=result;
+			previousDeliveryAddress=result;
 			syncDelivery();
 
 			var precision=result.precision||{};
@@ -484,7 +522,8 @@
 			}));
 		}).catch(function(){
 			if(resolveRequests.get(input)!==requestIdentity||!input.isConnected)return;
-			setAddressStatus(input,'Не удалось уточнить адрес. Выберите другой вариант из подсказок или позвоните: +7 978 688-22-88.','error');
+			addressServiceError='Не удалось уточнить адрес. Выберите вариант с номером дома или отправьте заявку — менеджер свяжется с вами и поможет.';
+			setAddressStatus(input,addressServiceError,'warning');
 		});
 	}
 
@@ -510,6 +549,7 @@
 
 		input.addEventListener('input',function(){
 			if(input.dataset.rollsbarAddressProgrammatic==='1')return;
+			addressServiceError='';
 			activeInput=input;
 			hidePanel();
 			clearResolvedState(input);
@@ -529,6 +569,7 @@
 		prepareNativeSummary();
 		positionNativeAction();
 		prepareSubmissionFeedback();
+		prepareShippingTerms(document.body.classList.contains('rollsbar-checkout-pickup'));
 		document.querySelectorAll('input').forEach(function(input){
 			preparePhone(input);
 			prepareAddress(input);
@@ -552,7 +593,7 @@
 		if(consent&&consent.dataset.rollsbarConsentPrepared!=='1'){
 			consent.dataset.rollsbarConsentPrepared='1';consent.addEventListener('change',prepareSubmissionFeedback);
 		}
-		var message=contactPhoneError||(consentAttempted&&missingConsent?'Подтвердите согласие на обработку персональных данных.':'Оставьте телефон и отметьте согласие — менеджер перезвонит и уточнит детали заявки.');
+		var message=contactPhoneError||deliveryMinimumError||(consentAttempted&&missingConsent?'Подтвердите согласие на обработку персональных данных.':'Оставьте телефон и отметьте согласие — менеджер перезвонит и уточнит детали заявки.');
 		if(feedback.textContent!==message)feedback.textContent=message;
 		feedback.hidden=!message;
 		var button=actions.querySelector('.wc-block-components-checkout-place-order-button');
@@ -562,7 +603,7 @@
 			consentAttempted=true;prepareSubmissionFeedback();
 			var currentConsent=document.querySelector('#order-rollsbar-privacy-consent');
 			var currentPhone=Array.from(document.querySelectorAll('input[id$="-phone"]')).find(function(n){return n.getClientRects().length;});
-			var selector=contactPhoneError||(currentPhone&&!currentPhone.value.trim())?'input[id$="-phone"]':currentConsent&&!currentConsent.checked?'#order-rollsbar-privacy-consent':null;
+			var selector=contactPhoneError||(currentPhone&&!currentPhone.value.trim())?'input[id$="-phone"]':currentConsent&&!currentConsent.checked?'#order-rollsbar-privacy-consent':deliveryMinimumError?'#shipping-address_1':null;
 			if(!selector)return;
 			window.setTimeout(function(){
 				var field=Array.from(document.querySelectorAll(selector)).find(function(n){return n.getClientRects().length;});

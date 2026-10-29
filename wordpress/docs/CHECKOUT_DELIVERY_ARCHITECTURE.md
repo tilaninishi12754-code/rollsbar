@@ -3,6 +3,10 @@
 Updated: 2026-10-08
 Status: STAGING IMPLEMENTATION — DADATA-FIRST, COURIER ENFORCEMENT STILL OFF
 
+## Owner override — 2026-10-30 checkout policy
+
+Known verified delivery minimums are now mandatory before native order submission (including current owner-authorized geographic rules). Unknown, missing, unsupported, ambiguous or low-precision/unresolved addresses remain phone+consent callback requests, with explicit manager clarification and no free-delivery promise. Pickup bypasses delivery minimums. Suggestions are restricted to Simferopol and its district; selecting a provider address persists signed metadata in the existing Woo session so reloading cannot discard a known minimum. Customer address remains native Woo storage. A completed successful Store API checkout clears only `store_api_customer_note`; failed/unfinished drafts retain it. Dynamic storefront/commerce HTML is no-store while content-versioned assets keep normal caching. Initial8/7 phone input immediately becomes+7. Native deferred email setting from RB-022 remains enabled. These later owner instructions supersede the earlier advisory-only commercial gate. Acceptance tracked in `CHECKOUT_POLICY_2026-10-30.md`.
+
 ## Current owner override — 2026-10-29 callback requests
 
 Later owner override on the same date: restore the checkout map and use the prepared geographic draft on **staging now**, without waiting for client review. Exact table identities remain primary; exact-house qc_geo=0 may use a provisional geographic fallback, with locality footprints before city background. Existing ambiguous street splits and conflicts remain unresolved. These are informational free-delivery minimums, never tariffs or callback blockers. Map lives directly below the native address form and is hidden for pickup; phone + explicit consent remains the submission contract. Production remains forbidden. Acceptance evidence is maintained in `CHECKOUT_DELIVERY_MAP_2026-10-29.md`; earlier “no map/polygons” statements are historical where this later instruction conflicts.

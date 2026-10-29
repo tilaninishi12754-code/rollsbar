@@ -528,8 +528,9 @@ jobs:
       - name: Live native modal, field, COD and DaData gate (no order submission)
         if: inputs.direct_port_phase == 'apply'
         run: |
-          python3 qa/checkout/canonical_host.py
+          # RB-021 is owner-deferred; its unaccepted alias gate is standalone.
           python3 qa/checkout/delivery_scenario.py --live
+          python3 qa/checkout/checkout_policy_live.py
       - name: Live exact address tiers and fail-closed cases
         if: inputs.direct_port_phase == 'apply'
         run: python3 qa/checkout/delivery_address_probe.py
@@ -572,6 +573,7 @@ jobs:
           path: |
             qa/visual-results/delivery-rules/
             qa/visual-results/canonical-host/
+            qa/visual-results/checkout-policy/
             qa/visual-results/delivery-reference/
             qa/visual-results/storefront-ux-staging/
           retention-days: 30
@@ -584,6 +586,7 @@ jobs:
             qa/visual-results/delivery-rules/**/*.png
             qa/visual-results/delivery-rules/**/*.json
             qa/visual-results/canonical-host/
+            qa/visual-results/checkout-policy/
             qa/visual-results/delivery-rules/*.txt
             qa/visual-results/delivery-rules/*.log
             qa/visual-results/delivery-reference/

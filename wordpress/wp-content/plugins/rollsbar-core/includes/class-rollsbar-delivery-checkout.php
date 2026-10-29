@@ -65,7 +65,17 @@ final class RollsBar_Delivery_Checkout {
 		// The native controller still validates that this pickup rate actually exists.
 		if ( str_starts_with( $rate, 'pickup_location:' ) ) { return $response; }
 		if ( 'rollsbar_delivery' !== $rate ) { return new WP_Error( 'rollsbar_delivery_mode', 'Выберите доступный способ получения.', array( 'status' => 400 ) ); }
-		// Callback request: native phone validation remains required; delivery rules are advisory.
+		$shipping = (array) $request->get_param( 'shipping_address' );
+		$billing = (array) $request->get_param( 'billing_address' );
+		$address = (string) ( $shipping['address_1'] ?? $billing['address_1'] ?? '' );
+		$extensions = (array) $request->get_param( 'extensions' );
+		$proof = $extensions['rollsbar-delivery']['address_proof'] ?? '';
+		$amount = (float) WC()->cart->get_cart_contents_total();
+		$stored = (string) WC()->session->get( 'rollsbar_delivery_address_proof', '' );
+		$decision = RollsBar_Delivery_Minimum::verify( $stored, $address, $amount );
+		if ( null === $decision['minimum'] ) { $decision = RollsBar_Delivery_Minimum::verify( is_string( $proof ) ? $proof : '', $address, $amount ); }
+		if ( 'below_minimum' === $decision['status'] ) { return new WP_Error( 'rollsbar_delivery_minimum', $decision['message'], array( 'status' => 400 ) ); }
+		// Unknown/unconfirmed addresses remain native callback requests.
 		return $response;
 	}
 }

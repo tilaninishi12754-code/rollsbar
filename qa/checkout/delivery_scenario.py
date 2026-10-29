@@ -82,6 +82,7 @@ try:
     require(not p.locator('input[type="email"]').filter(visible=True).count(),'email absent')
     require(not p.locator('[id$="-city"]').filter(visible=True).count(),'locality absent')
     require(p.locator('.wc-block-checkout__add-note textarea').is_visible(),'native note always open')
+    require(all('Уточнит менеджер' in text for text in p.locator('.rollsbar-delivery-terms').all_text_contents()) and p.locator('.rollsbar-delivery-terms').count()>0,'unknown delivery is not promised free in either native summary')
     require(not p.locator('.wc-block-checkout__add-note input[type="checkbox"]').is_visible(),'note checkbox absent')
     require(not p.locator('.wc-block-checkout__shipping-option').is_visible(),'single delivery rate has no duplicate selector')
     address=visible(p,'input[id$="-address_1"]');require(address.count()==1,'one customer address')
@@ -93,6 +94,8 @@ try:
     first=visible(p,'input[id$="-first_name"]');phone=visible(p,'input[id$="-phone"]')
     require(not first.evaluate('e=>e.required') and phone.evaluate('e=>e.required'),'phone alone required; name optional')
     p.evaluate('''()=>{window.__rbPhoneOnlyPayload=null;wp.apiFetch.use((o,next)=>{if((o.path||o.url||'').includes('/wc/store/v1/checkout')&&(o.method||'GET').toUpperCase()==='POST'){window.__rbPhoneOnlyPayload=JSON.parse(JSON.stringify(o.data));return Promise.reject({code:'qa_stop',message:'QA stopped before HTTP',data:{status:400}});}return next(o);});}''')
+    for entered,expected in [('8','+7'),('7','+7'),('89781234567','+79781234567'),('79781234567','+79781234567'),('+79781234567','+79781234567')]:
+     phone.fill(entered);require(phone.input_value()==expected,'immediate phone prefix '+entered)
     first.fill('');phone.fill('');phone.blur()
     p.locator('.wc-block-components-checkout-place-order-button').click()
     p.wait_for_function('wp.data.select("wc/store/checkout").isIdle()')
@@ -128,13 +131,14 @@ try:
     p.locator('.rollsbar-address-suggestions__item').first.click()
     p.wait_for_function("()=>document.querySelector('input[data-rollsbar-address-resolved]')")
     p.wait_for_function('(id)=>document.getElementById(id)?.parentNode.textContent.replace(/\s/g,"").includes("1200")',arg=address.get_attribute('id'))
-    require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'known below-minimum address remains advisory')
+    require(p.evaluate('!!wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")'),'known below-minimum address is blocked')
+    require(all('От' in text for text in p.locator('.rollsbar-delivery-terms').all_text_contents()),'below-minimum summaries do not promise free delivery')
     feedback=p.locator('.rollsbar-submit-feedback')
-    require('менеджер' in feedback.inner_text(),'callback explanation beside native button')
+    require('Добавьте товаров' in feedback.inner_text(),'missing amount explained beside native button')
     p.evaluate('window.__rbPhoneOnlyPayload=null')
     p.locator('.wc-block-components-checkout-place-order-button').click()
-    p.wait_for_function('window.__rbPhoneOnlyPayload!==null')
-    require(True,'below-minimum cart reaches native callback POST assembly')
+    p.wait_for_function('wp.data.select("wc/store/checkout").isIdle()')
+    require(p.evaluate('window.__rbPhoneOnlyPayload') is None,'below-minimum cart never assembles checkout POST')
     p.wait_for_function('wp.data.select("wc/store/checkout").isIdle()')
     if LIVE:require('Наличными или картой при получении' in p.locator('.wc-block-checkout__payment-method').inner_text(),'native receipt payment copy includes cash and card')
     require(p.evaluate('wp.data.select("wc/store/checkout").getExtensionData()["rollsbar-delivery"].address_proof')!='','native checkout carries signed address proof')
@@ -174,6 +178,7 @@ try:
      except Exception:
       report['minimum_failure']={'validation':p.evaluate('wp.data.select("wc/store/validation").getValidationErrors()'),'customer':p.evaluate('wp.data.select("wc/store/cart").getCustomerData()'),'totals':p.evaluate('wp.data.select("wc/store/cart").getCartTotals()'),'proof':p.evaluate('wp.data.select("wc/store/checkout").getExtensionData()'),'body':p.locator('body').inner_text()}
       raise
+     require(all(text=='Бесплатно' for text in p.locator('.rollsbar-delivery-terms').all_text_contents()),'qualified basket gets free delivery')
      for field,value in [('entrance','2'),('door-code','10'),('floor','3'),('apartment-office','4')]:p.locator('#order-rollsbar-'+field).fill(value)
      p.locator('.wc-block-checkout__add-note textarea').fill('Тест без отправки заказа')
      p.locator('#order-rollsbar-privacy-consent').check()

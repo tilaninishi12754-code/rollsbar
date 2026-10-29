@@ -5,6 +5,10 @@ Last updated: 2026-10-30
 
 This file is the durable source of truth for unresolved / deferred RollsBar defects and follow-up work. New confirmed issues should be recorded here instead of living only in chat. Do not reopen items marked DONE without new evidence.
 
+## RB-023 — Local suggestions, delivery minimum, order-note lifecycle and cache refresh
+
+Status: VERIFY. Priority: P1. Explicit owner policy2026-10-30: known delivery minimum required; unknown address still callback with manager warning; local suggestions; successful-order-only comment reset; immediate phone prefix and ordinary-browser updates. Local native five-width/server fixtures PASS. Live release/vision pending. See `CHECKOUT_POLICY_2026-10-30.md`. No further real order authorized in this batch.
+
 ## RB-022 — Final order submission waits for synchronous SMTP
 
 Status: DONE — staging single-order scope. Priority: P1. SMTP connect/auth measured5.193/5.193/4.477s while native email deferral was OFF. Enabled official Woo11.1.2 deferred emails with fresh backup20261029T212022Z (run40956867901). One explicitly owner-authorized labeled test order348: single native POST, final response1.274s, confirmation2.544s, guest COD/pickup/no account. Native queue action971 COMPLETE and Woo new-order-email-sent=true verified40957742262; receipt authorized_order_and_native_email_verified. No production access/mutation. Full evidence `CHECKOUT_SUBMIT_MAIL_QUEUE_2026-10-30.md` and JSON. This does not close RB-019 cold form startup.

@@ -45,6 +45,12 @@ try:
      raise
     require(suggested.value.status==200,'fresh suggestions '+query)
     payload=suggested.value.json()
+    if query=='Москва Тверская 1':
+     require(not payload.get('suggestions'),'out-of-area Moscow excluded from local suggestions')
+     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'unknown address remains callback, not a guessed minimum')
+     report['cases'].append({'query':query,'expected':None,'display':'no local suggestion','minimum':None})
+     p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/('address-'+str(len(report['cases']))+'.png')))
+     continue
     require(bool(payload.get('suggestions')),'provider candidates exist '+query)
     p.locator('.rollsbar-address-suggestions__item').first.wait_for(state='visible')
     p.wait_for_function('(display)=>document.querySelector(".rollsbar-address-suggestions__item")?.textContent===display',arg=payload['suggestions'][0]['display'])

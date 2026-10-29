@@ -94,6 +94,7 @@ try:
     p.keyboard.press('Escape');p.wait_for_url(BASE+'/',wait_until='domcontentloaded')
     require(store_cart_state(p)['itemsCount']==1,'close preserves native cart session')
     enter(p)
+    require(p.locator('.wc-block-checkout__add-note textarea').input_value()=='Самовывоз: тест без заказа','unfinished order note survives close/reopen')
     p.locator('.wc-block-checkout__shipping-method [role=radio]').first.click()
     address=p.locator('input[id$="-address_1"]').filter(visible=True).first
     query='Симферополь Киевская'

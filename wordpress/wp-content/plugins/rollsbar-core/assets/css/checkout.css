@@ -313,6 +313,8 @@ body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__main .checkout-order-summary-block-fill { border: 0; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-order-summary { padding: 0; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-totals-item { padding-inline: 0; }
+body.woocommerce-checkout .wc-block-components-totals-shipping .wc-block-components-totals-item__value[hidden] { display: none !important; }
+body.woocommerce-checkout .rollsbar-delivery-terms { text-align: right; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-totals-coupon { padding-inline: 0; }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-checkout-order-summary__title-text {
 	font-size: 19px;
