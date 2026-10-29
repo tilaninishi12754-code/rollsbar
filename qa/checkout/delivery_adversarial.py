@@ -20,6 +20,13 @@ def enter(p):
  p.locator('.rollsbar-drawer-checkout').click();p.wait_for_url(BASE+'/checkout/',wait_until='domcontentloaded')
  p.locator('[data-rollsbar-modal="1"]').wait_for(state='visible')
  require(p.locator('.wp-block-woocommerce-checkout').count()==1,'first cart activation opens one native checkout')
+def capture_native(p):
+ p.evaluate('''()=>{window.__rbPickupPayload=null;wp.apiFetch.use((o,next)=>{
+  if((o.path||o.url||'').includes('/wc/store/v1/checkout')&&(o.method||'GET').toUpperCase()==='POST'){
+   window.__rbPickupPayload=JSON.parse(JSON.stringify(o.data));return Promise.reject({code:'qa_stop',message:'QA: остановлено до HTTP.',data:{status:400}});
+  }return next(o);
+ });}''')
+
 try:
  with sync_playwright() as pw:
   browser=pw.chromium.launch()
@@ -55,11 +62,7 @@ try:
     p.locator('#order-rollsbar-privacy-consent').check()
     p.locator('.wc-block-checkout__add-note textarea').fill('Самовывоз: тест без заказа')
     p.wait_for_function('()=>!wp.data.select("wc/store/cart").isCustomerDataUpdating()&&!wp.data.select("wc/store/checkout").isCalculating()')
-    p.evaluate('''()=>{window.__rbPickupPayload=null;wp.apiFetch.use((o,next)=>{
-     if((o.path||o.url||'').includes('/wc/store/v1/checkout')&&(o.method||'GET').toUpperCase()==='POST'){
-      window.__rbPickupPayload=JSON.parse(JSON.stringify(o.data));return Promise.reject({code:'qa_stop',message:'QA: остановлено до HTTP.',data:{status:400}});
-     }return next(o);
-    });}''')
+    capture_native(p)
     phone.fill('+7')
     p.wait_for_function('!!wp.data.select("wc/store/validation").getValidationError("rollsbar-contact-phone")')
     p.locator('.wc-block-components-checkout-place-order-button').click()
@@ -95,7 +98,10 @@ try:
     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'unresolved address does not block callback')
     require(p.locator('iframe[src*="map"]').count()==0,'low precision never opens deferred map')
     p.wait_for_function('()=>!!document.querySelector(".rollsbar-submit-feedback")?.textContent')
-    p.evaluate('window.__rbPickupPayload=null')
+    capture_native(p)
+    p.locator('input[id$="-phone"]').filter(visible=True).first.fill('+79780000000')
+    p.locator('#order-rollsbar-privacy-consent').check()
+    p.wait_for_function('()=>!wp.data.select("wc/store/cart").isCustomerDataUpdating()&&!wp.data.select("wc/store/checkout").isCalculating()')
     p.locator('.wc-block-components-checkout-place-order-button').click()
     p.wait_for_function('()=>window.__rbPickupPayload!==null&&wp.data.select("wc/store/checkout").isIdle()')
     require(p.evaluate('window.__rbPickupPayload.billing_address.phone')=='+79780000000','unresolved delivery still assembles native callback with contact phone')
