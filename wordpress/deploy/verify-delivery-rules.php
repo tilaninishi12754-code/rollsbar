@@ -64,9 +64,9 @@ try {
  rb_direct_assert(null===RollsBar_Delivery_Checkout::validate_request(null,null,$request),'callback accepts absent proof without claiming confirmed delivery terms');
  $request->set_param('billing_address',array_merge($address,array('first_name'=>'','address_1'=>'')));
  $request->set_param('shipping_address',array_merge($address,array('first_name'=>'','address_1'=>'')));
- $request->set_param('additional_fields',array('rollsbar/privacy-consent'=>false));
+ $request->set_param('additional_fields',array('rollsbar/privacy-consent'=>true));
  RollsBar_Checkout::prepare_store_request(null,null,$request);
- rb_direct_assert(true===$native_route->validate_callback($request),'actual native phone-only callback accepts absent name/address and unchecked consent');
+ rb_direct_assert(true===$native_route->validate_callback($request),'actual native phone-only callback accepts absent name/address with explicit consent');
  rb_direct_assert(null===RollsBar_Delivery_Checkout::validate_request(null,null,$request),'native phone-only delivery callback bypasses commercial minimum gate');
  WC()->session->set('chosen_shipping_methods',array('pickup_location:0'));
  $request->set_param('shipping_address',array());

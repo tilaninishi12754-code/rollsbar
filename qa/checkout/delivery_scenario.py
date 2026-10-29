@@ -22,7 +22,7 @@ def hydrate(data):
   for k,v in locale.items():
    data['countryData']['RU']['locale'].setdefault(k,{}).update(v);data['defaultFields'].setdefault(k,{}).update(v)
   data['defaultFields']['email']['hidden']=True
-  data['defaultFields']['rollsbar/privacy-consent']['required']=False
+  data['defaultFields']['rollsbar/privacy-consent']['required']=True
   for k in ['entrance','door-code','floor','apartment-office']:
    f=data['defaultFields']['rollsbar/'+k];f['optionalLabel']=f['label']
   data['defaultFields']['rollsbar/door-code'].update(label='Домофон',optionalLabel='Домофон')
@@ -97,10 +97,23 @@ try:
     phone.fill('+79780000000')
     p.wait_for_function('()=>!wp.data.select("wc/store/cart").isCustomerDataUpdating()&&!wp.data.select("wc/store/checkout").isCalculating()')
     p.locator('.wc-block-components-checkout-place-order-button').click()
+    p.wait_for_function('()=>document.activeElement?.id==="order-rollsbar-privacy-consent"&&wp.data.select("wc/store/checkout").isIdle()')
+    require(p.evaluate('window.__rbPhoneOnlyPayload') is None,'unchecked consent blocks native request')
+    require('согласие' in p.locator('.rollsbar-submit-feedback').inner_text(),'consent explanation beside native button')
+    consent=p.locator('#order-rollsbar-privacy-consent')
+    marker=p.locator('.rollsbar-consent-missing')
+    require(marker.count()==1 and marker.evaluate('e=>getComputedStyle(e).backgroundColor==="rgb(255, 242, 242)"'),'consent block has distinct red background and outline')
+    require(marker.evaluate('e=>{let r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight}'),'unchecked consent block scrolled into viewport')
+    consent_out=OUT/'consent-feedback';consent_out.mkdir(exist_ok=True)
+    p.screenshot(path=str(consent_out/f'consent-{width}.png'))
+    consent.check()
+    p.wait_for_function('!document.querySelector(".rollsbar-consent-missing")')
+    require(True,'consent marker clears after explicit check')
+    p.locator('.wc-block-components-checkout-place-order-button').click()
     p.wait_for_function('window.__rbPhoneOnlyPayload!==null')
     minimal=p.evaluate('window.__rbPhoneOnlyPayload')
     require(not minimal['billing_address']['first_name'] and not minimal['shipping_address']['address_1'] and minimal['billing_address']['phone']=='+79780000000','native phone-only payload with absent name and address')
-    require(not minimal['additional_fields'].get('rollsbar/privacy-consent',False),'unchecked optional consent is not fabricated')
+    require(minimal['additional_fields'].get('rollsbar/privacy-consent') is True,'native callback retains explicit customer consent')
     p.wait_for_function('wp.data.select("wc/store/checkout").isIdle()')
     first.fill('Тест');phone.fill('+7')
     p.wait_for_function('!!wp.data.select("wc/store/validation").getValidationError("rollsbar-contact-phone")')

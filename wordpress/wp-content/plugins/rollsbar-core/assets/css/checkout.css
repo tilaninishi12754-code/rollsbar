@@ -479,3 +479,6 @@ body.rollsbar-checkout-pickup .wc-block-components-text-input:has(#order-rollsba
 @media(max-width:700px) {
  body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-checkout__shipping-fields .wc-block-components-address-form { grid-template-columns: minmax(0,1fr); }
 }
+
+/* Explicit consent error marker; no layout shift and no fabricated consent. */
+body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-consent-missing { border-color: #d92525; background: #fff2f2; box-shadow: 0 0 0 2px #d92525; }

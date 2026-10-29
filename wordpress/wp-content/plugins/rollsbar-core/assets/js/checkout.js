@@ -19,6 +19,7 @@
 	var deliveryError='';
 	var deliveryProof='';
 	var contactPhoneError='';
+	var consentAttempted=false;
 	function nativeAddressIdle(){
 		return new Promise(function(resolve,reject){
 			var stop=function(){};
@@ -539,18 +540,28 @@
 			feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
 			actions.prepend(feedback);
 		}
-		var message=contactPhoneError||'Оставьте телефон — менеджер перезвонит и уточнит детали заявки.';
+		var consent=document.querySelector('#order-rollsbar-privacy-consent');
+		var missingConsent=consent&&!consent.checked;
+		var consentBlock=consent&&(consent.closest('.wc-block-components-address-form__rollsbar-privacy-consent')||consent.closest('.wc-block-components-checkbox'));
+		if(consentBlock)consentBlock.classList.toggle('rollsbar-consent-missing',!!(consentAttempted&&missingConsent));
+		if(consent&&consent.dataset.rollsbarConsentPrepared!=='1'){
+			consent.dataset.rollsbarConsentPrepared='1';consent.addEventListener('change',prepareSubmissionFeedback);
+		}
+		var message=contactPhoneError||(consentAttempted&&missingConsent?'Подтвердите согласие на обработку персональных данных.':'Оставьте телефон и отметьте согласие — менеджер перезвонит и уточнит детали заявки.');
 		if(feedback.textContent!==message)feedback.textContent=message;
 		feedback.hidden=!message;
 		var button=actions.querySelector('.wc-block-components-checkout-place-order-button');
 		if(!button||button.dataset.rollsbarFeedback==='1')return;
 		button.dataset.rollsbarFeedback='1';
 		button.addEventListener('click',function(){
-			var selector=contactPhoneError?'input[id$="-phone"]':null;
+			consentAttempted=true;prepareSubmissionFeedback();
+			var currentConsent=document.querySelector('#order-rollsbar-privacy-consent');
+			var currentPhone=Array.from(document.querySelectorAll('input[id$="-phone"]')).find(function(n){return n.getClientRects().length;});
+			var selector=contactPhoneError||(currentPhone&&!currentPhone.value.trim())?'input[id$="-phone"]':currentConsent&&!currentConsent.checked?'#order-rollsbar-privacy-consent':null;
 			if(!selector)return;
 			window.setTimeout(function(){
 				var field=Array.from(document.querySelectorAll(selector)).find(function(n){return n.getClientRects().length;});
-				if(field){field.focus({preventScroll:true});field.scrollIntoView({block:'center',behavior:'instant'});}
+				if(field){field.focus({preventScroll:true});(field.closest('.rollsbar-consent-missing')||field).scrollIntoView({block:'center',behavior:'instant'});}
 			},0);
 		});
 	}

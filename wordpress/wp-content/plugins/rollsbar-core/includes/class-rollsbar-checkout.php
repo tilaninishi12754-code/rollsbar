@@ -271,15 +271,15 @@ final class RollsBar_Checkout {
 			);
 		}
 
-		// Owner-approved callback request: phone is the sole required customer field.
-		// Consent remains an explicit optional action; never precheck or fabricate it.
+		// Owner-approved callback request: phone plus explicit consent are required.
+		// Never precheck or fabricate consent. Name/address remain optional.
 		woocommerce_register_additional_checkout_field(
 			array(
 				'id'            => self::FIELD_PREFIX . 'privacy-consent',
 				'label'         => 'Я ознакомлен(а) с Политикой обработки персональных данных и даю согласие на обработку персональных данных для оформления и исполнения заказа.',
 				'location'      => 'order',
 				'type'          => 'checkbox',
-				'required'      => false,
+				'required'      => true,
 				'error_message' => 'Подтвердите согласие на обработку персональных данных для оформления заказа.',
 			)
 		);
