@@ -53,7 +53,8 @@ check($r->params['billing_address']['email']===$email&&$r->params['billing_addre
 check($r->params['shipping_address']['country']==='RU','native hidden shipping country restored before validation');
 check($r->params['create_account']===false,'guest cannot create account');
 $l=RollsBar_Checkout::field_locale([])['RU'];
-foreach(['first_name','phone'] as $key){check($l[$key]['required']&&!$l[$key]['hidden'],"$key visible required");}
+foreach(['phone'] as $key){check($l[$key]['required']&&!$l[$key]['hidden'],"$key visible required");}
+check(!$l['first_name']['required'],'name optional for callback');
 check(!$l['address_1']['required']&&!$l['address_1']['hidden'],'native customer address optional for pickup; delivery proof gate requires exact address');
 foreach(['last_name','company','address_2','state','postcode'] as $key){check(!$l[$key]['required']&&$l[$key]['hidden'],"$key hidden optional");}
 check(!$l['city']['required']&&$l['city']['hidden'],'locality optional hidden; delivery uses one address');

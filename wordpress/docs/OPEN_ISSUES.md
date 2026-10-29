@@ -305,3 +305,11 @@ Priority: `P1`
 Owner's 2026-10-29 screenshots resolved on staging: native COD consistently says cash/card at receipt; native pickup receipt has one address and no collection mistranslation. Delivery address/minimum blocker is visible next to CTA; click focuses/scrolls to the problem, valid native submit retained. Pickup clears pending suggestions, eliminating a pointer interception exposed by live QA. Exact unmatched-address wording corrected; minimum rules/coverage not relaxed.
 
 [Apply 40850856268](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40850856268), [finalization 40852211597](https://github.com/tilaninishi12754-code/rollsbar/actions/runs/40852211597); application/marker `53ade0760655cfdee392a2aeb4e34955f223552b`, receipt `browser_verified`, fresh backup `20261029T093647Z`. Installed native receipt renderer/order-display fixtures PASS without saving orders; live five-width feedback/native gate 5/5, addresses 20/20, adversarial 3/3, immutable geometry 5/5, storefront 5/5 and no-shelf controls 5/5 PASS. All 35 CI screenshots + four CTA closeups and storefront images inspected. Manifest `2fdc154060eb7aadc652ee1a368062ccafd857b1c09ae74550ab4c976c770558`. No worker-created order/account/mail; production untouched. Map/boundaries and RB-010 remain deferred. See `CHECKOUT_RECEIPT_FEEDBACK_REPORT_2026-10-29.md`.
+
+
+## RB-016 — Phone-only callback submission
+
+Status: `IN PROGRESS`
+Priority: `P1`
+
+Owner explicitly changed submission policy 2026-10-29: only customer phone required; missing name/address, unmatched address and below-minimum total must not lose a callback contact. Commercial delivery rules become advisory. Explicit consent remains optional and is never fabricated. Native Store API/Woo order/session/COD remain sole authority. Local five-width native phone-only and below-minimum assembly PASS, empty/incomplete phone rejected; live acceptance pending. See `CHECKOUT_PHONE_ONLY_REQUEST_2026-10-29.md`. Earlier strict-minimum/name/consent acceptance is historical, not the current request contract.

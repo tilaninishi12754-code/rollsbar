@@ -127,10 +127,10 @@ final class RollsBar_Checkout {
 		foreach ( array( 'last_name', 'company', 'address_2', 'state', 'postcode' ) as $key ) {
 			$locale['RU'][ $key ] = array( 'required' => false, 'hidden' => true );
 		}
-		$locale['RU']['first_name'] = array( 'label' => 'Имя', 'required' => true, 'hidden' => false );
+		$locale['RU']['first_name'] = array( 'label' => 'Имя', 'optionalLabel' => 'Имя', 'required' => false, 'hidden' => false );
 		$locale['RU']['phone'] = array( 'label' => 'Телефон', 'required' => true, 'hidden' => false, 'index' => 20 );
-		// Pickup needs no customer address. Delivery requires a signed exact address
-		// through the native Store API pre-order gate, not a hidden required input.
+		// Callback requests accept missing/unresolved customer addresses in either mode.
+		// Delivery information is advisory; native Woo remains the submission authority.
 		$locale['RU']['address_1'] = array( 'label' => 'Город, улица и дом', 'optionalLabel' => 'Город, улица и дом', 'required' => false, 'hidden' => false );
 		$locale['RU']['city'] = array( 'required' => false, 'hidden' => true );
 		// Woo 11.1.2 keeps country as the required locale lookup key. Its preset
@@ -271,17 +271,15 @@ final class RollsBar_Checkout {
 			);
 		}
 
-		// The approved legal baseline requires personal-data consent to be a
-		// separate explicit action, not bundled into acceptance of the offer.
-		// WooCommerce's Additional Checkout Fields API enforces a required
-		// checkbox in Checkout Block / Store API as part of order validation.
+		// Owner-approved callback request: phone is the sole required customer field.
+		// Consent remains an explicit optional action; never precheck or fabricate it.
 		woocommerce_register_additional_checkout_field(
 			array(
 				'id'            => self::FIELD_PREFIX . 'privacy-consent',
 				'label'         => 'Я ознакомлен(а) с Политикой обработки персональных данных и даю согласие на обработку персональных данных для оформления и исполнения заказа.',
 				'location'      => 'order',
 				'type'          => 'checkbox',
-				'required'      => true,
+				'required'      => false,
 				'error_message' => 'Подтвердите согласие на обработку персональных данных для оформления заказа.',
 			)
 		);

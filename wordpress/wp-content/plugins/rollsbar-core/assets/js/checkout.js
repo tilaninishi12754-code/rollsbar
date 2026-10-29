@@ -52,21 +52,20 @@
 		var amount=(Number(totals.total_items)-Number(totals.total_discount))/Math.pow(10,minor);
 		var valid=deliveryAddress&&address===deliveryAddress.display;
 		var rule=valid?deliveryAddress.delivery:null;
-		var message=pickup?'':!rule?'Выберите адрес с домом из подсказок, чтобы определить условия доставки.':rule.message;
+		var message=pickup?'':!rule?'Адрес можно указать сейчас или сообщить менеджеру по телефону.':rule.message;
 		if(!pickup&&rule&&rule.status==='resolved'){
-			message=amount<rule.minimum?'Минимальный заказ для доставки — '+rule.minimum.toLocaleString('ru-RU')+' ₽. Добавьте товары на '+(rule.minimum-amount).toLocaleString('ru-RU')+' ₽.':'';
+			message=amount<rule.minimum?'Бесплатная доставка от '+rule.minimum.toLocaleString('ru-RU')+' ₽. Условия заявки уточнит менеджер.':'';
 		}
 		if(message!==deliveryError){
 			deliveryError=message;
 			var validation=wp.data.dispatch('wc/store/validation');
-			if(message)validation.setValidationErrors({'rollsbar-delivery-minimum':{message:message,hidden:false}});
-			else validation.clearValidationError('rollsbar-delivery-minimum');
+			validation.clearValidationError('rollsbar-delivery-minimum');
 		}
 		var proof=valid?deliveryAddress.address_proof:'';
 		if(proof!==deliveryProof){deliveryProof=proof;wp.data.dispatch('wc/store/checkout').setExtensionData('rollsbar-delivery',{address_proof:proof});}
 		var input=document.querySelector(pickup?'#billing-address_1':'#shipping-address_1')||document.querySelector('#billing-address_1');
 		if(input&&!pickup){
-			input.setAttribute('aria-required','true');
+			input.setAttribute('aria-required','false');
 			setAddressStatus(input,message||(rule&&rule.message)||'',message?'warning':'success');
 		}
 		if(!deliverySubscription){deliverySubscription=true;wp.data.subscribe(syncDelivery);}
@@ -540,14 +539,14 @@
 			feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
 			actions.prepend(feedback);
 		}
-		var message=contactPhoneError||deliveryError||'';
+		var message=contactPhoneError||'Оставьте телефон — менеджер перезвонит и уточнит детали заявки.';
 		if(feedback.textContent!==message)feedback.textContent=message;
 		feedback.hidden=!message;
 		var button=actions.querySelector('.wc-block-components-checkout-place-order-button');
 		if(!button||button.dataset.rollsbarFeedback==='1')return;
 		button.dataset.rollsbarFeedback='1';
 		button.addEventListener('click',function(){
-			var selector=contactPhoneError?'input[id$="-phone"]':deliveryError?'input[id$="-address_1"]':null;
+			var selector=contactPhoneError?'input[id$="-phone"]':null;
 			if(!selector)return;
 			window.setTimeout(function(){
 				var field=Array.from(document.querySelectorAll(selector)).find(function(n){return n.getClientRects().length;});

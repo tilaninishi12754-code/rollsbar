@@ -65,14 +65,7 @@ final class RollsBar_Delivery_Checkout {
 		// The native controller still validates that this pickup rate actually exists.
 		if ( str_starts_with( $rate, 'pickup_location:' ) ) { return $response; }
 		if ( 'rollsbar_delivery' !== $rate ) { return new WP_Error( 'rollsbar_delivery_mode', 'Выберите доступный способ получения.', array( 'status' => 400 ) ); }
-		$shipping = (array) $request->get_param( 'shipping_address' );
-		$billing = (array) $request->get_param( 'billing_address' );
-		$address = (string) ( $shipping['address_1'] ?? $billing['address_1'] ?? '' );
-		$extensions = (array) $request->get_param( 'extensions' );
-		$proof = (string) ( $extensions['rollsbar-delivery']['address_proof'] ?? '' );
-		// Native line totals after discounts; exclude fees, shipping and taxes.
-		WC()->cart->calculate_totals();
-		$result = RollsBar_Delivery_Minimum::verify( $proof, $address, (float) WC()->cart->get_cart_contents_total() );
-		return 'resolved' === $result['status'] ? $response : new WP_Error( 'rollsbar_delivery_' . $result['status'], $result['message'], array( 'status' => 400, 'minimum' => $result['minimum'] ) );
+		// Callback request: native phone validation remains required; delivery rules are advisory.
+		return $response;
 	}
 }

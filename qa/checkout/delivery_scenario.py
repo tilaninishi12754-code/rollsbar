@@ -14,7 +14,7 @@ OUT=ROOT/'qa/visual-results/delivery-rules';OUT.mkdir(parents=True,exist_ok=True
 CAPTURE=ROOT/'qa/visual-results/checkout-direct'
 LIVE='--live' in sys.argv
 report={'status':'RUNNING','mode':'live' if LIVE else 'offline-native','release_sha':os.environ.get('ROLLSBAR_DEPLOY_SHA'),'checks':[],'submissions':[],'errors':[]}
-locale=json.loads((OUT/'locale.json').read_text(encoding='utf8')) if not LIVE else None
+locale=json.loads((CAPTURE/'locale.json').read_text(encoding='utf8')) if not LIVE else None
 def hydrate(data):
  if isinstance(data,list):return [hydrate(x) for x in data]
  if not isinstance(data,dict):return data
@@ -22,6 +22,7 @@ def hydrate(data):
   for k,v in locale.items():
    data['countryData']['RU']['locale'].setdefault(k,{}).update(v);data['defaultFields'].setdefault(k,{}).update(v)
   data['defaultFields']['email']['hidden']=True
+  data['defaultFields']['rollsbar/privacy-consent']['required']=False
   for k in ['entrance','door-code','floor','apartment-office']:
    f=data['defaultFields']['rollsbar/'+k];f['optionalLabel']=f['label']
   data['defaultFields']['rollsbar/door-code'].update(label='Домофон',optionalLabel='Домофон')
@@ -87,23 +88,37 @@ try:
      require(control.is_visible() and control.get_attribute('required') is None,'delivery optional '+field)
      require('необязательно' not in control.locator('..').inner_text(),'clean label '+field)
     first=visible(p,'input[id$="-first_name"]');phone=visible(p,'input[id$="-phone"]')
-    require(first.evaluate('e=>e.required') and phone.evaluate('e=>e.required'),'native required name and phone')
+    require(not first.evaluate('e=>e.required') and phone.evaluate('e=>e.required'),'phone alone required; name optional')
+    p.evaluate('''()=>{window.__rbPhoneOnlyPayload=null;wp.apiFetch.use((o,next)=>{if((o.path||o.url||'').includes('/wc/store/v1/checkout')&&(o.method||'GET').toUpperCase()==='POST'){window.__rbPhoneOnlyPayload=JSON.parse(JSON.stringify(o.data));return Promise.reject({code:'qa_stop',message:'QA stopped before HTTP',data:{status:400}});}return next(o);});}''')
+    first.fill('');phone.fill('');phone.blur()
+    p.locator('.wc-block-components-checkout-place-order-button').click()
+    p.wait_for_function('wp.data.select("wc/store/checkout").isIdle()')
+    require(p.evaluate('window.__rbPhoneOnlyPayload') is None,'empty phone rejects request before native POST assembly')
+    phone.fill('+79780000000')
+    p.wait_for_function('()=>!wp.data.select("wc/store/cart").isCustomerDataUpdating()&&!wp.data.select("wc/store/checkout").isCalculating()')
+    p.locator('.wc-block-components-checkout-place-order-button').click()
+    p.wait_for_function('window.__rbPhoneOnlyPayload!==null')
+    minimal=p.evaluate('window.__rbPhoneOnlyPayload')
+    require(not minimal['billing_address']['first_name'] and not minimal['shipping_address']['address_1'] and minimal['billing_address']['phone']=='+79780000000','native phone-only payload with absent name and address')
+    require(not minimal['additional_fields'].get('rollsbar/privacy-consent',False),'unchecked optional consent is not fabricated')
+    p.wait_for_function('wp.data.select("wc/store/checkout").isIdle()')
     first.fill('Тест');phone.fill('+7')
     p.wait_for_function('!!wp.data.select("wc/store/validation").getValidationError("rollsbar-contact-phone")')
     require(True,'country prefix alone cannot satisfy required phone')
     phone.fill('+79780000000')
     p.wait_for_function('!wp.data.select("wc/store/validation").getValidationError("rollsbar-contact-phone")')
-    require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")?.message') is not None,'unresolved address blocked before submit')
+    require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'unresolved address does not block callback')
     address.fill('Симферополь Гагарина 17')
     p.locator('.rollsbar-address-suggestions__item').first.click()
     p.wait_for_function("()=>document.querySelector('input[data-rollsbar-address-resolved]')")
-    p.wait_for_function('()=>wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")?.message.includes("1")')
-    require('1200' in p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum").message').replace('\u00a0','').replace(' ',''),'address minimum blocks underfilled cart')
+    p.wait_for_function('(id)=>document.getElementById(id)?.parentNode.textContent.replace(/\s/g,"").includes("1200")',arg=address.get_attribute('id'))
+    require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'known below-minimum address remains advisory')
     feedback=p.locator('.rollsbar-submit-feedback')
-    require('1 200' in feedback.inner_text().replace('\u00a0',' '),'minimum explanation repeated next to native order button')
+    require('менеджер' in feedback.inner_text(),'callback explanation beside native button')
+    p.evaluate('window.__rbPhoneOnlyPayload=null')
     p.locator('.wc-block-components-checkout-place-order-button').click()
-    p.wait_for_function('()=>document.activeElement?.id.endsWith("-address_1")')
-    require(address.evaluate('e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight}'),'blocked delivery click brings address explanation into viewport')
+    p.wait_for_function('window.__rbPhoneOnlyPayload!==null')
+    require(True,'below-minimum cart reaches native callback POST assembly')
     p.wait_for_function('wp.data.select("wc/store/checkout").isIdle()')
     if LIVE:require('Наличными или картой при получении' in p.locator('.wc-block-checkout__payment-method').inner_text(),'native receipt payment copy includes cash and card')
     require(p.evaluate('wp.data.select("wc/store/checkout").getExtensionData()["rollsbar-delivery"].address_proof')!='','native checkout carries signed address proof')
@@ -130,7 +145,7 @@ try:
     require('Симферополь, Кечкеметская улица, 1' in p.locator('.wc-block-checkout__pickup-options').inner_text(),'exact pickup address')
     require(p.locator('.wc-block-checkout__pickup-options').bounding_box()['y']<p.locator('.wc-block-checkout__order-notes').bounding_box()['y'],'pickup address precedes comment')
     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'pickup no delivery requirement')
-    require(not p.locator('.rollsbar-submit-feedback').inner_text(),'pickup has no stale delivery blocker message')
+    require('менеджер' in p.locator('.rollsbar-submit-feedback').inner_text(),'pickup retains callback explanation')
     require(not p.locator('#rollsbarAddressSuggestions').is_visible(),'pickup has no stale address list obscuring fulfillment controls')
     require(p.locator('input[value="cod"]').is_checked(),'native COD')
     modal.evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/f'pickup-{width}.png'))

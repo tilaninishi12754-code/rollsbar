@@ -35,7 +35,7 @@ $order->set_address( $address, 'billing' );
 $errors = new WP_Error();
 $validate_address->invoke( $controller, $order, 'billing', $errors );
 rb_direct_assert( ! $errors->has_errors(), 'native address validation accepts approved fields with optional locality/surname/state/postcode absent' );
-foreach ( array( 'first_name', 'phone' ) as $key ) {
+foreach ( array( 'phone' ) as $key ) {
  $test = $address; $test[$key] = ''; $order->set_address( $test, 'billing' ); $errors = new WP_Error();
  $validate_address->invoke( $controller, $order, 'billing', $errors );
  rb_direct_assert( $errors->has_errors(), 'native address validator requires ' . $key );
@@ -70,7 +70,7 @@ rb_direct_assert( $native_route instanceof Automattic\WooCommerce\StoreApi\Route
 rb_direct_assert( true === $native_route->validate_callback($request), 'native route accepts explicit consent without processing an order' );
 $request->set_param('additional_fields',array('rollsbar/privacy-consent'=>false));
 $without_consent=$native_route->validate_callback($request);
-rb_direct_assert( is_wp_error($without_consent) && isset($without_consent->get_error_data()['details']['additional_fields']), 'native route rejects false required privacy consent' );
+rb_direct_assert( !is_wp_error($without_consent), 'native callback route accepts explicit false optional consent without fabricating it' );
 $request->set_param('additional_fields',$order_fields);
 rb_direct_assert( false === apply_filters( 'woocommerce_checkout_registration_enabled', true ), 'native account creation UI disabled' );
 rb_direct_assert( false === apply_filters( 'pre_wp_mail', null, array( 'to' => $email, 'headers' => array() ) ), 'mail to compatibility identity blocked before transport' );
