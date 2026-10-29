@@ -103,6 +103,7 @@ printf 'actual_woo_version='; wp_cmd plugin get woocommerce --field=version
 for file in database.sql.gz uploads.tar.gz manifest.txt SHA256SUMS; do
  if [[ -s "$HOME/rollsbar-backups/staging/20261023T215945Z/$file" ]]; then echo "historical_$file=present"; else echo "historical_$file=missing"; fi
 done
+wp_cmd eval {shlex.quote((ROOT/'wordpress/deploy/probe-checkout-mail-latency.php').read_text().removeprefix('<?php'))}
 '''
  output=transport.execute(script);(OUT/(args.phase+'.log')).write_text(output,encoding='utf8')
  if args.phase=='apply':
