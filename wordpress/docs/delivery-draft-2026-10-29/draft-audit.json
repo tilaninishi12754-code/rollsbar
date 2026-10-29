@@ -1,0 +1,50 @@
+{
+  "source_rows": 92,
+  "located_rows": 83,
+  "boundary_rows": [
+    "B4",
+    "C3",
+    "C10",
+    "E11",
+    "F9"
+  ],
+  "unlocated": [
+    {
+      "cell": "B21",
+      "source": "ДКП"
+    },
+    {
+      "cell": "E10",
+      "source": "район ТНУ"
+    },
+    {
+      "cell": "G9",
+      "source": "3-й массив"
+    },
+    {
+      "cell": "G10",
+      "source": "ЖИВОПИСНОЕ 2 (Трудовое)"
+    }
+  ],
+  "references": 81,
+  "proposed_city_tiers": [
+    1200,
+    1500,
+    2000,
+    2500,
+    3000
+  ],
+  "all_seven_tiers_in_references": [
+    1200,
+    1500,
+    2000,
+    2500,
+    3000,
+    3500,
+    4000
+  ],
+  "hypotheses_are_unapproved": true,
+  "geometry_valid": true,
+  "city_gap_square_metres": 5.765912192146061e-10,
+  "city_overlap_square_metres": -4.470348358154297e-08
+}

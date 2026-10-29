@@ -1,0 +1,9 @@
+{
+  "endpoint": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+  "query": "osm-query.txt",
+  "osm_base": "2026-10-29T11:15:01Z",
+  "sha256_uncompressed": "af459afb44e4150a7c39fa9f837d7564a683ab5072c2bfd282e3fe6f84237632",
+  "license": "ODbL; © OpenStreetMap contributors",
+  "elements": 4567,
+  "privacy": "Generic public geographic bbox query only; client table and pricing were not sent externally."
+}

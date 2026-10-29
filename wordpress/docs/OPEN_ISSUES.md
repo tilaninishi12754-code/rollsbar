@@ -322,3 +322,10 @@ Status: `DEFERRED`
 Priority: `P2`
 
 Observed during deliberate QA pre-submit rejection: Woo's generic failure banner says to check email, although this guest flow has no customer email. Normal fresh checkout/consent-error captures do not show it; actual native callback assembly passes. This is existing failure-copy debt, not a commercial validation blocker. Keep native error/retry protection; a later narrow copy change should explain retry/contact by phone without claiming the request was accepted when submission failed. Do not hide real errors or fabricate success. Evidence: intercepted POST mode/adversarial snapshots in run 40856936705. Outside RB-016 minimal consent/required-fields scope.
+
+## RB-018 — Geographic delivery boundaries need client review
+
+Status: `AWAITING CLIENT REVIEW`
+Priority: `P2`
+
+Owner authorized preparing our own review draft from the existing delivery table instead of requiring the client to draw a complete map. Review-only package: `delivery-draft-2026-10-29/index.html` and README. All 92 source cells retained; 83 linked to geographic references, five ambiguous section rows and four unlocated landmarks remain explicit questions. All seven minimum levels represented, Mazanka = 4000. Existing OSM footprints and city nearest-reference hypotheses are clearly unapproved; no invented delivery radius, no checkout import/deploy. Namesake/spelling interpretations need review. Eight focused questions, local notes and download available. Source audit and five-width Playwright PASS, screenshots inspected. Geographic matching is not proof of commercial zone correctness. Live callback checkout (phone + explicit consent), staging and production unchanged. Final business boundaries and outside-zone policy remain unapproved.

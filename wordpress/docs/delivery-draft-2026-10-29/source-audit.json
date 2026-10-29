@@ -1,0 +1,9 @@
+{
+  "file": "маршрут доставка.xlsx",
+  "sha256": "4093f02c4446de749102a6b1e82b7e65d1bd0855b99644e3e411f92a5097095f",
+  "sheet": "Лист1",
+  "matched_source_cells": 92,
+  "overrides": {
+    "G8": "Мазанка = 4000 instead of original 3500; owner confirmation"
+  }
+}

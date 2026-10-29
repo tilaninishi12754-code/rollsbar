@@ -1,0 +1,56 @@
+{
+  "status": "CLIENT_REVIEW_NOT_AUTOMATIC_APPROVAL",
+  "draft": "2026-10-29",
+  "exported_at": "2026-10-29T11:46:08.073Z",
+  "source_sha256": "4093f02c4446de749102a6b1e82b7e65d1bd0855b99644e3e411f92a5097095f",
+  "questions": [
+    {
+      "id": "territories",
+      "question": "Цветные территории: какие границы сдвинуть?",
+      "answer": "Проверка: уточнить границу",
+      "status": "answered_needs_review"
+    },
+    {
+      "id": "segments",
+      "question": "Где заканчиваются спорные участки?",
+      "answer": "",
+      "status": "pending"
+    },
+    {
+      "id": "market",
+      "question": "Где граница «до Центрального рынка»?",
+      "answer": "",
+      "status": "pending"
+    },
+    {
+      "id": "settlements",
+      "question": "Посёлки входят целиком?",
+      "answer": "",
+      "status": "pending"
+    },
+    {
+      "id": "names",
+      "question": "Правильно ли выбраны одноимённые места?",
+      "answer": "",
+      "status": "pending"
+    },
+    {
+      "id": "landmarks",
+      "question": "Покажите четыре ориентира",
+      "answer": "",
+      "status": "pending"
+    },
+    {
+      "id": "priority",
+      "question": "Как быть с улицей, пересекающей несколько зон?",
+      "answer": "",
+      "status": "pending"
+    },
+    {
+      "id": "unknown",
+      "question": "Адреса вне таблицы и за краем зон",
+      "answer": "",
+      "status": "pending"
+    }
+  ]
+}

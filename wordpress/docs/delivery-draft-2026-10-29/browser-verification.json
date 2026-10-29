@@ -1,0 +1,98 @@
+{
+  "result": "PASS",
+  "tests": [
+    {
+      "width": 1440,
+      "result": "PASS",
+      "rows": 92,
+      "tiers": 7,
+      "js_errors": [],
+      "external_requests": [],
+      "gates": [
+        "overflow",
+        "source search",
+        "namesake location",
+        "missing location",
+        "layer toggles",
+        "review persistence",
+        "download pending status",
+        "offline vector map"
+      ]
+    },
+    {
+      "width": 701,
+      "result": "PASS",
+      "rows": 92,
+      "tiers": 7,
+      "js_errors": [],
+      "external_requests": [],
+      "gates": [
+        "overflow",
+        "source search",
+        "namesake location",
+        "missing location",
+        "layer toggles",
+        "review persistence",
+        "download pending status",
+        "offline vector map"
+      ]
+    },
+    {
+      "width": 700,
+      "result": "PASS",
+      "rows": 92,
+      "tiers": 7,
+      "js_errors": [],
+      "external_requests": [],
+      "gates": [
+        "overflow",
+        "source search",
+        "namesake location",
+        "missing location",
+        "layer toggles",
+        "review persistence",
+        "download pending status",
+        "offline vector map"
+      ]
+    },
+    {
+      "width": 390,
+      "result": "PASS",
+      "rows": 92,
+      "tiers": 7,
+      "js_errors": [],
+      "external_requests": [],
+      "gates": [
+        "overflow",
+        "source search",
+        "namesake location",
+        "missing location",
+        "layer toggles",
+        "review persistence",
+        "download pending status",
+        "offline vector map"
+      ]
+    },
+    {
+      "width": 320,
+      "result": "PASS",
+      "rows": 92,
+      "tiers": 7,
+      "js_errors": [],
+      "external_requests": [],
+      "gates": [
+        "overflow",
+        "source search",
+        "namesake location",
+        "missing location",
+        "layer toggles",
+        "review persistence",
+        "download pending status",
+        "offline vector map"
+      ]
+    }
+  ],
+  "screenshots": "qa/artifacts/delivery-draft-2026-10-29",
+  "order_requests": 0,
+  "staging_mutation": false
+}

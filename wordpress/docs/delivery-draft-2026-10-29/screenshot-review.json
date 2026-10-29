@@ -1,0 +1,51 @@
+{
+  "status": "INSPECTED",
+  "reviewer": "assistant vision",
+  "scope": "Review-only delivery map, no storefront acceptance",
+  "files": [
+    {
+      "file": "all-localities-file.png",
+      "sha256": "0c88474811637aeb619555f30e0607af2d9e6bdcc27353fe7ffab2c8a0497320"
+    },
+    {
+      "file": "map-1440.png",
+      "sha256": "1228e7dc110e417683eef89eb692d5eb1c9f88178674b86ca2b3677db04aa8ab"
+    },
+    {
+      "file": "map-320.png",
+      "sha256": "0ae0077175c185b5723e440c8bac87094e287e61355433e46f60549398edcf41"
+    },
+    {
+      "file": "map-390.png",
+      "sha256": "72983b17d3d05a0846a3f4afc3f1d21f5a78dac87d16ba7cc01e63320365494f"
+    },
+    {
+      "file": "map-700.png",
+      "sha256": "47d94b1a30adc435f54aaec8d7273db3ada22c0a91de59eb2a7327cd409d4412"
+    },
+    {
+      "file": "map-701.png",
+      "sha256": "827875edb316993b4024a39ae8929deed2ddfdfcd8665af9ea48b0383331279f"
+    },
+    {
+      "file": "review-1440.png",
+      "sha256": "d546941d4be730d2c946d79b8c25b09b1604f0790bdfe97ce76ccd65afeeac04"
+    },
+    {
+      "file": "review-320.png",
+      "sha256": "97fd257d682deb1bbf0ab2728f6c39e0161480fc0a18b991e6dd8b5c43e5c3e8"
+    },
+    {
+      "file": "review-390.png",
+      "sha256": "354cd4ab7a08c13688d7c9ec508fb15e7f6bf7d27a9c640f5cda6a01ed6de0a9"
+    },
+    {
+      "file": "review-700.png",
+      "sha256": "201aeb3d2275f0be12e013358caf25d24312c722ed252744e4ef944f5d767151"
+    },
+    {
+      "file": "review-701.png",
+      "sha256": "9182045e01be88447eb6492e1dd406aef7009d54a566fe3be42f2ef5edfb4346"
+    }
+  ]
+}

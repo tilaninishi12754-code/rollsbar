@@ -1,0 +1,8 @@
+[out:json][timeout:35];(
+nwr["place"]["name"](44.65,33.65,45.3,34.7);
+way["highway"]["name"](44.83,34.0,45.06,34.25);
+nwr["amenity"~"hospital|bus_station|marketplace"]["name"](44.83,34.0,45.06,34.25);
+nwr["shop"="mall"]["name"](44.83,34.0,45.06,34.25);
+nwr["railway"="station"]["name"](44.83,34.0,45.06,34.25);
+relation["boundary"="administrative"]["name"="Симферополь"](44.83,34.0,45.06,34.25);
+);out geom;
