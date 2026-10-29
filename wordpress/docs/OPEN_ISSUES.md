@@ -5,13 +5,13 @@ Last updated: 2026-10-29
 
 This file is the durable source of truth for unresolved / deferred RollsBar defects and follow-up work. New confirmed issues should be recorded here instead of living only in chat. Do not reopen items marked DONE without new evidence.
 
-## Workflow
-
 ## RB-019 — Checkout cold loading and redundant assets
 
 Status: VERIFY. Priority: P2. Owner-authorized narrow checkout latency investigation, 2026-10-29.
 
 Reproduced cold cart → checkout form5.9–11.8s, HTML TTFB0.8–1.1s; script transfer dominates. Remove active-checkout speculative cart assets and the classic checkout script on the native block route. No blanket cache/session changes. Local five-width native/contract fixtures PASS; live acceptance and measured improvement pending. Full evidence: `CHECKOUT_LOADING_2026-10-29.md`. Broader RB-005/RB-007/RB-008 work remains deferred.
+
+## Workflow
 
 For each issue keep: status, priority, observed evidence, intended batch, acceptance criteria, and final evidence when closed.
 

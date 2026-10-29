@@ -32,6 +32,14 @@ try:
   browser=pw.chromium.launch()
   for width in [320,700,701]:
    with delivery_page(browser,viewport={'width':width,'height':900},is_mobile=width<=700,has_touch=width<=700,locale='ru-RU') as p:
+    map_network=[];map_errors=[]
+    def map_event(kind,request):
+     if '/rollsbar-core/assets/delivery-map.html' in request.url:
+      map_network.append({'kind':kind,'url':request.url,'timing':request.timing,'failure':request.failure})
+    p.on('request',lambda r:map_event('start',r))
+    p.on('requestfinished',lambda r:map_event('finished',r))
+    p.on('requestfailed',lambda r:map_event('failed',r))
+    p.on('pageerror',lambda e:map_errors.append(str(e)))
     def guard(route):
      if is_order_submission(route.request):report['submissions'].append(route.request.url);route.abort()
      else:route.fallback()
@@ -98,7 +106,14 @@ try:
     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'unresolved address does not block callback')
     require(p.locator('.rollsbar-checkout-map').get_attribute('data-exact')=='0','low precision never places an exact customer point')
     frame=p.locator('.rollsbar-checkout-map iframe').element_handle().content_frame()
-    frame.wait_for_function('window.rollsbarMapReady===true')
+    try:
+     frame.wait_for_function('window.rollsbarMapReady===true')
+    except Exception:
+     diagnostic={'width':width,'frame_url':frame.url,'network':map_network,'errors':map_errors,
+      'current':p.locator('.rollsbar-checkout-map iframe').evaluate('e=>({connected:e.isConnected,box:e.getBoundingClientRect().toJSON(),url:e.contentDocument?.URL,ready:e.contentDocument?.readyState,mapReady:e.contentWindow?.rollsbarMapReady,loading:e.loading})')}
+     report['map_timeout']=diagnostic
+     print('MAP_TIMEOUT_DIAGNOSTIC',json.dumps(diagnostic),flush=True)
+     p.screenshot(path=str(OUT/f'map-timeout-{width}.png'));raise
     frame.wait_for_function('window.rollsbarMapState?.exact===false')
     p.wait_for_function('()=>!!document.querySelector(".rollsbar-submit-feedback")?.textContent')
     capture_native(p)
