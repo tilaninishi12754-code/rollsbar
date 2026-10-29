@@ -6,7 +6,7 @@ from gate_b_browser import BASE,add_first_simple_product,require
 from delivery_test_context import delivery_page,settle_native
 from request_guard import is_order_submission
 from playwright.sync_api import sync_playwright
-OUT=ROOT/'qa/visual-results/delivery-rules/map';OUT.mkdir(parents=True,exist_ok=True)
+OUT=Path(os.environ.get('ROLLSBAR_MAP_QA_OUT',str(ROOT/'qa/visual-results/delivery-rules/map')));OUT.mkdir(parents=True,exist_ok=True)
 SHA=os.environ['ROLLSBAR_DEPLOY_SHA'];expected=subprocess.check_output(['git','show',SHA+':wordpress/wp-content/plugins/rollsbar-core/assets/delivery-map.html'],cwd=ROOT)
 report={'status':'RUNNING','release_sha':SHA,'checks':[],'orders_created':0,'errors':[]}
 try:
@@ -28,6 +28,10 @@ try:
     require(p.locator('.rollsbar-checkout-map').get_attribute('data-exact')=='1','exact provider point displayed')
     require(frame.locator('.legend span').count()==7,'seven free-delivery minimums, no delivery fees')
     require(frame.evaluate('document.documentElement.scrollWidth<=innerWidth'),'iframe has no horizontal overflow')
+    # Address state changes before Leaflet completes its animated zoom. Capture
+    # the settled customer marker rather than an enlarged transitional SVG.
+    frame.wait_for_function('()=>!map._animatingZoom&&!(map._panAnim&&map._panAnim._inProgress)&&customer&&customer._path.getBoundingClientRect().width<=24')
+    frame.wait_for_function('()=>Array.from(document.querySelectorAll(".leaflet-tile")).every(i=>i.complete)')
     p.locator('.rollsbar-checkout-map').scroll_into_view_if_needed()
     p.screenshot(path=str(OUT/f'map-{width}.png'),animations='disabled')
     state=frame.evaluate('window.rollsbarMapState')
@@ -42,6 +46,10 @@ try:
     settle_native(p)
     frame=p.locator('.rollsbar-checkout-map iframe').element_handle().content_frame()
     frame.wait_for_function('window.rollsbarMapReady===true')
+    frame.evaluate('map.openPopup("Проверка закрытия подсказки",map.getCenter())')
+    frame.locator('#map').focus();frame.locator('#map').press('Escape')
+    frame.locator('.leaflet-popup').wait_for(state='detached')
+    require(p.url.startswith(BASE+'/checkout/'),'first Escape closes only map popup')
     frame.locator('#map').focus();frame.locator('#map').press('Escape')
     p.wait_for_url(BASE+'/',timeout=5000,wait_until='domcontentloaded')
     require(True,'Escape from focused map closes checkout without losing native cart')

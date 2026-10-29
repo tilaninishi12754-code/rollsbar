@@ -567,3 +567,17 @@ jobs:
             qa/visual-results/delivery-reference/
             qa/visual-results/storefront-ux-staging/
           retention-days: 30
+      - name: Upload lightweight screenshot review bundle (full traces retained above)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: map-review-${{ github.run_id }}
+          path: |
+            qa/visual-results/delivery-rules/**/*.png
+            qa/visual-results/delivery-rules/**/*.json
+            qa/visual-results/delivery-rules/*.txt
+            qa/visual-results/delivery-rules/*.log
+            qa/visual-results/delivery-reference/
+            qa/visual-results/storefront-ux-staging/**/*.png
+            qa/visual-results/storefront-ux-staging/**/*.json
+          retention-days: 30
