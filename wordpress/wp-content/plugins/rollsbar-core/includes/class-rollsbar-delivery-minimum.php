@@ -16,7 +16,7 @@ final class RollsBar_Delivery_Minimum {
 	}
 
 	public static function classify( array $data ): array {
-		$unknown = array( 'status' => 'unresolved', 'minimum' => null, 'message' => 'Не удалось определить условия доставки. Уточните адрес до дома или свяжитесь с нами: +7 978 688-22-88.' );
+		$unknown = array( 'status' => 'unresolved', 'minimum' => null, 'message' => 'Для этого адреса условия доставки пока не определены. Уточните доставку по телефону: +7 978 688-22-88.' );
 		if ( empty( $data['house'] ) || empty( $data['house_fias_id'] ) ) {
 			$unknown['message'] = 'Выберите точный адрес с номером дома из подсказок.';
 			return $unknown;

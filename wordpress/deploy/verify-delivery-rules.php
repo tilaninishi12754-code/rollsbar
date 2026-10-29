@@ -2,6 +2,21 @@
 /** Installed Woo contracts; fixtures never dispatch checkout or save an order. */
 if ( ! defined( 'ABSPATH' ) ) { exit( 1 ); }
 require __DIR__ . '/verify-checkout-direct-port.php';
+$cod = WC()->payment_gateways()->payment_gateways()['cod'];
+rb_direct_assert('Наличными или картой при получении' === $cod->get_title(), 'actual native COD title supports cash and card at receipt');
+rb_direct_assert('Оплатите заказ наличными или картой при получении.' === $cod->instructions, 'actual native thank-you instructions match receipt payment');
+ob_start();$cod->thankyou_page();$receipt_instructions=ob_get_clean();
+rb_direct_assert(str_contains($receipt_instructions,'наличными или картой')&&!str_contains($receipt_instructions,'при доставке заказа'), 'actual COD thank-you renderer has no delivery-only cash instruction');
+$receipt_order = new WC_Order();$receipt_order->set_payment_method('cod');
+$receipt_shipping = new WC_Order_Item_Shipping();$receipt_shipping->set_method_id('pickup_location');
+$receipt_shipping->set_total(0);
+$receipt_shipping->add_meta_data('pickup_location','Симферополь, Кечкеметская улица, 1');
+$receipt_shipping->add_meta_data('pickup_address','Кечкеметская улица, 1, Симферополь');
+$receipt_order->add_item($receipt_shipping);
+$receipt_display = $receipt_order->get_shipping_to_display();
+rb_direct_assert('Самовывоз: Симферополь, Кечкеметская улица, 1' === $receipt_display, 'actual native order shipping display has one pickup address and no collection translation');
+rb_direct_assert('Наличными или картой при получении' === $receipt_order->get_payment_method_title(), 'existing COD order title is corrected at presentation without rewriting order');
+rb_direct_assert(0 === $receipt_order->get_id() && 0 === $receipt_shipping->get_id(), 'receipt regression uses unsaved order and shipping fixtures only');
 rb_direct_assert( class_exists( 'RollsBar_Delivery_Minimum' ), 'delivery classifier loaded' );
 rb_direct_assert( ! WC_Validation::is_phone('+7','RU'), 'actual native phone validator rejects country prefix alone' );
 rb_direct_assert( WC_Validation::is_phone('+7 (978) 000-00-00','RU'), 'actual native phone validator accepts full formatted number' );

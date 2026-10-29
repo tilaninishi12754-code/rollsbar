@@ -87,6 +87,8 @@
 		layout.style.setProperty('--rb-action-top',(card.bottom-base.top+16)+'px');
 		layout.style.setProperty('--rb-action-left',(lane.left-base.left+17)+'px');
 		layout.style.setProperty('--rb-action-width',(lane.width-34)+'px');
+		var action=document.querySelector('.wc-block-checkout__actions');
+		if(action)sidebar.style.paddingBottom=(action.getBoundingClientRect().height+44)+'px';
 		if(!summaryObserver&&window.ResizeObserver){
 			summaryObserver=new ResizeObserver(positionNativeAction);
 			summaryObserver.observe(summary);summaryObserver.observe(layout);
@@ -517,9 +519,36 @@
 		decorateCheckout();
 		prepareNativeSummary();
 		positionNativeAction();
+		prepareSubmissionFeedback();
 		document.querySelectorAll('input').forEach(function(input){
 			preparePhone(input);
 			prepareAddress(input);
+		});
+	}
+
+	// Custom native validation keys have no Woo field to scroll to automatically.
+	function prepareSubmissionFeedback(){
+		var actions=document.querySelector('.wc-block-checkout__actions');
+		if(!actions)return;
+		var feedback=actions.querySelector('.rollsbar-submit-feedback');
+		if(!feedback){
+			feedback=document.createElement('div');feedback.className='rollsbar-submit-feedback';
+			feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
+			actions.prepend(feedback);
+		}
+		var message=contactPhoneError||deliveryError||'';
+		if(feedback.textContent!==message)feedback.textContent=message;
+		feedback.hidden=!message;
+		var button=actions.querySelector('.wc-block-components-checkout-place-order-button');
+		if(!button||button.dataset.rollsbarFeedback==='1')return;
+		button.dataset.rollsbarFeedback='1';
+		button.addEventListener('click',function(){
+			var selector=contactPhoneError?'input[id$="-phone"]':deliveryError?'input[id$="-address_1"]':null;
+			if(!selector)return;
+			window.setTimeout(function(){
+				var field=Array.from(document.querySelectorAll(selector)).find(function(n){return n.getClientRects().length;});
+				if(field){field.focus({preventScroll:true});field.scrollIntoView({block:'center',behavior:'instant'});}
+			},0);
 		});
 	}
 

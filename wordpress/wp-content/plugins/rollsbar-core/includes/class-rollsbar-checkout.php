@@ -19,6 +19,9 @@ final class RollsBar_Checkout {
 	private static array $contact_template_buffers = array();
 
 	public static function init(): void {
+		add_filter( 'option_woocommerce_cod_settings', array( __CLASS__, 'receipt_payment_settings' ) );
+		add_filter( 'woocommerce_order_get_payment_method_title', array( __CLASS__, 'receipt_payment_title' ), 20, 2 );
+		add_filter( 'woocommerce_order_shipping_to_display', array( __CLASS__, 'pickup_order_display' ), 20, 2 );
 		add_action( 'woocommerce_init', array( __CLASS__, 'register_additional_fields' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_checkout_assets' ) );
 		add_filter( 'woocommerce_get_country_locale', array( __CLASS__, 'field_locale' ) );
@@ -45,6 +48,29 @@ final class RollsBar_Checkout {
 			}
 			return $block;
 		} );
+	}
+
+	/** Stateful native Woo documents must load only on actual activation. */
+	public static function receipt_payment_settings( $settings ): array {
+		$settings = is_array( $settings ) ? $settings : array();
+		$settings['title'] = 'Наличными или картой при получении';
+		$settings['description'] = 'Оплатите заказ наличными или картой при получении.';
+		$settings['instructions'] = $settings['description'];
+		return $settings;
+	}
+
+	public static function receipt_payment_title( $title, $order ): string {
+		return 'cod' === $order->get_payment_method() ? 'Наличными или картой при получении' : (string) $title;
+	}
+
+	/** Presentation only: keep native order shipping, tax address and historical metadata. */
+	public static function pickup_order_display( $display, $order ): string {
+		$methods = $order->get_shipping_methods();
+		if ( 1 !== count( $methods ) ) { return (string) $display; }
+		$method = reset( $methods );
+		if ( 'pickup_location' !== $method->get_method_id() || (float) $method->get_total() > 0 ) { return (string) $display; }
+		$address = (string) ( $method->get_meta( 'pickup_location' ) ?: $method->get_meta( 'pickup_address' ) );
+		return 'Самовывоз' . ( $address ? ': ' . esc_html( $address ) : '' );
 	}
 
 	/** Stateful native Woo documents must load only on actual activation. */

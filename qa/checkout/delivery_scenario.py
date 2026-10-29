@@ -99,6 +99,13 @@ try:
     p.wait_for_function("()=>document.querySelector('input[data-rollsbar-address-resolved]')")
     p.wait_for_function('()=>wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")?.message.includes("1")')
     require('1200' in p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum").message').replace('\u00a0','').replace(' ',''),'address minimum blocks underfilled cart')
+    feedback=p.locator('.rollsbar-submit-feedback')
+    require('1 200' in feedback.inner_text().replace('\u00a0',' '),'minimum explanation repeated next to native order button')
+    p.locator('.wc-block-components-checkout-place-order-button').click()
+    p.wait_for_function('()=>document.activeElement?.id.endsWith("-address_1")')
+    require(address.evaluate('e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight}'),'blocked delivery click brings address explanation into viewport')
+    p.wait_for_function('wp.data.select("wc/store/checkout").isIdle()')
+    if LIVE:require('Наличными или картой при получении' in p.locator('.wc-block-checkout__payment-method').inner_text(),'native receipt payment copy includes cash and card')
     require(p.evaluate('wp.data.select("wc/store/checkout").getExtensionData()["rollsbar-delivery"].address_proof')!='','native checkout carries signed address proof')
     if width==1440:
      query='Симферополь Лермонтова 16'
@@ -123,6 +130,7 @@ try:
     require('Симферополь, Кечкеметская улица, 1' in p.locator('.wc-block-checkout__pickup-options').inner_text(),'exact pickup address')
     require(p.locator('.wc-block-checkout__pickup-options').bounding_box()['y']<p.locator('.wc-block-checkout__order-notes').bounding_box()['y'],'pickup address precedes comment')
     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'pickup no delivery requirement')
+    require(not p.locator('.rollsbar-submit-feedback').inner_text(),'pickup has no stale delivery blocker message')
     require(p.locator('input[value="cod"]').is_checked(),'native COD')
     modal.evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/f'pickup-{width}.png'))
     mode(p,False)

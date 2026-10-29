@@ -296,6 +296,7 @@ body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-
 	font-weight: 850;
 }
 body.woocommerce-checkout:not(.woocommerce-order-received) .wc-block-components-checkout-place-order-button:hover { background: #b91822; }
+body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-submit-feedback { margin-bottom: 12px; color: #8b3515; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
 body.woocommerce-checkout:not(.woocommerce-order-received) :is(button, a, input, textarea):focus-visible {
 	outline: 2px solid #b91822;
 	outline-offset: 3px;

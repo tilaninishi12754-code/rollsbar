@@ -295,3 +295,11 @@ Do not reopen without new evidence:
 3. `PERFORMANCE / MEDIA / CART LATENCY / CACHE` — RB-005, RB-007, RB-008.
 4. Final cross-site QA and production-readiness gate.
 5. Remaining P3 debt as explicitly scheduled.
+
+
+## RB-015 — Receipt payment/pickup copy and silent delivery validation
+
+Status: `IN PROGRESS`
+Priority: `P1`
+
+Owner screenshots 2026-10-29: native COD thank-you instructions incorrectly promise cash-only delivery, pickup receipt shows mistranslated collection label and duplicated location/address. Delivery CTA appears inactive when custom address/minimum validation is off-screen. Scope: cash/card at receipt text (no online gateway), single native pickup receipt address, visible blocker next to CTA and focus/scroll to address, preserving native pre-order enforcement. Local native five-width gate PASS including blocked-click feedback/focus; installed Woo receipt fixture and staging acceptance pending. No orders may be created by worker QA without Coordinator permission.
