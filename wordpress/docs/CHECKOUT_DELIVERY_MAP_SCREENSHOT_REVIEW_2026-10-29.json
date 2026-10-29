@@ -1,0 +1,315 @@
+{
+  "status": "VISION_PASS",
+  "release_sha": "6a44a669045dfd40491b3f37f90c6548cf2d1b85",
+  "proof_run": "40939565647",
+  "artifact": "12926243409",
+  "zip_sha256": "dc7b1ff4d2020ffc6dfc44324492cd72b71ab40aa0bddd3d08e3e50d7b3ca459",
+  "reviewed_manifest": "b22cac1f048ae8f2424227e5417d996627a50a3a711d02dcde61055dcdda67bc",
+  "method": "All checkout and storefront contact sheets viewed; stable desktop/390/320 map originals also inspected",
+  "checkout_pngs": 45,
+  "storefront_pngs": 30,
+  "pixel_equality_claimed": false,
+  "notes": "Native mode/adversarial pictures include deliberately intercepted submission failure (existing RB-017). Clean map/reference pictures confirm normal customer state. No masks or geometry tolerance changes.",
+  "files": [
+    {
+      "file": "delivery-reference/candidate-1440.png",
+      "sha256": "adacf12be669f939b2c839c64e64e58eaa3090d2da89a101e199007aae4f3af2"
+    },
+    {
+      "file": "delivery-reference/candidate-320.png",
+      "sha256": "e4458d2aca9c8beba4b901060321b9e4d538ac5b023f61bd21c07893aeb2faaa"
+    },
+    {
+      "file": "delivery-reference/candidate-390.png",
+      "sha256": "f7bdc82ab828f6c928bf010f0aaf1a0eec28af90c4cf6631e1db0e856b52a13c"
+    },
+    {
+      "file": "delivery-reference/candidate-700.png",
+      "sha256": "e25d3e924844dc7771d107511e9e69b20585cded49e59c824d98c06e13c59f5e"
+    },
+    {
+      "file": "delivery-reference/candidate-701.png",
+      "sha256": "0f38ec1f7cfaa024d3593ddbcb50f3d76b344904472721165ca968617103f521"
+    },
+    {
+      "file": "delivery-reference/diff-1440.png",
+      "sha256": "44e425a37975831e86be7a53c8cd7e055cfa3dfd75479d77dfdfa4461076e1ed"
+    },
+    {
+      "file": "delivery-reference/diff-320.png",
+      "sha256": "12ee5170506d5d614c3e99106bcff9702eabafb9bcd52e4061839f76c381bb31"
+    },
+    {
+      "file": "delivery-reference/diff-390.png",
+      "sha256": "d4bad78f6f293e6c52a399005c28ddf5b0a0183319c384244a41e336d32b6c0a"
+    },
+    {
+      "file": "delivery-reference/diff-700.png",
+      "sha256": "3f4390e2b1562a30f77fef4edad6abb1d3875768e60f5b8e6ac814a906cc84f6"
+    },
+    {
+      "file": "delivery-reference/diff-701.png",
+      "sha256": "b007ade0d5a58912f4dc46a3206b866932ae60f0b6fb3b2d527d2c788816ada5"
+    },
+    {
+      "file": "delivery-reference/reference-1440.png",
+      "sha256": "b18ce19cff33c748f4f3556ea90b342725ae64714ad5eaeaf69e82bfc53d55ec"
+    },
+    {
+      "file": "delivery-reference/reference-320.png",
+      "sha256": "b3061b21452220ad924e5b780e002143cc3d83c5a9f125c6798de8f96a8b6588"
+    },
+    {
+      "file": "delivery-reference/reference-390.png",
+      "sha256": "cf6d221aa32aeac08ac66a44da1255ab919cfb69796bea50494d793160a48409"
+    },
+    {
+      "file": "delivery-reference/reference-700.png",
+      "sha256": "98fec09bde3b14445b573dc86baf227007a8cccedcf4edd2c4aabc00187312c9"
+    },
+    {
+      "file": "delivery-reference/reference-701.png",
+      "sha256": "97a26f62a19d2bf33cd27a4e9eb95d686c82a9983d519675761ff3f247551ded"
+    },
+    {
+      "file": "delivery-rules/address-14.png",
+      "sha256": "88ac60dbbc6d79664079e997bd40568e5c92a3db02f3905a9c0581af6ff9184c"
+    },
+    {
+      "file": "delivery-rules/address-15.png",
+      "sha256": "c526b1753f368522d16ae45bbafbccd651441603d3c0891e70cda97894803c60"
+    },
+    {
+      "file": "delivery-rules/address-16.png",
+      "sha256": "3f5817f9f8f9e4bc91beb0d2f82b856c669d16db3a4b9bf0d098356d26fb4f35"
+    },
+    {
+      "file": "delivery-rules/address-17.png",
+      "sha256": "3967f1d0ac07f2d4f36b331aff61399296b8ff7b1ced8c8a4c82eeac86b67778"
+    },
+    {
+      "file": "delivery-rules/address-18.png",
+      "sha256": "bc85f37f810abc34e19b69dc6ce45f3483c768c56777d0062741626ec71b58da"
+    },
+    {
+      "file": "delivery-rules/address-19.png",
+      "sha256": "1176eddd92c434303c267d18672da6f8ccc0f1609ba9e514ee161ec04134c887"
+    },
+    {
+      "file": "delivery-rules/address-20.png",
+      "sha256": "dd7fb98b86cd8f54bb1004cce0d8da9c2b66dac20de1ca39bf045def7172a7ae"
+    },
+    {
+      "file": "delivery-rules/adversarial-320.png",
+      "sha256": "1922971ce7badc8011f67248b589b4fcb4da0616b1de8290a6ee2852bf2928e8"
+    },
+    {
+      "file": "delivery-rules/adversarial-700.png",
+      "sha256": "18fbc1e297917a9d926434527495210a2db4514a5cda5cdefbfdb1eb5a6bcb41"
+    },
+    {
+      "file": "delivery-rules/adversarial-701.png",
+      "sha256": "5f6f3dfc2569b9cc64fa69a7b6609b92469c99e334e3b45f281d981840aea955"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-1440.png",
+      "sha256": "fcc7fa0da574afde852d1379c68158fe7c94693de6bc8fd216e278e6e008ab0d"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-320.png",
+      "sha256": "5229131767bfcb9bd8e869ffaef250383b387e2619abf485f6f0d65e3374437f"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-390.png",
+      "sha256": "7100dbb52e8f67de4e0a2a461a7fcc321c993d76eca9d9edb2293c6f940b013b"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-700.png",
+      "sha256": "61a3a274d0e36f9691d4c28cf34a6938d3ed214e743511c883cf0f3b6b567849"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-701.png",
+      "sha256": "c4b6cb6d06333f81e7aaca488c99e20b9d2a31d93552ae38f0a2e2a81e5d2be4"
+    },
+    {
+      "file": "delivery-rules/delivery-1440.png",
+      "sha256": "2734f9d4c666c68e1803105b7134fa7d522ce7ba3ed19857f28032e34d951d7d"
+    },
+    {
+      "file": "delivery-rules/delivery-320.png",
+      "sha256": "4929604d887c32acbae6bf8b4929540a4ac82e79a39577df639bbea71c21f4e3"
+    },
+    {
+      "file": "delivery-rules/delivery-390.png",
+      "sha256": "a65a640ddafd8daec272aeaff78f639e2abeefeb2dc64cc3108f6937b16ab6ab"
+    },
+    {
+      "file": "delivery-rules/delivery-700.png",
+      "sha256": "322dcfc3db448ef49e13cdb45f2677f54d6653e766988354276300ca0101c25a"
+    },
+    {
+      "file": "delivery-rules/delivery-701.png",
+      "sha256": "eda4aaa34df92e01774bb1faf65919ec75763ec689b8fbfb2f663e482ab15e2e"
+    },
+    {
+      "file": "delivery-rules/map/map-1440.png",
+      "sha256": "3d3106257649bb393e57bcd00342bf4ac9289c5932616b2e979f739f6d6fecc9"
+    },
+    {
+      "file": "delivery-rules/map/map-320.png",
+      "sha256": "ce680e854d8d38f377fa85126959d523ae228c5f5c00bd720e41ef1138c0dda1"
+    },
+    {
+      "file": "delivery-rules/map/map-390.png",
+      "sha256": "198485b1f8e0b1da2d5e6766e99b28c1888a61e1be5aa1b774f6dd181c7b2663"
+    },
+    {
+      "file": "delivery-rules/map/map-700.png",
+      "sha256": "7e13e5ecd2d92ba80349edd8aeb63fd9e2ecdffc06e7b3f6cb5c73600684706e"
+    },
+    {
+      "file": "delivery-rules/map/map-701.png",
+      "sha256": "f5d6788c453e7416b00f882b5de2aedac97206398b6490a11418e1d3eac3aa62"
+    },
+    {
+      "file": "delivery-rules/pickup-1440.png",
+      "sha256": "b6eb7a4479fa7f8e7aef45c4aa37722b90807179d77bf541bc72147b2650295c"
+    },
+    {
+      "file": "delivery-rules/pickup-320.png",
+      "sha256": "925de8c029e32f81c4f08fa315bb409091a409f88bf756413fdd7c10b528025a"
+    },
+    {
+      "file": "delivery-rules/pickup-390.png",
+      "sha256": "3606f0cddb03cc8f9202f0ad0e4fb7c61bf0911d5ff8c3f0b8116fe09b54651e"
+    },
+    {
+      "file": "delivery-rules/pickup-700.png",
+      "sha256": "67c8efe15dfbc4ea23e5f51918925d5db84b2b6f1dd8e20463a19942d6b4c032"
+    },
+    {
+      "file": "delivery-rules/pickup-701.png",
+      "sha256": "3a040076cd8c9c2ddc2c42314d254ba715f52c40d9c21d871e368b431249ec45"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-1440x900-details-quantity.png",
+      "sha256": "b5ef8836ab06b4b35dfde39f585d6f36bd302d93ea4ff3543a89609a20928c9b"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-1440x900-multi-word-search.png",
+      "sha256": "c5fe9af738cceca4bdcf47c0ace5f162974f178d76e57411f743a1bfc80b04f6"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-1440x900-scrolled-controls.png",
+      "sha256": "2eb55c330a30349f93999df437054cae2cb1ef3e47536d59cae262407eda5b2b"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-320x568-details-quantity.png",
+      "sha256": "d58a9fcfde93928a4a21bfb5f9f37d97447b2727bc827493ee35328da7543f81"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-320x568-multi-word-search.png",
+      "sha256": "bf1be39e19dc4a2b37c53b9e9eef1ced1d435bfc55474af2651bf29aa4160bf3"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-320x568-scrolled-controls.png",
+      "sha256": "1a90a3f1c4e242eafe411f91b8fd992ebfb0e9014f252927e65e977f539b6644"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x844-details-quantity.png",
+      "sha256": "efa0cd595e92d3e2c6a25b9e57c9fd6b6131c12476c975d92a5d3e4f8273284b"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x844-multi-word-search.png",
+      "sha256": "e17c6af5cfa4c7adeaba3fde8506733fa03bf9c316e505ae7295544d7d66f4bf"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x844-scrolled-controls.png",
+      "sha256": "dc0b8208ff7dcaa6f3a4a926596c0399aeab7a61cbefe477fac0d70fb42b235a"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x900-details-quantity.png",
+      "sha256": "3b147401149d9ead53a0c8dec2ec2d4a6196d6feb59c333bed3e3b616cda1c5d"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x900-multi-word-search.png",
+      "sha256": "f05c5f77caec7add0f68e66d19eb7a86fa7ed94b063c8cc3a6bb50131da9a048"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x900-scrolled-controls.png",
+      "sha256": "cd8dbeea17be17b006b17944d2fba6f888e13d423322be98b3d88eb2cd03b7f1"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-430x932-details-quantity.png",
+      "sha256": "faf034728a1239c0d8689213a56660acef347c85a8bb1041cdf37e38a7073845"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-430x932-multi-word-search.png",
+      "sha256": "d89c655519c42e596a416878bd08bbf9d34aef7dd5edd2b54505204577c88b71"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-430x932-scrolled-controls.png",
+      "sha256": "7a71a68d955bd4499d8af644bc4f9bbb648d5267c6bede3c77ef463d1a7c18bf"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-1-page-0.png",
+      "sha256": "8336ae7d7206bf6cd4e21dfc92877f4d12b72ddd06d402a272e7596812ab1098"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-2-page-0.png",
+      "sha256": "fea33eb1367db2adeff0189888499b085a6beef8d6a24d9c6b01aee41d48d593"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-3-page-0.png",
+      "sha256": "cc045dc9f5beb8da33fccfccb1fa7f77dec9cf3aa96667b3ffa6f208f889b609"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-4-page-0.png",
+      "sha256": "645967a937fdc6fa205fb088a784d8250364fd14f076de8bcbe17d8a48ff587a"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-5-page-0.png",
+      "sha256": "15b19e0fb1e9baeb4ad5590fd0fe78d270cfc685d0d19b0e8e36bc987988467d"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-1440-false.png",
+      "sha256": "5c55a948adc3bfb6170cc3fb8ec1e077bdbd3daf3ee2fc0914903bea120289ca"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-1440-true.png",
+      "sha256": "bef3967fbd72e7f1b3a7518688895f6de73b71f34cbe7460833c5eedf08e5f18"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-320-false.png",
+      "sha256": "3607184e97c95684d32ec3910c20eb2023f71fd2149bef5477344323b71477c1"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-320-true.png",
+      "sha256": "213774c884e09db9056f4afbea0488f704181bbaa23914e071a4724e9c0f8e7f"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-390-false.png",
+      "sha256": "de8d7365397da956d14f8e8f11d186c6f43f45bd28da2a35ea472dd85cbc30dc"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-390-true.png",
+      "sha256": "f972565ead5409621de136fa50bf136d2360fd6279a160f9d17cb6843b6eec74"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-701-false.png",
+      "sha256": "0ba9c1f993027dcaf6299454f1ab745554e121689acf1fe59ee856f323d3547c"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-701-true.png",
+      "sha256": "1fd6d0814ae4efd492810bc9e525f1ff03357adb5db885714e81df8ff6444690"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-900-false.png",
+      "sha256": "8b742cc712f460cb86af61a6329430df2fd9a0d6b181ee48fc431fd79285384c"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-900-true.png",
+      "sha256": "00aeebc7db1c7547ef5f4b6a51e0d6ee0470868a336f673b5bbb94911c9cb169"
+    }
+  ]
+}

@@ -5,6 +5,8 @@ Status: STAGING IMPLEMENTATION — DADATA-FIRST, COURIER ENFORCEMENT STILL OFF
 
 ## Current owner override — 2026-10-29 callback requests
 
+Later owner override on the same date: restore the checkout map and use the prepared geographic draft on **staging now**, without waiting for client review. Exact table identities remain primary; exact-house qc_geo=0 may use a provisional geographic fallback, with locality footprints before city background. Existing ambiguous street splits and conflicts remain unresolved. These are informational free-delivery minimums, never tariffs or callback blockers. Map lives directly below the native address form and is hidden for pickup; phone + explicit consent remains the submission contract. Production remains forbidden. Acceptance evidence is maintained in `CHECKOUT_DELIVERY_MAP_2026-10-29.md`; earlier “no map/polygons” statements are historical where this later instruction conflicts.
+
 Current staging application `a4d5e5a68c59bb7904c36749b2dfadf828c67a22` is browser_verified (apply 40856936705, finalization 40858251322). A complete phone and explicit consent are required; name/address and minimum are not submission prerequisites. Unchecked consent is highlighted, focused and scrolled into view. DaData/FIAS minimums remain strict as information, but no longer refuse a callback request; manager confirms fulfillment. One native Woo Checkout Block/Store API/session/order/COD path remains. No polygons/map/tariffs. See `CHECKOUT_PHONE_ONLY_REQUEST_2026-10-29.md` and RB-016. Older enforcement assumptions below are historical where they conflict.
 
 ## Accepted override — 2026-10-28
