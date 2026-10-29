@@ -20,6 +20,12 @@
 	var deliveryProof='';
 	var contactPhoneError='';
 	var consentAttempted=false;
+	window.addEventListener('message',function(event){
+		if(event.origin!==location.origin||!event.data||event.data.type!=='rollsbar-map-escape')return;
+		var frame=document.querySelector('.rollsbar-checkout-map iframe');
+		var close=document.querySelector('[data-rollsbar-modal="1"] .rollsbar-legal-page__back');
+		if(frame&&event.source===frame.contentWindow&&close)close.click();
+	});
 	function nativeAddressIdle(){
 		return new Promise(function(resolve,reject){
 			var stop=function(){};

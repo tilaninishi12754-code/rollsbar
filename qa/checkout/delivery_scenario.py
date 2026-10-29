@@ -201,6 +201,13 @@ try:
      require(payload['additional_fields']['rollsbar/privacy-consent'] is True,'native privacy consent')
      for field,value in [('entrance','2'),('door-code','10'),('floor','3'),('apartment-office','4')]:require(payload['additional_fields']['rollsbar/'+field]==value,'native optional field '+field)
      report['native_presubmit']={'status':'PASS','http_sent':False,'fields':list(payload),'proof_present':True}
+    if not LIVE and width==1440:
+     settle_native(p)
+     keyboard_frame=p.locator('.rollsbar-checkout-map iframe').element_handle().content_frame()
+     keyboard_frame.wait_for_function('window.rollsbarMapReady===true')
+     keyboard_frame.locator('#map').focus();keyboard_frame.locator('#map').press('Escape')
+     p.wait_for_url(BASE+'/',wait_until='domcontentloaded')
+     require(True,'Escape in focused iframe returns from native checkout')
     if identity:identity.verify([])
     report['checks'].append({'width':width,'geometry':geometry,'status':'PASS'})
     print('PASS',width,flush=True)
