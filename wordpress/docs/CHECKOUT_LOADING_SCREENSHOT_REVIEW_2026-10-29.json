@@ -1,0 +1,314 @@
+{
+  "status": "VISION_PASS",
+  "release_sha": "fb0fb54cb4c9e4015e163f016d5dc0a8252c57df",
+  "proof_run": "40950660265",
+  "artifact": "12930594843",
+  "zip_sha256": "b4dedf1008f28087101cf4016bbd098caae32e2b6a35f22b3beacb9c2bf89e51",
+  "reviewed_manifest": "6463df18c5c45366e9bebb9c2d54eaf0ce3f5043c5e201c1f7dcafcd717721b0",
+  "method": "All nine contact sheets viewed; desktop and320 stable map originals additionally viewed",
+  "checkout_pngs": 45,
+  "storefront_pngs": 30,
+  "notes": "Synthetic failed-submit banners are existing RB-017 states from intercepted pre-submit tests, not normal customer failures. No masks or tolerances changed; immutable-source diffs include accepted field/map changes and are not pixel-equality claims. This visual/functional PASS is not a cold-latency performance PASS.",
+  "files": [
+    {
+      "file": "delivery-rules/address-14.png",
+      "sha256": "70297f5e40cc35318e537228d3158a8e627d249fe7317312e1ba3b4cee2f10e2"
+    },
+    {
+      "file": "delivery-rules/address-15.png",
+      "sha256": "3cf0c1199c5a68c999ea95b08aa1abb1d024915015eab0650c71e364f1ef521a"
+    },
+    {
+      "file": "delivery-rules/address-16.png",
+      "sha256": "32cc814b413b057b33fe161ccc5d290c2f681f0e1a6f8d1f6163b88e0491b124"
+    },
+    {
+      "file": "delivery-rules/address-17.png",
+      "sha256": "3913817986136a4dddf213ed2e1c6b3ab2f0c481e6d5378698a6c747d08ef46a"
+    },
+    {
+      "file": "delivery-rules/address-18.png",
+      "sha256": "f06ed9d178b67fd89b69a4876e6358dbc8bb56fcd35337bd2bdc26ad881d21a6"
+    },
+    {
+      "file": "delivery-rules/address-19.png",
+      "sha256": "ea9a7bab3f8494b9eebcc06280c72413eadc020ba24355b3ef9d98bc59fddb82"
+    },
+    {
+      "file": "delivery-rules/address-20.png",
+      "sha256": "6bf3610f65315ae82cf138fd6cb453e4f711202b7507ed6e690bbd6aeca66507"
+    },
+    {
+      "file": "delivery-rules/adversarial-320.png",
+      "sha256": "dd5e8f12544f12f798a58d6a881f2f0684e6c323392e8528631d5d8a43c37e3b"
+    },
+    {
+      "file": "delivery-rules/adversarial-700.png",
+      "sha256": "47ca549c5d018dc2e840ebcfea6f4728aa0373453eb7e2101513d03c85f9bdd5"
+    },
+    {
+      "file": "delivery-rules/adversarial-701.png",
+      "sha256": "3321d5992d8fcdb6e0c06cca724df9522a993f3d73836ea50e45c4e2eae775d3"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-1440.png",
+      "sha256": "b80acdff4183c1e7d79c70e2fe70dd1fbc5de1cb5756c9f763c9130e76b491d0"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-320.png",
+      "sha256": "8eca9e3e8e29893beb4e0fe24b1f74fc258bf83678c2582c0e93be353bd4131b"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-390.png",
+      "sha256": "7100dbb52e8f67de4e0a2a461a7fcc321c993d76eca9d9edb2293c6f940b013b"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-700.png",
+      "sha256": "567906e1fdac3e472c1aa77af59f73cf76b802421ac2937e1187c8c6f759320d"
+    },
+    {
+      "file": "delivery-rules/consent-feedback/consent-701.png",
+      "sha256": "5e0974fe1d9cf95d7fe6351ee87d733deeccc2fdf41821a39c9f1006c6378be5"
+    },
+    {
+      "file": "delivery-rules/delivery-1440.png",
+      "sha256": "981e69c8cd344a252ed6a14e5eae3c7ae4f2bc545acc3e2eb9d15fb0fbbb93a4"
+    },
+    {
+      "file": "delivery-rules/delivery-320.png",
+      "sha256": "2195245b216e80ac8afabae8bbaeaa5adde1d3b9890603b7f26741f73bfcc475"
+    },
+    {
+      "file": "delivery-rules/delivery-390.png",
+      "sha256": "6aacab9e7820246170ee83a91fd622e6c2b56cf73ff7121c9afc7c6b9113c929"
+    },
+    {
+      "file": "delivery-rules/delivery-700.png",
+      "sha256": "a7a1ca3a108cc222fbd0864b59522df5c0e52fb3a9fbef91428a3298b0e6bca1"
+    },
+    {
+      "file": "delivery-rules/delivery-701.png",
+      "sha256": "718124434703046827cc9bc45e5a5dc26b84a61ffea105e0f29955df9f39001f"
+    },
+    {
+      "file": "delivery-rules/map/map-1440.png",
+      "sha256": "1ad053dfc90261d5a8c1e7c2c9662cc5f9cf94e28a58efc42287d9867b73ec47"
+    },
+    {
+      "file": "delivery-rules/map/map-320.png",
+      "sha256": "3614c8e3c567e9b3d5b771644852ebc66e7c8d4d4e2a2c759ed7caca5db4c191"
+    },
+    {
+      "file": "delivery-rules/map/map-390.png",
+      "sha256": "d95027742073c31fa255e0924161df6f39b17cbcf1127ab5fb2584f270196552"
+    },
+    {
+      "file": "delivery-rules/map/map-700.png",
+      "sha256": "6046ad6f155f700d3b91db4246ccd5b4b9c8717d5cba6d5fd63b544c3f713e5c"
+    },
+    {
+      "file": "delivery-rules/map/map-701.png",
+      "sha256": "8ca37d0c7983e9b976a35e41d71078d770a53a9d73773cd17a463dd6d153ca6f"
+    },
+    {
+      "file": "delivery-rules/pickup-1440.png",
+      "sha256": "7b43545f8f5c0f0bf55bc970a68d4f23b149107ceff829e093ddd3ced43fc5e4"
+    },
+    {
+      "file": "delivery-rules/pickup-320.png",
+      "sha256": "925de8c029e32f81c4f08fa315bb409091a409f88bf756413fdd7c10b528025a"
+    },
+    {
+      "file": "delivery-rules/pickup-390.png",
+      "sha256": "3606f0cddb03cc8f9202f0ad0e4fb7c61bf0911d5ff8c3f0b8116fe09b54651e"
+    },
+    {
+      "file": "delivery-rules/pickup-700.png",
+      "sha256": "ee754cdbd762b43596462e96e168be6fbd563ea7e466057a83c31127d09542f3"
+    },
+    {
+      "file": "delivery-rules/pickup-701.png",
+      "sha256": "3a040076cd8c9c2ddc2c42314d254ba715f52c40d9c21d871e368b431249ec45"
+    },
+    {
+      "file": "delivery-reference/candidate-1440.png",
+      "sha256": "bbe6c56aa631c65d07283369807378c4ae8406d015a5f71393b56f54c3d701fc"
+    },
+    {
+      "file": "delivery-reference/candidate-320.png",
+      "sha256": "21b4d8daeb3a6822a4c817ceb6e4a923cdfe0def7b10c0a5bb08e70f1c964cad"
+    },
+    {
+      "file": "delivery-reference/candidate-390.png",
+      "sha256": "db12a07cf417eff427f6bdea65a82212218d16d36884534a008e0bc860e316fb"
+    },
+    {
+      "file": "delivery-reference/candidate-700.png",
+      "sha256": "9f8bc6fd7ddcf0e37a7361fd2750b84673d330b23f231539a40e13c0d5a9882b"
+    },
+    {
+      "file": "delivery-reference/candidate-701.png",
+      "sha256": "e9bbe9c1b9dee713d16a72c4d9215e67ae5cfc38d2b5db346d216ed05aeed180"
+    },
+    {
+      "file": "delivery-reference/diff-1440.png",
+      "sha256": "51501feee4a14e70048ac812dd41d7185ecb13523b0c752ae7d03412613087b5"
+    },
+    {
+      "file": "delivery-reference/diff-320.png",
+      "sha256": "d89fa99b39fbcf53d329882be7dff56d676d8c29a7bea18eff6452204fc4860f"
+    },
+    {
+      "file": "delivery-reference/diff-390.png",
+      "sha256": "e12004847915ba7d132981f71e37198e4c61afa4a341b2e6c714ddb8bf9d2759"
+    },
+    {
+      "file": "delivery-reference/diff-700.png",
+      "sha256": "ef3e906a127a0634332f7c993cc11292cf6f3d6d750e5d4a86131b0e4eef555a"
+    },
+    {
+      "file": "delivery-reference/diff-701.png",
+      "sha256": "d52e79d4d36696e631c4d9eb16a933ebfac135302233b7dff5ba67982b12fb1e"
+    },
+    {
+      "file": "delivery-reference/reference-1440.png",
+      "sha256": "b18ce19cff33c748f4f3556ea90b342725ae64714ad5eaeaf69e82bfc53d55ec"
+    },
+    {
+      "file": "delivery-reference/reference-320.png",
+      "sha256": "b3061b21452220ad924e5b780e002143cc3d83c5a9f125c6798de8f96a8b6588"
+    },
+    {
+      "file": "delivery-reference/reference-390.png",
+      "sha256": "cf6d221aa32aeac08ac66a44da1255ab919cfb69796bea50494d793160a48409"
+    },
+    {
+      "file": "delivery-reference/reference-700.png",
+      "sha256": "98fec09bde3b14445b573dc86baf227007a8cccedcf4edd2c4aabc00187312c9"
+    },
+    {
+      "file": "delivery-reference/reference-701.png",
+      "sha256": "97a26f62a19d2bf33cd27a4e9eb95d686c82a9983d519675761ff3f247551ded"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-1440x900-details-quantity.png",
+      "sha256": "b5ef8836ab06b4b35dfde39f585d6f36bd302d93ea4ff3543a89609a20928c9b"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-1440x900-multi-word-search.png",
+      "sha256": "c5fe9af738cceca4bdcf47c0ace5f162974f178d76e57411f743a1bfc80b04f6"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-1440x900-scrolled-controls.png",
+      "sha256": "2fcbca3ca0197f7bd7771c31b83d3e8de1ece75060706ed36b6883cea71a01b4"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-320x568-details-quantity.png",
+      "sha256": "d58a9fcfde93928a4a21bfb5f9f37d97447b2727bc827493ee35328da7543f81"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-320x568-multi-word-search.png",
+      "sha256": "ec2708df205d3fbd91cf4d9061ac9a4c167530fbe880ef599cb7f6ff29d40b13"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-320x568-scrolled-controls.png",
+      "sha256": "c061896a8cece2c7c5429a4e34bfa32b01cf6350d75dce4bac1031e17c54d378"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x844-details-quantity.png",
+      "sha256": "1f5d8929d7fe114ee0f603d5579e0f05a567449fbaa1f94e416d90bb30e43b23"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x844-multi-word-search.png",
+      "sha256": "53dc50d605fff40056ef9573a8c77c110b2154efd04d812c4f1886a438195b84"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x844-scrolled-controls.png",
+      "sha256": "019c580d4a69be4ee6ce464fdc109c4b0355c1877c6ff22a2fd3e09854fac18a"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x900-details-quantity.png",
+      "sha256": "c5a68e0467fa399ccd461d0c29ad1f4343103cec55c9c6dd26dfaf91e4df2a24"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x900-multi-word-search.png",
+      "sha256": "f2d10018b6887b87c935356cb66b7d98177d83a9953ab4573598598a5084f359"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-390x900-scrolled-controls.png",
+      "sha256": "064d169cca976965fe5a8477647462bb21c5881815abc1cd4612982fd10b5162"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-430x932-details-quantity.png",
+      "sha256": "faf034728a1239c0d8689213a56660acef347c85a8bb1041cdf37e38a7073845"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-430x932-multi-word-search.png",
+      "sha256": "d89c655519c42e596a416878bd08bbf9d34aef7dd5edd2b54505204577c88b71"
+    },
+    {
+      "file": "storefront-ux-staging/chromium-430x932-scrolled-controls.png",
+      "sha256": "7a71a68d955bd4499d8af644bc4f9bbb648d5267c6bede3c77ef463d1a7c18bf"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-1-page-0.png",
+      "sha256": "65b424bb4c8f64509aa1f514165dae624a157f719033be5fceb7cd08dcd9316e"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-2-page-0.png",
+      "sha256": "fea33eb1367db2adeff0189888499b085a6beef8d6a24d9c6b01aee41d48d593"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-3-page-0.png",
+      "sha256": "cc045dc9f5beb8da33fccfccb1fa7f77dec9cf3aa96667b3ffa6f208f889b609"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-4-page-0.png",
+      "sha256": "645967a937fdc6fa205fb088a784d8250364fd14f076de8bcbe17d8a48ff587a"
+    },
+    {
+      "file": "storefront-ux-staging/diagnostics/context-5-page-0.png",
+      "sha256": "15b19e0fb1e9baeb4ad5590fd0fe78d270cfc685d0d19b0e8e36bc987988467d"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-1440-false.png",
+      "sha256": "5c55a948adc3bfb6170cc3fb8ec1e077bdbd3daf3ee2fc0914903bea120289ca"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-1440-true.png",
+      "sha256": "bef3967fbd72e7f1b3a7518688895f6de73b71f34cbe7460833c5eedf08e5f18"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-320-false.png",
+      "sha256": "3607184e97c95684d32ec3910c20eb2023f71fd2149bef5477344323b71477c1"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-320-true.png",
+      "sha256": "213774c884e09db9056f4afbea0488f704181bbaa23914e071a4724e9c0f8e7f"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-390-false.png",
+      "sha256": "f94c1cfb90cc12435061124a051ef0276d989d965fe251e26dad5ea1514618e5"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-390-true.png",
+      "sha256": "f972565ead5409621de136fa50bf136d2360fd6279a160f9d17cb6843b6eec74"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-701-false.png",
+      "sha256": "0ba9c1f993027dcaf6299454f1ab745554e121689acf1fe59ee856f323d3547c"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-701-true.png",
+      "sha256": "1fd6d0814ae4efd492810bc9e525f1ff03357adb5db885714e81df8ff6444690"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-900-false.png",
+      "sha256": "67c98705a98d1a50d5a697ae4df9a1bd8c4ac3069204a4dea7a142dbb2ee9e36"
+    },
+    {
+      "file": "storefront-ux-staging/no-dock-900-true.png",
+      "sha256": "f8f36b65e78e64f9fcd7fc375f7cee100d71ec158d6e75edf73ef2cd54f16a15"
+    }
+  ]
+}

@@ -16,7 +16,8 @@
           "ttfb_ms": 833.1000000089407,
           "speculative_links": 51,
           "external_scripts": 66,
-          "resource_entries": 129
+          "resource_entries": 129,
+          "resource_transfer_bytes": 742169
         },
         {
           "width": 390,
@@ -25,7 +26,8 @@
           "ttfb_ms": 1622.699999988079,
           "speculative_links": 51,
           "external_scripts": 66,
-          "resource_entries": 129
+          "resource_entries": 129,
+          "resource_transfer_bytes": 742169
         }
       ]
     },
@@ -41,7 +43,8 @@
           "ttfb_ms": 1373.7999999970198,
           "speculative_links": 0,
           "external_scripts": 62,
-          "resource_entries": 74
+          "resource_entries": 74,
+          "resource_transfer_bytes": 719040
         },
         {
           "width": 390,
@@ -50,7 +53,8 @@
           "ttfb_ms": 977.9000000059605,
           "speculative_links": 0,
           "external_scripts": 62,
-          "resource_entries": 74
+          "resource_entries": 74,
+          "resource_transfer_bytes": 719040
         }
       ]
     }

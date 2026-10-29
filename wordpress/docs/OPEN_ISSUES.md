@@ -7,9 +7,13 @@ This file is the durable source of truth for unresolved / deferred RollsBar defe
 
 ## RB-019 — Checkout cold loading and redundant assets
 
-Status: VERIFY. Priority: P2. Owner-authorized narrow checkout latency investigation, 2026-10-29.
+Status: OPEN (cold latency); narrow asset cleanup **STAGING PASS**. Priority: P2. Owner-authorized checkout latency investigation, 2026-10-29.
 
-Reproduced cold cart → checkout form5.9–11.8s, HTML TTFB0.8–1.1s; script transfer dominates. Remove active-checkout speculative cart assets and the classic checkout script on the native block route. No blanket cache/session changes. Local five-width native/contract fixtures PASS; live acceptance and measured improvement pending. Full evidence: `CHECKOUT_LOADING_2026-10-29.md`. Broader RB-005/RB-007/RB-008 work remains deferred.
+Un-routed real-cache before desktop/mobile cold3.751/6.138s; after6.528/4.355s, warm0.967/0.812s. Stable cold improvement not proven. Removed checkout speculative hints and classic checkout script only on native block route; no blanket cache/session changes. Captured resources129→74, actual bytes742169→719040; do not equate entry count with download bytes. Application/markerfb0fb54, apply40950660265/finalize40952441600 PASS, backup20261029T203821Z, all75 screenshots viewed. Full evidence: `CHECKOUT_LOADING_2026-10-29.md`. Further acceptance: comparable repeated cold probes must demonstrate improvement without harming native/session/storefront contracts. Broader RB-005/RB-007/RB-008 work remains deferred.
+
+## RB-020 — Intermittent staging map readiness timeout, cause untriaged
+
+Status: OPEN. Priority: P2 diagnostic follow-up. Apply40948665799 adversarial701 timed out on iframe `rollsbarMapReady`30s, after native/provider/map5-width gates passed and adversarial320/700 passed. No failed-run state captured sufficient to establish cause. Instrumented local replay and instrumented CI40950660265 subsequently passed all three widths without timeout/tolerance changes. Native iframe request/error/current-document diagnostics now persist on future failures. No customer map defect or network cause is asserted from this single observation. Acceptance: diagnose from recorded failing-state evidence if recurrence occurs; preserve lazy-map/native lifecycle and original30s gate. This does not reopen accepted visual/modal functionality based solely on a later successful test.
 
 ## Workflow
 
@@ -34,7 +38,7 @@ Priority order unless Coordinator explicitly changes it:
 
 - Branch: `wordpress/checkout-visual-parity-2026-10-25`.
 - Checkout Final Direct Port and Storefront Interaction Stability: verified PASS on staging (2026-10-28), apply run 40583002012, finalization 40585851050.
-- Current deployed application marker: `a4d5e5a68c59bb7904c36749b2dfadf828c67a22`, receipt `browser_verified`, fresh backup `20261029T102229Z`; callback/required-consent apply 40856936705, inspected finalization 40858251322. Required customer input: phone plus explicit consent; name/address/minimum advisory. Native 5/5, addresses 20/20, adversarial 3/3, immutable geometry 5/5, storefront 5/5 and controls 5/5 PASS. All 40 modal/reference/consent images inspected. See `CHECKOUT_PHONE_ONLY_REQUEST_2026-10-29.md`; earlier acceptance is historical.
+- Current deployed application marker: `fb0fb54cb4c9e4015e163f016d5dc0a8252c57df`, receipt `browser_verified`, fresh backup `20261029T203821Z`; apply40950660265, inspected finalization40952441600. Native5/5, addresses20/20, map5/5, adversarial3/3, immutable geometry5/5, storefront5/5 and controls5/5 PASS; all45 checkout+30 storefront PNGs viewed. Phone plus explicit consent remains required; name/address/minimum advisory; map restored. Native asset cleanup accepted, cold latency remains RB-019 OPEN. See `CHECKOUT_LOADING_2026-10-29.md` and `CHECKOUT_DELIVERY_MAP_2026-10-29.md`; earlier acceptance is historical.
 - Client Media Canon `client-media-2026-10-21`: 36 canonical assets, 45 mapped product identities, 57 applied rows, 4 deferred rows preserved.
 - Catalog invariant: 118 canonical products / 13 variable parents / 26 variations + 3 hidden staging upsells = 121 published product posts.
 - Production remains forbidden without an explicit production gate and authorization.
