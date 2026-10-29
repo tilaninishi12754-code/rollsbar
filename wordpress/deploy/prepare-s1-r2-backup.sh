@@ -14,7 +14,9 @@ backup_root="$(realpath "$ROLLSBAR_BACKUP_ROOT")"
 [[ "$(wp --path="$WP_PATH" option get siteurl)" == 'https://staging.rollsbar.ru' ]]
 [[ "$(wp --path="$WP_PATH" option get blog_public)" == '0' ]]
 [[ "$(wp --path="$WP_PATH" eval 'echo wp_get_environment_type();')" == 'staging' ]]
-[[ "$(wp --path="$WP_PATH" core version)" == '7.1.3' ]]
+# Staging's independently installed patch 7.1.4 was verified read-only on 2026-10-29.
+wordpress_backup_version="$(wp --path="$WP_PATH" core version)"
+[[ "$wordpress_backup_version" == '7.1.3' || "$wordpress_backup_version" == '7.1.4' ]]
 [[ "$(wp --path="$WP_PATH" plugin get woocommerce --field=version)" == '11.1.2' ]]
 
 verify_snapshot(){
