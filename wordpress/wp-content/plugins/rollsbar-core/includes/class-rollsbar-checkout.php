@@ -24,6 +24,8 @@ final class RollsBar_Checkout {
 		add_filter( 'woocommerce_order_shipping_to_display', array( __CLASS__, 'pickup_order_display' ), 20, 2 );
 		add_action( 'woocommerce_init', array( __CLASS__, 'register_additional_fields' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_checkout_assets' ) );
+		add_filter( 'wp_resource_hints', array( __CLASS__, 'checkout_resource_hints' ), 20, 2 );
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'native_checkout_scripts' ), 100 );
 		add_filter( 'woocommerce_get_country_locale', array( __CLASS__, 'field_locale' ) );
 		add_filter( 'woocommerce_validate_phone', array( __CLASS__, 'validate_phone' ), 10, 3 );
 		add_action( 'template_redirect', array( __CLASS__, 'prepare_native_customer' ) );
@@ -334,6 +336,21 @@ final class RollsBar_Checkout {
 			) . ';',
 			'before'
 		);
+	}
+
+	/** Match Woo's native block asset policy before the theme prints its head. */
+	public static function native_checkout_scripts(): void {
+		if ( is_checkout() && ! is_order_received_page() && has_block( 'woocommerce/checkout', wc_get_page_id( 'checkout' ) ) ) {
+			// Woo's block render schedules this dequeue after the theme has already
+			// printed its head. Do it at enqueue time for the designated native page.
+			wp_dequeue_script( 'wc-checkout' );
+		}
+	}
+
+	/** The active checkout has no reason to speculate on the separate cart page. */
+	public static function checkout_resource_hints( array $urls, string $relation ): array {
+		if ( is_checkout() && ! is_order_received_page() && in_array( $relation, array( 'prefetch', 'prerender' ), true ) ) { return array(); }
+		return $urls;
 	}
 
 	/** Presentation state only: preserve the menu position when the modal closes. */
