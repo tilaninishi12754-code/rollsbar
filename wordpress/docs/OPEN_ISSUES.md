@@ -7,7 +7,7 @@ This file is the durable source of truth for unresolved / deferred RollsBar defe
 
 ## RB-026 — Client remarks follow-up for pizza choices navigation and delivery presentation
 
-Status: IN PROGRESS — owner authorized 2026-10-30. Visible native pizza choices, shared internal menu, truthful Hit-menu card and shared homepage checkout map/conditions. Existing checkout close path exposed as text return. No new promotions/tariffs/catalog changes. Staging acceptance pending; see `CLIENT_UX_REMARKS_2026-10-30.md`. RB-025 latency separate OPEN; production forbidden.
+Status: DONE — staging accepted 2026-10-31 Moscow. Visible native pizza choices, shared internal menu, truthful Hit-menu card and shared homepage checkout map/conditions; checkout close path exposed as text return. Application/marker cb0cc321cc7cf0cfa1de231955b1a16a2b22bb2a, backup20261030T210528Z; apply41128215275/finalize41131370663 SUCCESS, browser_verified. Native5/policy2/fulfillment2/clientUX5/provider20/map5/adversarial3/reference5/storefront5/controls5/stability6 PASS. All110 artifact+12 supplementary images inspected. Catalog/media preserved, no new promotions/tariffs/zone boundaries. Report `CLIENT_UX_REMARKS_2026-10-30.md` and JSON. RB-025 latency separate OPEN; no submitted orders or production access/mutation.
 
 ## RB-024 — Cold native cart minimum, nearest-area coverage and qualified feedback
 

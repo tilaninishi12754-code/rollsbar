@@ -1,0 +1,371 @@
+{
+  "status": "STAGING_PASS",
+  "application_sha": "cb0cc321cc7cf0cfa1de231955b1a16a2b22bb2a",
+  "marker": "cb0cc321cc7cf0cfa1de231955b1a16a2b22bb2a",
+  "receipt_phase": "browser_verified",
+  "apply_run": 41128215275,
+  "finalize_run": 41131370663,
+  "backup": "20261030T210528Z",
+  "artifact": {
+    "run": "41128215275",
+    "id": 13012028690,
+    "zip_sha256": "c0cbdace208b7d0f0032cb741992af038acde173e75ef6a3680be87bedf54d5c",
+    "verified": true,
+    "files": 146
+  },
+  "reviewed_manifest": "1cc6b3a0a146de3068c5900859620dbd4f7e5c71d8c8fc07483dd52508487b86",
+  "gates": [
+    {
+      "file": "delivery-rules/evidence.json",
+      "status": "AUTOMATED_PASS_AWAITING_SCREENSHOT_REVIEW",
+      "cases": 5
+    },
+    {
+      "file": "checkout-policy/evidence.json",
+      "status": "PASS",
+      "cases": 2
+    },
+    {
+      "file": "fulfillment/evidence.json",
+      "status": "PASS",
+      "cases": 2
+    },
+    {
+      "file": "client-ux/evidence.json",
+      "status": "PASS",
+      "cases": 5
+    },
+    {
+      "file": "delivery-rules/address-evidence.json",
+      "status": "PASS",
+      "cases": 20
+    },
+    {
+      "file": "delivery-rules/map/evidence.json",
+      "status": "PASS",
+      "cases": 5
+    },
+    {
+      "file": "delivery-rules/adversarial-evidence.json",
+      "status": "PASS",
+      "cases": 3
+    },
+    {
+      "file": "delivery-reference/evidence.json",
+      "status": "MODAL_CHROME_PASS_CONTENT_CHANGED_BY_OWNER",
+      "cases": 5
+    },
+    {
+      "file": "storefront-ux-staging/original-browser.json",
+      "status": "PASS",
+      "cases": 5
+    },
+    {
+      "file": "storefront-ux-staging/browser.json",
+      "status": "PASS",
+      "cases": 5
+    },
+    {
+      "file": "storefront-ux-staging/interaction/browser.json",
+      "status": "PASS",
+      "cases": 6
+    }
+  ],
+  "supplemental_navigation": {
+    "status": "PASS",
+    "application_sha": "cb0cc321cc7cf0cfa1de231955b1a16a2b22bb2a",
+    "checks": [
+      {
+        "width": 1440,
+        "internal_contacts_navigation": "PASS",
+        "home_delivery_navigation": "PASS",
+        "headings_clear_sticky_header": "PASS",
+        "css_version": "c2098258c5b93901"
+      },
+      {
+        "width": 701,
+        "internal_contacts_navigation": "PASS",
+        "home_delivery_navigation": "PASS",
+        "headings_clear_sticky_header": "PASS",
+        "css_version": "c2098258c5b93901"
+      },
+      {
+        "width": 700,
+        "internal_contacts_navigation": "PASS",
+        "home_delivery_navigation": "PASS",
+        "headings_clear_sticky_header": "PASS",
+        "css_version": "c2098258c5b93901"
+      },
+      {
+        "width": 390,
+        "internal_contacts_navigation": "PASS",
+        "home_delivery_navigation": "PASS",
+        "headings_clear_sticky_header": "PASS",
+        "css_version": "c2098258c5b93901"
+      },
+      {
+        "width": 320,
+        "internal_contacts_navigation": "PASS",
+        "home_delivery_navigation": "PASS",
+        "headings_clear_sticky_header": "PASS",
+        "css_version": "c2098258c5b93901"
+      }
+    ],
+    "submitted_orders": 0
+  },
+  "screenshots_inspected": {
+    "checkout-policy/policy-1440.png": "42ff31bb7350ee4294cba6fbd1e4f697645cd01704f2e29cccc3184625ced0b7",
+    "checkout-policy/policy-390.png": "a5fdcf1933b9baaa06ae701847fdce519e0900a9bb8f98176205076f32dc09f2",
+    "client-ux/delivery-1440.png": "53dacd2a20969d130a5d296b61676f3be3510a560ed93d64a121dbffc8629523",
+    "client-ux/delivery-320.png": "aea58d12ba8d824eeb3a5dd505c5f4bba9a7a9fb515696cfd46fcb674e5c2201",
+    "client-ux/delivery-390.png": "d4597c3efd6486ac3467f8f8a9fea0f84d02b90fff93566e3082ce71c92be0a6",
+    "client-ux/delivery-700.png": "e755d6680f507b0ea3ad44a71a5630387e7fa82d64cef798b093576f48ad904f",
+    "client-ux/delivery-701.png": "15d5862a49fb2f35ff38ce124a5e4d29496e7f84111119e029e60c8dbc76cda9",
+    "client-ux/menu-1440.png": "e45822b39e11364958ef249633ab7f7502c177dc87380250c829f26e6b1e6f7d",
+    "client-ux/menu-320.png": "d58c046df94dc427f9d8e4a663df8486e27968ffacf76230bd22bc05fbf6c21d",
+    "client-ux/menu-390.png": "ea39fc2f959ae399b2fa5576e21640f4b370d59e3436ece19c0ea49595ce6e20",
+    "client-ux/menu-700.png": "59ac5992c3d21c7df55498fb7f42d8d8ccdb546c30dcffa79108b6f1e7db7884",
+    "client-ux/menu-701.png": "8b573d846a117cb46db79b78b07defc44334380416a00a048f30df8e91b80e6b",
+    "client-ux/pizza-1440.png": "b922f121da7b81f8b64f4bfaafc4fc4ed723c821661504fc91002da6c121ff0f",
+    "client-ux/pizza-320.png": "7377300455384b3a66517c5e8887492c2f9de724d6f5dd500ab840ee59c3dfae",
+    "client-ux/pizza-390.png": "86f9817b8d98eaa5a48da837e2db6d5a8529467c67e2ffe6653122fb5118b5c0",
+    "client-ux/pizza-700.png": "c357776dda84960abf805dd4a1d65c0a8acef69020f76055f9da8b651788de12",
+    "client-ux/pizza-701.png": "07672809099f2c5ceba33765063106d797615bde9e493d7d1ccc23cc43eabea5",
+    "delivery-reference/candidate-1440.png": "6c24d763a6839f5529aacf115fa19511d8c24e735cb9cae3807ba28bd010aba7",
+    "delivery-reference/candidate-320.png": "d0c1ca11160da27e962a2880e5e8fd26aa44a0ea87167a66d3c9aa20ea501b34",
+    "delivery-reference/candidate-390.png": "1a4937bf42ebe8ec255cd6157bfe6ebc06949e15c3b9ca06aac83f2433164fe9",
+    "delivery-reference/candidate-700.png": "b0cf2af6bdb3e6950a0de15752b024abc1ff188a91334d5f1d37a14a5470344d",
+    "delivery-reference/candidate-701.png": "dbe1f9126bf530a72e317c1a3b8da57469990ec9b690d976b1289711f9394d57",
+    "delivery-reference/diff-1440.png": "75d9b8de885870a67476f47564dfad5319e8527fad44b3f008535984c995b67d",
+    "delivery-reference/diff-320.png": "159f4171fcc7087fe71be5fe6de890241a2a83fac18bc97d565c9c5ba23b4be4",
+    "delivery-reference/diff-390.png": "a10c8fc3c584dd652016b2d9fe781c3a9d065f3f4cd856f1f4eb4fe84211bb8b",
+    "delivery-reference/diff-700.png": "8f9a2d853b5a6f3350655ba893aab3bd5ef1959efa99bffad1f7f711f0cba343",
+    "delivery-reference/diff-701.png": "3a8ba350c91b86ab3caa40ca23351432762d8cdd12ae5273a7c2437f53a58a4f",
+    "delivery-reference/reference-1440.png": "b18ce19cff33c748f4f3556ea90b342725ae64714ad5eaeaf69e82bfc53d55ec",
+    "delivery-reference/reference-320.png": "b3061b21452220ad924e5b780e002143cc3d83c5a9f125c6798de8f96a8b6588",
+    "delivery-reference/reference-390.png": "cf6d221aa32aeac08ac66a44da1255ab919cfb69796bea50494d793160a48409",
+    "delivery-reference/reference-700.png": "98fec09bde3b14445b573dc86baf227007a8cccedcf4edd2c4aabc00187312c9",
+    "delivery-reference/reference-701.png": "97a26f62a19d2bf33cd27a4e9eb95d686c82a9983d519675761ff3f247551ded",
+    "delivery-rules/address-14.png": "ccbd19b82411b328d6af816c1ae8060ae99647628053c0a6eda32dd961e316ff",
+    "delivery-rules/address-15.png": "e9a90ea2421aebd0a614d34a74165e602a1be97b15ff4d4b82fa99c7c388e87f",
+    "delivery-rules/address-16.png": "809ce096d7019eeeb956bb733f3759842de61ebebb089ddf743f208e28bbb1ca",
+    "delivery-rules/address-17.png": "640d15fbd61909b004c182746536943f7838678c4dbd206a8818f9c64627a948",
+    "delivery-rules/address-18.png": "7f58b8070463ed210b624c9744419ae18631cdcd93a3baabcd65c980afbab956",
+    "delivery-rules/address-19.png": "97a3b3ae4dd8bfbeb5cf40c12a763752649078c846c99c768db8f8cb3f8bfeca",
+    "delivery-rules/address-20.png": "505fbcce2e51b9ce61fcd7f983513d60919566e36d8e1187176aa6de1a6483ef",
+    "delivery-rules/adversarial-320.png": "0dc73ca20b5dfe12b43bbad1d3ce5c5218a07f6f74951cdf3abcc821c9378817",
+    "delivery-rules/adversarial-700.png": "978b0e4d93a7eee3c450a9c62018428beac9d4a996743e6bb7c76ca96ea1edaf",
+    "delivery-rules/adversarial-701.png": "c14fd4e694ec7d54d19c0e64ba465129ab584e2a69d871bd44e9691daf1f62c4",
+    "delivery-rules/consent-feedback/consent-1440.png": "1928046d3723cbbca72a37f1b9533abeb0ae379f64413746268931ad5525ce00",
+    "delivery-rules/consent-feedback/consent-320.png": "6d75cac03621fad942a398c66f84a046eb235bf2184d8a3c729830fe9cdb6ab5",
+    "delivery-rules/consent-feedback/consent-390.png": "f97a0a3ee1c790fc0f53b7459cc80b668dc3fb5303aac7689f3d75ee49c3afd5",
+    "delivery-rules/consent-feedback/consent-700.png": "b72fa3d8f67797dd0c5452945f1a6bd978607a93abb05e8776622966e0c5c66d",
+    "delivery-rules/consent-feedback/consent-701.png": "c046b41351c2529222bbc901b67127eefdb7723c0a75642d2dd3daba27dd9bdd",
+    "delivery-rules/delivery-1440.png": "cfc402c63344f4e7f5e8a0ad7f76b67a7ce8bd4796820c7663779935cdeca804",
+    "delivery-rules/delivery-320.png": "c164e4db6051ed7c5bc07647083e22caf854047d9eb8c8c25416405595f1c1be",
+    "delivery-rules/delivery-390.png": "52af632d94b907d6028ab3fa1fb5f23a0d9506a11152e8af76d89adf8fbb2853",
+    "delivery-rules/delivery-700.png": "a0695caa0ecfa48654914747487951a6ad4d41f9ffebc79f986a7d0c6815a6e6",
+    "delivery-rules/delivery-701.png": "7f668ccdb8403f95858f9ae715162b1db0bc53c7ebb022f72c0c1b0cb350fb8a",
+    "delivery-rules/map/map-1440.png": "d766ca870ef09e867433349840dbef518e872a31a8d3cb66f26a8f34cec2a5e0",
+    "delivery-rules/map/map-320.png": "8b7337ab25108f1d2bdcccd5dfa919b21df043b0c5ad23596ad39b451dd26e30",
+    "delivery-rules/map/map-390.png": "796f810ed7b9c112b9b09437e7e91917fff18976f19b8e7395f052d8c8ac6df9",
+    "delivery-rules/map/map-700.png": "ed68bdf13ce36a216eb6092ea6e8ee273eb17c878f3ce06871ac44079ab002f1",
+    "delivery-rules/map/map-701.png": "7202a0b2d0e860d9b7bdc1abf891437ff6732c5b8f5cba11cfc79b351fda2d3d",
+    "delivery-rules/pickup-1440.png": "263b808da7d416c9383cfd71b2eb2d8b99c700fa7aa5e501f23906fbb322f070",
+    "delivery-rules/pickup-320.png": "93711584f1a7394966ac857cc389d91437365b32c8a15c563d277b235aed1461",
+    "delivery-rules/pickup-390.png": "22519df10c6620438707aa89fe5934bcb41a308c2aa8fbf4f1f242a6acf5875a",
+    "delivery-rules/pickup-700.png": "afb0ad5610a934bb444924c7d74efa7a79f1128cfa6cb7365196f7f635a3c480",
+    "delivery-rules/pickup-701.png": "ed4001b9d111187c4b3e130ebaec42154aac1448ca490ae1945644f4db71c320",
+    "fulfillment/local-address-1440.png": "05a5c05b5708997ff85474968069f3929c32387f58213da2d457f108e2bfc9dc",
+    "fulfillment/local-address-390.png": "c5d48f1f67170a046b7495258cdc930c90530afedffce838c230859b336512a7",
+    "fulfillment/qualified-1440.png": "645e0966869e0fd1a3a6b881da21560925c3d060a0cbf213c7c95bfcfdca0767",
+    "fulfillment/qualified-390.png": "ad4793ae65a89cbedb77804f010c16a2b3fa09cf6d4ed7822a5743110a15308c",
+    "storefront-ux-staging/chromium-1440x900-details-quantity.png": "b5ef8836ab06b4b35dfde39f585d6f36bd302d93ea4ff3543a89609a20928c9b",
+    "storefront-ux-staging/chromium-1440x900-multi-word-search.png": "c5fe9af738cceca4bdcf47c0ace5f162974f178d76e57411f743a1bfc80b04f6",
+    "storefront-ux-staging/chromium-1440x900-scrolled-controls.png": "2eb55c330a30349f93999df437054cae2cb1ef3e47536d59cae262407eda5b2b",
+    "storefront-ux-staging/chromium-320x568-details-quantity.png": "f714a99e11d8e624cc4eac5944338a46b668e2bf575bfb144869ed9eaabb3ad7",
+    "storefront-ux-staging/chromium-320x568-multi-word-search.png": "a5aa68e805c77aa1233dce4a381fe3fd997f0564b410189f3d9a1abe1feb8261",
+    "storefront-ux-staging/chromium-320x568-scrolled-controls.png": "c061896a8cece2c7c5429a4e34bfa32b01cf6350d75dce4bac1031e17c54d378",
+    "storefront-ux-staging/chromium-390x844-details-quantity.png": "efa0cd595e92d3e2c6a25b9e57c9fd6b6131c12476c975d92a5d3e4f8273284b",
+    "storefront-ux-staging/chromium-390x844-multi-word-search.png": "53dc50d605fff40056ef9573a8c77c110b2154efd04d812c4f1886a438195b84",
+    "storefront-ux-staging/chromium-390x844-scrolled-controls.png": "019c580d4a69be4ee6ce464fdc109c4b0355c1877c6ff22a2fd3e09854fac18a",
+    "storefront-ux-staging/chromium-390x900-details-quantity.png": "575a3aef1708da489d5963741fec7f73c6eed62cfc7644db8537edc5a5adc31a",
+    "storefront-ux-staging/chromium-390x900-multi-word-search.png": "f05c5f77caec7add0f68e66d19eb7a86fa7ed94b063c8cc3a6bb50131da9a048",
+    "storefront-ux-staging/chromium-390x900-scrolled-controls.png": "064d169cca976965fe5a8477647462bb21c5881815abc1cd4612982fd10b5162",
+    "storefront-ux-staging/chromium-430x932-details-quantity.png": "faf034728a1239c0d8689213a56660acef347c85a8bb1041cdf37e38a7073845",
+    "storefront-ux-staging/chromium-430x932-multi-word-search.png": "d89c655519c42e596a416878bd08bbf9d34aef7dd5edd2b54505204577c88b71",
+    "storefront-ux-staging/chromium-430x932-scrolled-controls.png": "7a71a68d955bd4499d8af644bc4f9bbb648d5267c6bede3c77ef463d1a7c18bf",
+    "storefront-ux-staging/diagnostics/context-1-page-0.png": "41cb260539a62ff9c9c1eb1e6eaf31319ca69d1b33432202072f0c2b8c5f4556",
+    "storefront-ux-staging/diagnostics/context-2-page-0.png": "f6e291b08e07795a5061b0df88bfd783e7d02d38095a0e41a8e7b8da07fb58d0",
+    "storefront-ux-staging/diagnostics/context-3-page-0.png": "cf8b13fcda2770245ddeb4a1dd88f6febe7c01f2cb0eccf8bba3ac8708bc6e74",
+    "storefront-ux-staging/diagnostics/context-4-page-0.png": "9c393f346756515b5e9d3532a06be4e84df89cc0faa2221ecc925b8a37590c56",
+    "storefront-ux-staging/diagnostics/context-5-page-0.png": "72f385d5df066c0e569096f82291c5ac4dfd651555eb75e49f3667126abf37de",
+    "storefront-ux-staging/diagnostics/context-6-page-0.png": "41b3757bcc8581bc717663ba99945473b12ffd686200fd9631809352e585eec4",
+    "storefront-ux-staging/interaction/chromium-1440-false.png": "5c55a948adc3bfb6170cc3fb8ec1e077bdbd3daf3ee2fc0914903bea120289ca",
+    "storefront-ux-staging/interaction/chromium-1440-true.png": "1f21585c29e6325c7df86e437f13115fbd18b94d26d0a16cbc8a5b8a1798e4f1",
+    "storefront-ux-staging/interaction/chromium-320-false.png": "1edeecabc9d5eb53409374d2dd9e6809e5a491f7464343978a489c5b643e57f0",
+    "storefront-ux-staging/interaction/chromium-320-true.png": "9bd93f75957e8ff1015350f5ced463b828869ef96ab31a54c66e5553a97bae5e",
+    "storefront-ux-staging/interaction/chromium-390-false.png": "a9cdac04e1d150c6df39ba8b1eb437516ed6b8f6a765fcf42be504abc1ca044c",
+    "storefront-ux-staging/interaction/chromium-390-pending.png": "8904b15b4a961f85e9c478d984b1bc78ebec708fb8d2a121c1d35ca5741068df",
+    "storefront-ux-staging/interaction/chromium-390-true.png": "d452fc5411671e26d3ef2ac173cc76db8220eb9f98c8ac0d0a85dc7a04b78afd",
+    "storefront-ux-staging/interaction/chromium-430-false.png": "e06c0ad6e1f13beb1edf0a0395835c41309988170d80e28333f428584cec5bd1",
+    "storefront-ux-staging/interaction/chromium-430-true.png": "6794f1298806c70dd08ac48083c4021d85692d2aed3f0c5a9802765d21f51939",
+    "storefront-ux-staging/interaction/chromium-701-false.png": "0ba9c1f993027dcaf6299454f1ab745554e121689acf1fe59ee856f323d3547c",
+    "storefront-ux-staging/interaction/chromium-701-true.png": "d6e14ec33beefaa80e9b28bcb75ce86747f7f4fa199989c55588a0d33b38230c",
+    "storefront-ux-staging/interaction/chromium-900-false.png": "8b742cc712f460cb86af61a6329430df2fd9a0d6b181ee48fc431fd79285384c",
+    "storefront-ux-staging/interaction/chromium-900-true.png": "03707673496f5b6a08ed046d9a9c11498ac6eb01b6baa002249ebb84cf6f30ba",
+    "storefront-ux-staging/no-dock-1440-false.png": "5c55a948adc3bfb6170cc3fb8ec1e077bdbd3daf3ee2fc0914903bea120289ca",
+    "storefront-ux-staging/no-dock-1440-true.png": "bef3967fbd72e7f1b3a7518688895f6de73b71f34cbe7460833c5eedf08e5f18",
+    "storefront-ux-staging/no-dock-320-false.png": "3607184e97c95684d32ec3910c20eb2023f71fd2149bef5477344323b71477c1",
+    "storefront-ux-staging/no-dock-320-true.png": "213774c884e09db9056f4afbea0488f704181bbaa23914e071a4724e9c0f8e7f",
+    "storefront-ux-staging/no-dock-390-false.png": "f94c1cfb90cc12435061124a051ef0276d989d965fe251e26dad5ea1514618e5",
+    "storefront-ux-staging/no-dock-390-true.png": "f972565ead5409621de136fa50bf136d2360fd6279a160f9d17cb6843b6eec74",
+    "storefront-ux-staging/no-dock-701-false.png": "0ba9c1f993027dcaf6299454f1ab745554e121689acf1fe59ee856f323d3547c",
+    "storefront-ux-staging/no-dock-701-true.png": "1fd6d0814ae4efd492810bc9e525f1ff03357adb5db885714e81df8ff6444690",
+    "storefront-ux-staging/no-dock-900-false.png": "8b742cc712f460cb86af61a6329430df2fd9a0d6b181ee48fc431fd79285384c",
+    "storefront-ux-staging/no-dock-900-true.png": "2669967f38d23bc11ab44f594b43c9902e345eeaa54c1c122a5d6b1c49e39575"
+  },
+  "supplemental_screenshots_inspected": {
+    "delivery-anchor-1440.png": "c1053bd904ced956ce80ee854cfbb6a5e470455880ecdf0da9bec6d60c14f8fe",
+    "delivery-anchor-320.png": "d33356b3f773db9d98ea09b81680184368b514b50969759684b9db549dfc1f0f",
+    "delivery-anchor-390.png": "690e6e642a2929517e197d613e01de2d7752cd2d0d2fdb4bd0ec4ea7c1242d0b",
+    "delivery-anchor-700.png": "3be18bc0d26cf8214468d14793c333639c2c535b8ecd3cf122ee6cea981c9a57",
+    "delivery-anchor-701.png": "29dd79f3c5152b2c8008f2a8c4ba8f5b304cb2bcd0c79fa4b4271dfe1d974bd5"
+  },
+  "settled_supplemental": {
+    "client-pizza-settled": {
+      "proof": {
+        "status": "PASS",
+        "release_sha": "cb0cc321cc7cf0cfa1de231955b1a16a2b22bb2a",
+        "checks": [
+          {
+            "width": 1440,
+            "selected_size": 50,
+            "actual_price_rubles": 890,
+            "native_add_enabled": true,
+            "status": "PASS"
+          },
+          {
+            "width": 701,
+            "selected_size": 50,
+            "actual_price_rubles": 890,
+            "native_add_enabled": true,
+            "status": "PASS"
+          },
+          {
+            "width": 700,
+            "selected_size": 50,
+            "actual_price_rubles": 890,
+            "native_add_enabled": true,
+            "status": "PASS"
+          },
+          {
+            "width": 390,
+            "selected_size": 50,
+            "actual_price_rubles": 890,
+            "native_add_enabled": true,
+            "status": "PASS"
+          },
+          {
+            "width": 320,
+            "selected_size": 50,
+            "actual_price_rubles": 890,
+            "native_add_enabled": true,
+            "status": "PASS"
+          }
+        ],
+        "submitted_orders": 0
+      },
+      "images_inspected": {
+        "pizza-ready-1440.png": "b6d185ada39036efa7b2748d340a511e565094da19d70822c63c196362dd3303",
+        "pizza-ready-320.png": "a3c88a7c7e8032256c8c2b798c78e7bd2209bf0ec96756066fad772c8c1311dd",
+        "pizza-ready-390.png": "c8720efe9baf0be00c8b686e663c5203bf3b66e27bea8e7a70dea715a02c882d",
+        "pizza-ready-700.png": "e8aaa568777a9eee3528be74cafa2019fccdb47b1b813200edd3ec6ce1482d97",
+        "pizza-ready-701.png": "032e92e5d70204fc85c3b9665d9385c183efb2a7f37a3aa911806442c72ed777"
+      }
+    },
+    "client-fulfillment-settled": {
+      "proof": {
+        "status": "PASS",
+        "release_sha": "cb0cc321cc7cf0cfa1de231955b1a16a2b22bb2a",
+        "checks": [
+          {
+            "width": 1440,
+            "status": "PASS",
+            "cart_rubles": 4200,
+            "minimum": 2500,
+            "molodezhnaya": [
+              {
+                "display": "г Симферополь, ул Молодежная, д 1",
+                "qc_geo": 2,
+                "decision": {
+                  "status": "unresolved",
+                  "minimum": null,
+                  "message": "Предварительный минимум для бесплатной доставки — 1 200 ₽. Отправьте заявку — условия уточнит менеджер.",
+                  "estimate_minimum": 1200
+                }
+              },
+              {
+                "display": "г Симферополь, ул Молодежная, д 2",
+                "qc_geo": 2,
+                "decision": {
+                  "status": "unresolved",
+                  "minimum": null,
+                  "message": "Предварительный минимум для бесплатной доставки — 1 200 ₽. Отправьте заявку — условия уточнит менеджер.",
+                  "estimate_minimum": 1200
+                }
+              },
+              {
+                "display": "г Симферополь, ул Молодежная, д 5",
+                "qc_geo": 2,
+                "decision": {
+                  "status": "unresolved",
+                  "minimum": null,
+                  "message": "Предварительный минимум для бесплатной доставки — 1 200 ₽. Отправьте заявку — условия уточнит менеджер.",
+                  "estimate_minimum": 1200
+                }
+              }
+            ]
+          }
+        ],
+        "orders_created": 0
+      },
+      "images_inspected": {
+        "local-address-1440.png": "9c18c25fb94cd06d0813c8d7772aa26f2160ea0873c21779a182e5f1e3be974a",
+        "qualified-1440.png": "573d593cd1e867dfa22128ead82e0357aaa275d2825f8f316abeb0ea5fc2ac71"
+      }
+    }
+  },
+  "local_storefront": {
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "cases": 10,
+    "status": "PASS"
+  },
+  "local_interaction_stability": {
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "cases": 12,
+    "status": "PASS"
+  },
+  "changed_app_files": 9,
+  "cumulative_explicit_deploy_scope": 19,
+  "new_discounts_or_tariffs": false,
+  "map_data_changed": false,
+  "catalog_media_changed": false,
+  "submitted_orders": 0,
+  "production_access": false,
+  "production_mutation": false,
+  "homepage_latency": "RB-025 remains OPEN; no speed improvement claimed",
+  "vision_notes": [
+    "All110 exact-release artifact PNGs inspected through contact sheets and full-size critical originals.",
+    "All5 supplemental navigation,5 settled pizza and2 settled checkout screenshots inspected. Headings clear sticky header, native add buttons enabled with selected price,420 and4200 totals rendered without loading skeleton.",
+    "Pizza sizes/prices, selected state, mobile/desktop layout, shared menu and linked OpenStreetMap attribution visually verified.",
+    "Immutable checkout modal chrome/backdrop preserved; new return link is owner-authorized content.",
+    "No masks/baselines/tolerances weakened. Expected no-order middleware validation notices in functional fixtures are not actual submitted-order failures."
+  ]
+}
