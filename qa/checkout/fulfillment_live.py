@@ -38,7 +38,15 @@ try:
       require(value['delivery']['status']=='resolved' and value['delivery']['minimum'] in [1200,1500,2000,2500,3000,3500,4000],'exact Molodezhnaya house receives an existing zone minimum')
       break
      require(value['delivery']['minimum'] is None,'imprecise Molodezhnaya coordinate remains manager callback')
+     require(value['delivery'].get('estimate_minimum') in [1200,1500,2000,2500,3000,3500,4000],'Molodezhnaya gets explicit nonblocking estimate')
+     require('Предварительный минимум' in p.locator('#shipping-address_1').locator('..').inner_text(),'estimate and manager qualification visible beside address')
+    if youth[-1]['qc_geo']!=0:
+     p.evaluate('async()=>{const s=wp.data.select("wc/store/cart");await wp.data.dispatch("wc/store/cart").changeCartItemQuantity(s.getCartData().items[0].key,1)}');settle_native(p)
+     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'420 below preliminary minimum can still request manager callback')
+     p.reload(wait_until='domcontentloaded');p.locator('#shipping-address_1').wait_for();settle_native(p)
+     require('Предварительный минимум' in p.locator('#shipping-address_1').locator('..').inner_text(),'signed preliminary estimate survives ordinary reload')
     frame=p.locator('.rollsbar-checkout-map iframe').element_handle().content_frame();frame.wait_for_function('window.rollsbarMapReady===true')
+    if youth[-1]['qc_geo']!=0:require(frame.evaluate('window.rollsbarMapState?.exact') is False,'preliminary street estimate never places an exact house marker')
     require(frame.locator('.leaflet-control-attribution a[href*="leafletjs"]').count()==0,'Leaflet prefix/flag removed through supported API')
     require(frame.locator('.leaflet-control-attribution a[href*="openstreetmap.org/copyright"]').is_visible(),'OpenStreetMap attribution preserved')
     p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(out/f'local-address-{width}.png'),animations='disabled')

@@ -18,6 +18,7 @@ final class RollsBar_Native_Delivery_Method extends WC_Shipping_Method {
 		$label = 'Доставка — условия уточнит менеджер';
 		if ( 'resolved' === $decision['status'] ) { $label = 'Бесплатная доставка'; }
 		elseif ( 'below_minimum' === $decision['status'] ) { $label = 'Доставка от ' . number_format( $decision['minimum'], 0, '.', ' ' ) . ' ₽'; }
+		elseif ( ! empty( $decision['estimate_minimum'] ) ) { $label = 'Доставка — предварительно от ' . number_format( $decision['estimate_minimum'], 0, '.', ' ' ) . ' ₽, условия уточнит менеджер'; }
 		$this->add_rate( array( 'id' => $this->id, 'label' => $label, 'cost' => 0, 'taxes' => false, 'package' => $package ) );
 	}
 }

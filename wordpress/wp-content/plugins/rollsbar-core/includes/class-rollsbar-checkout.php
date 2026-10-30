@@ -385,7 +385,7 @@ final class RollsBar_Checkout {
 		$proof = (string) WC()->session->get( 'rollsbar_delivery_address_proof', '' );
 		$address = WC()->customer->get_shipping_address_1();
 		$decision = RollsBar_Delivery_Minimum::verify( $proof, $address, 1000000000 );
-		if ( null === $decision['minimum'] ) { return null; }
+		if ( null === $decision['minimum'] && empty( $decision['estimate_minimum'] ) ) { return null; }
 		$data = json_decode( (string) base64_decode( explode( '.', $proof )[0], true ), true )['data'];
 		return array( 'display' => $address, 'delivery' => $decision, 'address_proof' => $proof, 'qc_geo' => $data['qc_geo'] ?? null, 'lat' => $data['geo_lat'] ?? null, 'lon' => $data['geo_lon'] ?? null, 'precision' => RollsBar_Geocode_Policy::evaluate( $data['qc_geo'] ?? null ) );
 	}

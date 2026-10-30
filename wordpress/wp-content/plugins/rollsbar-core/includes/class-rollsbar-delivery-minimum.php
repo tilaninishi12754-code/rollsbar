@@ -15,11 +15,15 @@ final class RollsBar_Delivery_Minimum {
 		return trim( preg_replace( '/[\s.\-]+/u', ' ', str_replace( 'ё', 'е', mb_strtolower( $value, 'UTF-8' ) ) ) );
 	}
 
+	public static function local_scope( array $data ): bool {
+		return 'крым' === self::normalize( (string) ( $data['region'] ?? '' ) ) && ( 'симферополь' === self::normalize( (string) ( $data['city'] ?? '' ) ) || 'симферопольский' === self::normalize( (string) ( $data['area'] ?? '' ) ) || ( 'бахчисарайский' === self::normalize( (string) ( $data['area'] ?? '' ) ) && 'приятное свидание' === self::normalize( (string) ( $data['settlement'] ?? '' ) ) ) );
+	}
+
 	public static function classify( array $data ): array {
 		$unknown = array( 'status' => 'unresolved', 'minimum' => null, 'message' => 'Для этого адреса условия доставки пока не определены. Уточните доставку по телефону: +7 978 688-22-88.' );
 		if ( empty( $data['house'] ) || empty( $data['house_fias_id'] ) ) {
 			$unknown['message'] = 'Выберите точный адрес с номером дома из подсказок.';
-			return $unknown;
+			return self::estimate( $data, $unknown );
 		}
 		// Scope every same-named street/locality to the provider's administrative identity.
 		$city = self::normalize( (string) ( $data['city'] ?? '' ) );
@@ -33,6 +37,17 @@ final class RollsBar_Delivery_Minimum {
 			$unknown['message'] = 'Для этого участка улицы условия доставки требуют уточнения. Позвоните: +7 978 688-22-88.';
 			return self::geographic( $data, $unknown );
 		}
+		$matches = self::identity_matches( $data );
+		$amounts = array_unique( array_column( $matches, 'minimum' ) );
+		if ( 1 !== count( $amounts ) ) {
+			return $matches ? self::estimate( $data, $unknown ) : self::geographic( $data, $unknown );
+		}
+		$minimum = (int) reset( $amounts );
+		return array( 'status' => 'resolved', 'minimum' => $minimum, 'basis' => 'fias_identity', 'sources' => array_column( $matches, 'cell' ), 'message' => 'Бесплатная доставка при заказе от ' . number_format( $minimum, 0, '.', ' ' ) . ' ₽.' );
+	}
+
+	private static function identity_matches( array $data ): array {
+		$city = self::normalize( (string) ( $data['city'] ?? '' ) );
 		$matches = array();
 		foreach ( self::rules() as $rule ) {
 			// These are whole-identity rules with a verified FIAS house. Coordinates
@@ -49,18 +64,29 @@ final class RollsBar_Delivery_Minimum {
 				if ( $value === self::normalize( $alias ) ) { $matches[] = $rule; break; }
 			}
 		}
-		$amounts = array_unique( array_column( $matches, 'minimum' ) );
-		if ( 1 !== count( $amounts ) ) {
-			// Conflicting exact identities are not resolved by an approximate geographic hypothesis.
-			return $matches ? $unknown : self::geographic( $data, $unknown );
+		return $matches;
+	}
+
+	/** Owner-approved estimate is informative, never a strict minimum or exact pin. */
+	private static function estimate( array $data, array $unknown ): array {
+		if ( 'staging' !== wp_get_environment_type() || ! self::local_scope( $data ) ) { return $unknown; }
+		$amounts = array_unique( array_column( self::identity_matches( $data ), 'minimum' ) );
+		if ( 1 === count( $amounts ) ) { $minimum = (int) reset( $amounts ); }
+		elseif ( ! empty( $data['street_fias_id'] ) && in_array( (string) ( $data['qc_geo'] ?? '' ), array( '0', '1', '2' ), true ) ) {
+			$decision = self::geographic( $data, $unknown, true );
+			$minimum = $decision['minimum'] ?? null;
+		} else { $minimum = null; }
+		if ( $minimum ) {
+			$unknown['estimate_minimum'] = $minimum;
+			$unknown['message'] = 'Предварительный минимум для бесплатной доставки — ' . number_format( $minimum, 0, '.', ' ' ) . ' ₽. Отправьте заявку — условия уточнит менеджер.';
 		}
-		$minimum = (int) reset( $amounts );
-		return array( 'status' => 'resolved', 'minimum' => $minimum, 'basis' => 'fias_identity', 'sources' => array_column( $matches, 'cell' ), 'message' => 'Бесплатная доставка при заказе от ' . number_format( $minimum, 0, '.', ' ' ) . ' ₽.' );
+		return $unknown;
 	}
 
 	/** Owner-approved coverage: containing area first, nearest existing area next. */
-	private static function geographic( array $data, array $unknown ): array {
-		if ( 'staging' !== wp_get_environment_type() || ! RollsBar_Geocode_Policy::can_auto_assign_zone( $data['qc_geo'] ?? null ) ) { return $unknown; }
+	private static function geographic( array $data, array $unknown, bool $estimate = false ): array {
+		if ( 'staging' !== wp_get_environment_type() ) { return $unknown; }
+		if ( ! $estimate && ! RollsBar_Geocode_Policy::can_auto_assign_zone( $data['qc_geo'] ?? null ) ) { return self::estimate( $data, $unknown ); }
 		$lat = $data['geo_lat'] ?? null; $lon = $data['geo_lon'] ?? null;
 		if ( ! is_numeric( $lat ) || ! is_numeric( $lon ) || abs( (float) $lat ) > 90 || abs( (float) $lon ) > 180 || 0.0 === (float) $lat || 0.0 === (float) $lon ) { return $unknown; }
 		static $geography;

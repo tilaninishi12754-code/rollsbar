@@ -76,6 +76,10 @@
 			message=minimumError||'Минимум '+minimum.toLocaleString('ru-RU')+' ₽ набран — доставка бесплатная.';
 			deliveryTerms=minimumError?'От '+minimum.toLocaleString('ru-RU')+' ₽':'Бесплатно';
 		}
+		else if(!pickup&&rule&&Number(rule.estimate_minimum)>0){
+			message='Предварительный минимум для бесплатной доставки — '+Number(rule.estimate_minimum).toLocaleString('ru-RU')+' ₽. Отправьте заявку — условия уточнит менеджер.';
+			deliveryTerms='Предварительно от '+Number(rule.estimate_minimum).toLocaleString('ru-RU')+' ₽';
+		}
 		if(minimumError!==deliveryMinimumError){
 			deliveryMinimumError=minimumError;
 			var nativeValidation=wp.data.dispatch('wc/store/validation');
