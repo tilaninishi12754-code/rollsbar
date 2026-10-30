@@ -556,6 +556,11 @@ jobs:
         env:
           ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
         run: node --import ./qa/visual/staging-browser-diagnostics.mjs qa/visual/controls-no-dock.mjs
+      - name: Storefront Interaction Stability regression with accepted no-shelf contract
+        if: inputs.direct_port_phase == 'apply'
+        env:
+          ROLLSBAR_UX_BASE: https://staging.rollsbar.ru
+        run: node --import ./qa/visual/staging-browser-diagnostics.mjs qa/visual/interaction-stability.mjs
       - name: Screenshot manifest for subsequent vision review
         if: inputs.direct_port_phase == 'apply'
         run: python3 wordpress/deploy/apply_delivery_rules_staging.py --phase manifest > qa/visual-results/delivery-rules/screenshot-manifest.txt

@@ -85,10 +85,11 @@ const browser=await engine.launch();try{for(const width of [320,390,430,701,900,
   await page.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,1100)});await expect(page.locator('.client-back-top')).toBeVisible();await expect(page.locator('.client-back-top')).toHaveClass(/show/);await page.locator('.client-back-top').evaluate(n=>n.getAnimations().forEach(a=>a.finish()));
   for(const loc of [cart(),page.locator('.client-back-top'),...(width<=700?[page.locator('.mobile-phone')]:[])])hits.push(await hit(loc,'fixed '+populated));
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)).toBe(0);
-  // No catalog control may receive a hit in the reserved fixed-control region.
-  const dock=await page.evaluate(()=>{const reserve=innerWidth<=900?160:90;const bad=[];for(let y=innerHeight-reserve+4;y<innerHeight;y+=12)for(let x=8;x<innerWidth;x+=16){const n=document.elementFromPoint(x,y);if(n?.closest('.rollsbar-product-card'))bad.push({x,y,tag:n.tagName});}return {reserve,bad};});
-  expect(dock.bad,'catalog leaked into fixed-control dock').toEqual([]);
-  hits.push({label:'reserved control dock',...dock});
+  // Owner's later accepted no-shelf contract (controls-no-dock.mjs) supersedes
+  // the reserved strip. Keep all pointer/race and individual control hit tests.
+  const dock=await page.locator('.rollsbar-controls-dock').evaluate(n=>({display:getComputedStyle(n).display}));
+  expect(dock.display,'accepted no-shelf contract').toBe('none');
+  hits.push({label:'no full-width control shelf',...dock});
 
   const path=out+'/'+name+'-'+width+'-'+populated+'.png';await page.screenshot({path});report.screenshots.push(path);
   await openCart();await back();

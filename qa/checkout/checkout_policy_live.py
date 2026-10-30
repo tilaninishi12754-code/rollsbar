@@ -18,7 +18,8 @@ try:
     require('no-store' in home.headers.get('cache-control',''),'ordinary storefront document cannot retain old asset references')
     add_first_simple_product(p);settle_native(p)
     checkout=p.goto(BASE+'/checkout/',wait_until='domcontentloaded')
-    require('no-store' in checkout.headers.get('cache-control',''),'checkout HTML is private dynamic')
+    directives={part.strip().lower() for part in checkout.headers.get('cache-control','').split(',')}
+    require({'private','no-cache','must-revalidate','max-age=0'}<=directives,'native checkout HTML requires private revalidation on every visit')
     p.locator('#shipping-address_1').wait_for()
     address=p.locator('#shipping-address_1');queries=[]
     for query in ['Симферополь','улица Гагарина','Мазанка']:

@@ -21,7 +21,6 @@ final class RollsBar_Checkout {
 	public static function init(): void {
 		add_action( 'init', array( __CLASS__, 'canonical_staging_host' ), -100 );
 		add_filter( 'wp_headers', array( __CLASS__, 'dynamic_page_headers' ), 100 );
-		add_filter( 'nocache_headers', array( __CLASS__, 'dynamic_page_headers' ), 100 );
 		add_filter( 'rest_request_after_callbacks', array( __CLASS__, 'clear_completed_note' ), 20, 3 );
 		add_filter( 'option_woocommerce_cod_settings', array( __CLASS__, 'receipt_payment_settings' ) );
 		add_filter( 'woocommerce_order_get_payment_method_title', array( __CLASS__, 'receipt_payment_title' ), 20, 2 );
@@ -58,7 +57,9 @@ final class RollsBar_Checkout {
 
 	/** Dynamic documents must fetch the current version; versioned assets stay cached. */
 	public static function dynamic_page_headers( array $headers ): array {
-		if ( 'staging' === wp_get_environment_type() && ( is_front_page() || is_checkout() || is_cart() ) ) {
+		// Native Woo cart/checkout already require private revalidation. Preserve
+		// their BFCache policy; only storefront HTML needs this extra exclusion.
+		if ( 'staging' === wp_get_environment_type() && is_front_page() ) {
 			$headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0, private';
 			$headers['Expires'] = 'Wed, 11 Jan 1984 05:00:00 GMT';
 		}
