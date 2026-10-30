@@ -285,7 +285,7 @@
 
 	function publishSelection(product){
 		var contract=product.selection;
-		var select=groups.querySelector('[data-variation]');
+		var select=groups.querySelector('input[data-variation]:checked,select[data-variation]');
 		var variation=select?contract.variations.find(function(row){return String(row.id)===select.value&&row.available;}):null;
 		var valid=!contract.blocked&&(!product.variable||!!variation);
 		var options=contract.options.map(function(group,index){
@@ -299,7 +299,7 @@
 		modal.dispatchEvent(new CustomEvent('rollsbar:selectionchange',{bubbles:true,detail:JSON.parse(modal.dataset.selection)}));
 		var submit=selector.querySelector('.rollsbar-product-options__add');
 		submit.disabled=!valid||cartBusy||!cartConfig;
-		submit.textContent=contract.blocked||contract.options.some(function(group){return group.pending;})?'Ожидаем список вариантов':(valid?'Добавить в корзину':'Нет доступных вариантов');
+		submit.textContent=contract.blocked||contract.options.some(function(group){return group.pending;})?'Ожидаем список вариантов':(valid?(product.pizza&&variation?'Добавить за '+variation.price_label:'Добавить в корзину'):'Нет доступных вариантов');
 	}
 	function showSelector(product){
 		modal.classList.add('selecting');
@@ -324,7 +324,17 @@
 			var first=product.selection.variations.find(function(variation){return variation.available;});
 			if(first)select.value=String(first.id);
 			else{var empty=document.createElement('option');empty.value='';empty.textContent='Нет доступных вариантов';select.prepend(empty);select.value='';select.disabled=true;}
-			wrap.appendChild(select);
+			if(product.pizza){
+				var choices=document.createElement('div');choices.className='rollsbar-size-choices';
+				choices.setAttribute('role','radiogroup');choices.setAttribute('aria-label',product.selection.label);
+				var initial=product.selection.variations.find(function(v){return v.available&&/^30\b/.test(v.label);})||first;
+				product.selection.variations.forEach(function(v){
+					var label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');
+					input.type='radio';input.name='rollsbar-pizza-size';input.value=String(v.id);input.dataset.variation='';input.disabled=!v.available;input.checked=v===initial;
+					text.textContent=v.label+' · '+v.price_label;label.append(input,text);choices.appendChild(label);
+				});
+				wrap.querySelector('label').removeAttribute('for');wrap.appendChild(choices);
+			}else wrap.appendChild(select);
 		}
 		product.selection.options.forEach(function(group,index){
 			var id='rollsbarOption'+index,wrap=row(group.label,group.pending?null:id);
@@ -591,23 +601,26 @@
 	syncMobileCart();
 })();
 
-// Homepage header menu. Preserve the existing search/cart handlers and scroll state.
+// Shared site header menu. Preserve the existing search/cart handlers and scroll state.
 (function(){
 	'use strict';
 	var menu=document.getElementById('rollsbarSiteMenu');
 	var toggle=document.querySelector('[data-rollsbar-menu-open]');
 	if(!menu||!toggle)return;
-	var previousOverflow='';
+	var previousOverflow='',menuBackground=[];
 	function closeMenu(){
 		if(!menu.classList.contains('open'))return;
 		menu.classList.remove('open');
 		menu.setAttribute('aria-hidden','true');
 		toggle.setAttribute('aria-expanded','false');
 		document.body.style.overflow=previousOverflow;
+		menuBackground.forEach(function(entry){entry[0].inert=entry[1];});menuBackground=[];
 		toggle.focus();
 	}
 	toggle.addEventListener('click',function(){
+		if(menu.classList.contains('open')){closeMenu();return;}
 		previousOverflow=document.body.style.overflow;
+		Array.from(document.body.children).forEach(function(node){if(node!==menu&&node.tagName!=='SCRIPT'){menuBackground.push([node,node.inert]);node.inert=true;}});
 		menu.classList.add('open');
 		menu.setAttribute('aria-hidden','false');
 		toggle.setAttribute('aria-expanded','true');
@@ -619,9 +632,8 @@
 			closeMenu();
 			// B15: the public contacts section precedes the website footer.
 			if(link.hasAttribute('data-rollsbar-menu-contacts')){
-				event.preventDefault();
 				var contacts=document.getElementById('contacts');
-				if(contacts)contacts.scrollIntoView();
+				if(contacts){event.preventDefault();contacts.scrollIntoView();}
 			}
 		});
 	});

@@ -5,6 +5,10 @@ Last updated: 2026-10-30
 
 This file is the durable source of truth for unresolved / deferred RollsBar defects and follow-up work. New confirmed issues should be recorded here instead of living only in chat. Do not reopen items marked DONE without new evidence.
 
+## RB-026 — Client remarks follow-up for pizza choices navigation and delivery presentation
+
+Status: IN PROGRESS — owner authorized 2026-10-30. Visible native pizza choices, shared internal menu, truthful Hit-menu card and shared homepage checkout map/conditions. Existing checkout close path exposed as text return. No new promotions/tariffs/catalog changes. Staging acceptance pending; see `CLIENT_UX_REMARKS_2026-10-30.md`. RB-025 latency separate OPEN; production forbidden.
+
 ## RB-024 — Cold native cart minimum, nearest-area coverage and qualified feedback
 
 Status: DONE — functional staging scope; homepage latency separately RB-025 OPEN. Priority: P1. Owner screenshot4200/2500 and read-only native probe41042740854 prove pre-controller validation read unloaded cart totals as0. Fix loads the authoritative native cart before comparison; isolated native proof41044741234 gives420→2080 shortfall and4200→PASS at2500, no order invocation. Owner also approved nearest existing zone for uncovered exact local addresses, preliminary nonblocking estimates for street-level addresses (Молодёжная1/2/5→estimated1200), and Leaflet prefix/flag removal with OpenStreetMap attribution retained. Final application/marker c624af9b4772854eba21cce254e6ea0e653c8a9f; backup20261030T113057Z; apply41048482333/finalize41051300317 SUCCESS. Native5/policy2/fulfillment2/provider20/map5/adversarial3/reference5/storefront/controls/Interaction Stability PASS. All95 artifact+4 settled PNGs inspected. Fixed address limiter expiry while preserving90-per-minute threshold. See `CHECKOUT_FULFILLMENT_2026-10-30.md`. Production prohibited; no new submitted orders authorized.

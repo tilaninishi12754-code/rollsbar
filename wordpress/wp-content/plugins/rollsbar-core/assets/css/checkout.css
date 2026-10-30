@@ -486,3 +486,5 @@ body.rollsbar-checkout-pickup .wc-block-components-text-input:has(#order-rollsba
 
 /* Explicit consent error marker; no layout shift and no fabricated consent. */
 body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-consent-missing { border-color: #d92525; background: #fff2f2; box-shadow: 0 0 0 2px #d92525; }
+
+body.woocommerce-checkout:not(.woocommerce-order-received) .rollsbar-checkout-shopping{display:inline-flex;align-items:center;min-height:44px;margin:0 0 12px;color:#b91822;font-size:14px;font-weight:700;text-decoration:underline}

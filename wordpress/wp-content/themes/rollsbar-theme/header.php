@@ -45,10 +45,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<?php echo rollsbar_cart_badge_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</a>
 			<?php endif; ?>
+			<button class="rollsbar-menu-toggle" type="button" aria-label="Открыть меню" aria-controls="rollsbarSiteMenu" aria-expanded="false" data-rollsbar-menu-open><span></span><span></span><span></span></button>
 		</div>
 	</div>
 </header>
 <?php endif; ?>
+<?php get_template_part( 'template-parts/site-menu' ); ?>
 
 <?php if ( is_front_page() ) : ?>
 <div class="product-search" id="rollsbarProductSearch" aria-hidden="true">

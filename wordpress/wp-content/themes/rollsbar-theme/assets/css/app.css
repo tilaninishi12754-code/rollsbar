@@ -675,3 +675,17 @@ a.screen-reader-text:focus{position:fixed;top:8px;left:8px;width:auto;height:aut
 
 @media(max-width:900px){html:has(body.home){scroll-padding-bottom:160px}}
 @media(min-width:901px){html:has(body.home){scroll-padding-bottom:90px}}
+
+/* Visible native variation choices; one Woo variation contract. */
+.rollsbar-size-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rollsbar-product-options__group .rollsbar-size-choices label{position:relative;margin:0;color:#202020;font-size:14px}
+.rollsbar-size-choices input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;z-index:1;cursor:pointer}
+.rollsbar-size-choices span{display:flex;align-items:center;justify-content:center;min-height:48px;padding:10px 6px;border:2px solid #ececef;border-radius:12px;background:#f4f5f6;text-align:center;cursor:pointer}
+.rollsbar-size-choices input:checked+span{border-color:#d92525;background:#fff0ef;color:#b91822}
+.rollsbar-size-choices input:focus-visible+span{outline:3px solid #222;outline-offset:3px}
+.rollsbar-size-choices input:disabled+span{opacity:.45;cursor:not-allowed}
+.rollsbar-site-menu{z-index:220}
+.rollsbar-site-menu__panel{overflow-y:auto;overscroll-behavior:contain}
+.rollsbar-site-menu__close{min-width:44px;min-height:44px}
+.rollsbar-home-delivery .rollsbar-delivery-map{display:block;width:100%;height:360px;border:0}
+@media(max-width:700px){body:not(.home) .rollsbar-header .rollsbar-cart-link{display:none}body:not(.home) .rollsbar-menu-toggle{width:44px;height:44px}}

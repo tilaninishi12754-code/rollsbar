@@ -55,7 +55,7 @@ async function run(engine,name){
   const variants=data[pizzaId].selection.variations;
   const thirty=variants.find(v=>/30/.test(v.label)),fifty=variants.find(v=>/50/.test(v.label));expect(!!thirty&&!!fifty).toBeTruthy();
   for(const [v,n] of [[thirty,2],[fifty,3]]){
-   await open(pizzaId);await modal.locator('.rollsbar-product-details__add').click();await modal.locator('[data-variation]').selectOption(String(v.id));await qty(n);await modal.locator('.rollsbar-product-options__add').click();await expect(modal).toBeHidden();
+   await open(pizzaId);await modal.locator('.rollsbar-product-details__add').click();await modal.locator('input[data-variation][value="'+v.id+'"]').check();await qty(n);await modal.locator('.rollsbar-product-options__add').click();await expect(modal).toBeHidden();
    const state=await snap(),line=state.lines.find(l=>l.source_id===pizzaId&&l.variation_id===v.id);expect(line.quantity).toBe(n);
    if(v===thirty){
     await expect(card(pizzaId).locator('.rollsbar-product-counter span')).toHaveText('2');await card(pizzaId).locator('[data-rollsbar-cart-delta="1"]').click();await expect(card(pizzaId).locator('.rollsbar-product-counter span')).toHaveText('3');

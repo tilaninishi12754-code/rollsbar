@@ -6,13 +6,14 @@ from apply_storefront_ux_staging import verify
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/delivery-rules'
 BASE='921698e085263f23493e8f757aa0e7c1b561946c'
-PREVIOUS_APP='95f3e6439338295694efee4a391a40edf40b8501'
+PREVIOUS_APP='c624af9b4772854eba21cce254e6ea0e653c8a9f'
 CHANGED=[transport.PLUGIN+p for p in [
  'data/delivery-minimum.json','includes/class-rollsbar-delivery-minimum.php',
  'includes/class-rollsbar-delivery-checkout.php','includes/class-rollsbar-native-delivery-method.php',
  'rollsbar-core.php','includes/class-rollsbar-address-suggestions.php',
  'includes/class-rollsbar-checkout.php','includes/class-rollsbar-cart-actions.php',
  'assets/js/checkout.js','assets/css/checkout.css','assets/delivery-map.html','data/delivery-geography.json']]
+CHANGED += [transport.THEME+p for p in ['header.php','front-page.php','assets/js/app.js','assets/css/app.css','template-parts/header-home.php','template-parts/site-menu.php','template-parts/delivery-home.php']]
 RECEIPT='$HOME/.rollsbar-delivery-rules-release'
 
 def verify_mail():
@@ -50,7 +51,7 @@ wp_cmd eval {shlex.quote(probe)}
 
 def scope():
  paths=subprocess.check_output(['git','diff','--name-only',BASE,'--',transport.PLUGIN,transport.THEME],cwd=ROOT,text=True).splitlines()
- if sorted(paths)!=sorted(CHANGED):raise ValueError('Delivery batch application files differ from the explicit twelve-file scope')
+ if sorted(paths)!=sorted(CHANGED):raise ValueError('Delivery batch application files differ from the explicit nineteen-file cumulative scope')
 
 def backend():
  return 'wp_cmd eval-file "$PROJECT_ROOT/wordpress/deploy/verify-delivery-rules.php"\n'+verify()
@@ -91,7 +92,7 @@ def manifest():
  if len(reference)!=15:raise ValueError('Five immutable reference/candidate/unmasked diff sets required')
  maps=sorted((OUT/'map').glob('*.png'))
  if len(maps)!=5:raise ValueError('Five restored-map screenshots required')
- return hashlib.sha256('\n'.join(str(p.relative_to(ROOT/'qa/visual-results'))+':'+hashlib.sha256(p.read_bytes()).hexdigest() for p in files+reference+maps).encode()).hexdigest()
+ return hashlib.sha256('\n'.join(str(p.relative_to(ROOT/'qa/visual-results'))+':'+hashlib.sha256(p.read_bytes()).hexdigest() for p in files+reference+maps+sorted((ROOT/'qa/visual-results/client-ux').glob('*.png'))).encode()).hexdigest()
 
 def finalize(sha):
  proof=json.loads((OUT/'evidence.json').read_text(encoding='utf8'))
@@ -109,6 +110,8 @@ def finalize(sha):
  for path in ['original-browser.json','browser.json']:
   data=json.loads((ROOT/'qa/visual-results/storefront-ux-staging'/path).read_text(encoding='utf8'))
   if data.get('status')!='PASS' or data.get('release_sha')!=sha:raise ValueError('Exact storefront regression proof required: '+path)
+ client=json.loads((ROOT/'qa/visual-results/client-ux/evidence.json').read_text(encoding='utf8'))
+ if client.get('status')!='PASS' or client.get('release_sha')!=sha or [c['width'] for c in client['checks']]!=[1440,701,700,390,320]:raise ValueError('Exact client UX five-width proof required')
  if os.environ.get('ROLLSBAR_REVIEWED_MANIFEST')!=manifest():raise ValueError('Exact screenshot set must be inspected')
  return f'''[[ "$(git -C "$PROJECT_ROOT" rev-parse HEAD)" == {sha} ]]
 {transport.code_hash_guard(sha,changed=CHANGED,base=BASE)}

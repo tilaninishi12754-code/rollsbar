@@ -42,8 +42,8 @@ $categories = array(
 $utility_cards = array(
 	'promo' => array(
 		'eyebrow' => 'Rolls Bar',
-		'title'   => 'Акции',
-		'text'    => 'Скидки, комбо и специальные предложения',
+		'title'   => 'Хит-меню',
+		'text'    => 'Популярные блюда Rolls Bar',
 		'url'     => '#hits',
 		'image'   => '',
 	),
@@ -98,6 +98,11 @@ foreach ( $promo_posts as $promo_post ) {
 		'image'   => $image ?: '',
 	);
 }
+// This navigation card promises the actual destination, including editable legacy promo posts.
+$utility_cards['promo']['title'] = 'Хит-меню';
+$utility_cards['promo']['text'] = 'Популярные блюда Rolls Bar';
+$utility_cards['promo']['url'] = '#hits';
+
 ?>
 
 <section class="rollsbar-utilities">

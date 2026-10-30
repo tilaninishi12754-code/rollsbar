@@ -303,6 +303,8 @@
 		heading.before(head);
 		head.appendChild(heading);
 		head.appendChild(close);
+		var shopping=document.createElement('a');shopping.className='rollsbar-checkout-shopping';shopping.href=close.href;shopping.textContent='← Вернуться к покупкам';
+		shopping.addEventListener('click',function(event){event.preventDefault();close.click();});head.after(shopping);
 		var backdrop=document.createElement('button');
 		backdrop.type='button';
 		backdrop.className='rollsbar-checkout-backdrop';
