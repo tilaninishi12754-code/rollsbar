@@ -2,6 +2,8 @@
 
 Status: STAGING PASS, 2026-10-30. Production access/mutation = no.
 
+Later erratum: the original minimum fixtures used precalculated cart totals and missed native cold-request cart loading. Owner4200/2500 evidence reproduced a false zero; RB-024 corrects this with real native lazy-cart proof. Its report `CHECKOUT_FULFILLMENT_2026-10-30.md` also records the later owner-approved nearest-area and nonblocking preliminary-estimate policy. Earlier application91-image acceptance below is historical, not proof that the later cold-cart defect never existed.
+
 Owner approved local Simferopol/district suggestions; mandatory known delivery minimum; unknown-address callback with clear explanation; retain identity/address but clear comment only after successful order; immediate8/7→+7; ordinary browser updates without deleting cookies.
 
 Official evidence: [DaData address API](https://dadata.ru/api/suggest/address/), [provider guidance on city priority](https://support.dadata.ru/communities/1/topics/2325-kak-nastroit-prioritet-goroda-v-podskazkah), [Woo cache exclusions](https://developer.woocommerce.com/docs/best-practices/performance/configuring-caching-plugins/). Prior proxy used unsupported city-name locations_boost and no local restrictions. New parent filters accept Simferopol city OR Simferopol district, and server response filtering excludes remote namesakes while retaining villages. No IP geolocation or guessed coordinates. Native geocode precision safety and original geography dataset unchanged.

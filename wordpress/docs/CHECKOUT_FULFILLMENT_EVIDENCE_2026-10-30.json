@@ -1,0 +1,468 @@
+{
+  "functional_status": "STAGING_PASS",
+  "homepage_latency_status": "OPEN",
+  "application_sha": "c624af9b4772854eba21cce254e6ea0e653c8a9f",
+  "release_marker": "c624af9b4772854eba21cce254e6ea0e653c8a9f",
+  "receipt_phase": "browser_verified",
+  "apply_run": 41048482333,
+  "finalize_run": 41051300317,
+  "backup": "20261030T113057Z",
+  "artifact": {
+    "run": "41048482333",
+    "id": 12973728693,
+    "zip_sha256": "a90afe0cca40ba4175387760bd9990afc05f6b9fa732a008484308fea07b2a83",
+    "verified": true,
+    "files": 129
+  },
+  "reviewed_manifest": "a472ca8a3796f015ff7726682c14323219942146ec2cf0a753d1e18720e61368",
+  "artifact_pngs_viewed": {
+    "checkout-policy/policy-1440.png": "1cc91d74034a9caae629bb1501fe8aed047bbc3551ab9db4fe48a9d1c142aafc",
+    "checkout-policy/policy-390.png": "ce2db371c91c979bbbd876aeebab3ce63f56a7fb722c931ab2eaa567f518817d",
+    "delivery-reference/candidate-1440.png": "43abe0befcce8fd52d1c8a905121e099b32d21d0cbc2051d8a175462596dd07d",
+    "delivery-reference/candidate-320.png": "39a29ff53c868d519355e38fea42feb42536398d7fbf263fe6ce885758bff4ae",
+    "delivery-reference/candidate-390.png": "14ae318efdb33121a0967e68abd6e27cde7e9500636b475c8784851c967aded6",
+    "delivery-reference/candidate-700.png": "a3fbcf62125c68cae41558f65fe0175cdf68c18e7e3f7d08c00fa61576e9e7b9",
+    "delivery-reference/candidate-701.png": "322fb647fb22727176ef43616058da482336b4019efdc4657db99e4c437d44f4",
+    "delivery-reference/diff-1440.png": "3dee8783427a8c204396c0cd26f15a8f5f1645a4baa3bad1ebebc4c85c37538e",
+    "delivery-reference/diff-320.png": "4c8b7de027f01136fad0a12922525cff7edcc65b5681ae1b4b6ce128c8cbc3bb",
+    "delivery-reference/diff-390.png": "eb5eb4932a6ec50f49bfecead56bf91b2da826d0bd23e1aa01489a50f180fa29",
+    "delivery-reference/diff-700.png": "aa9fa394512644772a298320d44852952362195d39ee5a641693945b4f950586",
+    "delivery-reference/diff-701.png": "04184b089c14cf475f966bd1830240adeeef8ff6a70441e4be56ac6c5bd52f00",
+    "delivery-reference/reference-1440.png": "b18ce19cff33c748f4f3556ea90b342725ae64714ad5eaeaf69e82bfc53d55ec",
+    "delivery-reference/reference-320.png": "b3061b21452220ad924e5b780e002143cc3d83c5a9f125c6798de8f96a8b6588",
+    "delivery-reference/reference-390.png": "cf6d221aa32aeac08ac66a44da1255ab919cfb69796bea50494d793160a48409",
+    "delivery-reference/reference-700.png": "98fec09bde3b14445b573dc86baf227007a8cccedcf4edd2c4aabc00187312c9",
+    "delivery-reference/reference-701.png": "97a26f62a19d2bf33cd27a4e9eb95d686c82a9983d519675761ff3f247551ded",
+    "delivery-rules/address-14.png": "078c1f7da3dd218f839c1ebe2a79b5da14abb9ad4b2a2d4f29ec99e90c460720",
+    "delivery-rules/address-15.png": "96a82753c04f45fad25d49482d231f7dfb17efaa8e3607f018e2f65b5f108759",
+    "delivery-rules/address-16.png": "85df971a9cae151dbf9ed8c748f555eae59081edafcc0258847e40cddfc9eea4",
+    "delivery-rules/address-17.png": "8678905a37fd1723705168e3d9b44c6ca99a13bd78a03296e3b8b74f9b416440",
+    "delivery-rules/address-18.png": "0b1e64ed95dcf0012f46f0e6061a97e84cebfbc5ed413e2439077531e435f233",
+    "delivery-rules/address-19.png": "cbdf7f768ed39e5a26dc980605cd167ca90e5863bb38f2bb78bbc4a0a7e9aa46",
+    "delivery-rules/address-20.png": "8c4495a7861fd5265b96f14431f4c0dceea38e9296fc01bdf8de16f5636dfaf4",
+    "delivery-rules/adversarial-320.png": "554ac2dc200b0cfc2525ea8f0a0634b62f585a29b6828b75a11b903177a4df85",
+    "delivery-rules/adversarial-700.png": "6ecd18f5d2229b3818cdb0eaf70d95123da69d8c39fe2cf432a13288c2b68e7d",
+    "delivery-rules/adversarial-701.png": "82effeb0c2f8069a109f7f1066c27dc10bf96cc815186ca7973b4ff3db65a411",
+    "delivery-rules/consent-feedback/consent-1440.png": "8cfbf03fef714c87a7f5b52327b1c0a4d1b22ae818c4d7bb31772efa7df38dbe",
+    "delivery-rules/consent-feedback/consent-320.png": "d36e14fcd27f3a81e10241222970932b8ee93707503df682a99cf83248677a09",
+    "delivery-rules/consent-feedback/consent-390.png": "6e513f79a07975709bfd7d7d37d28fff963c6fade11485877d6aa9208af8e75e",
+    "delivery-rules/consent-feedback/consent-700.png": "47b6528c176bf86826412d3f7e8281df4d08a848e4eb59a50ce6c8b76cb44aa9",
+    "delivery-rules/consent-feedback/consent-701.png": "650a12a7ffa0411bae56625b0ff9cbff5bbacc57f6615a772cdad1643d3aea50",
+    "delivery-rules/delivery-1440.png": "b92eecdc3d6b9d3b2652ea9721fd7a287c7d299feb01afe057dbfa295344eed1",
+    "delivery-rules/delivery-320.png": "c871fb13be2c826562616116b9b9d613a533876be8756e58f7917ab9f8f0a5b0",
+    "delivery-rules/delivery-390.png": "f746f3615d9e7ce1a6cc9d59bfbaf412a8109519116c493d1cd4df5086d27596",
+    "delivery-rules/delivery-700.png": "4ef2edf4036e51e20f5a8281dbd5b8871c40ae6cad1c95aa0a4dbaff5873d4a8",
+    "delivery-rules/delivery-701.png": "e2c5b718cb5eba6596c499f49c38e45b38b90f6cf72c763d97cd104b15af983d",
+    "delivery-rules/map/map-1440.png": "cacde710189eafe547e65c146efe4b727d80369774a590eb166d4145de4e01e3",
+    "delivery-rules/map/map-320.png": "a4f7cda23259e45c875be68181bdb2ed185649ae259af1d00a0d188a29bea99d",
+    "delivery-rules/map/map-390.png": "582bfe787f28c4ca4ad6ede6044d9aee4f4d27b5ac1d9a83189a6ad6989b5b53",
+    "delivery-rules/map/map-700.png": "b768f2cd5412fff3354eba8ee09c71285e418e701229df0c3adc999ba547b517",
+    "delivery-rules/map/map-701.png": "b0f9f1facd6232a4f63334cd06cf8daabe5e6a9c7f07993357982cd8926c1005",
+    "delivery-rules/pickup-1440.png": "17f4d1565216be27d07bcc5bf1d0a2f4b9473675f11ca237fd76d42941f76f17",
+    "delivery-rules/pickup-320.png": "a44bf8cb25708b4a22f2ef928fe6489fc4b75aa42b69373dada7599d344070de",
+    "delivery-rules/pickup-390.png": "4c5251ea38b7945bb7dac380b7aaa6895dcffcb83063fdd8d9de484ae15f8a49",
+    "delivery-rules/pickup-700.png": "3460efdc4f242888a004ae032ceb4aebe391c03a917d5eb58b3e797dac8e76e4",
+    "delivery-rules/pickup-701.png": "3a040076cd8c9c2ddc2c42314d254ba715f52c40d9c21d871e368b431249ec45",
+    "fulfillment/local-address-1440.png": "5fc94ac6cfb66e9c6d28420aebbbcdcf7c65fdbf378789c991e095701fc1d329",
+    "fulfillment/local-address-390.png": "3feba7950ae89356fa591b12d215bc9753011ed88954ad9a7d4691142fa10bf7",
+    "fulfillment/qualified-1440.png": "b64dc688710d582b398da48805bbdc142a71bcba3f26436c203aeb72c8560042",
+    "fulfillment/qualified-390.png": "eb6876d897c76709a14d5a909c1d892662754d24d50ac9b35a27e2249471622c",
+    "storefront-ux-staging/chromium-1440x900-details-quantity.png": "b5ef8836ab06b4b35dfde39f585d6f36bd302d93ea4ff3543a89609a20928c9b",
+    "storefront-ux-staging/chromium-1440x900-multi-word-search.png": "d238fe3a5557c3e46d9e989ffc2d4e58c41ea4096964a98bca3818bd89ad0ccc",
+    "storefront-ux-staging/chromium-1440x900-scrolled-controls.png": "dd678d4dcdf53fa9c37aaf3a29510d1300516ad887c41d16dbd8323ccf0cdc03",
+    "storefront-ux-staging/chromium-320x568-details-quantity.png": "09a8ae490f3510320b04c8a4e7f02b03a5349992fffd5d7d1f859d287c46649e",
+    "storefront-ux-staging/chromium-320x568-multi-word-search.png": "a5aa68e805c77aa1233dce4a381fe3fd997f0564b410189f3d9a1abe1feb8261",
+    "storefront-ux-staging/chromium-320x568-scrolled-controls.png": "c061896a8cece2c7c5429a4e34bfa32b01cf6350d75dce4bac1031e17c54d378",
+    "storefront-ux-staging/chromium-390x844-details-quantity.png": "ae618b94e3cadb0459807d27a909c2694e8987799c1f1ddc5822500bd481d36a",
+    "storefront-ux-staging/chromium-390x844-multi-word-search.png": "53dc50d605fff40056ef9573a8c77c110b2154efd04d812c4f1886a438195b84",
+    "storefront-ux-staging/chromium-390x844-scrolled-controls.png": "019c580d4a69be4ee6ce464fdc109c4b0355c1877c6ff22a2fd3e09854fac18a",
+    "storefront-ux-staging/chromium-390x900-details-quantity.png": "e83169fd5587bd2edc4f8b11acf8d32d0fb523b5e0935546d0c9fbb12cc113d9",
+    "storefront-ux-staging/chromium-390x900-multi-word-search.png": "d36dcf29a7302beeae7d80420a43deda337d051b0d5ae2caec8219fa1bf62356",
+    "storefront-ux-staging/chromium-390x900-scrolled-controls.png": "064d169cca976965fe5a8477647462bb21c5881815abc1cd4612982fd10b5162",
+    "storefront-ux-staging/chromium-430x932-details-quantity.png": "faf034728a1239c0d8689213a56660acef347c85a8bb1041cdf37e38a7073845",
+    "storefront-ux-staging/chromium-430x932-multi-word-search.png": "d89c655519c42e596a416878bd08bbf9d34aef7dd5edd2b54505204577c88b71",
+    "storefront-ux-staging/chromium-430x932-scrolled-controls.png": "7a71a68d955bd4499d8af644bc4f9bbb648d5267c6bede3c77ef463d1a7c18bf",
+    "storefront-ux-staging/diagnostics/context-1-page-0.png": "46606da9cc85d54af63385a23f697c44b991999b091a2dc2702142cef551a7c2",
+    "storefront-ux-staging/diagnostics/context-2-page-0.png": "1b3402448adbbf84a500f92a7ea3c6e93e3fa9351c89fa2c311f20e2179317c9",
+    "storefront-ux-staging/diagnostics/context-3-page-0.png": "45d1157fbcdfe26109bf840404f6c024a90b4594d8b47bca84891b2bc09f21a4",
+    "storefront-ux-staging/diagnostics/context-4-page-0.png": "a8b606bb6cdb255b4035b8207159dc2ace09afec82686cc7be9d75aac61db6af",
+    "storefront-ux-staging/diagnostics/context-5-page-0.png": "8a934106a4cc6d24573d741e8ef8e02062ee969ccb04519db2b003e42ae5ea4e",
+    "storefront-ux-staging/diagnostics/context-6-page-0.png": "6c1e933a5d10733495bb20309cd082757b3ee3f42ad0412b83f521fc619798f1",
+    "storefront-ux-staging/interaction/chromium-1440-false.png": "5c55a948adc3bfb6170cc3fb8ec1e077bdbd3daf3ee2fc0914903bea120289ca",
+    "storefront-ux-staging/interaction/chromium-1440-true.png": "1f21585c29e6325c7df86e437f13115fbd18b94d26d0a16cbc8a5b8a1798e4f1",
+    "storefront-ux-staging/interaction/chromium-320-false.png": "1edeecabc9d5eb53409374d2dd9e6809e5a491f7464343978a489c5b643e57f0",
+    "storefront-ux-staging/interaction/chromium-320-true.png": "9bd93f75957e8ff1015350f5ced463b828869ef96ab31a54c66e5553a97bae5e",
+    "storefront-ux-staging/interaction/chromium-390-false.png": "a9cdac04e1d150c6df39ba8b1eb437516ed6b8f6a765fcf42be504abc1ca044c",
+    "storefront-ux-staging/interaction/chromium-390-pending.png": "8904b15b4a961f85e9c478d984b1bc78ebec708fb8d2a121c1d35ca5741068df",
+    "storefront-ux-staging/interaction/chromium-390-true.png": "d452fc5411671e26d3ef2ac173cc76db8220eb9f98c8ac0d0a85dc7a04b78afd",
+    "storefront-ux-staging/interaction/chromium-430-false.png": "e06c0ad6e1f13beb1edf0a0395835c41309988170d80e28333f428584cec5bd1",
+    "storefront-ux-staging/interaction/chromium-430-true.png": "6794f1298806c70dd08ac48083c4021d85692d2aed3f0c5a9802765d21f51939",
+    "storefront-ux-staging/interaction/chromium-701-false.png": "0ba9c1f993027dcaf6299454f1ab745554e121689acf1fe59ee856f323d3547c",
+    "storefront-ux-staging/interaction/chromium-701-true.png": "d6e14ec33beefaa80e9b28bcb75ce86747f7f4fa199989c55588a0d33b38230c",
+    "storefront-ux-staging/interaction/chromium-900-false.png": "8b742cc712f460cb86af61a6329430df2fd9a0d6b181ee48fc431fd79285384c",
+    "storefront-ux-staging/interaction/chromium-900-true.png": "03707673496f5b6a08ed046d9a9c11498ac6eb01b6baa002249ebb84cf6f30ba",
+    "storefront-ux-staging/no-dock-1440-false.png": "5c55a948adc3bfb6170cc3fb8ec1e077bdbd3daf3ee2fc0914903bea120289ca",
+    "storefront-ux-staging/no-dock-1440-true.png": "bef3967fbd72e7f1b3a7518688895f6de73b71f34cbe7460833c5eedf08e5f18",
+    "storefront-ux-staging/no-dock-320-false.png": "3607184e97c95684d32ec3910c20eb2023f71fd2149bef5477344323b71477c1",
+    "storefront-ux-staging/no-dock-320-true.png": "213774c884e09db9056f4afbea0488f704181bbaa23914e071a4724e9c0f8e7f",
+    "storefront-ux-staging/no-dock-390-false.png": "5f1aeebbbd372b96c7338707be83b4660f2b6070e3660ce54e9bd27e84cb0c16",
+    "storefront-ux-staging/no-dock-390-true.png": "f972565ead5409621de136fa50bf136d2360fd6279a160f9d17cb6843b6eec74",
+    "storefront-ux-staging/no-dock-701-false.png": "0ba9c1f993027dcaf6299454f1ab745554e121689acf1fe59ee856f323d3547c",
+    "storefront-ux-staging/no-dock-701-true.png": "1fd6d0814ae4efd492810bc9e525f1ff03357adb5db885714e81df8ff6444690",
+    "storefront-ux-staging/no-dock-900-false.png": "8b742cc712f460cb86af61a6329430df2fd9a0d6b181ee48fc431fd79285384c",
+    "storefront-ux-staging/no-dock-900-true.png": "f8f36b65e78e64f9fcd7fc375f7cee100d71ec158d6e75edf73ef2cd54f16a15"
+  },
+  "supplemental_settled_pngs_viewed": {
+    "local-address-1440.png": "1d1b64e1dfd143dc5891124901fd525e4a20f6df432a9ade06f2026d33af740e",
+    "local-address-390.png": "c914ebc099789ab6d6cb90660166a85979094857368ad82ff0fe874f5e16c80e",
+    "qualified-1440.png": "abb73f18290876ed0debfdb9472afa0332910af1528cf710a717bb04cf71f945",
+    "qualified-390.png": "5029aceceefcf74e791be6f88c832e77988464a5e6d6ac10f983df733a435061"
+  },
+  "gates": [
+    {
+      "file": "delivery-rules/evidence.json",
+      "status": "AUTOMATED_PASS_AWAITING_SCREENSHOT_REVIEW",
+      "cases": 5
+    },
+    {
+      "file": "checkout-policy/evidence.json",
+      "status": "PASS",
+      "cases": 2
+    },
+    {
+      "file": "fulfillment/evidence.json",
+      "status": "PASS",
+      "cases": 2
+    },
+    {
+      "file": "delivery-rules/address-evidence.json",
+      "status": "PASS",
+      "cases": 20
+    },
+    {
+      "file": "delivery-rules/map/evidence.json",
+      "status": "PASS",
+      "cases": 5
+    },
+    {
+      "file": "delivery-rules/adversarial-evidence.json",
+      "status": "PASS",
+      "cases": 3
+    },
+    {
+      "file": "delivery-reference/evidence.json",
+      "status": "MODAL_CHROME_PASS_CONTENT_CHANGED_BY_OWNER",
+      "cases": 5
+    },
+    {
+      "file": "storefront-ux-staging/original-browser.json",
+      "status": "PASS",
+      "cases": 5
+    },
+    {
+      "file": "storefront-ux-staging/browser.json",
+      "status": "PASS",
+      "cases": 5
+    },
+    {
+      "file": "storefront-ux-staging/interaction/browser.json",
+      "status": "PASS",
+      "cases": 6
+    }
+  ],
+  "native_unloaded_cart_before": [
+    {
+      "quantity": 1,
+      "before_total": 0,
+      "after_total": 0,
+      "blocked": true,
+      "message": "Для доставки добавьте товары на 2 500,00 ₽. Минимальный заказ — 2500 ₽.",
+      "orders_created": 0
+    },
+    {
+      "quantity": 10,
+      "before_total": 0,
+      "after_total": 0,
+      "blocked": true,
+      "message": "Для доставки добавьте товары на 2 500,00 ₽. Минимальный заказ — 2500 ₽.",
+      "orders_created": 0
+    }
+  ],
+  "native_loaded_cart_after": [
+    {
+      "quantity": 1,
+      "before_total": 0,
+      "after_total": "420",
+      "needs_shipping": true,
+      "chosen": [
+        "rollsbar_delivery"
+      ],
+      "blocked": true,
+      "message": "Для доставки добавьте товары на 2 080,00 ₽. Минимальный заказ — 2500 ₽.",
+      "orders_created": 0
+    },
+    {
+      "quantity": 10,
+      "before_total": 0,
+      "after_total": "4200",
+      "needs_shipping": true,
+      "chosen": [
+        "rollsbar_delivery"
+      ],
+      "blocked": false,
+      "message": "PASS",
+      "orders_created": 0
+    }
+  ],
+  "nearest_oracle": {
+    "tool": "Shapely2.1.2",
+    "gap_cases": 32,
+    "quadrants": [
+      "NE",
+      "NW",
+      "SE",
+      "SW"
+    ],
+    "geography_sha256": "e1c41d62b8a44771f71d0747b5a08f68eac7a6eebd1bb5304d4b0b1a3140740c"
+  },
+  "rate_limit": {
+    "threshold_unchanged": 90,
+    "fixed_window_seconds": 60,
+    "old_count_at_failure": 90,
+    "expiry_utc": "2026-10-30T11:23:51+00:00",
+    "failed_resolve_utc": "2026-10-30T11:22:53+00:00",
+    "audit_run": 41048179166,
+    "unit_fixture": "ADDRESS_RATE_WINDOW_FIXTURE_PASS"
+  },
+  "homepage_measurements": {
+    "before": [
+      {
+        "ttfb": 6149.4000000059605,
+        "dns": 274.40000000596046,
+        "connect": 306,
+        "server_wait": 3260,
+        "html_end": 6160.299999982119,
+        "dom_ready": 6781,
+        "fcp": 6716,
+        "width": 1440,
+        "run": 0,
+        "status": 200
+      },
+      {
+        "ttfb": 2498.800000011921,
+        "dns": 239.89999997615814,
+        "connect": 275.30000001192093,
+        "server_wait": 1982.4000000059605,
+        "html_end": 2501.800000011921,
+        "dom_ready": 2950.300000011921,
+        "fcp": 2864,
+        "width": 1440,
+        "run": 1,
+        "status": 200
+      },
+      {
+        "ttfb": 1209.699999988079,
+        "dns": 0.19999998807907104,
+        "connect": 280.7000000178814,
+        "server_wait": 927.5999999940395,
+        "html_end": 1210.7999999821186,
+        "dom_ready": 1667.5999999940395,
+        "fcp": 1568,
+        "width": 1440,
+        "run": 2,
+        "status": 200
+      },
+      {
+        "ttfb": 1594.300000011921,
+        "dns": 236,
+        "connect": 277.80000001192093,
+        "server_wait": 1079.2000000178814,
+        "html_end": 1595.5,
+        "dom_ready": 2050,
+        "fcp": 1960,
+        "width": 390,
+        "run": 0,
+        "status": 200
+      },
+      {
+        "ttfb": 1207.5999999940395,
+        "dns": 0.20000001788139343,
+        "connect": 278.7999999821186,
+        "server_wait": 927.3999999761581,
+        "html_end": 1210.800000011921,
+        "dom_ready": 1675,
+        "fcp": 1576,
+        "width": 390,
+        "run": 1,
+        "status": 200
+      },
+      {
+        "ttfb": 1269.8999999761581,
+        "dns": 0.29999998211860657,
+        "connect": 275.7000000178814,
+        "server_wait": 992.7999999821186,
+        "html_end": 1272.5,
+        "dom_ready": 1720,
+        "fcp": 1624,
+        "width": 390,
+        "run": 2,
+        "status": 200
+      }
+    ],
+    "after": [
+      {
+        "ttfb": 1481.0999999940395,
+        "dns": 143.5,
+        "connect": 281.69999998807907,
+        "server_wait": 1053,
+        "html_end": 1482.4000000059605,
+        "dom_ready": 1935.5,
+        "fcp": 1864,
+        "width": 1440,
+        "run": 0,
+        "status": 200
+      },
+      {
+        "ttfb": 1334.4000000059605,
+        "dns": 0.19999998807907104,
+        "connect": 283,
+        "server_wait": 1050,
+        "html_end": 1335.4000000059605,
+        "dom_ready": 1789.2000000178814,
+        "fcp": 1700,
+        "width": 1440,
+        "run": 1,
+        "status": 200
+      },
+      {
+        "ttfb": 1408,
+        "dns": 0.09999999403953552,
+        "connect": 276.90000000596046,
+        "server_wait": 1129.699999988079,
+        "html_end": 1493.9000000059605,
+        "dom_ready": 1870,
+        "fcp": 1772,
+        "width": 1440,
+        "run": 2,
+        "status": 200
+      },
+      {
+        "ttfb": 1659.4000000059605,
+        "dns": 334.2999999821186,
+        "connect": 275.30000001192093,
+        "server_wait": 1048.4000000059605,
+        "html_end": 1662.2000000178814,
+        "dom_ready": 2118.800000011921,
+        "fcp": 2016,
+        "width": 390,
+        "run": 0,
+        "status": 200
+      },
+      {
+        "ttfb": 1505.5,
+        "dns": 0.19999998807907104,
+        "connect": 274.80000001192093,
+        "server_wait": 1228.7999999821186,
+        "html_end": 1506.6000000238419,
+        "dom_ready": 1960.7000000178814,
+        "fcp": 1868,
+        "width": 390,
+        "run": 1,
+        "status": 200
+      },
+      {
+        "ttfb": 1557.699999988079,
+        "dns": 240.90000000596046,
+        "connect": 296.19999998807907,
+        "server_wait": 1018.8000000119209,
+        "html_end": 1559,
+        "dom_ready": 2009.699999988079,
+        "fcp": 1916,
+        "width": 390,
+        "run": 2,
+        "status": 200
+      }
+    ]
+  },
+  "same_host_http": [
+    {
+      "path": "/",
+      "sample": 0,
+      "status": 200,
+      "dns": 0.001827,
+      "connect": 0.002587,
+      "tls": null,
+      "ttfb": 0.740828,
+      "total": 0.746015,
+      "error": 0
+    },
+    {
+      "path": "/",
+      "sample": 1,
+      "status": 200,
+      "dns": 2e-05,
+      "connect": 0.000707,
+      "tls": null,
+      "ttfb": 0.591521,
+      "total": 0.596864,
+      "error": 0
+    },
+    {
+      "path": "/",
+      "sample": 2,
+      "status": 200,
+      "dns": 2e-05,
+      "connect": 0.00066,
+      "tls": null,
+      "ttfb": 0.680619,
+      "total": 0.685348,
+      "error": 0
+    },
+    {
+      "path": "/wp-content/plugins/rollsbar-core/assets/js/checkout.js",
+      "sample": 0,
+      "status": 200,
+      "dns": 2.3e-05,
+      "connect": 0.000657,
+      "tls": null,
+      "ttfb": 0.013064,
+      "total": 0.013364,
+      "error": 0
+    },
+    {
+      "path": "/wp-content/plugins/rollsbar-core/assets/js/checkout.js",
+      "sample": 1,
+      "status": 200,
+      "dns": 1.6e-05,
+      "connect": 0.000639,
+      "tls": null,
+      "ttfb": 0.022767,
+      "total": 0.02282,
+      "error": 0
+    },
+    {
+      "path": "/wp-content/plugins/rollsbar-core/assets/js/checkout.js",
+      "sample": 2,
+      "status": 200,
+      "dns": 1.6e-05,
+      "connect": 0.000684,
+      "tls": null,
+      "ttfb": 0.011808,
+      "total": 0.011856,
+      "error": 0
+    }
+  ],
+  "submitted_test_orders": 0,
+  "production_access": false,
+  "production_mutation": false,
+  "vision_notes": [
+    "All95 artifact PNGs viewed through10 contact sheets +2 policy +4 fulfillment originals.",
+    "All4 supplemental settled originals also viewed; native total420 RUB visible and no loading descendant after reload.",
+    "Fixed modal/backdrop/source chrome, no overflow, consent marker, receiving modes and floating controls preserved.",
+    "4200/2500 qualified free delivery and420/1200 preliminary callback visibly correct.",
+    "Linked OpenStreetMap attribution retained, Leaflet prefix/flag absent, no exact marker for approximate street.",
+    "Expected no-order middleware notices remain in functional assembly captures; no actual customer submission failure inferred.",
+    "One original frame caught transient native loading; supplemental settled capture passed without altering originals.",
+    "No visual defect revoking functional PASS; homepage latency remains OPEN."
+  ]
+}
