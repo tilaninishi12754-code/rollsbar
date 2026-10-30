@@ -36,6 +36,7 @@ try:
     settle_native(p);p.reload(wait_until='domcontentloaded')
     p.wait_for_function('!!wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")')
     require(p.locator('#shipping-address_1').input_value()==candidate,'verified address survives ordinary reload')
+    p.locator('.rollsbar-delivery-terms').filter(visible=True).first.wait_for(state='visible')
     require(all('От' in text for text in p.locator('.rollsbar-delivery-terms').all_text_contents()) and p.locator('.rollsbar-delivery-terms').count()>0,'saved-address minimum survives reload without false free delivery')
     for typed,expected in [('8','+7'),('7','+7'),('89781234567','+79781234567')]:
      p.locator('#shipping-phone').fill(typed);require(p.locator('#shipping-phone').input_value()==expected,'immediate prefix '+typed)
