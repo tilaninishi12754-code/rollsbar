@@ -49,7 +49,7 @@ try:
      require(not payload.get('suggestions'),'out-of-area Moscow excluded from local suggestions')
      require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'unknown address remains callback, not a guessed minimum')
      report['cases'].append({'query':query,'expected':None,'display':'no local suggestion','minimum':None})
-     p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/('address-'+str(len(report['cases']))+'.png')))
+     p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/('address-'+str(len(report['cases']))+'.png')))
      continue
     require(bool(payload.get('suggestions')),'provider candidates exist '+query)
     p.locator('.rollsbar-address-suggestions__item').first.wait_for(state='visible')
@@ -76,7 +76,7 @@ try:
     row['browser_message']=message
     print('PASS',query,rule,flush=True)
     if minimum==4000 or minimum is None or query in ['Симферополь Киевская 139А','Симферополь Кечкеметская 79','Симферополь Беспалова 53']:
-     p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/('address-'+str(len(report['cases']))+'.png')))
+     p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/('address-'+str(len(report['cases']))+'.png')))
    for tier in [1200,1500,2000,2500,3000,3500,4000]:
     unique={r['display'] for r in report['cases'] if r['expected']==tier}
     require(len(unique)>=2,'two distinct live exact addresses at tier '+str(tier))

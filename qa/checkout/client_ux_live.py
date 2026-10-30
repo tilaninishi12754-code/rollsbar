@@ -37,7 +37,7 @@ try:
       require(radios.nth(1).is_checked(),'native keyboard arrow selection')
       p.screenshot(path=str(out/f'pizza-{width}.png'))
      p.keyboard.press('Escape');require(not modal.is_visible(),'size modal closes')
-    mapframe=p.locator('.rollsbar-delivery-map');mapframe.scroll_into_view_if_needed()
+    mapframe=p.locator('.rollsbar-delivery-map');p.locator('#delivery').evaluate("e=>e.scrollIntoView({block:'start'})")
     frame=mapframe.element_handle().content_frame();frame.wait_for_function('window.rollsbarMapReady===true')
     tiers=frame.locator('.legend').inner_text()
     for tier in [1200,1500,2000,2500,3000,3500,4000]:require(str(tier) in tiers,'all existing tiers visible')

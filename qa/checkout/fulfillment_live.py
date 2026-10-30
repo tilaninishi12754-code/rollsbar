@@ -30,7 +30,7 @@ try:
     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'4200 exceeds 2500 and has no minimum error')
     p.wait_for_function('()=>!document.querySelector(".rollsbar-submit-feedback").textContent.includes("Оставьте телефон")')
     require('доставка бесплатная' in p.locator('.rollsbar-submit-feedback').inner_text(),'completed contact/consent gets truthful qualified feedback')
-    p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(out/f'qualified-{width}.png'),animations='disabled')
+    p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(out/f'qualified-{width}.png'),animations='disabled')
     youth=[]
     for house in [1,2,5]:
      value=select('Симферополь Молодёжная '+str(house));youth.append(value)
@@ -51,7 +51,7 @@ try:
      require(frame.evaluate('window.rollsbarMapState?.exact') is False,'preliminary street estimate never places an exact house marker')
     require(frame.locator('.leaflet-control-attribution a[href*="leafletjs"]').count()==0,'Leaflet prefix/flag removed through supported API')
     require(frame.locator('.leaflet-control-attribution a[href*="openstreetmap.org/copyright"]').is_visible(),'OpenStreetMap attribution preserved')
-    p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(out/f'local-address-{width}.png'),animations='disabled')
+    p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(out/f'local-address-{width}.png'),animations='disabled')
     report['checks'].append({'width':width,'status':'PASS','cart_rubles':4200,'minimum':2500,'molodezhnaya':[{'display':v['display'],'qc_geo':v['qc_geo'],'decision':v['delivery']} for v in youth]})
   b.close()
  report['status']='PASS'

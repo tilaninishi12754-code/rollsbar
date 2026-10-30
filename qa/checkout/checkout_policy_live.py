@@ -48,7 +48,7 @@ try:
     p.locator('.wc-block-checkout__add-note textarea').wait_for()
     require(p.locator('.wc-block-checkout__add-note textarea').input_value()==note,'unfinished note survives reload; only successful order may clear it')
     require('no-store' in p.request.get(BASE+'/').headers.get('cache-control',''),'same-browser revisit fetches dynamic HTML')
-    p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(out/f'policy-{width}.png'),animations='disabled')
+    p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(out/f'policy-{width}.png'),animations='disabled')
     report['checks'].append({'width':width,'status':'PASS','queries':queries,'saved_address':candidate,'draft_retained':True})
   b.close()
  report['status']='PASS'

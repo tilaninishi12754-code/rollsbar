@@ -689,3 +689,5 @@ a.screen-reader-text:focus{position:fixed;top:8px;left:8px;width:auto;height:aut
 .rollsbar-site-menu__close{min-width:44px;min-height:44px}
 .rollsbar-home-delivery .rollsbar-delivery-map{display:block;width:100%;height:360px;border:0}
 @media(max-width:700px){body:not(.home) .rollsbar-header .rollsbar-cart-link{display:none}body:not(.home) .rollsbar-menu-toggle{width:44px;height:44px}}
+
+.rollsbar-home-delivery,.rollsbar-contacts{scroll-margin-top:150px}

@@ -253,14 +253,14 @@ try:
    print('protected native country/email context seeded')
    for width in WIDTHS:
     height=1000 if width>700 else 844
-    p.set_viewport_size({'width':width,'height':height});ref.set_viewport_size({'width':width,'height':height});p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.wait_for_timeout(500)
+    p.set_viewport_size({'width':width,'height':height});ref.set_viewport_size({'width':width,'height':height});p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0');p.wait_for_timeout(500)
     # Locator.click invokes CDP scrollIntoView, which scrolls this already visible
     # heading by 23px after a reopen. A real pointer hit leaves the panel at top.
     p.bring_to_front()
     heading=p.locator('.rollsbar-checkout-title').bounding_box()
     p.mouse.click(heading['x']+10,heading['y']+10)
     ref.locator('.checkout-head h2').click();p.bring_to_front()
-    require(p.locator('[role=dialog]').evaluate('e=>e.scrollTop')==0,'visible heading pointer hit preserves modal top')
+    require(p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop')==0,'visible heading pointer hit preserves modal top')
     require(p.locator('.wc-block-components-notice-banner,.wc-block-components-notice-snackbar').count()==0,'clean checkout has no stale native cart notices')
     map_ready(p)
     shell=geom(p,'.rollsbar-legal-page > .rollsbar-shell');reference=geom(ref,'.checkout-panel')
@@ -316,10 +316,10 @@ try:
     p.screenshot(path=str(OUT/f'candidate-{width}-cta.png'));ref.screenshot(path=str(OUT/f'reference-{width}-cta.png'))
     ImageChops.difference(Image.open(OUT/f'candidate-{width}-cta.png').convert('RGB'),Image.open(OUT/f'reference-{width}-cta.png').convert('RGB')).save(OUT/f'diff-{width}-cta.png')
     ref.locator('.checkout-panel').evaluate('e=>e.scrollTop=0')
-    p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0')
+    p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0')
     p.mouse.move(shell['x']+5,height/2);p.mouse.wheel(0,400);p.wait_for_timeout(200)
-    require(p.evaluate('scrollY')==0 and p.locator('[role=dialog]').evaluate('e=>e.scrollTop')>0,'wheel scrolls modal only')
-    p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0')
+    require(p.evaluate('scrollY')==0 and p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop')>0,'wheel scrolls modal only')
+    p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0')
     p.locator('.rollsbar-legal-page__back').click();p.wait_for_url(BASE+'/',wait_until='domcontentloaded')
     p.wait_for_function("document.querySelector('.rollsbar-product-card')?.getAttribute('aria-busy')==='false'")
     p.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
@@ -336,8 +336,8 @@ try:
    map_ready(p,reveal=True)
    p.locator('.rollsbar-checkout-map').screenshot(path=str(OUT/'dadata-low-precision.png'))
    cart=store_cart_state(p);require(cart['itemsCount']==1,'cart summary retains exact isolated native cart item')
-   p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.locator('.rollsbar-legal-page__back').focus();p.keyboard.press('Shift+Tab')
-   require(p.locator('[role=dialog]').evaluate('e=>e.contains(document.activeElement)'),'focus remains in modal')
+   p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0');p.locator('.rollsbar-legal-page__back').focus();p.keyboard.press('Shift+Tab')
+   require(p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.contains(document.activeElement)'),'focus remains in modal')
    p.keyboard.press('Escape');p.wait_for_url(BASE+'/',wait_until='domcontentloaded')
    p.locator('.rollsbar-header').wait_for(state='visible')
    require(p.locator('.rollsbar-header').is_visible(),'Escape returns to storefront')
@@ -349,8 +349,8 @@ try:
    # routed old-document fetch before it emits a terminal request event.
    p.wait_for_function("document.querySelector('.rollsbar-product-card')?.getAttribute('aria-busy')==='false'")
    require(all('page_finished' in r or 'failed' in r for r in report['cart_transport']),'direct entry setup starts after native home cart read settles')
-   p.goto(BASE+'/checkout/',wait_until='domcontentloaded');p.locator('[role=dialog]').wait_for()
-   require(p.locator('[role=dialog]').count()==1,'direct checkout entry remains modal')
+   p.goto(BASE+'/checkout/',wait_until='domcontentloaded');p.locator('[data-rollsbar-modal="1"][role=dialog]').wait_for()
+   require(p.locator('[data-rollsbar-modal="1"][role=dialog]').count()==1,'direct checkout entry remains modal')
    # Exercise Woo's real submit assembly, stopping in public apiFetch middleware
    # before HTTP. The independent route guard still aborts any escaped POST.
    p.locator('#billing-first_name').fill('Тест')

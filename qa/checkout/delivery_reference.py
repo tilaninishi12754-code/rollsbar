@@ -55,7 +55,7 @@ try:
    p.goto(BASE+'/checkout/',wait_until='domcontentloaded');p.locator('[data-rollsbar-modal="1"]').wait_for(state='visible')
    for width in [1440,701,700,390,320]:
     p.set_viewport_size({'width':width,'height':900});ref.set_viewport_size({'width':width,'height':900})
-    p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');ref.locator('.checkout-panel').evaluate('e=>e.scrollTop=0')
+    p.locator('[data-rollsbar-modal="1"][role=dialog]').evaluate('e=>e.scrollTop=0');ref.locator('.checkout-panel').evaluate('e=>e.scrollTop=0')
     ref.wait_for_timeout(400)
     native=geometry(p,'[data-rollsbar-modal="1"]');source=geometry(ref,'.checkout-panel')
     for key in ['x','width']:require(abs(native[key]-source[key])<=2,'immutable modal '+key+' at '+str(width))
