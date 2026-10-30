@@ -103,6 +103,10 @@ try:
     p.wait_for_function('(v)=>document.querySelector(".rollsbar-address-suggestions__item")?.textContent===v',arg=candidates[0]['display'])
     with p.expect_response(lambda r:'/rollsbar/v1/address-resolve' in r.url and r.request.method=='POST') as resolved:p.locator('.rollsbar-address-suggestions__item').first.click()
     result=resolved.value.json()
+    if resolved.value.status!=200 or 'qc_geo' not in result:
+     report['address_failure']={'width':width,'query':query,'status':resolved.value.status,'response':result}
+     print('ADDRESS_FAILURE',json.dumps(report['address_failure'],ensure_ascii=False),flush=True)
+    require(resolved.value.status==200 and 'qc_geo' in result,'provider resolve returns successful precision metadata')
     require(result['qc_geo']!=0 and result['delivery']['minimum'] is None,'low precision never assigns a threshold')
     require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'unresolved address does not block callback')
     require(p.locator('.rollsbar-checkout-map').get_attribute('data-exact')=='0','low precision never places an exact customer point')
