@@ -211,7 +211,10 @@ final class RollsBar_Address_Suggestions {
 	private static function check_rate_limit() {
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
 		$key = 'rb_addr_rl_' . substr( hash_hmac( 'sha256', $ip, wp_salt( 'nonce' ) ), 0, 32 );
-		$count = (int) get_transient( $key );
+		$now = time(); $window = get_transient( $key );
+		$count = is_array( $window ) ? max( 0, (int) ( $window['count'] ?? 0 ) ) : max( 0, (int) $window );
+		$expires = is_array( $window ) ? (int) ( $window['expires'] ?? 0 ) : $now + MINUTE_IN_SECONDS;
+		if ( $expires <= $now ) { $count = 0; $expires = $now + MINUTE_IN_SECONDS; }
 
 		if ( $count >= self::RATE_LIMIT ) {
 			return new WP_Error(
@@ -221,7 +224,8 @@ final class RollsBar_Address_Suggestions {
 			);
 		}
 
-		set_transient( $key, $count + 1, MINUTE_IN_SECONDS );
+		// Keep the first request's window boundary; activity must not renew it.
+		set_transient( $key, array( 'count' => $count + 1, 'expires' => $expires ), max( 1, $expires - $now ) );
 		return true;
 	}
 

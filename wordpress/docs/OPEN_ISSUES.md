@@ -5,6 +5,14 @@ Last updated: 2026-10-30
 
 This file is the durable source of truth for unresolved / deferred RollsBar defects and follow-up work. New confirmed issues should be recorded here instead of living only in chat. Do not reopen items marked DONE without new evidence.
 
+## RB-024 — Cold native cart minimum, nearest-area coverage and qualified feedback
+
+Status: VERIFY. Priority: P1. Owner screenshot4200/2500 and read-only native probe41042740854 prove pre-controller validation read unloaded cart totals as0. Fix loads the authoritative native cart before comparison; isolated native proof41044741234 gives420→2080 shortfall and4200→PASS at2500, no order invocation. Owner also approved nearest existing zone for uncovered exact local addresses, preliminary nonblocking estimates for street-level addresses (Молодёжная1/2/5→estimated1200), and Leaflet prefix/flag removal with OpenStreetMap attribution retained. Focused1440/390 gates PASS; full exact-release/vision pending. See `CHECKOUT_FULFILLMENT_2026-10-30.md`. Production prohibited; no new submitted orders authorized.
+
+## RB-025 — Variable delay before first storefront HTML/paint
+
+Status: OPEN — measured, no speed fix claimed. Priority: P2. Owner reports a pause before initial site loading. Six fresh un-routed desktop/mobile navigations: first TTFB6.149s/FCP6.716s; remaining TTFB1.208–2.499s. Same-host public HTTP probe41043921255: homepage0.592–0.741s versus static JS0.012–0.023s. Browser/network startup and variable server response contribute; map/checkout code has not started at that point. Exact root of intermittent long first response remains unproven. Preserve cache/session correctness and accepted storefront; no blanket cache/CDN or shared production hosting changes. Evidence/limits in `CHECKOUT_FULFILLMENT_2026-10-30.md`.
+
 ## RB-023 — Local suggestions, delivery minimum, order-note lifecycle and cache refresh
 
 Status: DONE — staging, no new submitted orders. Priority: P1. Explicit owner policy2026-10-30 implemented: known minimum mandatory, unknown address callback with manager warning, local suggestions, successful-order-only note reset, immediate phone prefix and ordinary-browser updates. Application/marker ae4824266724241507056c4068343cd510575d28; backup20261030T090847Z; apply41031129897/finalize41033485851 SUCCESS; native/provider/map/reference/adversarial/storefront/Interaction Stability PASS; all91 PNGs inspected. Native success/failure session fixtures prove note cleanup; no new successful order placed for that check. Full evidence/limitations: `CHECKOUT_POLICY_2026-10-30.md` and JSON. Production untouched.

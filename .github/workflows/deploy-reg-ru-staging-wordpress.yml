@@ -493,6 +493,7 @@ jobs:
           php -l wordpress/deploy/verify-delivery-rules.php
           node --check wordpress/wp-content/plugins/rollsbar-core/assets/js/checkout.js
           php qa/checkout/nearest_fixture.php
+          php qa/checkout/address_rate_fixture.php
       - name: Install transport
         run: python3 -m pip install --disable-pip-version-check --quiet paramiko
       - name: Install browser gates
