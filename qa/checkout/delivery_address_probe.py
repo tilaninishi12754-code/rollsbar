@@ -67,9 +67,12 @@ try:
     if query=='Симферополь Киевская 139А':require(rule.get('provisional') is True and rule.get('basis')=='owner_geographic_advisory','new exact-house geographic fallback is explicitly provisional')
     p.wait_for_function('(value)=>[...document.querySelectorAll("input[id$=address_1]")].some(e=>e.value===value)',arg=result['display'])
     p.wait_for_function('(proof)=>wp.data.select("wc/store/checkout").getExtensionData()["rollsbar-delivery"]?.address_proof===proof',arg=result['address_proof'])
-    require(p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")') is None,'address rule is advisory for callback')
+    p.wait_for_function('(known)=>!!wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")===known',arg=minimum is not None)
+    error=p.evaluate('wp.data.select("wc/store/validation").getValidationError("rollsbar-delivery-minimum")')
+    require(bool(error)==(minimum is not None),'known minimum blocks below-threshold delivery; unknown remains callback')
+    if minimum is not None:require(str(minimum) in error['message'].replace(' ','').replace('\u00a0',''),'blocking error names actual provider minimum')
     message=p.locator('input[id$=address_1]').filter(visible=True).first.locator('..').inner_text()
-    if minimum is not None:require(str(minimum) in message.replace(' ','').replace('\u00a0',''),'native browser displays advisory minimum '+str(minimum))
+    if minimum is not None:require(str(minimum) in message.replace(' ','').replace('\u00a0',''),'native browser displays required minimum '+str(minimum))
     row['browser_message']=message
     print('PASS',query,rule,flush=True)
     if minimum==4000 or minimum is None or query=='Симферополь Киевская 139А':
