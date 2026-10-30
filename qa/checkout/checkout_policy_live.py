@@ -27,7 +27,7 @@ try:
      result=suggested.value.json()['suggestions']
      require(bool(result) and not any('Москва' in s['display'] for s in result),'local suggestions for '+query)
      if query in ['Симферополь','улица Гагарина']:require('Симферополь' in result[0]['display'],'Simferopol ranked first for '+query)
-     else:require(query in result[0]['display'],'approved nearby village remains available: '+query)
+     else:require(query.casefold() in result[0]['display'].casefold(),'approved nearby village remains available: '+query)
      queries.append({'query':query,'first':result[0]['display']})
     with p.expect_response(lambda r:'/address-suggestions' in r.url and parse_qs(urlsplit(r.url).query).get('query')==['Гагарина 1']) as suggested:address.fill('Гагарина 1')
     candidate=suggested.value.json()['suggestions'][0]['display']

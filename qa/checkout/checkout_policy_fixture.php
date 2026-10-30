@@ -38,6 +38,7 @@ check_rule(RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','city
 check_rule(RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area'=>'Симферопольский','settlement'=>'Мазанка']),'nearby villages accepted');
 check_rule(!RollsBar_Address_Suggestions::local_scope(['region'=>'Москва','street'=>'Симферопольская']),'Moscow namesake excluded');
 check_rule(RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area'=>'Бахчисарайский','settlement'=>'Приятное Свидание']),'explicit client-table village outside primary district retained');
+check_rule(RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area'=>'Бахчисарайский','settlement'=>'Приятное свидание','settlement_fias_id'=>'a5c49b5b-790c-4ae6-990d-5f445f5b4d6c']),'actual provider lowercase village identity accepted');
 check_rule(!RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area'=>'Бахчисарайский','settlement'=>'Другой посёлок']),'unrelated district results remain excluded');
 $border=identity(['city'=>'','area'=>'Бахчисарайский','settlement'=>'Приятное Свидание','settlement_fias_id'=>'fixture-approved-village']);
 check_rule(4000===RollsBar_Delivery_Minimum::classify($border)['minimum'],'H9 minimum retained under actual neighbouring district');
