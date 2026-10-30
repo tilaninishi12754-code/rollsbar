@@ -181,7 +181,13 @@ try:
      except Exception:
       report['minimum_failure']={'validation':p.evaluate('wp.data.select("wc/store/validation").getValidationErrors()'),'customer':p.evaluate('wp.data.select("wc/store/cart").getCustomerData()'),'totals':p.evaluate('wp.data.select("wc/store/cart").getCartTotals()'),'proof':p.evaluate('wp.data.select("wc/store/checkout").getExtensionData()'),'body':p.locator('body').inner_text()}
       raise
-     require(all(text=='Бесплатно' for text in p.locator('.rollsbar-delivery-terms').all_text_contents()),'qualified basket gets free delivery')
+     settle_native(p)
+     p.wait_for_function('()=>{const terms=[...document.querySelectorAll(".rollsbar-delivery-terms")];return terms.length>0&&terms.every(e=>e.textContent==="Бесплатно")}')
+     terms=p.locator('.rollsbar-delivery-terms').all_text_contents()
+     if not all(text=='Бесплатно' for text in terms):
+      report['qualified_failure']={'terms':terms,'totals':p.evaluate('wp.data.select("wc/store/cart").getCartTotals()'),'address':p.evaluate('wp.data.select("wc/store/cart").getCustomerData().shippingAddress.address_1')}
+      print('QUALIFIED_FAILURE',report['qualified_failure'],flush=True)
+     require(all(text=='Бесплатно' for text in terms),'qualified basket gets free delivery')
      for field,value in [('entrance','2'),('door-code','10'),('floor','3'),('apartment-office','4')]:p.locator('#order-rollsbar-'+field).fill(value)
      p.locator('.wc-block-checkout__add-note textarea').fill('Тест без отправки заказа')
      p.locator('#order-rollsbar-privacy-consent').check()
