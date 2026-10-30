@@ -3,6 +3,9 @@
 $saved_cart=WC()->cart;$saved_session=WC()->session;$saved_customer=WC()->customer;$saved_actions=$GLOBALS['wp_actions'];
 $saved_hooks=array_map(static fn($hook)=>clone $hook,$GLOBALS['wp_filter']);
 try {
+ // Earlier fixtures constructed empty carts. Their session callbacks would
+ // overwrite this isolated cart's selected shipping method during calculation.
+ foreach($GLOBALS['wp_filter'] as $name=>$hook){foreach($hook->callbacks as $priority=>$callbacks){foreach($callbacks as $entry){$cb=$entry['function'];if(is_array($cb)&&is_object($cb[0])&&$cb[0] instanceof WC_Cart_Session){remove_filter($name,$cb,$priority);}}}}
  add_filter('woocommerce_cart_session_initialize','__return_false',PHP_INT_MAX);
  foreach(array(1,10) as $quantity){
   WC()->session=new class extends WC_Session_Handler {public function __construct(){}public function save_data($old_session_key=0){}};

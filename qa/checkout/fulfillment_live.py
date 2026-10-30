@@ -14,8 +14,9 @@ try:
   for width in [1440,390]:
    with delivery_page(b,viewport={'width':width,'height':900},locale='ru-RU') as p:
     p.goto(BASE+'/',wait_until='domcontentloaded');add_first_simple_product(p);settle_native(p)
-    total=p.evaluate('''async()=>{const r=await fetch('/wp-json/wc/store/v1/cart'),cart=await r.json();const u=await fetch('/wp-json/wc/store/v1/cart/update-item',{method:'POST',headers:{'Content-Type':'application/json',Nonce:r.headers.get('Nonce')},body:JSON.stringify({key:cart.items[0].key,quantity:10})});if(!u.ok)throw Error('Native quantity update failed');return (await u.json()).totals.total_items;}''')
-    require(int(total)==420000,'native 10 x 420 cart, not a client-invented total')
+    total=p.evaluate('''async()=>{const r=await fetch('/wp-json/wc/store/v1/cart'),cart=await r.json();const u=await fetch('/wp-json/wc/store/v1/cart/update-item',{method:'POST',headers:{'Content-Type':'application/json',Nonce:r.headers.get('Nonce')},body:JSON.stringify({key:cart.items[0].key,quantity:10})});if(!u.ok)throw Error('Native quantity update failed');return (await u.json()).totals;}''')
+    print('NATIVE_TOTALS',total,flush=True)
+    require(int(total['total_items'])/10**int(total['currency_minor_unit'])==4200,'native 10 x 420 cart, not a client-invented total')
     p.goto(BASE+'/checkout/',wait_until='domcontentloaded');p.locator('#shipping-address_1').wait_for()
     def select(query):
      with p.expect_response(lambda r:'/address-suggestions' in r.url and parse_qs(urlsplit(r.url).query).get('query')==[query]) as suggested:p.locator('#shipping-address_1').fill(query)
