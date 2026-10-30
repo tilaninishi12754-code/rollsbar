@@ -39,4 +39,8 @@ check_rule(RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area
 check_rule(!RollsBar_Address_Suggestions::local_scope(['region'=>'Москва','street'=>'Симферопольская']),'Moscow namesake excluded');
 check_rule(RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area'=>'Бахчисарайский','settlement'=>'Приятное Свидание']),'explicit client-table village outside primary district retained');
 check_rule(!RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area'=>'Бахчисарайский','settlement'=>'Другой посёлок']),'unrelated district results remain excluded');
+$border=identity(['city'=>'','area'=>'Бахчисарайский','settlement'=>'Приятное Свидание','settlement_fias_id'=>'fixture-approved-village']);
+check_rule(4000===RollsBar_Delivery_Minimum::classify($border)['minimum'],'H9 minimum retained under actual neighbouring district');
+$border['settlement']='Другой посёлок';
+check_rule(null===RollsBar_Delivery_Minimum::classify($border)['minimum'],'neighbouring district is not opened by village exception');
 echo "CHECKOUT_POLICY_FIXTURE_PASS\n";

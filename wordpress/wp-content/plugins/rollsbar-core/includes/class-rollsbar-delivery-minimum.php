@@ -25,7 +25,8 @@ final class RollsBar_Delivery_Minimum {
 		$city = self::normalize( (string) ( $data['city'] ?? '' ) );
 		$area = self::normalize( (string) ( $data['area'] ?? '' ) );
 		$region = self::normalize( (string) ( $data['region'] ?? '' ) );
-		if ( 'крым' !== $region || ( 'симферополь' !== $city && 'симферопольский' !== $area ) ) { return $unknown; }
+		$approved_border_village = 'бахчисарайский' === $area && 'приятное свидание' === self::normalize( (string) ( $data['settlement'] ?? '' ) );
+		if ( 'крым' !== $region || ( 'симферополь' !== $city && 'симферопольский' !== $area && ! $approved_border_village ) ) { return $unknown; }
 		$street = self::normalize( (string) ( $data['street'] ?? '' ) );
 		if ( 'симферополь' === $city && in_array( $street, array( 'кечкеметская', 'беспалова' ), true ) ) {
 			$unknown['status'] = 'ambiguous';
