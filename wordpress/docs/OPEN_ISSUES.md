@@ -7,7 +7,7 @@ This file is the durable source of truth for unresolved / deferred RollsBar defe
 
 ## RB-023 — Local suggestions, delivery minimum, order-note lifecycle and cache refresh
 
-Status: VERIFY. Priority: P1. Explicit owner policy2026-10-30: known delivery minimum required; unknown address still callback with manager warning; local suggestions; successful-order-only comment reset; immediate phone prefix and ordinary-browser updates. Local native five-width/server fixtures PASS. Live release/vision pending. See `CHECKOUT_POLICY_2026-10-30.md`. No further real order authorized in this batch.
+Status: DONE — staging, no new submitted orders. Priority: P1. Explicit owner policy2026-10-30 implemented: known minimum mandatory, unknown address callback with manager warning, local suggestions, successful-order-only note reset, immediate phone prefix and ordinary-browser updates. Application/marker ae4824266724241507056c4068343cd510575d28; backup20261030T090847Z; apply41031129897/finalize41033485851 SUCCESS; native/provider/map/reference/adversarial/storefront/Interaction Stability PASS; all91 PNGs inspected. Native success/failure session fixtures prove note cleanup; no new successful order placed for that check. Full evidence/limitations: `CHECKOUT_POLICY_2026-10-30.md` and JSON. Production untouched.
 
 ## RB-022 — Final order submission waits for synchronous SMTP
 
@@ -15,7 +15,7 @@ Status: DONE — staging single-order scope. Priority: P1. SMTP connect/auth mea
 
 ## RB-021 — Trailing-dot storefront loses session on checkout navigation
 
-Status: DEFERRED after owner clarified the noncanonical URL was their input and shifted work to final-submit latency. Priority: P2. Dotted-origin session split was reproduced, canonical entry works. Candidatec613f3f applied with backend checks, but run40954043553 failed the new dotted-entry redirect gate; no automatic-normalization PASS or finalization claimed. Existing PHP hook's effectiveness is unproven on this host; no cookie migration/cart reconstruction attempted. Server application remainsc613f3f, historical accepted markerfb0fb54. Evidence: `CART_CANONICAL_HOST_2026-10-29.md`. This separate failed candidate must not be conflated with successful option-only email queue verification.
+Status: DEFERRED after owner clarified the noncanonical URL was their input and shifted work to final-submit latency. Priority: P2. Dotted-origin session split was reproduced, canonical entry works. Candidatec613f3f applied with backend checks, but run40954043553 failed the new dotted-entry redirect gate; no automatic-normalization PASS or finalization claimed. Existing PHP hook's effectiveness is unproven on this host; no cookie migration/cart reconstruction attempted. At deferral, server application was c613f3f with historical accepted marker fb0fb54; latest accepted application is tracked in RB-023. Evidence: `CART_CANONICAL_HOST_2026-10-29.md`. This separate failed candidate must not be conflated with successful option-only email queue verification.
 
 ## RB-019 — Checkout cold loading and redundant assets
 
