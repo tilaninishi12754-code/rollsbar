@@ -1,0 +1,326 @@
+{
+  "geography_sha256": "e1c41d62b8a44771f71d0747b5a08f68eac7a6eebd1bb5304d4b0b1a3140740c",
+  "oracle": "Shapely metric distance to polygon area, not centroid/store radius",
+  "cases": [
+    {
+      "quadrant": "NE",
+      "point": [
+        34.116,
+        44.998000000000005
+      ],
+      "minimum": 2000,
+      "distance_m": 82,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NE",
+      "point": [
+        34.116,
+        45.010000000000005
+      ],
+      "minimum": 2000,
+      "distance_m": 926,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NE",
+      "point": [
+        34.116,
+        45.022000000000006
+      ],
+      "minimum": 3500,
+      "distance_m": 579,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NE",
+      "point": [
+        34.116,
+        45.034000000000006
+      ],
+      "minimum": 3500,
+      "distance_m": 1304,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NE",
+      "point": [
+        34.116,
+        45.04600000000001
+      ],
+      "minimum": 3500,
+      "distance_m": 772,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NE",
+      "point": [
+        34.116,
+        45.07
+      ],
+      "minimum": 3500,
+      "distance_m": 1,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NE",
+      "point": [
+        34.116,
+        45.082
+      ],
+      "minimum": 3500,
+      "distance_m": 1065,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NE",
+      "point": [
+        34.116,
+        45.094
+      ],
+      "minimum": 3500,
+      "distance_m": 1957,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NW",
+      "point": [
+        33.9,
+        44.962
+      ],
+      "minimum": 2000,
+      "distance_m": 8928,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NW",
+      "point": [
+        33.9,
+        44.974000000000004
+      ],
+      "minimum": 4000,
+      "distance_m": 8047,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NW",
+      "point": [
+        33.9,
+        44.986000000000004
+      ],
+      "minimum": 4000,
+      "distance_m": 6881,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NW",
+      "point": [
+        33.9,
+        44.998000000000005
+      ],
+      "minimum": 4000,
+      "distance_m": 5788,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NW",
+      "point": [
+        33.9,
+        45.010000000000005
+      ],
+      "minimum": 4000,
+      "distance_m": 4807,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NW",
+      "point": [
+        33.9,
+        45.022000000000006
+      ],
+      "minimum": 4000,
+      "distance_m": 3992,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NW",
+      "point": [
+        33.9,
+        45.034000000000006
+      ],
+      "minimum": 4000,
+      "distance_m": 3510,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "NW",
+      "point": [
+        33.9,
+        45.04600000000001
+      ],
+      "minimum": 4000,
+      "distance_m": 3479,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SE",
+      "point": [
+        34.116,
+        44.794000000000004
+      ],
+      "minimum": 3000,
+      "distance_m": 9451,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SE",
+      "point": [
+        34.116,
+        44.806000000000004
+      ],
+      "minimum": 3000,
+      "distance_m": 8128,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SE",
+      "point": [
+        34.116,
+        44.818000000000005
+      ],
+      "minimum": 3000,
+      "distance_m": 6810,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SE",
+      "point": [
+        34.116,
+        44.830000000000005
+      ],
+      "minimum": 3000,
+      "distance_m": 5500,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SE",
+      "point": [
+        34.116,
+        44.842000000000006
+      ],
+      "minimum": 3000,
+      "distance_m": 4205,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SE",
+      "point": [
+        34.116,
+        44.854000000000006
+      ],
+      "minimum": 3000,
+      "distance_m": 2945,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SE",
+      "point": [
+        34.116,
+        44.866
+      ],
+      "minimum": 3000,
+      "distance_m": 1790,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SE",
+      "point": [
+        34.116,
+        44.878
+      ],
+      "minimum": 3000,
+      "distance_m": 783,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SW",
+      "point": [
+        33.9,
+        44.806000000000004
+      ],
+      "minimum": 4000,
+      "distance_m": 9502,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SW",
+      "point": [
+        33.9,
+        44.818000000000005
+      ],
+      "minimum": 4000,
+      "distance_m": 8932,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SW",
+      "point": [
+        33.9,
+        44.830000000000005
+      ],
+      "minimum": 4000,
+      "distance_m": 8534,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SW",
+      "point": [
+        33.9,
+        44.842000000000006
+      ],
+      "minimum": 4000,
+      "distance_m": 8333,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SW",
+      "point": [
+        33.9,
+        44.854000000000006
+      ],
+      "minimum": 4000,
+      "distance_m": 8343,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SW",
+      "point": [
+        33.9,
+        44.866
+      ],
+      "minimum": 4000,
+      "distance_m": 8537,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SW",
+      "point": [
+        33.9,
+        44.878
+      ],
+      "minimum": 4000,
+      "distance_m": 8858,
+      "basis": "owner_nearest_zone"
+    },
+    {
+      "quadrant": "SW",
+      "point": [
+        33.9,
+        44.89
+      ],
+      "minimum": 4000,
+      "distance_m": 9360,
+      "basis": "owner_nearest_zone"
+    }
+  ]
+}

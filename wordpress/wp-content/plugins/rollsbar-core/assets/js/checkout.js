@@ -593,7 +593,13 @@
 		if(consent&&consent.dataset.rollsbarConsentPrepared!=='1'){
 			consent.dataset.rollsbarConsentPrepared='1';consent.addEventListener('change',prepareSubmissionFeedback);
 		}
-		var message=contactPhoneError||deliveryMinimumError||(consentAttempted&&missingConsent?'Подтвердите согласие на обработку персональных данных.':'Оставьте телефон и отметьте согласие — менеджер перезвонит и уточнит детали заявки.');
+		var cart=window.wp&&wp.data&&wp.data.select('wc/store/cart');
+		var customer=cart&&cart.getCustomerData(),pickup=document.body.classList.contains('rollsbar-checkout-pickup');
+		var contact=customer&&(pickup?customer.billingAddress:customer.shippingAddress);
+		var digits=String((contact||{}).phone||'').replace(/\D/g,'');
+		var completePhone=digits.length>=10&&digits.length<=15;
+		var readyMessage=pickup?'Самовывоз по адресу: Симферополь, Кечкеметская улица, 1.':deliveryTerms==='Бесплатно'?'Минимальная сумма набрана — доставка бесплатная.':'Менеджер свяжется с вами и уточнит условия доставки.';
+		var message=contactPhoneError||deliveryMinimumError||(consentAttempted&&missingConsent?'Подтвердите согласие на обработку персональных данных.':completePhone&&!missingConsent?readyMessage:'Оставьте телефон и отметьте согласие — менеджер перезвонит и уточнит детали заявки.');
 		if(feedback.textContent!==message)feedback.textContent=message;
 		feedback.hidden=!message;
 		var button=actions.querySelector('.wc-block-components-checkout-place-order-button');

@@ -58,7 +58,10 @@ final class RollsBar_Delivery_Checkout {
 
 	public static function validate_request( $response, $handler, $request ) {
 		if ( null !== $response || 'POST' !== $request->get_method() || ! preg_match( '#^/wc/store/v[0-9]+/checkout$#', $request->get_route() ) ) { return $response; }
-		if ( ! WC()->cart || ! WC()->session ) { wc_load_cart(); }
+		// This filter runs before Checkout::get_response loads its native cart.
+		// A constructed WC_Cart can still have zero totals and unloaded items.
+		$controller = new \Automattic\WooCommerce\StoreApi\Utilities\CartController();
+		$controller->load_cart();
 		$chosen = WC()->session->get( 'chosen_shipping_methods', array() );
 		if ( 1 !== count( $chosen ) ) { return new WP_Error( 'rollsbar_delivery_mode', 'Выберите доставку или самовывоз.', array( 'status' => 400 ) ); }
 		$rate = (string) reset( $chosen );
@@ -70,7 +73,7 @@ final class RollsBar_Delivery_Checkout {
 		$address = (string) ( $shipping['address_1'] ?? $billing['address_1'] ?? '' );
 		$extensions = (array) $request->get_param( 'extensions' );
 		$proof = $extensions['rollsbar-delivery']['address_proof'] ?? '';
-		$amount = (float) WC()->cart->get_cart_contents_total();
+		$amount = (float) $controller->get_cart_for_response()->get_cart_contents_total();
 		$stored = (string) WC()->session->get( 'rollsbar_delivery_address_proof', '' );
 		$decision = RollsBar_Delivery_Minimum::verify( $stored, $address, $amount );
 		if ( null === $decision['minimum'] ) { $decision = RollsBar_Delivery_Minimum::verify( is_string( $proof ) ? $proof : '', $address, $amount ); }

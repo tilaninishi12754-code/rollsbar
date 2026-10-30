@@ -492,7 +492,7 @@ jobs:
           php -l wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-checkout.php
           php -l wordpress/deploy/verify-delivery-rules.php
           node --check wordpress/wp-content/plugins/rollsbar-core/assets/js/checkout.js
-          php qa/checkout/geography_fixture.php
+          php qa/checkout/nearest_fixture.php
       - name: Install transport
         run: python3 -m pip install --disable-pip-version-check --quiet paramiko
       - name: Install browser gates
@@ -531,6 +531,7 @@ jobs:
           # RB-021 is owner-deferred; its unaccepted alias gate is standalone.
           python3 qa/checkout/delivery_scenario.py --live
           python3 qa/checkout/checkout_policy_live.py
+            python3 qa/checkout/fulfillment_live.py
       - name: Live exact address tiers and fail-closed cases
         if: inputs.direct_port_phase == 'apply'
         run: python3 qa/checkout/delivery_address_probe.py
@@ -579,6 +580,7 @@ jobs:
             qa/visual-results/delivery-rules/
             qa/visual-results/canonical-host/
             qa/visual-results/checkout-policy/
+              qa/visual-results/fulfillment/
             qa/visual-results/delivery-reference/
             qa/visual-results/storefront-ux-staging/
           retention-days: 30
@@ -592,6 +594,7 @@ jobs:
             qa/visual-results/delivery-rules/**/*.json
             qa/visual-results/canonical-host/
             qa/visual-results/checkout-policy/
+              qa/visual-results/fulfillment/
             qa/visual-results/delivery-rules/*.txt
             qa/visual-results/delivery-rules/*.log
             qa/visual-results/delivery-reference/

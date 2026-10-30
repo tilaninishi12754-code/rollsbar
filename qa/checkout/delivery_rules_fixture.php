@@ -23,7 +23,7 @@ foreach ( RollsBar_Delivery_Minimum::rules() as $r ) {
  }
 }
 check_rule( count( $tiers ) === 7, 'all seven tiers covered' );
-foreach ( array( 'Кечкеметская', 'Беспалова' ) as $street ) { check_rule( 'ambiguous' === RollsBar_Delivery_Minimum::classify( identity( array( 'street' => $street ) ) )['status'], 'boundary not guessed: ' . $street ); }
+foreach ( array( 'Кечкеметская', 'Беспалова' ) as $street ) { check_rule( 'ambiguous' === RollsBar_Delivery_Minimum::classify( identity( array( 'street' => $street, 'qc_geo' => 2 ) ) )['status'], 'imprecise split street remains callback: ' . $street ); }
 foreach ( array( array( 'street' => 'Киевская', 'geo_lat'=>0, 'geo_lon'=>0 ), array( 'street' => 'Несуществующая', 'geo_lat'=>0, 'geo_lon'=>0 ), array( 'region' => 'Московская' ), array( 'city' => 'Другой', 'area' => 'Другой' ), array( 'house' => '' ), array( 'house_fias_id' => '' ), array( 'street_fias_id' => '', 'geo_lat'=>0, 'geo_lon'=>0 ) ) as $i => $patch ) { check_rule( 'resolved' !== RollsBar_Delivery_Minimum::classify( identity( $patch ) )['status'], 'unsupported identity/outside geography fail closed ' . $i ); }
 foreach ( array( null, 1, 2, 3, 4, 5 ) as $precision ) { check_rule( 'resolved' !== RollsBar_Delivery_Minimum::classify( identity( array( 'qc_geo' => $precision, 'house_fias_id' => '' ) ) )['status'], 'approximate address without verified FIAS house fails closed ' . var_export( $precision, true ) ); }
 $denisovka = identity(array('city'=>'','settlement'=>'Денисовка','settlement_fias_id'=>'807c873c-8913-45a8-9255-5e04c55500bd','house_fias_id'=>'3f41224e-ea1a-4314-a9df-98b16219fc5c','qc_geo'=>3));

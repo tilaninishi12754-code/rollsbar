@@ -108,3 +108,5 @@ try {
  }
 } finally {WC()->session=$policy_session;}
 echo "CHECKOUT_NOTE_NATIVE_FIXTURE_PASS_NO_ORDERS\n";
+define('ROLLSBAR_ASSERT_LOADED_CART',true);
+require __DIR__.'/probe-delivery-cart.php';

@@ -6,6 +6,7 @@ class WP_REST_Response {function __construct(private $data,private $status=200){
 class PolicyRequest {function __construct(public $params=[],private $method='POST'){}function get_method(){return $this->method;}function get_route(){return '/wc/store/v1/checkout';}function get_param($key){return $this->params[$key]??null;}}
 function WC(){return $GLOBALS['wc'];}
 function wc_load_cart(){}
+eval('namespace Automattic\\WooCommerce\\StoreApi\\Utilities; class CartController {public function load_cart(){\\WC()->cart->loaded=true;}public function get_cart_for_response(){ $cart=\\WC()->cart; if(isset($cart->pending_amount)){$cart->amount=$cart->pending_amount;unset($cart->pending_amount);}return $cart;}}');
 function is_front_page(){return $GLOBALS['front']??true;}
 function is_checkout(){return false;}
 function is_cart(){return false;}
@@ -18,6 +19,8 @@ $session=WC()->session;$session->data['chosen_shipping_methods']=['rollsbar_deli
 $address='г Симферополь, ул Гагарина, д 1';$proof=RollsBar_Delivery_Minimum::proof(identity(),$address);
 $request=new PolicyRequest(['shipping_address'=>['address_1'=>$address],'extensions'=>['rollsbar-delivery'=>['address_proof'=>$proof]]]);
 foreach([420,1199.99,1200,2000] as $amount){WC()->cart->amount=$amount;$r=RollsBar_Delivery_Checkout::validate_request(null,null,$request);check_rule(($amount<1200)===is_wp_error($r),'server enforces known minimum at '.$amount);}
+WC()->cart->amount=0;WC()->cart->pending_amount=4200;
+check_rule(null===RollsBar_Delivery_Checkout::validate_request(null,null,$request)&&WC()->cart->amount===4200,'unloaded zero cart is refreshed before minimum validation');
 WC()->cart->amount=420;$session->data['rollsbar_delivery_address_proof']=$proof;$request->params['extensions']=[];
 check_rule(is_wp_error(RollsBar_Delivery_Checkout::validate_request(null,null,$request)),'saved native-session proof prevents bypass by omitting client extension');
 $request->params['shipping_address']['address_1']='Улица вне справочника';

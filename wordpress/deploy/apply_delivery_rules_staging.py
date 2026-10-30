@@ -138,7 +138,7 @@ for file in database.sql.gz uploads.tar.gz manifest.txt SHA256SUMS; do
 done
 '''
  if args.phase=='probe-address':script='wp_cmd eval '+shlex.quote((ROOT/'wordpress/deploy/probe-local-addresses.php').read_text(encoding='utf8').removeprefix('<?php'))
- if args.phase=='probe-cart':script='wp_cmd eval '+shlex.quote((ROOT/'wordpress/deploy/probe-delivery-cart.php').read_text(encoding='utf8').removeprefix('<?php'))
+ if args.phase=='probe-cart':script='wp_cmd eval '+shlex.quote('\n'.join((ROOT/'wordpress/deploy'/name).read_text(encoding='utf8').removeprefix('<?php') for name in ['probe-delivery-cart.php','probe-storefront-timing.php']))
  output=transport.execute(script);(OUT/(args.phase+'.log')).write_text(output,encoding='utf8')
  if args.phase=='apply':
   if 'DELIVERY_BACKEND_PASS' not in output:raise RuntimeError('Missing backend receipt')

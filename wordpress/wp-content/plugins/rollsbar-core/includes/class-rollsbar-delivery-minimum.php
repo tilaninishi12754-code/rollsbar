@@ -31,7 +31,7 @@ final class RollsBar_Delivery_Minimum {
 		if ( 'симферополь' === $city && in_array( $street, array( 'кечкеметская', 'беспалова' ), true ) ) {
 			$unknown['status'] = 'ambiguous';
 			$unknown['message'] = 'Для этого участка улицы условия доставки требуют уточнения. Позвоните: +7 978 688-22-88.';
-			return $unknown;
+			return self::geographic( $data, $unknown );
 		}
 		$matches = array();
 		foreach ( self::rules() as $rule ) {
@@ -58,18 +58,21 @@ final class RollsBar_Delivery_Minimum {
 		return array( 'status' => 'resolved', 'minimum' => $minimum, 'basis' => 'fias_identity', 'sources' => array_column( $matches, 'cell' ), 'message' => 'Бесплатная доставка при заказе от ' . number_format( $minimum, 0, '.', ' ' ) . ' ₽.' );
 	}
 
-	/** Informational fallback only: never changes native rates or callback eligibility. */
+	/** Owner-approved coverage: containing area first, nearest existing area next. */
 	private static function geographic( array $data, array $unknown ): array {
 		if ( 'staging' !== wp_get_environment_type() || ! RollsBar_Geocode_Policy::can_auto_assign_zone( $data['qc_geo'] ?? null ) ) { return $unknown; }
 		$lat = $data['geo_lat'] ?? null; $lon = $data['geo_lon'] ?? null;
-		if ( ! is_numeric( $lat ) || ! is_numeric( $lon ) || abs( (float) $lat ) > 90 || abs( (float) $lon ) > 180 ) { return $unknown; }
+		if ( ! is_numeric( $lat ) || ! is_numeric( $lon ) || abs( (float) $lat ) > 90 || abs( (float) $lon ) > 180 || 0.0 === (float) $lat || 0.0 === (float) $lon ) { return $unknown; }
 		static $geography;
 		if ( null === $geography ) { $geography = json_decode( file_get_contents( dirname( __DIR__ ) . '/data/delivery-geography.json' ), true, 512, JSON_THROW_ON_ERROR ); }
-		$matches = array();
+		$matches = array(); $nearest = array(); $best = INF;
 		foreach ( $geography['features'] as $feature ) {
 			$geometry = $feature['geometry'];
 			$polygons = 'Polygon' === $geometry['type'] ? array( $geometry['coordinates'] ) : $geometry['coordinates'];
 			foreach ( $polygons as $polygon ) {
+				$distance = self::polygon_distance( (float) $lon, (float) $lat, $polygon );
+				if ( $distance < $best - 0.000001 ) { $best = $distance; $nearest = array( $feature['properties'] ); }
+				elseif ( abs( $distance - $best ) <= 0.000001 ) { $nearest[] = $feature['properties']; }
 				$inside = self::in_ring( (float) $lon, (float) $lat, $polygon[0] );
 				foreach ( array_slice( $polygon, 1 ) as $hole ) { if ( self::in_ring( (float) $lon, (float) $lat, $hole ) ) { $inside = false; } }
 				if ( $inside ) { $matches[] = $feature['properties']; break; }
@@ -78,10 +81,30 @@ final class RollsBar_Delivery_Minimum {
 		// Geographic locality footprints take priority over the city background.
 		$local = array_values( array_filter( $matches, static fn( $m ) => 'locality' === $m['kind'] ) );
 		$matches = $local ?: $matches;
-		$amounts = array_unique( array_column( $matches, 'minimum' ) );
-		if ( 1 !== count( $amounts ) ) { return $unknown; }
-		$minimum = (int) reset( $amounts );
-		return array( 'status' => 'resolved', 'minimum' => $minimum, 'basis' => 'owner_geographic_advisory', 'provisional' => true, 'zones' => array_column( $matches, 'id' ), 'message' => 'Предварительно: бесплатная доставка от ' . number_format( $minimum, 0, '.', ' ' ) . ' ₽. Точные условия подтвердит менеджер.' );
+		$inside = (bool) $matches;
+		$matches = $matches ?: $nearest;
+		if ( ! $matches ) { return $unknown; }
+		// An exact shared edge/equal distance uses the higher existing minimum.
+		$minimum = (int) max( array_column( $matches, 'minimum' ) );
+		return array( 'status' => 'resolved', 'minimum' => $minimum, 'basis' => $inside ? 'owner_geographic_advisory' : 'owner_nearest_zone', 'distance_m' => $inside ? 0 : (int) round( $best ), 'provisional' => true, 'zones' => array_values( array_unique( array_column( $matches, 'id' ) ) ), 'message' => 'Бесплатная доставка от ' . number_format( $minimum, 0, '.', ' ' ) . ' ₽.' );
+	}
+
+	/** Distance to polygon area, including hole boundaries, in local metric coordinates. */
+	private static function polygon_distance( float $x, float $y, array $polygon ): float {
+		$inside = self::in_ring( $x, $y, $polygon[0] );
+		foreach ( array_slice( $polygon, 1 ) as $hole ) { if ( self::in_ring( $x, $y, $hole ) ) { $inside = false; } }
+		if ( $inside ) { return 0.0; }
+		$scale_x = 6371000 * M_PI / 180 * cos( deg2rad( $y ) ); $scale_y = 6371000 * M_PI / 180; $best = INF;
+		foreach ( $polygon as $ring ) {
+			for ( $i = 0, $j = count( $ring ) - 1; $i < count( $ring ); $j = $i++ ) {
+				$ax = ( $ring[$j][0] - $x ) * $scale_x; $ay = ( $ring[$j][1] - $y ) * $scale_y;
+				$bx = ( $ring[$i][0] - $x ) * $scale_x; $by = ( $ring[$i][1] - $y ) * $scale_y;
+				$dx = $bx - $ax; $dy = $by - $ay; $length = $dx * $dx + $dy * $dy;
+				$t = $length > 0 ? max( 0, min( 1, -( $ax * $dx + $ay * $dy ) / $length ) ) : 0;
+				$best = min( $best, hypot( $ax + $t * $dx, $ay + $t * $dy ) );
+			}
+		}
+		return $best;
 	}
 
 	/** Ray casting with explicit edge inclusion; holes are excluded by the caller. */

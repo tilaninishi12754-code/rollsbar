@@ -18,7 +18,7 @@ CASES=[
  (3000,'Крым Денисовка Энергетиков 2'),(3000,'Крым Фонтаны Верхние Фонтаны 32'),
  (3500,'Крым Урожайное 8 Марта 31'),(3500,'Крым Урожайное 8 Марта 32'),
  (4000,'Крым Донское Комсомольская 146А'),(4000,'Крым Мазанка Ясная 14'),
- (None,'Симферополь Кечкеметская 79'),(None,'Симферополь Беспалова 53'),
+ (1200,'Симферополь Кечкеметская 79'),(2500,'Симферополь Беспалова 53'),
  (1200,'Симферополь Киевская 139А'),(None,'Москва Тверская 1'),(None,'Симферополь Киевская')]
 report={'status':'RUNNING','release_sha':os.environ['ROLLSBAR_DEPLOY_SHA'],'cases':[],'orders_created':0}
 try:
@@ -75,7 +75,7 @@ try:
     if minimum is not None:require(str(minimum) in message.replace(' ','').replace('\u00a0',''),'native browser displays required minimum '+str(minimum))
     row['browser_message']=message
     print('PASS',query,rule,flush=True)
-    if minimum==4000 or minimum is None or query=='Симферополь Киевская 139А':
+    if minimum==4000 or minimum is None or query in ['Симферополь Киевская 139А','Симферополь Кечкеметская 79','Симферополь Беспалова 53']:
      p.locator('[role=dialog]').evaluate('e=>e.scrollTop=0');p.screenshot(path=str(OUT/('address-'+str(len(report['cases']))+'.png')))
    for tier in [1200,1500,2000,2500,3000,3500,4000]:
     unique={r['display'] for r in report['cases'] if r['expected']==tier}
