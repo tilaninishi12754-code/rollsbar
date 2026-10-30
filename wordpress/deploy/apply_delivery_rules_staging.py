@@ -6,7 +6,7 @@ from apply_storefront_ux_staging import verify
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'qa/visual-results/delivery-rules'
 BASE='921698e085263f23493e8f757aa0e7c1b561946c'
-PREVIOUS_APP='c4f4c51665907e095770be7d0da66f59a7f3eef0'
+PREVIOUS_APP='ae4824266724241507056c4068343cd510575d28'
 CHANGED=[transport.PLUGIN+p for p in [
  'data/delivery-minimum.json','includes/class-rollsbar-delivery-minimum.php',
  'includes/class-rollsbar-delivery-checkout.php','includes/class-rollsbar-native-delivery-method.php',
@@ -124,7 +124,7 @@ echo DELIVERY_STAGING_PASS
 '''
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest','probe-mail','enable-mail','verify-mail','probe-address'],required=True);args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest','probe-mail','enable-mail','verify-mail','probe-address','probe-cart'],required=True);args=p.parse_args()
  OUT.mkdir(parents=True,exist_ok=True)
  if args.phase=='manifest':print(manifest());return
  sha=transport.release_sha();scope()
@@ -138,6 +138,7 @@ for file in database.sql.gz uploads.tar.gz manifest.txt SHA256SUMS; do
 done
 '''
  if args.phase=='probe-address':script='wp_cmd eval '+shlex.quote((ROOT/'wordpress/deploy/probe-local-addresses.php').read_text(encoding='utf8').removeprefix('<?php'))
+ if args.phase=='probe-cart':script='wp_cmd eval '+shlex.quote((ROOT/'wordpress/deploy/probe-delivery-cart.php').read_text(encoding='utf8').removeprefix('<?php'))
  output=transport.execute(script);(OUT/(args.phase+'.log')).write_text(output,encoding='utf8')
  if args.phase=='apply':
   if 'DELIVERY_BACKEND_PASS' not in output:raise RuntimeError('Missing backend receipt')
