@@ -124,7 +124,7 @@ echo DELIVERY_STAGING_PASS
 '''
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest','probe-mail','enable-mail','verify-mail'],required=True);args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--phase',choices=['apply','inspect','finalize','manifest','probe-mail','enable-mail','verify-mail','probe-address'],required=True);args=p.parse_args()
  OUT.mkdir(parents=True,exist_ok=True)
  if args.phase=='manifest':print(manifest());return
  sha=transport.release_sha();scope()
@@ -137,6 +137,7 @@ for file in database.sql.gz uploads.tar.gz manifest.txt SHA256SUMS; do
  if [[ -s "$HOME/rollsbar-backups/staging/20261023T215945Z/$file" ]]; then echo "historical_$file=present"; else echo "historical_$file=missing"; fi
 done
 '''
+ if args.phase=='probe-address':script='wp_cmd eval '+shlex.quote((ROOT/'wordpress/deploy/probe-local-addresses.php').read_text(encoding='utf8').removeprefix('<?php'))
  output=transport.execute(script);(OUT/(args.phase+'.log')).write_text(output,encoding='utf8')
  if args.phase=='apply':
   if 'DELIVERY_BACKEND_PASS' not in output:raise RuntimeError('Missing backend receipt')

@@ -51,7 +51,7 @@ on:
         description: Checkout Direct Port phase
         type: choice
         default: apply
-        options: [apply, inspect, finalize, probe-mail, enable-mail, verify-mail]
+        options: [apply, inspect, finalize, probe-mail, enable-mail, verify-mail, probe-address]
       test_order_id:
         description: Single owner-authorized staging test order to inspect (never create)
         type: string
