@@ -37,4 +37,6 @@ $GLOBALS['front']=false;check_rule([]===RollsBar_Checkout::dynamic_page_headers(
 check_rule(RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','city'=>'Симферополь']),'city accepted');
 check_rule(RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area'=>'Симферопольский','settlement'=>'Мазанка']),'nearby villages accepted');
 check_rule(!RollsBar_Address_Suggestions::local_scope(['region'=>'Москва','street'=>'Симферопольская']),'Moscow namesake excluded');
+check_rule(RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area'=>'Бахчисарайский','settlement'=>'Приятное Свидание']),'explicit client-table village outside primary district retained');
+check_rule(!RollsBar_Address_Suggestions::local_scope(['region'=>'Крым','area'=>'Бахчисарайский','settlement'=>'Другой посёлок']),'unrelated district results remain excluded');
 echo "CHECKOUT_POLICY_FIXTURE_PASS\n";

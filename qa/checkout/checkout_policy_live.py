@@ -22,12 +22,12 @@ try:
     require({'private','no-cache','must-revalidate','max-age=0'}<=directives,'native checkout HTML requires private revalidation on every visit')
     p.locator('#shipping-address_1').wait_for()
     address=p.locator('#shipping-address_1');queries=[]
-    for query in ['Симферополь','улица Гагарина','Мазанка']:
+    for query in ['Симферополь','улица Гагарина','Мазанка','Приятное Свидание']:
      with p.expect_response(lambda r:'/address-suggestions' in r.url and parse_qs(urlsplit(r.url).query).get('query')==[query]) as suggested:address.fill(query)
      result=suggested.value.json()['suggestions']
      require(bool(result) and not any('Москва' in s['display'] for s in result),'local suggestions for '+query)
-     if query!='Мазанка':require('Симферополь' in result[0]['display'],'Simferopol ranked first for '+query)
-     else:require('Мазанка' in result[0]['display'],'nearby village remains available')
+     if query in ['Симферополь','улица Гагарина']:require('Симферополь' in result[0]['display'],'Simferopol ranked first for '+query)
+     else:require(query in result[0]['display'],'approved nearby village remains available: '+query)
      queries.append({'query':query,'first':result[0]['display']})
     with p.expect_response(lambda r:'/address-suggestions' in r.url and parse_qs(urlsplit(r.url).query).get('query')==['Гагарина 1']) as suggested:address.fill('Гагарина 1')
     candidate=suggested.value.json()['suggestions'][0]['display']

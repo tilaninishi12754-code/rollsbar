@@ -226,7 +226,7 @@ final class RollsBar_Address_Suggestions {
 	}
 
 	public static function local_scope( array $data ): bool {
-		return 'Крым' === ( $data['region'] ?? '' ) && ( 'Симферополь' === ( $data['city'] ?? '' ) || 'Симферопольский' === ( $data['area'] ?? '' ) );
+		return 'Крым' === ( $data['region'] ?? '' ) && ( 'Симферополь' === ( $data['city'] ?? '' ) || 'Симферопольский' === ( $data['area'] ?? '' ) || 'Приятное Свидание' === ( $data['settlement'] ?? '' ) );
 	}
 
 	private static function provider_request( string $query, int $count ) {
@@ -234,7 +234,9 @@ final class RollsBar_Address_Suggestions {
 			'query'    => $query,
 			'count'    => max( 1, min( 20, $count ) ),
 			'language' => 'ru',
-			'locations' => array( array( 'region' => 'Крым', 'city' => 'Симферополь' ), array( 'region' => 'Крым', 'area' => 'Симферопольский' ) ),
+			// H9 in the client table is outside the main district; retain this
+			// explicit approved village without opening unrelated regional results.
+			'locations' => array( array( 'region' => 'Крым', 'city' => 'Симферополь' ), array( 'region' => 'Крым', 'area' => 'Симферопольский' ), array( 'region' => 'Крым', 'settlement' => 'Приятное Свидание' ) ),
 		);
 
 		$response = wp_remote_post(
