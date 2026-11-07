@@ -49,7 +49,13 @@ prefix="${options%options}"
 home="$(query "SELECT option_value FROM ${options} WHERE option_name='home' LIMIT 1")"
 public="$(query "SELECT option_value FROM ${options} WHERE option_name='blog_public' LIMIT 1")"
 products="$(query "SELECT COUNT(*) FROM ${prefix}posts WHERE post_type='product' AND post_status='publish'")"
-[[ "$home" == 'https://staging.rollsbar.ru' && "$public" == '0' && "$products" == '118' ]] || exit 25
+printf 'restored_home=%s\nrestored_blog_public=%s\nrestored_products=%s\n' "$home" "$public" "$products"
+reference="$HOME/rollsbar-backups/staging/20261107T222110Z/manifest.txt"
+expected_products="$(awk -F= '$1=="published_products"{print $2}' "$reference")"
+expected_public="$(awk -F= '$1=="blog_public"{print $2}' "$reference")"
+[[ "$expected_products" =~ ^[0-9]+$ && "$expected_public" =~ ^[01]$ ]] || exit 26
+printf 'snapshot_reference_products=%s\nsnapshot_reference_blog_public=%s\n' "$expected_products" "$expected_public"
+[[ "$home" == 'https://staging.rollsbar.ru' && "$public" == "$expected_public" && "$products" == "$expected_products" ]] || exit 25
 printf 'restored_products=%s\n' "$products"
 printf 'restored_tables='; query 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()'
 printf 'restored_private_career_applications='; query "SELECT COUNT(*) FROM ${prefix}posts WHERE post_type='rb_job_application' AND post_status='private'"
