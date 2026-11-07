@@ -14,6 +14,7 @@ final class RollsBar_Vacancy_Page {
 	private const PAGE_OPTION = 'rollsbar_vacancy_page_id';
 	private const PAGE_SLUG   = 'rabota-v-rolls-bar';
 	public const RECIPIENT = 'stroy_business24@mail.ru';
+	public const COPY_RECIPIENT = 'botnetagancy@gmail.com';
 	public const MAIL_HOOK = 'rollsbar_send_career_application';
 
 	public static function init(): void {
@@ -67,7 +68,7 @@ final class RollsBar_Vacancy_Page {
 		add_meta_box( 'rb_job_data', 'Анкета и отправка на почту', static function ( $post ) {
 			$data = get_post_meta( $post->ID, '_rollsbar_application', true );
 			foreach ( self::field_labels() as $key => $label ) { echo '<p><strong>' . esc_html( $label ) . ':</strong> ' . nl2br( esc_html( (string) ( $data[ $key ] ?? '' ) ) ) . '</p>'; }
-			echo '<p><strong>Почта:</strong> ' . esc_html( self::RECIPIENT ) . '</p><p><strong>Статус отправки:</strong> ' . esc_html( (string) get_post_meta( $post->ID, '_rollsbar_mail_status', true ) ) . '</p>';
+			echo '<p><strong>Почта:</strong> ' . esc_html( self::RECIPIENT ) . '</p><p><strong>Копия:</strong> ' . esc_html( self::COPY_RECIPIENT ) . '</p><p><strong>Статус отправки:</strong> ' . esc_html( (string) get_post_meta( $post->ID, '_rollsbar_mail_status', true ) ) . '</p>';
 		}, 'rb_job_application' );
 	}
 
@@ -145,7 +146,7 @@ final class RollsBar_Vacancy_Page {
 		update_post_meta( $id, '_rollsbar_mail_attempts', $attempt );
 		$body = 'Новая анкета кандидата Rolls Bar' . "\n\n";
 		foreach ( self::field_labels() as $key => $label ) { $body .= $label . ': ' . ( $data[ $key ] ?? '' ) . "\n"; }
-		$sent = wp_mail( self::RECIPIENT, 'Анкета кандидата Rolls Bar #' . $id, $body, array( 'Content-Type: text/plain; charset=UTF-8' ) );
+		$sent = wp_mail( self::RECIPIENT, 'Анкета кандидата Rolls Bar #' . $id, $body, array( 'Content-Type: text/plain; charset=UTF-8', 'Cc: ' . self::COPY_RECIPIENT ) );
 		update_post_meta( $id, '_rollsbar_mail_status', $sent ? 'sent' : 'failed' );
 		if ( $sent ) { update_post_meta( $id, '_rollsbar_mail_sent_at', current_time( 'mysql', true ) ); }
 		elseif ( $attempt < 3 ) { self::queue_mail( $id, 60 * $attempt ); }

@@ -46,6 +46,7 @@ on:
           - careers
           - client-nov05
           - promo-title
+          - career-recipients
       release_sha:
         description: Exact already deployed application SHA (required for release-resume)
         required: false
@@ -77,6 +78,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  career-recipients:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'career-recipients' && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      deployment: false
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python3 -m pip install --disable-pip-version-check --quiet paramiko
+      - name: Validate and apply career recipients
+        env:
+          ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
+          ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
+          ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
+          ROLLSBAR_DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          php -l wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-vacancy-page.php
+          php qa/careers/validation_fixture.php
+          python3 wordpress/deploy/apply_career_recipients_staging.py
+
   promo-title:
     if: github.event_name == 'workflow_dispatch' && inputs.operation == 'promo-title' && github.ref_name == 'wordpress/checkout-visual-parity-2026-10-25'
     runs-on: ubuntu-latest

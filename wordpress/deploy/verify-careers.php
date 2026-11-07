@@ -9,7 +9,7 @@ $cases=[['name'=>''],['phone'=>'00000000000'],['phone'=>'7123'],['phone'=>['bad'
 foreach($cases as $case)career_assert(is_wp_error(RollsBar_Vacancy_Page::validate(array_merge($valid,$case))),'Invalid input accepted');
 foreach(['rb_job_location','rb_job_application'] as $type){$t=get_post_type_object($type);career_assert(!$t->public&&!$t->publicly_queryable&&!$t->show_in_rest&&$t->cap->read_post==='manage_woocommerce','Private admin contract');}
 $fixture=wp_insert_post(['post_type'=>'rb_job_location','post_status'=>'draft','post_title'=>'QA TEMP ADDRESS']);update_post_meta($fixture,'_rollsbar_job_city','Тестгород');
-$mail_calls=0;$mail_result=false;$mail_filter=static function($pre,$args)use(&$mail_calls,&$mail_result){$mail_calls++;career_assert($args['to']==='stroy_business24@mail.ru','Wrong recipient');career_assert(str_contains($args['message'],'Адрес заведения:'),'Missing address');return $mail_result;};
+$mail_calls=0;$mail_result=false;$mail_filter=static function($pre,$args)use(&$mail_calls,&$mail_result){$mail_calls++;career_assert($args['to']==='stroy_business24@mail.ru','Wrong recipient');career_assert(in_array('Cc: botnetagancy@gmail.com',$args['headers'],true),'Wrong copy recipient');career_assert(str_contains($args['message'],'Адрес заведения:'),'Missing address');return $mail_result;};
 $application=0;
 try{
  career_assert(!isset(RollsBar_Vacancy_Page::locations()[$fixture]),'Draft leaked');wp_update_post(['ID'=>$fixture,'post_status'=>'publish']);career_assert(isset(RollsBar_Vacancy_Page::locations()[$fixture]),'Admin addition missing');
