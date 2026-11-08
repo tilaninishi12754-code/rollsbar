@@ -27,12 +27,12 @@ wp --path="$root" eval 'if (wc_get_orders(array("created_via"=>"rollsbar_cutover
 wp --path="$root" option update blog_public 1 >/dev/null
 wp --path="$root" config set DISABLE_WP_CRON false --raw >/dev/null
 if [[ -f "$root/cutover-maintenance.html" ]]; then
- grep -q 'Сайт обновляется' "$root/cutover-maintenance.html"
+ grep -q '<title>Rolls Bar</title>' "$root/cutover-maintenance.html"
  rm -- "$root/cutover-maintenance.html"
 fi
 wp --path="$root" rewrite flush --hard >/dev/null
 [[ "$(wp --path="$root" option get blog_public)" == 1 ]]
-[[ "$(wp --path="$root" config get DISABLE_WP_CRON)" == false ]]
+wp --path="$root" eval 'if (!defined("DISABLE_WP_CRON") || DISABLE_WP_CRON) { exit(1); }'
 [[ "$(wp --path="$HOME/www/staging.rollsbar.ru" --skip-plugins --skip-themes option get blog_public)" == 0 ]]
 echo production_indexing_and_cron=PASS
 backup="$HOME/rollsbar-backups/production-live-20261108"
