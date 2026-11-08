@@ -29,6 +29,8 @@ find wp-content/themes/rollsbar-theme wp-content/plugins/rollsbar-core -type f -
                 if p.is_file():expected[str(p).removeprefix('wordpress/')]=hashlib.sha256(p.read_bytes()).hexdigest()
         print('project_tracked_code_matches_release='+str(all(v==actual.get(p) for p,v in expected.items())).lower())
         print('project_has_extra_runtime_files='+str(bool(set(actual)-set(expected))).lower())
+        print('public_project_mismatch_paths='+json.dumps([p for p,v in expected.items() if v!=actual.get(p)]))
+        print('public_project_extra_paths='+json.dumps(sorted(set(actual)-set(expected))))
         print('read_only_checks_completed=true')
     finally:client.close()
 
