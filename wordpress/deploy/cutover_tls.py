@@ -1,5 +1,5 @@
 """Issue and verify trusted TLS for the prepared production domain and www alias."""
-import json,socket,ssl,time,subprocess
+import json,socket,ssl,time,subprocess,re
 import recovery_drill as core
 from cutover_prepare import connect,write_private,SECRET,RELEASE
 
@@ -36,7 +36,9 @@ def main():
     print('authoritative_dns_both_nameservers=PASS',flush=True)
     sid=core.auth()
     if not state.get('tls_requested') and not (trusted_tls('rollsbar.ru') and trusted_tls('www.rollsbar.ru')):
-        core.api_call({'out':'xml','func':'letsencrypt.generate','auth':sid,'sok':'ok','domain_name':'rollsbar.ru www.rollsbar.ru','domain':'rollsbar.ru','email':'tilaninishi12754@gmail.com','keylen':'2048','enable_cert':'on','wildcard':'off','dns_check':'off'})
+        # This REG.RU form accepts one primary domain; its WWW aliases belong to
+        # the prepared webdomain and are handled by the hosting integration.
+        core.api_call({'out':'xml','func':'letsencrypt.generate','auth':sid,'sok':'ok','domain_name':'rollsbar.ru','domain':'rollsbar.ru','email':'tilaninishi12754@gmail.com','keylen':'2048','enable_cert':'on','wildcard':'off','dns_check':'off'})
         state['tls_requested']=True;write_private(None,SECRET,json.dumps(state))
         print('trusted_certificate_request_submitted=true',flush=True)
     deadline=time.monotonic()+480
@@ -54,4 +56,9 @@ def main():
 
 if __name__=='__main__':
     try:main()
-    except Exception as exc:print('production_tls_failed=true; type='+type(exc).__name__);raise SystemExit(1)
+    except Exception as exc:
+        print('production_tls_failed=true; type='+type(exc).__name__)
+        for field in ('type','object','name','code'):
+            match=re.search("'"+field+"': '([A-Za-z0-9_.-]+)'",str(exc))
+            if match:print('certificate_error_'+field+'='+match.group(1))
+        raise SystemExit(1)
