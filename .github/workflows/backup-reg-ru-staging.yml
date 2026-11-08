@@ -24,4 +24,4 @@ jobs:
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           PRECUTOVER_MODE: backup
-        run: python3 wordpress/deploy/cutover_tls.py
+        run: python3 wordpress/deploy/cutover_www_tls.py
