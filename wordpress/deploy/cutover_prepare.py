@@ -19,9 +19,15 @@ def connect():
 def run(client,script,timeout=600):
     # Shared hosting closes idle sessions. Use a fresh connection per operation;
     # never repeat a mutation after an uncertain exec result.
+    name='.rollsbar-cutover-op-'+secrets.token_hex(16)+'.sh'
+    current=connect();sftp=current.open_sftp()
+    try:
+        with sftp.open(name,'wx') as fh:
+            sftp.chmod(name,0o600);fh.write(script.encode())
+    finally:sftp.close();current.close()
     current=connect()
-    try:status,out,err=core.remote(current,script,timeout=timeout)
-    finally:current.close()
+    try:status,out,err=core.remote(current,'bash "$HOME/'+name+'"',timeout=timeout)
+    finally:current.close();remove_private(name)
     if status: raise RuntimeError('remote_failed_'+str(status))
     return out
 
@@ -89,7 +95,9 @@ def main():
     try:
         check_release(client)
         # An existing prepared site is never overwritten by repeating this operation.
+        STEP='verify_original_rollback_copy'
         run(client,'set -euo pipefail\n[[ ! -e "$HOME/www/rollsbar.ru/wp-config.php" ]]\n[[ -f "$HOME/rollsbar-backups/precutover/20261107T222121Z/SHA256SUMS" ]]\n(cd "$HOME/rollsbar-backups/precutover/20261107T222121Z";sha256sum -c SHA256SUMS >/dev/null)\necho source_rollback_gate=PASS')
+        STEP='fresh_source_backup'
         canonical=pathlib.Path('wordpress/deploy/backup-staging.sh').read_text()
         backup=run(client,'export PATH="$HOME/.local/bin:$PATH"\nexport WP_PATH="$HOME/www/staging.rollsbar.ru"\nexport ROLLSBAR_BACKUP_RETENTION=9999\n'+canonical,timeout=900)
         if 'BACKUP VERIFIED PASS' not in backup:raise RuntimeError('Fresh backup failed')
