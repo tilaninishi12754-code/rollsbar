@@ -71,7 +71,7 @@ def main():
     try:
         check_release(client)
         # An existing prepared site is never overwritten by repeating this operation.
-        run(client,'set -euo pipefail\n[[ ! -e "$HOME/www/rollsbar.ru/wp-config.php" ]]\n[[ -f "$HOME/rollsbar-backups/precutover/20261107T222121Z/SHA256SUMS" ]]\n(cd "$HOME/rollsbar-backups/precutover/20261107T222121Z";sha256sum -c SHA256SUMS >/dev/null)')
+        run(client,'set -euo pipefail\n[[ ! -e "$HOME/www/rollsbar.ru/wp-config.php" ]]\n[[ -f "$HOME/rollsbar-backups/precutover/20261107T222121Z/SHA256SUMS" ]]\n(cd "$HOME/rollsbar-backups/precutover/20261107T222121Z";sha256sum -c SHA256SUMS >/dev/null)\necho source_rollback_gate=PASS')
         canonical=pathlib.Path('wordpress/deploy/backup-staging.sh').read_text()
         backup=run(client,'export PATH="$HOME/.local/bin:$PATH"\nexport WP_PATH="$HOME/www/staging.rollsbar.ru"\nexport ROLLSBAR_BACKUP_RETENTION=9999\n'+canonical,timeout=900)
         if 'BACKUP VERIFIED PASS' not in backup:raise RuntimeError('Fresh backup failed')
@@ -173,4 +173,7 @@ if __name__=='__main__':
     try:main()
     except Exception as exc:
         print('cutover_prepare_failed=true; stage='+STEP+'; type='+type(exc).__name__,flush=True)
+        if isinstance(exc,paramiko.SSHException):
+            known=next((r for r in ('Channel closed','SSH session not active','Unable to open channel','Timeout') if r.lower() in str(exc).lower()),'other_ssh_error')
+            print('connection_failure_class='+known,flush=True)
         raise SystemExit(1)
