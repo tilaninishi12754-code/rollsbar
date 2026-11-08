@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 $map_url = '';
-if ( 'staging' === wp_get_environment_type() && defined( 'ROLLSBAR_CORE_FILE' ) ) {
+if ( defined( 'ROLLSBAR_CORE_FILE' ) && class_exists( 'RollsBar_Core' ) && RollsBar_Core::checkout_runtime_enabled() ) {
     $map_file = dirname( ROLLSBAR_CORE_FILE ) . '/assets/delivery-map.html';
     $map_url = add_query_arg( 'ver', rollsbar_theme_asset_version( $map_file, ROLLSBAR_CORE_VERSION ), plugins_url( 'assets/delivery-map.html', ROLLSBAR_CORE_FILE ) );
 }

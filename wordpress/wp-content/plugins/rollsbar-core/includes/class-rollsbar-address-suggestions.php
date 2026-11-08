@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Staging-only DaData proxy for interactive checkout address suggestions.
+ * DaData proxy for interactive checkout on staging and the approved live site.
  *
  * The API token stays server-side. Customer-facing responses intentionally
  * exclude provider country labels and unrestricted provider address strings.
@@ -193,7 +193,7 @@ final class RollsBar_Address_Suggestions {
 	}
 
 	private static function ensure_available() {
-		if ( 'staging' !== wp_get_environment_type() ) {
+		if ( ! RollsBar_Core::checkout_runtime_enabled() ) {
 			return new WP_Error( 'rollsbar_address_not_available', 'Not found.', array( 'status' => 404 ) );
 		}
 

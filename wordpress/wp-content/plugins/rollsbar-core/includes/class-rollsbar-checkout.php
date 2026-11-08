@@ -60,7 +60,7 @@ final class RollsBar_Checkout {
 	public static function dynamic_page_headers( array $headers ): array {
 		// Native Woo cart/checkout already require private revalidation. Preserve
 		// their BFCache policy; only storefront HTML needs this extra exclusion.
-		if ( 'staging' === wp_get_environment_type() && is_front_page() ) {
+		if ( RollsBar_Core::checkout_runtime_enabled() && is_front_page() ) {
 			$headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0, private';
 			$headers['Expires'] = 'Wed, 11 Jan 1984 05:00:00 GMT';
 		}
@@ -357,7 +357,7 @@ final class RollsBar_Checkout {
 			true
 		);
 
-		$address_suggestions_enabled = 'staging' === wp_get_environment_type()
+		$address_suggestions_enabled = RollsBar_Core::checkout_runtime_enabled()
 			&& defined( 'ROLLSBAR_DADATA_API_KEY' )
 			&& '' !== trim( (string) ROLLSBAR_DADATA_API_KEY );
 
@@ -368,7 +368,7 @@ final class RollsBar_Checkout {
 					'phonePrefix'        => '+7 ',
 					'deliverySelection'  => self::delivery_selection(),
 					'internalEmail'      => is_user_logged_in() ? '' : self::internal_email(),
-					'mapUrl'             => 'staging' === wp_get_environment_type() ? add_query_arg( 'ver', RollsBar_Asset_Version::for_file( dirname( __DIR__ ) . '/assets/delivery-map.html', ROLLSBAR_CORE_VERSION ), plugins_url( 'assets/delivery-map.html', ROLLSBAR_CORE_FILE ) ) : '',
+					'mapUrl'             => RollsBar_Core::checkout_runtime_enabled() ? add_query_arg( 'ver', RollsBar_Asset_Version::for_file( dirname( __DIR__ ) . '/assets/delivery-map.html', ROLLSBAR_CORE_VERSION ), plugins_url( 'assets/delivery-map.html', ROLLSBAR_CORE_FILE ) ) : '',
 					'addressSuggestions' => array(
 						'enabled'      => $address_suggestions_enabled,
 						'suggestUrl'   => rest_url( 'rollsbar/v1/address-suggestions' ),

@@ -4,6 +4,9 @@ define( 'ABSPATH', __DIR__ ); define( 'HOUR_IN_SECONDS', 3600 );
 function wp_json_encode( $v ) { return json_encode( $v, JSON_UNESCAPED_UNICODE ); }
 function wp_salt( $v ) { return 'fixture-only-' . $v; }
 function wp_get_environment_type() { return $GLOBALS['rb_fixture_environment'] ?? 'staging'; }
+function home_url( $path = '' ) { return ( $GLOBALS['rb_fixture_home'] ?? 'https://unrelated.example' ) . $path; }
+function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); }
+require __DIR__ . '/../../wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-core.php';
 require __DIR__ . '/../../wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-geocode-policy.php';
 require __DIR__ . '/../../wordpress/wp-content/plugins/rollsbar-core/includes/class-rollsbar-delivery-minimum.php';
 function check_rule( $ok, $label ) { if ( ! $ok ) { throw new RuntimeException( $label ); } echo "PASS $label\n"; }

@@ -1,0 +1,32 @@
+[
+  {
+    "path": "wp-content/plugins/rollsbar-core/includes/class-rollsbar-address-suggestions.php",
+    "before": "54a64c995f592d003594aadd02f535d70ebe425c9e16bb7657588608ce4584d0",
+    "after": "fc2a0b0eaf61807cc74ff63c02b6e8015636a9abb91f87137ceccf39f6b8311a"
+  },
+  {
+    "path": "wp-content/plugins/rollsbar-core/includes/class-rollsbar-checkout.php",
+    "before": "ea418b609c403df9a4f50a27b6de8637a33a5c7e68bac8c7b5dd7f16c39b4d11",
+    "after": "2f583c76fd2d13b8dbcea2e961d2cec76e8fe1898959757f5914152c344386e4"
+  },
+  {
+    "path": "wp-content/plugins/rollsbar-core/includes/class-rollsbar-core.php",
+    "before": "cca85d0b10b2e611f2bb40b8c9cef69acf5bc11d52f7ce7950478d4a4a142e34",
+    "after": "db63a0bc6bc3b189d70b1eb9e4c07e25593b94c94e0c335dfaa723c2fb568cf8"
+  },
+  {
+    "path": "wp-content/plugins/rollsbar-core/includes/class-rollsbar-delivery-checkout.php",
+    "before": "4cf8ad4125836cda32a0b3d61616bf58aff7258721a6f5b0d3c29f4d7abeaa8e",
+    "after": "ec21041b8c33682f12c82e07e3b445bf5f0dc4daafcf3f6cc0e37554e31aa300"
+  },
+  {
+    "path": "wp-content/plugins/rollsbar-core/includes/class-rollsbar-delivery-minimum.php",
+    "before": "f24a4c018a5f4c6dba089791b6efc3c9f39e51fe6e4e8ab4b70ebd10179e2fc1",
+    "after": "0ddd24bd3ede24402b954e37295cff396fa6a9a99eb2dc1ec16adb5bc7e3073c"
+  },
+  {
+    "path": "wp-content/themes/rollsbar-theme/template-parts/delivery-home.php",
+    "before": "3aab604bc1db117c0f740f8097a4ed558286e80b221c81ac7c07466c3360d810",
+    "after": "767e888ad168af06e74f99e6505f2f7a3590a5ba31c2a0206948990db671c71e"
+  }
+]

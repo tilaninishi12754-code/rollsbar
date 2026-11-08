@@ -69,7 +69,7 @@ final class RollsBar_Delivery_Minimum {
 
 	/** Owner-approved estimate is informative, never a strict minimum or exact pin. */
 	private static function estimate( array $data, array $unknown ): array {
-		if ( 'staging' !== wp_get_environment_type() || ! self::local_scope( $data ) ) { return $unknown; }
+		if ( ! RollsBar_Core::checkout_runtime_enabled() || ! self::local_scope( $data ) ) { return $unknown; }
 		$amounts = array_unique( array_column( self::identity_matches( $data ), 'minimum' ) );
 		if ( 1 === count( $amounts ) ) { $minimum = (int) reset( $amounts ); }
 		elseif ( ! empty( $data['street_fias_id'] ) && in_array( (string) ( $data['qc_geo'] ?? '' ), array( '0', '1', '2' ), true ) ) {
@@ -85,7 +85,7 @@ final class RollsBar_Delivery_Minimum {
 
 	/** Owner-approved coverage: containing area first, nearest existing area next. */
 	private static function geographic( array $data, array $unknown, bool $estimate = false ): array {
-		if ( 'staging' !== wp_get_environment_type() ) { return $unknown; }
+		if ( ! RollsBar_Core::checkout_runtime_enabled() ) { return $unknown; }
 		if ( ! $estimate && ! RollsBar_Geocode_Policy::can_auto_assign_zone( $data['qc_geo'] ?? null ) ) { return self::estimate( $data, $unknown ); }
 		$lat = $data['geo_lat'] ?? null; $lon = $data['geo_lon'] ?? null;
 		if ( ! is_numeric( $lat ) || ! is_numeric( $lon ) || abs( (float) $lat ) > 90 || abs( (float) $lon ) > 180 || 0.0 === (float) $lat || 0.0 === (float) $lon ) { return $unknown; }

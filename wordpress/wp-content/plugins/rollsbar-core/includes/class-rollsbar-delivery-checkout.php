@@ -1,10 +1,10 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-/** Native Woo shipping/rates and pre-order validation. Staging batch only. */
+/** Native Woo shipping/rates and pre-order validation on the approved site. */
 final class RollsBar_Delivery_Checkout {
 	public static function init(): void {
-		if ( 'staging' !== wp_get_environment_type() ) { return; }
+		if ( ! RollsBar_Core::checkout_runtime_enabled() ) { return; }
 		add_action( 'woocommerce_shipping_init', array( __CLASS__, 'load_method' ) );
 		add_filter( 'woocommerce_shipping_methods', static function ( $methods ) { $methods['rollsbar_delivery'] = 'RollsBar_Native_Delivery_Method'; return $methods; } );
 		add_filter( 'rest_request_before_callbacks', array( __CLASS__, 'validate_request' ), 10, 3 );
@@ -34,7 +34,7 @@ final class RollsBar_Delivery_Checkout {
 	}
 
 	public static function choose_mode( string $mode ): void {
-		if ( 'staging' !== wp_get_environment_type() ) { return; }
+		if ( ! RollsBar_Core::checkout_runtime_enabled() ) { return; }
 		// A receiving-mode choice can precede the first item and its native session cookie.
 		WC()->session->set_customer_session_cookie( true );
 		if ( WC()->cart->is_empty() ) { WC()->session->set( 'chosen_shipping_methods', array() ); return; }

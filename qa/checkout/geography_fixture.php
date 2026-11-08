@@ -8,7 +8,8 @@ foreach($cases as $minimum=>$points){
   check_rule('resolved'===$result['status']&&(int)$minimum===$result['minimum']&&true===$result['provisional']&&'owner_geographic_advisory'===$result['basis'],'independent geographic point '.$minimum.' '.json_encode($point));
   foreach(array(null,1,2,3,4,5) as $qc){$low=$data;$low['qc_geo']=$qc;check_rule(null===RollsBar_Delivery_Minimum::classify($low)['minimum'],'no polygon assignment with qc_geo='.var_export($qc,true));}
   $invalid=$data;$invalid['house_fias_id']='';check_rule(null===RollsBar_Delivery_Minimum::classify($invalid)['minimum'],'no polygon assignment without verified house');
-  $GLOBALS['rb_fixture_environment']='production';check_rule(null===RollsBar_Delivery_Minimum::classify($data)['minimum'],'geographic fallback disabled outside staging');unset($GLOBALS['rb_fixture_environment']);
+  $GLOBALS['rb_fixture_environment']='production';check_rule(null===RollsBar_Delivery_Minimum::classify($data)['minimum'],'geographic fallback disabled on unrelated production host');
+  $GLOBALS['rb_fixture_home']='https://rollsbar.ru';check_rule((int)$minimum===RollsBar_Delivery_Minimum::classify($data)['minimum'],'same geographic contract enabled on canonical production host');unset($GLOBALS['rb_fixture_environment'],$GLOBALS['rb_fixture_home']);
  }
 }
 $methods=new ReflectionMethod(RollsBar_Delivery_Minimum::class,'in_ring');
