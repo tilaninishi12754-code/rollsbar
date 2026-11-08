@@ -28,10 +28,10 @@ def main():
     for item in manifest:
         p=item['path'];lines+=['[[ "$(sha256sum "$root/'+p+'" | cut -d" " -f1)" == '+item['before']+' ]]','[[ "$(sha256sum "$work/candidate/'+p+'" | cut -d" " -f1)" == '+item['after']+' ]]','php -l "$work/candidate/'+p+'" >/dev/null','mkdir -p "$backup/files/'+str(pathlib.PurePosixPath(p).parent)+'"','cp -p "$root/'+p+'" "$backup/files/'+p+'"']
     lines+=['wp --path="$root" --skip-plugins --skip-themes db export "$backup/database.sql" --quiet >/dev/null','gzip "$backup/database.sql"']
-    restore='; '.join('cp -p "$backup/files/'+i['path']+'" "$root/'+i['path']+'"' for i in reversed(manifest))
+    restore='; '.join('cp -p "$backup/files/'+i['path']+'" "$root/'+i['path']+'"' for i in reversed(manifest))+'; wp --path="$root" transient delete wc_shipping_method_count >/dev/null'
     lines+=['rollback() { '+restore+'; echo runtime_rollback=PASS; }',"trap 'rollback' ERR"]
     for item in manifest:lines+=['chmod 644 "$work/candidate/'+item['path']+'"','mv "$work/candidate/'+item['path']+'" "$root/'+item['path']+'"']
-    lines+=['wp --path="$root" eval-file "$work/wordpress/deploy/verify-delivery-rules.php" >"$backup/native-fixture.log" 2>&1','grep -q DELIVERY_GEOGRAPHY_NATIVE_PASS "$backup/native-fixture.log"','grep -q CHECKOUT_NOTE_NATIVE_FIXTURE_PASS_NO_ORDERS "$backup/native-fixture.log"','wp --path="$root" eval \'if (!RollsBar_Core::checkout_runtime_enabled()) { exit(1); } echo "production_runtime_gate=PASS\\n";\'','trap - ERR','echo native_checkout_delivery_regressions=PASS','printf "native_assertions="; grep -c "^PASS " "$backup/native-fixture.log"','echo production_code_promotion=PASS']
+    lines+=['wp --path="$root" transient delete wc_shipping_method_count >/dev/null','wp --path="$root" eval-file "$work/wordpress/deploy/verify-delivery-rules.php" >"$backup/native-fixture.log" 2>&1','grep -q DELIVERY_GEOGRAPHY_NATIVE_PASS "$backup/native-fixture.log"','grep -q CHECKOUT_NOTE_NATIVE_FIXTURE_PASS_NO_ORDERS "$backup/native-fixture.log"','wp --path="$root" eval \'if (!RollsBar_Core::checkout_runtime_enabled()) { exit(1); } echo "production_runtime_gate=PASS\\n";\'','trap - ERR','echo native_checkout_delivery_regressions=PASS','printf "native_assertions="; grep -c "^PASS " "$backup/native-fixture.log"','echo production_code_promotion=PASS']
     print(run(None,'\n'.join(lines),timeout=300),flush=True)
     state['promoted_release']=candidate;write_private(None,SECRET,json.dumps(state))
     write_private(None,'.rollsbar-production-release-sha',candidate)
