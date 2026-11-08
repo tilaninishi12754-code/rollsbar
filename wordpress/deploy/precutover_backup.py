@@ -29,6 +29,7 @@ def encrypted_copy(sftp, source, target, public_key):
     plain_hash = hashlib.sha256()
     size = 0
     with sftp.open(source,'rb') as src, target.open('wb') as dst:
+        src.prefetch(file_size=sftp.stat(source).st_size,max_concurrent_requests=16)
         dst.write(header)
         while chunk := src.read(1024*1024):
             size += len(chunk); plain_hash.update(chunk); dst.write(cipher.update(chunk))
