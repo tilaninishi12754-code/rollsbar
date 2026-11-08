@@ -11,17 +11,36 @@ RELEASE='d4b41c59f0a6101666450723c324d25a28585c35'
 SECRET='.rollsbar-production-db.json'
 STEP='preflight'
 
+def connect():
+    client=paramiko.SSHClient();client.set_missing_host_key_policy(PinnedHostKey())
+    client.connect(core.urlsplit(core.BASE).hostname,username=core.USER,password=core.PASSWORD,look_for_keys=False,allow_agent=False,timeout=20)
+    return client
+
 def run(client,script,timeout=600):
-    status,out,err=core.remote(client,script,timeout=timeout)
+    # Shared hosting closes idle sessions. Use a fresh connection per operation;
+    # never repeat a mutation after an uncertain exec result.
+    current=connect()
+    try:status,out,err=core.remote(current,script,timeout=timeout)
+    finally:current.close()
     if status: raise RuntimeError('remote_failed_'+str(status))
     return out
 
 def write_private(client,path,body):
-    sftp=client.open_sftp()
+    current=connect();sftp=current.open_sftp()
     try:
         with sftp.open(path,'w') as fh:
             sftp.chmod(path,0o600);fh.write(body.encode())
-    finally:sftp.close()
+    finally:sftp.close();current.close()
+
+def remove_private(path):
+    current=connect();sftp=current.open_sftp()
+    try:
+        try:sftp.remove(path)
+        except FileNotFoundError:pass
+    finally:sftp.close();current.close()
+
+def write_mysql_config(path,user,password):
+    write_private(None,path,'[client]\nhost=localhost\nuser='+user+'\npassword='+password+'\n')
 
 def check_release(client):
     out=run(client,'set -euo pipefail\ncd "$HOME/www/staging.rollsbar.ru"\nfind wp-content/themes/rollsbar-theme wp-content/plugins/rollsbar-core -type f -print0 | sort -z | xargs -0 sha256sum')
@@ -38,13 +57,13 @@ def check_release(client):
     print('release_and_runtime_package=PASS',flush=True)
 
 def provision_db(client,sid):
-    sftp=client.open_sftp()
+    current=connect();sftp=current.open_sftp()
     try:
         try:
             if stat.S_ISLNK(sftp.lstat(SECRET).st_mode):raise RuntimeError('Linked credentials')
             with sftp.open(SECRET) as fh: data=json.loads(fh.read().decode())
         except FileNotFoundError:data=None
-    finally:sftp.close()
+    finally:sftp.close();current.close()
     target=adapter.list_target(sid,'rollsbar_prod')
     if target is not None and data is None:raise RuntimeError('Unowned production database exists')
     if data is None:
@@ -61,8 +80,7 @@ def provision_db(client,sid):
 
 def main():
     global STEP
-    sid=core.auth();client=paramiko.SSHClient();client.set_missing_host_key_policy(PinnedHostKey())
-    client.connect(core.urlsplit(core.BASE).hostname,username=core.USER,password=core.PASSWORD,look_for_keys=False,allow_agent=False,timeout=20)
+    sid=core.auth();client=None
     temp_name='rbdrill_'+str(int(time.time())%100000000).zfill(8)
     temp_db=temp_user=temp_pair=temp_id='';temp_attempt=False
     temp_password=secrets.token_urlsafe(36);core.mask(temp_password)
@@ -88,7 +106,7 @@ def main():
         print('isolated_production_site_and_database=PASS',flush=True)
         STEP='prepare_temporary_migration_database';temp_attempt=True
         temp_db,temp_user,temp_pair,temp_id=adapter.create_temp_db(sid,temp_name,temp_password)
-        core.write_client_config(client,temp_cfg,temp_user,temp_password)
+        write_mysql_config(temp_cfg,temp_user,temp_password)
         command=r'''set -euo pipefail
 umask 077
 export PATH="$HOME/.local/bin:$PATH"
@@ -121,7 +139,7 @@ printf '%s' "$work"
         out=run(client,clean);print('sanitized_content_and_url_transform=PASS',flush=True)
         STEP='install_isolated_production_content'
         prod_cfg='.rollsbar-production-import-'+secrets.token_hex(6)+'.cnf'
-        core.write_client_config(client,prod_cfg,prod['user'],prod['password'])
+        write_mysql_config(prod_cfg,prod['user'],prod['password'])
         try:
             script='set -euo pipefail\numask 077\nexport PATH="$HOME/.local/bin:$PATH"\nroot="$HOME/www/rollsbar.ru"\n'
             script+='[[ ! -f "$root/wp-config.php" ]]\n'
@@ -147,9 +165,7 @@ printf '%s' "$work"
             script+='cp "$root/wp-config.php" "$root/.htaccess" "$backup/"\n(cd "$backup"; sha256sum database.sql.gz wp-config.php .htaccess > SHA256SUMS;sha256sum -c SHA256SUMS >/dev/null)\nchmod 600 "$backup"/*\n'
             run(client,script,timeout=900)
         finally:
-            sftp=client.open_sftp()
-            try:sftp.remove(prod_cfg)
-            finally:sftp.close()
+            remove_private(prod_cfg)
         check_release(client)
         prod['phase']='prepared_maintenance';write_private(client,SECRET,json.dumps(prod))
         print('production_prepared_in_maintenance=PASS',flush=True)
@@ -158,16 +174,11 @@ printf '%s' "$work"
     finally:
         if work:
             run(client,'set -euo pipefail\nwork='+shlex.quote(work)+'\n[[ "$work" == "$HOME/.rollsbar-cutover-work-20261108" && "$(realpath "$work")" == "$work" ]]\nrm -rf -- "$work"')
-        sftp=client.open_sftp()
-        try:
-            try:sftp.remove(temp_cfg)
-            except FileNotFoundError:pass
-        finally:sftp.close()
+        remove_private(temp_cfg)
         if temp_attempt:
             errors=adapter.cleanup_temp_db(sid,temp_name,temp_user,temp_pair,temp_id)
             print('temporary_migration_database_cleanup='+('PASS' if not errors else 'FAIL'),flush=True)
             if errors:raise RuntimeError('Temporary cleanup failed')
-        client.close()
 
 if __name__=='__main__':
     try:main()
