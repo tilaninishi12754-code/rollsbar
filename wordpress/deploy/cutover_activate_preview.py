@@ -24,8 +24,6 @@ RewriteEngine On
 RewriteRule ^\\.well-known/acme-challenge/ - [L]
 RewriteCond %{HTTP_HOST} ^www\\.rollsbar\\.ru$ [NC]
 RewriteRule ^ https://rollsbar.ru%{REQUEST_URI} [R=301,L,NE]
-RewriteCond %{HTTPS} !=on
-RewriteRule ^ https://rollsbar.ru%{REQUEST_URI} [R=301,L,NE]
 </IfModule>
 '''
     write_private(None,home+'/www/rollsbar.ru/.htaccess',prefix+body)
