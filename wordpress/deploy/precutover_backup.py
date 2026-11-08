@@ -17,57 +17,43 @@ class PinnedHostKey(paramiko.MissingHostKeyPolicy):
         if actual != HOST_FINGERPRINT:
             raise RuntimeError('SSH host key differs from verified inventory')
 
+def encrypted_copy(sftp, source, target, public_key):
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import padding
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    key, nonce = secrets.token_bytes(32), secrets.token_bytes(12)
+    wrapped = public_key.encrypt(key, padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
+    header = (json.dumps({'format':'rollsbar-backup-aes256gcm-rsa3072-v1', 'key':base64.b64encode(wrapped).decode(), 'nonce':base64.b64encode(nonce).decode()},sort_keys=True)+'\n').encode()
+    cipher = Cipher(algorithms.AES(key), modes.GCM(nonce)).encryptor()
+    cipher.authenticate_additional_data(header)
+    plain_hash = hashlib.sha256()
+    size = 0
+    with sftp.open(source,'rb') as src, target.open('wb') as dst:
+        dst.write(header)
+        while chunk := src.read(1024*1024):
+            size += len(chunk); plain_hash.update(chunk); dst.write(cipher.update(chunk))
+        dst.write(cipher.finalize()); dst.write(cipher.tag)
+    return {'file':target.name,'plaintext_sha256':plain_hash.hexdigest(),'plaintext_bytes':size,'encrypted_sha256':hashlib.sha256(target.read_bytes()).hexdigest()}
+
 def backup(client):
-    # The existing format-3 snapshot also enables the established isolated DB restore drill.
-    canonical = pathlib.Path('wordpress/deploy/backup-staging.sh').read_text()
-    print(remote(client, 'export PATH="$HOME/.local/bin:$PATH"\nexport WP_PATH="$HOME/www/staging.rollsbar.ru"\nexport ROLLSBAR_BACKUP_RETENTION=9999\n' + canonical,timeout=900))
-    command=r'''set -euo pipefail
-umask 077
-export PATH="$HOME/.local/bin:$PATH"
-site="$(realpath "$HOME/www/staging.rollsbar.ru")"
-[[ "$site" == "$HOME/www/staging.rollsbar.ru" ]] || exit 21
-[[ -f "$site/wp-config.php" && -f "$site/wp-load.php" ]] || exit 22
-actual_home="$(wp --path="$site" --skip-plugins --skip-themes option get home)"
-[[ "$actual_home" == 'https://staging.rollsbar.ru' ]] || exit 23
-root="$HOME/rollsbar-backups/precutover"
-mkdir -p "$root"
-[[ ! -L "$root" && "$(realpath "$root")" == "$root" ]] || exit 24
-chmod 700 "$root"
-stamp="$(date -u +%Y%m%dT%H%M%SZ)"
-snapshot="$root/$stamp"
-[[ ! -e "$snapshot" ]] || exit 25
-mkdir "$snapshot"
-wp --path="$site" --skip-plugins --skip-themes db export - --single-transaction --quick --skip-lock-tables 2>"$snapshot/db-export.stderr" | gzip -9 > "$snapshot/database.sql.gz"
-gzip -t "$snapshot/database.sql.gz"
-tar -C "$site" -czf "$snapshot/site-files.tar.gz" .
-tar -tzf "$snapshot/site-files.tar.gz" >/dev/null
-{
- echo 'backup_format=full-precutover-v1'
- echo "created_utc=$stamp"
- echo "site_url=$actual_home"
- echo 'contains_secrets=yes; keep private'
- echo 'production_root=absent_in_this_account'
- echo 'restore_database_to_isolated_database_only=yes'
- printf 'wp_version='; wp --path="$site" core version
- printf 'deployed_sha='; cat "$HOME/.rollsbar-staging-deployed-sha"
- echo
- echo 'plugins:'; wp --path="$site" --skip-plugins --skip-themes plugin list --format=json
- echo 'themes:'; wp --path="$site" --skip-plugins --skip-themes theme list --format=json
-} > "$snapshot/manifest.txt"
-rm -- "$snapshot/db-export.stderr"
-(cd "$snapshot"; sha256sum database.sql.gz site-files.tar.gz manifest.txt > SHA256SUMS; sha256sum -c SHA256SUMS >/dev/null)
-chmod 600 "$snapshot"/*
-printf 'snapshot_path=%s\n' "$snapshot"
-printf 'full_backup_integrity=PASS\n'
-'''
-    result=remote(client,command,timeout=1200)
-    snapshot=next(x.split('=',1)[1] for x in result.splitlines() if x.startswith('snapshot_path='))
-    print('full_backup_integrity=PASS')
-    print('full_backup_timestamp='+snapshot.rsplit('/',1)[1])
+    snapshot=remote(client, r'printf "%s" "$HOME/rollsbar-backups/precutover/20261107T222121Z"').strip()
+    remote(client, 'set -euo pipefail\nsnapshot='+shlex.quote(snapshot)+'\n[[ -d "$snapshot" && ! -L "$snapshot" && "$(realpath "$snapshot")" == "$snapshot" ]]\ncd "$snapshot"\nsha256sum -c SHA256SUMS >/dev/null\ngzip -t database.sql.gz\ntar -tzf site-files.tar.gz >/dev/null',timeout=300)
+    print('existing_verified_snapshot=20261107T222121Z; server_integrity=PASS')
+    from cryptography.hazmat.primitives import serialization
+    public_key=serialization.load_pem_public_key(pathlib.Path('wordpress/deploy/precutover-backup-public.pem').read_bytes())
     folder=pathlib.Path('precutover-output');folder.mkdir(mode=0o700,exist_ok=True)
-    receipt={'timestamp':snapshot.rsplit('/',1)[1], 'server_directory':'$HOME/rollsbar-backups/precutover/'+snapshot.rsplit('/',1)[1], 'source':'https://staging.rollsbar.ru', 'full_backup_integrity':'PASS', 'offsite_copy':'NOT_CREATED_PENDING_OWNER_DESTINATION_APPROVAL', 'site_modified':False, 'production_modified':False}
-    (folder/'receipt.json').write_text(json.dumps(receipt,indent=2))
-    print('backup_payload_location=hosting_only; no payload exported')
+    sftp=client.open_sftp()
+    try:
+        with sftp.open(snapshot+'/SHA256SUMS') as fh:
+            expected={line.split()[1]:line.split()[0] for line in fh.read().decode().splitlines()}
+        receipts=[]
+        for name in ('database.sql.gz','site-files.tar.gz','manifest.txt','SHA256SUMS'):
+            receipt=encrypted_copy(sftp,snapshot+'/'+name,folder/(name+'.encrypted'),public_key)
+            if name in expected and receipt['plaintext_sha256'] != expected[name]: raise RuntimeError('Transfer checksum mismatch')
+            receipts.append(receipt)
+        (folder/'receipt.json').write_text(json.dumps({'timestamp':snapshot.rsplit('/',1)[1],'server_directory':'$HOME/rollsbar-backups/precutover/'+snapshot.rsplit('/',1)[1],'source':'https://staging.rollsbar.ru','files':receipts,'site_modified':False,'production_modified':False},indent=2))
+        print('encrypted_offsite_copy=PASS')
+    finally: sftp.close()
 
 def remote(client, command, timeout=120):
     _, out, err = client.exec_command('bash -lc ' + shlex.quote(command), timeout=timeout)
