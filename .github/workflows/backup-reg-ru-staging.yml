@@ -17,18 +17,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - run: python3 -m pip install --disable-pip-version-check --quiet paramiko cryptography
+      - run: python3 -m pip install --disable-pip-version-check --quiet paramiko
       - name: Authorized pre-cutover inventory and backup
         env:
           ISP_MANAGER_URL: ${{ secrets.ISP_MANAGER_URL }}
           ISP_MANAGER_USER: ${{ secrets.ISP_MANAGER_USER }}
           ISP_MANAGER_PASSWORD: ${{ secrets.ISP_MANAGER_PASSWORD }}
           PRECUTOVER_MODE: backup
-        run: python3 wordpress/deploy/precutover_backup.py
-      - uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: rollsbar-precutover-encrypted
-          path: precutover-output/*
-          if-no-files-found: ignore
-          retention-days: 30
+        run: python3 wordpress/deploy/cutover_safe_check.py
